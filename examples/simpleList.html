@@ -1,0 +1,51 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../build/output/knockout-min.js"></script>
+        <style type="text/css">
+            SELECT { width: 21em; height: 10em; margin-top: 0.25em; }
+        </style>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Simple List</h1>
+            <p>
+                This example demonstrates binding to an array of values.
+            </p>
+            <p>
+                Notice how the "Add" button is 
+                enabled only when you have entered some text - check the HTML source code to see how
+                to use the "enable" binding.
+            </p>
+
+            <form data-bind="submit: addItem">
+                New item:
+                <input data-bind="value: itemToAdd, valueUpdate: 'keyup'" />
+                <button type="submit" data-bind="enable: itemToAdd().length > 0">Add</button>
+            </form>
+            <div>
+                <select multiple="multiple" width="50" data-bind="options: items"></select>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var viewModel = {};
+            viewModel.items = ko.observableArray(["Alpha", "Beta", "Gamma"]);
+            viewModel.itemToAdd = ko.observable("");
+            viewModel.addItem = function () {
+                if (viewModel.itemToAdd() != "") {
+                    viewModel.items.push(viewModel.itemToAdd()); // Adds the item. Writing to the "items" observableArray causes any associated UI to update.
+                    viewModel.itemToAdd("");                     // Clears the text box, because it's bound to the "itemToAdd" observable
+                }
+            }
+
+            ko.applyBindings(document.body, viewModel);
+        </script>
+	</body>
+</html>

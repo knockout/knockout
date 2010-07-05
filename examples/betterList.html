@@ -1,0 +1,61 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../build/output/knockout-min.js"></script>
+        <style type="text/css">
+            SELECT { width: 21em; height: 10em; margin-top: 0.25em; }
+        </style>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Better List</h1>
+            <p>
+                This example builds on the earlier <a href="simpleList.html">simple list example</a> by making it possible to remove items (with multi-selection) and to sort the list.
+                The "remove" and "sort" buttons become disabled if they are not applicable (e.g., if there aren't enough items to sort).
+            </p>
+            <p>Check out the HTML source code to see how little code all this takes. This example also shows how you can use function literals in bindings (see the binding for 'sort').</p>
+            
+            <hr /> 
+            
+            <!-- The example code starts here -->
+            <form data-bind="submit:addItem">
+                Add item: <input type="text" data-bind="value:itemToAdd, valueUpdate: 'keyup'" />
+                <button type="submit" data-bind="enable: itemToAdd().length > 0">Add</button>
+            </form>
+            <select multiple="multiple" height="5" data-bind="options:allItems, selectedOptions:selectedItems"></select>
+            <div>
+                <button data-bind="click: removeSelected, enable: selectedItems().length > 0">Remove</button>
+                <button data-bind="click: function() { allItems.sort() }, enable: allItems().length > 1">Sort</button>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            // In this example, betterListModel is a class, and the view model is an instance of it.
+            // See simpleList.html for an example of how to construct a view model without defining a class for it. Either technique works fine.
+            var betterListModel = function () {
+                this.itemToAdd = new ko.observable("");
+                this.allItems = new ko.observableArray(["Fries", "Eggs Benedict", "Ham", "Cheese"]); // Initial items
+                this.selectedItems = new ko.observableArray(["Ham"]);                                // Initial selection
+
+                this.addItem = function () {
+                    if ((this.itemToAdd() != "") && (this.allItems.indexOf(this.itemToAdd()) < 0)) // Prevent blanks and duplicates
+                        this.allItems.push(this.itemToAdd());
+                    this.itemToAdd(""); // Clear the text box
+                }
+
+                this.removeSelected = function () {
+                    this.allItems.removeAll(this.selectedItems());
+                    this.selectedItems([]); // Clear selection
+                }
+            };
+
+            ko.applyBindings(document.body, new betterListModel());
+        </script>
+	</body>
+</html>

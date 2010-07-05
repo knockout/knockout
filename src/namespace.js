@@ -1,0 +1,1 @@
+var ko = window.ko = {};
