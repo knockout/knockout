@@ -2,6 +2,6 @@
 
 For more details, see
 <ul>
-<li>Online examples at <http://knockoutjs.com/></li>
-<li>Introductory tutorial at (insert)</li>
+<li>Online examples at <a href="http://knockoutjs.com/">http://knockoutjs.com/</a></li>
+<li>Introductory tutorial at <a href="http://blog.stevensanderson.com/2010/07/05/introducing-knockout-a-ui-library-for-javascript/">Steve Sanderson's blog</a></li>
 </ul>
