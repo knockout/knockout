@@ -1,5 +1,6 @@
 // Knockout JavaScript library v1.0
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
+// License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
 var ko=window.ko={};
 ko.utils=new (function(){var e=/^(\s|\u00A0)+|(\s|\u00A0)+$/g;return{arrayForEach:function(a,c){for(var b=0,d=a.length;b<d;b++)c(a[b])},arrayIndexOf:function(a,c){if(typeof a.indexOf=="function")return a.indexOf(c);for(var b=0,d=a.length;b<d;b++)if(a[b]==c)return b;return-1},arrayFirst:function(a,c,b){for(var d=0,f=a.length;d<f;d++)if(c.call(b,a[d]))return a[d];return null},arrayRemoveItem:function(a,c){var b=ko.utils.arrayIndexOf(a,c);b>=0&&a.splice(b,1)},arrayGetDistinctValues:function(a){a=a||
