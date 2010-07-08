@@ -9,7 +9,13 @@ ko.jqueryTmplTemplateEngine = function () {
     }
 
     this.renderTemplate = function (template, data, options) {
-        return $.tmpl(getTemplateNode(template).text, data);
+        // jquery.tmpl doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
+        // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
+        // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
+        // parse that text into a document fragment using jQuery.clean().
+        var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(template).text + "</script>";
+        var renderedMarkupInWrapper = $.tmpl(templateTextInWrapper, data);
+        return jQuery.clean([renderedMarkupInWrapper[0].text], document);
     },
 
     this.isTemplateRewritten = function (template) {
