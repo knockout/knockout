@@ -15,6 +15,11 @@ describe('Binding attribute syntax', {
         ko.applyBindings(testNode); // No exception means success
     },
 
+    'Should tolerate arbitrary literals as the values for a handler': function () {
+        testNode.innerHTML = "<div data-bind='stringLiteral: \"hello\", numberLiteral: 123, boolLiteral: true, objectLiteral: {}, functionLiteral: function() { }'></div>";
+        ko.applyBindings(testNode); // No exception means success
+    },
+
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {

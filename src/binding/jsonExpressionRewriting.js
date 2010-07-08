@@ -3,6 +3,7 @@
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
     var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z]*(\[.*?\])*(\.[\_$a-z][\_$a-z]*(\[.*?\])*)*$/i;
+    var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
         return string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
@@ -11,6 +12,8 @@ ko.jsonExpressionRewriting = (function () {
     }
 
     function isWriteableValue(expression) {
+        if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
+            return false;
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
