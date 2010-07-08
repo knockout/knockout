@@ -1,0 +1,52 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
+        <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="../build/output/knockout-min.js"></script>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Chat</h1>
+            
+            <form data-bind="submit: signIn, visible: !signedInAsUserName()">
+                <input data-bind="value: enteringUserName, valueUpdate: 'keyup'" />
+                <button data-bind="enable: enteringUserName">Sign in</button>
+            </form>
+            <div data-bind="visible: signedInAsUserName">
+                Now chatting
+                <button data-bind="click: signOut">Sign out</button>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
+            var chatViewModel = {
+                // Logging in
+                enteringUserName: ko.observable(""),
+                signIn: function () {
+                    this.signedInAsUserName(this.enteringUserName());
+                    debugger;
+                    $.get("http://chat.nodejs.org/join", { nick: this.signedInAsUserName() }, function (result) {
+                        alert(JSON.stringify(result));
+                    }, "json");
+                },
+
+                // Chatting
+                signedInAsUserName: ko.observable(),
+                signOut: function () {
+                    this.signedInAsUserName(undefined);
+                }
+            };
+
+            ko.applyBindings(document.body, chatViewModel);
+        </script>
+	</body>
+</html>

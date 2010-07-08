@@ -1,0 +1,74 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
+        <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.js"></script>        
+        <script type="text/javascript" src="../build/knockout-debug.js"></script>
+        <style type="text/css">
+            tr { vertical-align: top; }
+            input.error { border: 1px solid red; background-color: #FDC; }
+            label.error { display: block; color: Red; font-size: 0.8em; }
+        </style>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Editable Grid</h1>
+
+            <form action="asd" method="get">
+                <p>You have asked for <span data-bind="text: gifts().length">&nbsp;</span> gift(s)</p>
+                <table data-bind="visible: gifts().length > 0">
+                    <thead>
+                        <tr>
+                            <th>Gift name</th>
+                            <th>Price</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="template: 'giftRowTemplate', data: gifts"></tbody>
+                </table>
+
+                <button data-bind="click: addGift">Add Gift</button>
+                <button data-bind="enable: gifts().length > 0" type="submit">Submit</button>
+            </form>
+
+            <script type="text/html" id="giftRowTemplate">
+                {{each(i, gift) $data}}
+                    <tr>
+                        <td><input class="required" data-bind="value: gift.name, uniqueName: true"/></td>
+                        <td><input class="required" data-bind="value: gift.price, uniqueName: true"/></td>
+                        <td><a href="#" data-bind="click: function() { viewModel.removeGift(gift) }">Delete</a></td>
+                    </tr>
+                {{/each}}
+            </script>
+        </div>
+
+        <script type="text/javascript">
+            var viewModel = {
+                gifts: ko.observableArray([
+                    { name: "Tall Hat", price: "39.95" },
+                    { name: "Long Cloak", price: "120.00" },
+                    { name: "Long Cloak2", price: "120.00" }
+                ]),
+
+                addGift: function () {
+                    this.gifts.push({ name: "", price: "" });
+                },
+
+                removeGift: function (gift) {
+                    this.gifts.remove(gift);
+                }
+            };
+
+            ko.applyBindings(document.body, viewModel);
+
+            $("form").validate({ debug: true });
+        </script>
+	</body>
+</html>
