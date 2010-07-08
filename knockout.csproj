@@ -62,6 +62,7 @@
     <Content Include="lib\jquery-1.4.2.js" />
     <Content Include="lib\jquery.tmpl.js" />
     <Content Include="spec\bindingAttributeBehaviors.js" />
+    <Content Include="spec\editDetectionBehaviors.js" />
     <Content Include="spec\jsonExpressionRewritingBehaviors.js" />
     <Content Include="spec\memoizationBehaviors.js" />
     <Content Include="spec\observableArrayBehaviors.js" />
@@ -74,6 +75,7 @@
     <Content Include="spec\runner.html" />
     <Content Include="spec\subscribableBehaviors.js" />
     <Content Include="spec\templatingBehaviors.js" />
+    <Content Include="src\binding\editDetection\compareArrays.js" />
     <Content Include="src\binding\defaultBindings.js" />
     <Content Include="src\binding\jsonExpressionRewriting.js" />
     <Content Include="src\memoization.js" />
