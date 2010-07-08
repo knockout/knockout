@@ -53,10 +53,3 @@ describe('Compare Arrays', {
         ]);
     }
 });
-
-function makeRange(max) {
-    var result = [];
-    for (var i = 0; i < max; i++)
-        result.push(i);
-    return result;
-}
