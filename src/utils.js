@@ -59,7 +59,8 @@ ko.utils = new (function () {
         },
 
         setDomNodeChildren: function (domNode, childNodes) {
-            domNode.innerHTML = "";
+            while (domNode.firstChild)
+                domNode.removeChild(domNode.firstChild);
             if (childNodes) {
                 ko.utils.arrayForEach(childNodes, function (childNode) {
                     domNode.appendChild(childNode);
