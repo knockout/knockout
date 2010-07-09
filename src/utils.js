@@ -197,6 +197,29 @@ ko.utils = new (function () {
             return result;
         },
 
+        stringifyJson: function (data) {
+            if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
+                throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
+            return JSON.stringify(data);
+        },
+
+        postJson: function (url, data) {
+            data = ko.utils.unwrapObservable(data);
+            var form = document.createElement("FORM");
+            form.style.display = "none";
+            form.action = url;
+            form.method = "post";
+            for (var key in data) {
+                var input = document.createElement("INPUT");
+                input.name = key;
+                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
+            setTimeout(function () { form.parentNode.removeChild(form); }, 0);
+        },
+
         domData: {
             uniqueId: 0,
             dataStoreKeyExpandoPropertyName: "__ko__" + (new Date).getTime(),
