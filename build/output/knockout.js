@@ -64,8 +64,10 @@ ko.utils = new (function () {
         },
 
         setDomNodeChildren: function (domNode, childNodes) {
-            while (domNode.firstChild)
+            while (domNode.firstChild) {
+                ko.utils.domData.cleanNodeAndDescendants(domNode.firstChild);
                 domNode.removeChild(domNode.firstChild);
+            }
             if (childNodes) {
                 ko.utils.arrayForEach(childNodes, function (childNode) {
                     domNode.appendChild(childNode);
@@ -80,8 +82,10 @@ ko.utils = new (function () {
                 var parent = insertionPoint.parentNode;
                 for (var i = 0, j = newNodesArray.length; i < j; i++)
                     parent.insertBefore(newNodesArray[i], insertionPoint);
-                for (var i = 0, j = nodesToReplaceArray.length; i < j; i++)
+                for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
+                    ko.utils.domData.cleanNodeAndDescendants(nodesToReplaceArray[i]);
                     parent.removeChild(nodesToReplaceArray[i]);
+                }
             }
         },
 
@@ -196,6 +200,45 @@ ko.utils = new (function () {
             for (var i = min; i <= max; i++)
                 result.push(i);
             return result;
+        },
+
+        domData: {
+            uniqueId: 0,
+            dataStoreKeyExpandoPropertyName: "__ko__" + (new Date).getTime(),
+            dataStore: {},
+            get: function (node, key) {
+                var allDataForNode = ko.utils.domData.getAll(node, false);
+                return allDataForNode === undefined ? undefined : allDataForNode[key];
+            },
+            set: function (node, key, value) {
+                var allDataForNode = ko.utils.domData.getAll(node, true);
+                allDataForNode[key] = value;
+            },
+            getAll: function (node, createIfNotFound) {
+                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
+                if (!dataStoreKey) {
+                    if (!createIfNotFound)
+                        return undefined;
+                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = ko.utils.domData.uniqueId++;
+                    ko.utils.domData[dataStoreKey] = {};
+                }
+                return ko.utils.domData[dataStoreKey];
+            },
+            cleanNode: function (node) {
+                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
+                if (dataStoreKey) {
+                    delete ko.utils.domData[dataStoreKey];
+                    node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = null;
+                }
+            },
+            cleanNodeAndDescendants: function (node) {
+                if ((node.nodeType != 1) && (node.nodeType != 9))
+                    return;
+                ko.utils.domData.cleanNode(node);
+                var descendants = node.getElementsByTagName("*");
+                for (var i = 0, j = descendants.length; i < j; i++)
+                    ko.utils.domData.cleanNode(descendants[i]);
+            }
         }
     }
 })();
@@ -901,9 +944,174 @@ ko.templateRewriting = (function () {
 
     ko.bindingHandlers.template = {
         update: function (element, bindingValue, allBindings, viewModel) {
-            ko.renderTemplate(bindingValue, typeof allBindings.data == "undefined" ? viewModel : allBindings.data, null, element);
+            var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
+            var templateData = bindingValue.data;
+            ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
         }
     };
+})();﻿/// <reference path="../../utils.js" />
+
+// Simple calculation based on Levenshtein distance.
+(function () {
+
+    function calculateEditDistanceMatrix(oldArray, newArray, maxAllowedDistance) {
+        var distances = [];
+        for (var i = 0; i <= newArray.length; i++)
+            distances[i] = [];
+
+        // Top row - transform old array into empty array via deletions
+        for (var i = 0, j = Math.min(oldArray.length, maxAllowedDistance); i <= j; i++)
+            distances[0][i] = i;
+
+        // Left row - transform empty array into new array via additions
+        for (var i = 1, j = Math.min(newArray.length, maxAllowedDistance); i <= j; i++) {
+            distances[i][0] = i;
+        }
+
+        // Fill out the body of the array
+        var oldIndex, oldIndexMax = oldArray.length, newIndex, newIndexMax = newArray.length;
+        var distanceViaAddition, distanceViaDeletion;
+        for (oldIndex = 1; oldIndex <= oldIndexMax; oldIndex++) {
+            var newIndexMinForRow = Math.max(1, oldIndex - maxAllowedDistance);
+            var newIndexMaxForRow = Math.min(newIndexMax, oldIndex + maxAllowedDistance);
+            for (newIndex = newIndexMinForRow; newIndex <= newIndexMaxForRow; newIndex++) {
+                if (oldArray[oldIndex - 1] === newArray[newIndex - 1])
+                    distances[newIndex][oldIndex] = distances[newIndex - 1][oldIndex - 1];
+                else {
+                    var northDistance = distances[newIndex - 1][oldIndex] === undefined ? Number.MAX_VALUE : distances[newIndex - 1][oldIndex] + 1;
+                    var westDistance = distances[newIndex][oldIndex - 1] === undefined ? Number.MAX_VALUE : distances[newIndex][oldIndex - 1] + 1;
+                    distances[newIndex][oldIndex] = Math.min(northDistance, westDistance);
+                }
+            }
+        }
+
+        return distances;
+    }
+
+    function findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray) {
+        var oldIndex = oldArray.length;
+        var newIndex = newArray.length;
+        var editScript = [];
+        var maxDistance = editDistanceMatrix[newIndex][oldIndex];
+        if (maxDistance === undefined)
+            return null; // maxAllowedDistance must be too small
+        while ((oldIndex > 0) || (newIndex > 0)) {
+            var me = editDistanceMatrix[newIndex][oldIndex];
+            var distanceViaAdd = (newIndex > 0) ? editDistanceMatrix[newIndex - 1][oldIndex] : maxDistance + 1;
+            var distanceViaDelete = (oldIndex > 0) ? editDistanceMatrix[newIndex][oldIndex - 1] : maxDistance + 1;
+            var distanceViaRetain = (newIndex > 0) && (oldIndex > 0) ? editDistanceMatrix[newIndex - 1][oldIndex - 1] : maxDistance + 1;
+            if ((distanceViaAdd === undefined) || (distanceViaAdd < me - 1)) distanceViaAdd = maxDistance + 1;
+            if ((distanceViaDelete === undefined) || (distanceViaDelete < me - 1)) distanceViaDelete = maxDistance + 1;
+            if (distanceViaRetain < me - 1) distanceViaRetain = maxDistance + 1;
+
+            if ((distanceViaAdd <= distanceViaDelete) && (distanceViaAdd < distanceViaRetain)) {
+                editScript.push({ status: "added", value: newArray[newIndex - 1] });
+                newIndex--;
+            } else if ((distanceViaDelete < distanceViaAdd) && (distanceViaDelete < distanceViaRetain)) {
+                editScript.push({ status: "deleted", value: oldArray[oldIndex - 1] });
+                oldIndex--;
+            } else {
+                editScript.push({ status: "retained", value: oldArray[oldIndex - 1] });
+                newIndex--;
+                oldIndex--;
+            }
+        }
+        return editScript.reverse();
+    }
+
+    ko.utils.compareArrays = function (oldArray, newArray, maxEditsToConsider) {
+        if (maxEditsToConsider === undefined) {
+            return ko.utils.compareArrays(oldArray, newArray, 1)                 // First consider likely case where there is at most one edit (very fast)
+                || ko.utils.compareArrays(oldArray, newArray, 10)                // If that fails, account for a fair number of changes while still being fast
+                || ko.utils.compareArrays(oldArray, newArray, Number.MAX_VALUE); // Ultimately give the right answer, even though it may take a long time
+        } else {
+            oldArray = oldArray || [];
+            newArray = newArray || [];
+            var editDistanceMatrix = calculateEditDistanceMatrix(oldArray, newArray, maxEditsToConsider);
+            return findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray);
+        }
+    };
+})();﻿/// <reference path="compareArrays.js" />
+
+(function () {
+    // Objective:
+    // * Given an input array, a container DOM node, and a function from array elements to arrays of DOM nodes,
+    //   map the array elements to arrays of DOM nodes, concatenate together all these arrays, and use them to populate the container DOM node
+    // * Next time we're given the same combination of things (with the array possibly having mutated), update the container DOM node
+    //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
+    //   previously mapped - retain those nodes, and just insert/delete other ones
+
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping) {
+        // Compare the provided array against the previous one
+        array = array || [];
+        var lastMappingResult = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") || [];
+        var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
+        var editScript = ko.utils.compareArrays(lastArray, array);
+
+        // Build the new mapping result
+        var newMappingResult = [];
+        var lastMappingResultIndex = 0;
+        var nodesToDelete = [];
+        var nodesAdded = [];
+        var insertAfterNode = null;
+        for (var i = 0, j = editScript.length; i < j; i++) {
+            switch (editScript[i].status) {
+                case "retained":
+                    // Just keep the information - don't touch the nodes
+                    var dataToRetain = lastMappingResult[lastMappingResultIndex];
+                    newMappingResult.push(dataToRetain);
+                    if (dataToRetain.domNodes.length > 0)
+                        insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
+                    lastMappingResultIndex++;
+                    break;
+
+                case "deleted":
+                    // Queue these nodes for later removal
+                    ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
+                        nodesToDelete.push(node);
+                        insertAfterNode = node;
+                    });
+                    lastMappingResultIndex++;
+                    break;
+
+                case "added":
+                    // Map this array value and insert the resulting nodes at the current insertion point
+                    var mappedNodes = mapping(editScript[i].value) || [];
+                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
+                    for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
+                        var node = mappedNodes[nodeIndex];
+                        nodesAdded.push(node);
+                        if (insertAfterNode == null) {
+                            // Insert at beginning
+                            if (domNode.firstChild)
+                                domNode.insertBefore(node, domNode.firstChild);
+                            else
+                                domNode.appendChild(node);
+                        } else {
+                            // Insert after insertion point
+                            if (insertAfterNode.nextSibling)
+                                domNode.insertBefore(node, insertAfterNode.nextSibling);
+                            else
+                                domNode.appendChild(node);
+                        }
+                        insertAfterNode = node;
+                    }
+                    break;
+            }
+        }
+
+        ko.utils.arrayForEach(nodesToDelete, function (node) {
+            ko.utils.domData.cleanNodeAndDescendants(node);
+
+            // Todo: Instead of just deleting the nodes outright, permit callback methods for "onNodeAdded" and "onNodeRemoved"
+            // (Then only remove the node here if there's no onNodeRemoved callback)
+            if (node.parentNode)
+                node.parentNode.removeChild(node);
+        });
+
+        // Store a copy of the array items we just considered so we can difference it next time
+        ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);
+    }
 })();/// <reference path="../templating.js" />
 
 ko.jqueryTmplTemplateEngine = function () {

@@ -10,21 +10,23 @@ var dummyTemplateEngine = function (templates) {
 
         result = options.showParams ? result + ", data=" + data + ", options=" + options : result;
 
-        with (options.templateRenderingVariablesInScope || {}) {
-            // Dummy [renderTemplate:...] syntax
-            result = result.replace(/\[renderTemplate\:(.*?)\]/g, function (match, templateName) {
-                return ko.renderTemplate(templateName, data, options);
-            });
+        with (data || {}) {
+            with (options.templateRenderingVariablesInScope || {}) {
+                // Dummy [renderTemplate:...] syntax
+                result = result.replace(/\[renderTemplate\:(.*?)\]/g, function (match, templateName) {
+                    return ko.renderTemplate(templateName, data, options);
+                });
 
-            // Dummy [js:...] syntax
-            result = result.replace(/\[js\:(.*?)\]/g, function (match, script) {
-                try {
-                    var evalResult = eval(script);
-                    return (evalResult === null) || (evalResult === undefined) ? "" : evalResult.toString();
-                } catch (ex) {
-                    throw new Error("Error evaluating script: [js: " + script + "]\n\nException: " + ex.toString());
-                }
-            });
+                // Dummy [js:...] syntax
+                result = result.replace(/\[js\:(.*?)\]/g, function (match, script) {
+                    try {
+                        var evalResult = eval(script);
+                        return (evalResult === null) || (evalResult === undefined) ? "" : evalResult.toString();
+                    } catch (ex) {
+                        throw new Error("Error evaluating script: [js: " + script + "]\n\nException: " + ex.toString());
+                    }
+                });
+            }
         }
 
         if (options.bypassDomNodeWrap)
@@ -36,7 +38,7 @@ var dummyTemplateEngine = function (templates) {
             node.innerHTML = "<div>a</div>" + result + "<div>a</div>";
             node.removeChild(node.firstChild);
             node.removeChild(node.lastChild);
-            
+
             return [node];
         }
     };
@@ -130,6 +132,13 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>template output</div>");
     },
 
+    'Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
+        ko.applyBindings(testNode, { someProp: { childProp: 123} });
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
+    },
+
     'Should be able to chain templates, rendering one from inside another': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({
             outerTemplate: "outer template output, [renderTemplate:innerTemplate]", // [renderTemplate:...] is special syntax supported by dummy template engine
@@ -169,7 +178,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({
             someTemplate: "<input data-bind='value:message' />[js: message = 'goodbye'; undefined; ]"
         }));
-        ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { message: "hello" } }, testNode);
+        ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { message: "hello"} }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].value).should_be("goodbye");
     }
 })

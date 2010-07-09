@@ -38,7 +38,7 @@
                                 <a href="#" data-bind="click: addChild ">Add child</a>
                                 <span class="renderTime" data-bind="visible: showRenderTimes">(person rendered at ${ new Date().getSeconds() })</span>
                             </div>
-                            <div data-bind="template: 'childrenTemplate', data: children"></div>
+                            <div data-bind="template: { name: 'childrenTemplate', data: children }"></div>
                         </li>
                     {{/each}}
                 </ul>

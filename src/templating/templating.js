@@ -72,7 +72,9 @@
 
     ko.bindingHandlers.template = {
         update: function (element, bindingValue, allBindings, viewModel) {
-            ko.renderTemplate(bindingValue, typeof allBindings.data == "undefined" ? viewModel : allBindings.data, null, element);
+            var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
+            var templateData = bindingValue.data;
+            ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
         }
     };
 })();

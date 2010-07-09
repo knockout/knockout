@@ -25,7 +25,7 @@
                 </div>
 
                 <p>Currently viewing <span data-bind="text: editingList.userNames().length"></span>&nbsp;user(s):</p>
-                <div class="currentUsers" data-bind="template: 'usersTemplate', data: editingList"></div>
+                <div class="currentUsers" data-bind="template: { name: 'usersTemplate', data: editingList }"></div>
                 
                 <form data-bind="submit: addUser">
                     <label>Add user:</label>
@@ -33,7 +33,7 @@
                     <button type="submit" data-bind="enable: userNameToAddIsValid() && userNameToAdd() != ''">Add</button>
                 </form>
             </div>
-            <div class="tweets" data-bind="template: 'tweetsTemplate', data: currentTweets"></div>
+            <div class="tweets" data-bind="template: { name: 'tweetsTemplate', data: currentTweets }"></div>
             
             <script type="text/html" id="tweetsTemplate">
                 <table width="100%">
