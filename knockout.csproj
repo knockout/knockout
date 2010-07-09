@@ -46,6 +46,8 @@
     <Content Include="examples\clickCounter.html" />
     <Content Include="examples\contactsEditor.html" />
     <Content Include="examples\betterList.html" />
+    <Content Include="examples\gridEditor.html" />
+    <Content Include="examples\nodeChat.html" />
     <Content Include="examples\resources\background-stripes.png" />
     <Content Include="examples\resources\knockout-logo.png" />
     <Content Include="examples\resources\knockout.simpleGrid.js" />

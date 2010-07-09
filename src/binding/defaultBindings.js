@@ -165,3 +165,11 @@ ko.bindingHandlers.css = {
         }
     }
 };
+
+ko.bindingHandlers.uniqueName = {
+    init: function (element, value) {
+        if (value)
+            element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
+    }
+};
+ko.bindingHandlers.uniqueName.currentIndex = 0;
