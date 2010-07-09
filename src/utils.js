@@ -214,7 +214,7 @@ ko.utils = new (function () {
                 if (!dataStoreKey) {
                     if (!createIfNotFound)
                         return undefined;
-                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = ko.utils.domData.uniqueId++;
+                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = "ko" + ko.utils.domData.uniqueId++;
                     ko.utils.domData[dataStoreKey] = {};
                 }
                 return ko.utils.domData[dataStoreKey];

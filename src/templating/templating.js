@@ -16,9 +16,9 @@
     }
 
     function executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options) {
-        // Unwrap observable data
-        var dataForTemplate = ko.isObservable(data) ? data() : data;
+        var dataForTemplate = ko.utils.unwrapObservable(data);
 
+        options = options || {};
         var templateEngineToUse = (options.templateEngine || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
         var renderedNodesArray = templateEngineToUse.renderTemplate(template, dataForTemplate, options);
@@ -35,6 +35,7 @@
         switch (renderMode) {
             case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
             case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "ignoreTargetNode": break;
             default: throw new Error("Unknown renderMode: " + renderMode);
         }
 
@@ -53,7 +54,7 @@
 
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options || {});
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -70,11 +71,33 @@
         }
     };
 
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
+        var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
+
+        new ko.dependentObservable(function () {
+            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray);
+            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+                unwrappedArray = [unwrappedArray];
+
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, unwrappedArray, function (arrayValue) {
+                return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
+            });
+        }, null, { disposeWhen: whenToDispose });
+    };
+
     ko.bindingHandlers.template = {
         update: function (element, bindingValue, allBindings, viewModel) {
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-            var templateData = bindingValue.data;
-            ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
+
+            if (typeof bindingValue.foreach != "undefined") {
+                // Render once for each data point
+                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], null, element);
+            }
+            else {
+                // Render once for this single data point (or use the viewModel if no data was provided)
+                var templateData = bindingValue.data;
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
+            }
         }
     };
 })();
