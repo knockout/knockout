@@ -14,5 +14,6 @@
     'src/templating/templateRewriting.js',
     'src/templating/templating.js',
     'src/binding/editDetection/compareArrays.js',
+    'src/binding/editDetection/arrayToDomNodeChildren.js',
     'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'
 ]);
