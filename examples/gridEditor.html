@@ -31,7 +31,10 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody data-bind="template: 'giftRowTemplate', data: gifts"></tbody>
+                    <tbody data-bind="template: { name: 'giftRowTemplate', 
+                                                  foreach: gifts, 
+                                                  afterAdd: function(nodes) { $(nodes).hide().fadeIn(200); }, 
+                                                  beforeRemove: function(nodes) { $(nodes).fadeOut(200); } }"></tbody>
                 </table>
 
                 <button data-bind="click: addGift">Add Gift</button>
@@ -39,13 +42,11 @@
             </form>
 
             <script type="text/html" id="giftRowTemplate">
-                {{each(i, gift) $data}}
-                    <tr>
-                        <td><input class="required" data-bind="value: gift.name, uniqueName: true"/></td>
-                        <td><input class="required" data-bind="value: gift.price, uniqueName: true"/></td>
-                        <td><a href="#" data-bind="click: function() { viewModel.removeGift(gift) }">Delete</a></td>
-                    </tr>
-                {{/each}}
+                <tr>
+                    <td><input class="required" data-bind="value: name, uniqueName: true"/></td>
+                    <td><input class="required" data-bind="value: price, uniqueName: true"/></td>
+                    <td><a href="#" data-bind="click: function() { viewModel.removeGift($data) }">Delete</a></td>
+                </tr>
             </script>
         </div>
 

@@ -219,7 +219,7 @@ ko.utils = new (function () {
                 if (!dataStoreKey) {
                     if (!createIfNotFound)
                         return undefined;
-                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = ko.utils.domData.uniqueId++;
+                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = "ko" + ko.utils.domData.uniqueId++;
                     ko.utils.domData[dataStoreKey] = {};
                 }
                 return ko.utils.domData[dataStoreKey];
@@ -819,7 +819,15 @@ ko.bindingHandlers.css = {
             }
         }
     }
-};/// <reference path="../utils.js" />
+};
+
+ko.bindingHandlers.uniqueName = {
+    init: function (element, value) {
+        if (value)
+            element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
+    }
+};
+ko.bindingHandlers.uniqueName.currentIndex = 0;/// <reference path="../utils.js" />
 
 ko.templateEngine = function () {
     this.renderTemplate = function (templateName, data, options) {
@@ -888,9 +896,9 @@ ko.templateRewriting = (function () {
     }
 
     function executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options) {
-        // Unwrap observable data
-        var dataForTemplate = ko.isObservable(data) ? data() : data;
+        var dataForTemplate = ko.utils.unwrapObservable(data);
 
+        options = options || {};
         var templateEngineToUse = (options.templateEngine || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
         var renderedNodesArray = templateEngineToUse.renderTemplate(template, dataForTemplate, options);
@@ -907,6 +915,7 @@ ko.templateRewriting = (function () {
         switch (renderMode) {
             case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
             case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "ignoreTargetNode": break;
             default: throw new Error("Unknown renderMode: " + renderMode);
         }
 
@@ -925,7 +934,7 @@ ko.templateRewriting = (function () {
 
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options || {});
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -942,11 +951,33 @@ ko.templateRewriting = (function () {
         }
     };
 
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
+        var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
+
+        new ko.dependentObservable(function () {
+            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray);
+            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+                unwrappedArray = [unwrappedArray];
+
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, unwrappedArray, function (arrayValue) {
+                return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
+            }, options);
+        }, null, { disposeWhen: whenToDispose });
+    };
+
     ko.bindingHandlers.template = {
         update: function (element, bindingValue, allBindings, viewModel) {
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-            var templateData = bindingValue.data;
-            ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
+
+            if (typeof bindingValue.foreach != "undefined") {
+                // Render once for each data point
+                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove }, element);
+            }
+            else {
+                // Render once for this single data point (or use the viewModel if no data was provided)
+                var templateData = bindingValue.data;
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
+            }
         }
     };
 })();﻿/// <reference path="../../utils.js" />
@@ -1041,9 +1072,11 @@ ko.templateRewriting = (function () {
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
         // Compare the provided array against the previous one
         array = array || [];
+        options = options || {};
+        var isFirstExecution = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") === undefined;
         var lastMappingResult = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") || [];
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
         var editScript = ko.utils.compareArrays(lastArray, array);
@@ -1099,15 +1132,23 @@ ko.templateRewriting = (function () {
                     break;
             }
         }
+        
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node); });
 
-        ko.utils.arrayForEach(nodesToDelete, function (node) {
-            ko.utils.domData.cleanNodeAndDescendants(node);
-
-            // Todo: Instead of just deleting the nodes outright, permit callback methods for "onNodeAdded" and "onNodeRemoved"
-            // (Then only remove the node here if there's no onNodeRemoved callback)
-            if (node.parentNode)
-                node.parentNode.removeChild(node);
-        });
+        var invokedBeforeRemoveCallback = false;
+        if (!isFirstExecution) {
+            if (options.afterAdd)
+                options.afterAdd(nodesAdded);
+            if (options.beforeRemove) {
+                options.beforeRemove(nodesToDelete);
+                invokedBeforeRemoveCallback = true;
+            }
+        }
+        if (!invokedBeforeRemoveCallback)
+            ko.utils.arrayForEach(nodesToDelete, function (node) {
+                if (node.parentNode)
+                    node.parentNode.removeChild(node);
+            });
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);
@@ -1127,7 +1168,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
         // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
         // parse that text into a document fragment using jQuery.clean().
-        var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(template).text + "</script>";
+        var templateTextInWrapper = "<script type=\"text/html\">" + ko.utils.stringTrim(getTemplateNode(template).text) + "</script>";
         var renderedMarkupInWrapper = $.tmpl(templateTextInWrapper, data);
         return jQuery.clean([renderedMarkupInWrapper[0].text], document);
     },

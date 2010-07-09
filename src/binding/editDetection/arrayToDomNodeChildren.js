@@ -8,9 +8,11 @@
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
         // Compare the provided array against the previous one
         array = array || [];
+        options = options || {};
+        var isFirstExecution = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") === undefined;
         var lastMappingResult = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") || [];
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
         var editScript = ko.utils.compareArrays(lastArray, array);
@@ -66,15 +68,23 @@
                     break;
             }
         }
+        
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node); });
 
-        ko.utils.arrayForEach(nodesToDelete, function (node) {
-            ko.utils.domData.cleanNodeAndDescendants(node);
-
-            // Todo: Instead of just deleting the nodes outright, permit callback methods for "onNodeAdded" and "onNodeRemoved"
-            // (Then only remove the node here if there's no onNodeRemoved callback)
-            if (node.parentNode)
-                node.parentNode.removeChild(node);
-        });
+        var invokedBeforeRemoveCallback = false;
+        if (!isFirstExecution) {
+            if (options.afterAdd)
+                options.afterAdd(nodesAdded);
+            if (options.beforeRemove) {
+                options.beforeRemove(nodesToDelete);
+                invokedBeforeRemoveCallback = true;
+            }
+        }
+        if (!invokedBeforeRemoveCallback)
+            ko.utils.arrayForEach(nodesToDelete, function (node) {
+                if (node.parentNode)
+                    node.parentNode.removeChild(node);
+            });
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);

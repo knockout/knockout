@@ -188,12 +188,12 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings(testNode, { myCollection: myArray });
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>the item is bob</div><div>the item is frank</div>");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div><div>the item is frank</div>");
         var originalBobNode = testNode.childNodes[0].childNodes[0];
         var originalFrankNode = testNode.childNodes[0].childNodes[1];
 
         myArray.push({ personName: "Steve" });
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>the item is bob</div><div>the item is frank</div><div>the item is steve</div>");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is frank</div><div>the item is steve</div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
         value_of(testNode.childNodes[0].childNodes[1]).should_be(originalFrankNode);
     }
