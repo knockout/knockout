@@ -77,6 +77,7 @@
     <Content Include="spec\templatingBehaviors.js" />
     <Content Include="src\binding\editDetection\compareArrays.js" />
     <Content Include="src\binding\defaultBindings.js" />
+    <Content Include="src\binding\editDetection\arrayToDomNodeChildren.js" />
     <Content Include="src\binding\jsonExpressionRewriting.js" />
     <Content Include="src\memoization.js" />
     <Content Include="src\subscribables\dependencyDetection.js" />

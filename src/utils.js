@@ -59,8 +59,10 @@ ko.utils = new (function () {
         },
 
         setDomNodeChildren: function (domNode, childNodes) {
-            while (domNode.firstChild)
+            while (domNode.firstChild) {
+                ko.utils.domData.cleanNodeAndDescendants(domNode.firstChild);
                 domNode.removeChild(domNode.firstChild);
+            }
             if (childNodes) {
                 ko.utils.arrayForEach(childNodes, function (childNode) {
                     domNode.appendChild(childNode);
@@ -75,8 +77,10 @@ ko.utils = new (function () {
                 var parent = insertionPoint.parentNode;
                 for (var i = 0, j = newNodesArray.length; i < j; i++)
                     parent.insertBefore(newNodesArray[i], insertionPoint);
-                for (var i = 0, j = nodesToReplaceArray.length; i < j; i++)
+                for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
+                    ko.utils.domData.cleanNodeAndDescendants(nodesToReplaceArray[i]);
                     parent.removeChild(nodesToReplaceArray[i]);
+                }
             }
         },
 
@@ -191,6 +195,45 @@ ko.utils = new (function () {
             for (var i = min; i <= max; i++)
                 result.push(i);
             return result;
+        },
+
+        domData: {
+            uniqueId: 0,
+            dataStoreKeyExpandoPropertyName: "__ko__" + (new Date).getTime(),
+            dataStore: {},
+            get: function (node, key) {
+                var allDataForNode = ko.utils.domData.getAll(node, false);
+                return allDataForNode === undefined ? undefined : allDataForNode[key];
+            },
+            set: function (node, key, value) {
+                var allDataForNode = ko.utils.domData.getAll(node, true);
+                allDataForNode[key] = value;
+            },
+            getAll: function (node, createIfNotFound) {
+                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
+                if (!dataStoreKey) {
+                    if (!createIfNotFound)
+                        return undefined;
+                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = ko.utils.domData.uniqueId++;
+                    ko.utils.domData[dataStoreKey] = {};
+                }
+                return ko.utils.domData[dataStoreKey];
+            },
+            cleanNode: function (node) {
+                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
+                if (dataStoreKey) {
+                    delete ko.utils.domData[dataStoreKey];
+                    node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = null;
+                }
+            },
+            cleanNodeAndDescendants: function (node) {
+                if ((node.nodeType != 1) && (node.nodeType != 9))
+                    return;
+                ko.utils.domData.cleanNode(node);
+                var descendants = node.getElementsByTagName("*");
+                for (var i = 0, j = descendants.length; i < j; i++)
+                    ko.utils.domData.cleanNode(descendants[i]);
+            }
         }
     }
 })();
