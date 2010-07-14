@@ -266,3 +266,85 @@ describe('Binding: Unique Name', {
         value_of(testNode.childNodes[0].name == testNode.childNodes[1].name).should_be(false);
     }
 });
+
+describe('Binding: Checked', {
+    before_each: prepareTestNode,
+
+    'Should be able to control a checkbox\'s checked state': function () {
+        var myobservable = new ko.observable(true);
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+
+        ko.applyBindings(testNode, { someProp: myobservable });
+        value_of(testNode.childNodes[0].checked).should_be(true);
+
+        myobservable(false);
+        value_of(testNode.childNodes[0].checked).should_be(false);
+    },
+
+    'Should update observable properties on the underlying model when the checkbox change event fires': function () {
+        var myobservable = new ko.observable(false);
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, { someProp: myobservable });
+
+        testNode.childNodes[0].checked = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(myobservable()).should_be(true);
+    },
+
+    'Should update non-observable properties on the underlying model when the checkbox change event fires': function () {
+        var model = { someProp: false };
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, model);
+
+        testNode.childNodes[0].checked = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(model.someProp).should_be(true);
+    },
+
+    'Should update observable properties on the underlying model when the checkbox is clicked': function () {
+        var myobservable = new ko.observable(false);
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, { someProp: myobservable });
+
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(myobservable()).should_be(true);
+    },
+
+    'Should update non-observable properties on the underlying model when the checkbox is clicked': function () {
+        var model = { someProp: false };
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, model);
+
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(model.someProp).should_be(true);
+    },
+
+    'Should make a radio button checked if and only if its value matches the bound model property': function () {
+        var myobservable = new ko.observable("another value");
+        testNode.innerHTML = "<input type='radio' value='This Radio Button Value' data-bind='checked:someProp' />";
+
+        ko.applyBindings(testNode, { someProp: myobservable });
+        value_of(testNode.childNodes[0].checked).should_be(false);
+
+        myobservable("This Radio Button Value");
+        value_of(testNode.childNodes[0].checked).should_be(true);
+    },
+
+    'Should set an observable model property to this radio button\'s value when checked': function () {
+        var myobservable = new ko.observable("another value");
+        testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, { someProp: myobservable });
+
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(myobservable()).should_be("this radio button value");
+    },
+
+    'Should set a non-observable model property to this radio button\'s value when checked': function () {
+        var model = { someProp: "another value" };
+        testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
+        ko.applyBindings(testNode, model);
+
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(model.someProp).should_be("this radio button value");
+    }
+});

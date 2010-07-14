@@ -1,0 +1,118 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
+        <style type="text/css">
+            .readout { width: 25em; float: right; }
+            tr { vertical-align: top }
+            td { padding: 0.2em 0.2em 0.6em 0.2em; }
+            td.label { text-align: right; padding-right: 0.5em; }
+        </style>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Control Types</h1>
+            <p>
+                For reference, here's an example of binding view model properties to a range of HTML control types.
+                There's nothing interesting about the view model here - this is just to make clear how bindings work
+                with select elements, radio buttons, etc.
+            </p>
+            <hr />
+            
+            <div class="readout">
+                <fieldset>
+                    <legend>What's in the underlying model?</legend>
+                    <table>
+                        <tr>
+                            <td class="label">Your text value:</td>
+                            <td data-bind="text: stringValue"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Your password:</td>
+                            <td data-bind="text: passwordValue"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Your boolean value:</td>
+                            <td data-bind="text: booleanValue() ? 'True' : 'False'"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Your selected option:</td>
+                            <td data-bind="text: selectedOptionValue"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Your multi-selected options:</td>
+                            <td data-bind="text: multipleSelectedOptionValues"></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Your radio button selection:</td>
+                            <td data-bind="text: radioSelectedOptionValue"></td>
+                        </tr>
+                    </table>
+                </fieldset>
+            </div>
+
+            <fieldset>
+                <legend>HTML control examples</legend>
+                <table>
+                    <tr>
+                        <td class="label">Text value (updates on change):</td>
+                        <td><input data-bind="value: stringValue" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Text value (updates on keystroke):</td>
+                        <td><input data-bind="value: stringValue, valueUpdate: 'keyup'" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Text value (multi-line):</td>
+                        <td><textarea data-bind="value: stringValue"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Password:</td>
+                        <td><input type="password" data-bind="value: passwordValue" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Checkbox:</td>
+                        <td><input type="checkbox" data-bind="checked: booleanValue" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Drop-down list:</td>
+                        <td><select data-bind="options: optionValues, value: selectedOptionValue"></select></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Multi-select drop-down list:</td>
+                        <td><select multiple="multiple" data-bind="options: optionValues, selectedOptions: multipleSelectedOptionValues"></select></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Radio buttons:</td>
+                        <td>
+                            <label><input type="radio" value="Alpha" data-bind="checked: radioSelectedOptionValue" />Alpha</label>
+                            <label><input type="radio" value="Beta" data-bind="checked: radioSelectedOptionValue" />Beta</label>
+                            <label><input type="radio" value="Gamma" data-bind="checked: radioSelectedOptionValue" />Gamma</label>
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+            
+            <!-- The example code starts here -->
+        </div>
+
+        <script type="text/javascript">
+            var viewModel = {
+                stringValue : ko.observable("Hello"),
+                passwordValue : ko.observable("mypass"),
+                booleanValue : ko.observable(true),
+                optionValues : ["Alpha", "Beta", "Gamma"],
+                selectedOptionValue : ko.observable("Gamma"),
+                multipleSelectedOptionValues : ko.observable(["Alpha"]),
+                radioSelectedOptionValue : ko.observable("Beta")
+            };
+            ko.applyBindings(document.body, viewModel);
+        </script>
+    </body>
+</html>
