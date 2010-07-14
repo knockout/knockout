@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.01
+// Knockout JavaScript library v1.02
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -205,7 +205,7 @@ ko.utils = new (function () {
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
-            return JSON.stringify(data);
+            return JSON.stringify(ko.utils.unwrapObservable(data));
         },
 
         postJson: function (url, data) {
@@ -850,7 +850,40 @@ ko.bindingHandlers.uniqueName = {
             element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
     }
 };
-ko.bindingHandlers.uniqueName.currentIndex = 0;/// <reference path="../utils.js" />
+ko.bindingHandlers.uniqueName.currentIndex = 0;
+
+ko.bindingHandlers.checked = {
+    init: function (element, value, allBindings) {
+        if (ko.isWriteableObservable(value)) {
+            var updateHandler;
+            if (element.type == "checkbox")
+                updateHandler = function () { value(this.checked) };
+            else if (element.type == "radio")
+                updateHandler = function () { if (this.checked) value(this.value) };
+            if (updateHandler) {
+                ko.utils.registerEventHandler(element, "change", updateHandler);
+                ko.utils.registerEventHandler(element, "click", updateHandler);
+            }
+        } else if (allBindings._ko_property_writers && allBindings._ko_property_writers.checked) {
+            var updateHandler;
+            if (element.type == "checkbox")
+                updateHandler = function () { allBindings._ko_property_writers.checked(this.checked) };
+            else if (element.type == "radio")
+                updateHandler = function () { if (this.checked) allBindings._ko_property_writers.checked(this.value) };
+            if (updateHandler) {
+                ko.utils.registerEventHandler(element, "change", updateHandler);
+                ko.utils.registerEventHandler(element, "click", updateHandler);
+            }
+        }
+    },
+    update: function (element, value) {
+        value = ko.utils.unwrapObservable(value);
+        if (element.type == "checkbox")
+            element.checked = value;
+        else if (element.type == "radio")
+            element.checked = (element.value == value);
+    }
+};/// <reference path="../utils.js" />
 
 ko.templateEngine = function () {
     this.renderTemplate = function (templateName, data, options) {
