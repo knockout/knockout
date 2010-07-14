@@ -64,6 +64,7 @@
     <Content Include="homepage.html" />
     <Content Include="lib\jquery-1.4.2.js" />
     <Content Include="lib\jquery.tmpl.js" />
+    <Content Include="lib\jquery.validate.js" />
     <Content Include="spec\bindingAttributeBehaviors.js" />
     <Content Include="spec\editDetectionBehaviors.js" />
     <Content Include="spec\jsonExpressionRewritingBehaviors.js" />

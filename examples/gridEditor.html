@@ -5,8 +5,8 @@
         <link rel="Stylesheet" href="styles.css" />
         <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
         <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
-        <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery.validate/1.7/jquery.validate.js"></script>        
-        <script type="text/javascript" src="../build/knockout-debug.js"></script>
+        <script type="text/javascript" src="../lib/jquery.validate.js"></script>        
+        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
         <style type="text/css">
             tr { vertical-align: top; }
             input.error { border: 1px solid red; background-color: #FDC; }
@@ -20,8 +20,19 @@
         </div>
         <div id="main">
             <h1>Examples &raquo; Editable Grid</h1>
-
-            <form action="asd" method="get">
+            <p>
+                An example of using the 'foreach' binding to render a template for each item in an array.
+                The advantage of doing this (compared to just using a 'for' loop inside the template) is that
+                when you add or remove items, Knockout doesn't need to re-render everything - it only runs the
+                template for the new item. The means the state of other rich UI controls (e.g., validators)
+                isn't wiped out.
+            </p>
+            <p>
+                For a detailed step-by-step tutorial about building this example and integrating it with ASP.NET MVC,
+                see <a href="http://blog.stevensanderson.com/2010/07/12/editing-a-variable-length-list-knockout-style/">this blog post</a>.
+            </p>
+            <hr />
+            <form>
                 <p>You have asked for <span data-bind="text: gifts().length">&nbsp;</span> gift(s)</p>
                 <table data-bind="visible: gifts().length > 0">
                     <thead>
@@ -31,10 +42,7 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody data-bind="template: { name: 'giftRowTemplate', 
-                                                  foreach: gifts, 
-                                                  afterAdd: function(nodes) { $(nodes).hide().fadeIn(200); }, 
-                                                  beforeRemove: function(nodes) { $(nodes).fadeOut(200); } }"></tbody>
+                    <tbody data-bind="template: { name: 'giftRowTemplate', foreach: gifts }"></tbody>
                 </table>
 
                 <button data-bind="click: addGift">Add Gift</button>
@@ -44,7 +52,7 @@
             <script type="text/html" id="giftRowTemplate">
                 <tr>
                     <td><input class="required" data-bind="value: name, uniqueName: true"/></td>
-                    <td><input class="required" data-bind="value: price, uniqueName: true"/></td>
+                    <td><input class="required number" data-bind="value: price, uniqueName: true"/></td>
                     <td><a href="#" data-bind="click: function() { viewModel.removeGift($data) }">Delete</a></td>
                 </tr>
             </script>
@@ -54,8 +62,7 @@
             var viewModel = {
                 gifts: ko.observableArray([
                     { name: "Tall Hat", price: "39.95" },
-                    { name: "Long Cloak", price: "120.00" },
-                    { name: "Long Cloak2", price: "120.00" }
+                    { name: "Long Cloak", price: "120.00" }
                 ]),
 
                 addGift: function () {
@@ -64,12 +71,16 @@
 
                 removeGift: function (gift) {
                     this.gifts.remove(gift);
+                },
+
+                save: function () {
+                    alert("Could now transmit to server: " + ko.utils.stringifyJson(this.gifts));
                 }
             };
 
             ko.applyBindings(document.body, viewModel);
 
-            $("form").validate({ debug: true });
+            $("form").validate({ submitHandler: function () { viewModel.save() } });
         </script>
 	</body>
 </html>

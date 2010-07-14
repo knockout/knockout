@@ -200,7 +200,7 @@ ko.utils = new (function () {
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
-            return JSON.stringify(data);
+            return JSON.stringify(ko.utils.unwrapObservable(data));
         },
 
         postJson: function (url, data) {
