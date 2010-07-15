@@ -34,12 +34,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="build\build-windows.bat" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\knockout-debug.js" />
-    <Content Include="build\output\knockout-min.js" />
-    <Content Include="build\output\knockout.js" />
+    <Content Include="build\output\knockout-latest.js" />
+    <Content Include="build\output\knockout-latest.min.js" />
     <Content Include="build\source-references.js" />
     <Content Include="build\tools\curl.exe" />
     <Content Include="build\version-header.js" />
