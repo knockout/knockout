@@ -1,4 +1,4 @@
-﻿/// <reference path="../../utils.js" />
+/// <reference path="../../utils.js" />
 
 // Simple calculation based on Levenshtein distance.
 (function () {

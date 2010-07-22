@@ -1,4 +1,4 @@
-﻿/// <reference path="templateEngine.js" />
+/// <reference path="templateEngine.js" />
 
 ko.templateRewriting = (function () {
     var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])(.*?)\5/g;

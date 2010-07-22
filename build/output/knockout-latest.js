@@ -275,7 +275,7 @@ if (!Function.prototype.bind) {
             return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));
         }; 
     };
-}﻿/// <reference path="utils.js" />
+}/// <reference path="utils.js" />
 
 ko.memoization = (function () {
     var memos = {};
@@ -420,7 +420,7 @@ ko.isObservable = function (instance) {
 }
 ko.isWriteableObservable = function (instance) {
     return (typeof instance == "function") && instance.__ko_proto__ === ko.observable;
-}﻿/// <reference path="observable.js" />
+}/// <reference path="observable.js" />
 
 ko.observableArray = function (initialValues) {
     var result = new ko.observable(initialValues);
@@ -532,7 +532,7 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     evaluate();
     return dependentObservable;
 };
-ko.dependentObservable.__ko_proto__ = ko.observable;﻿/// <reference path="../utils.js" />
+ko.dependentObservable.__ko_proto__ = ko.observable;/// <reference path="../utils.js" />
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
@@ -898,7 +898,7 @@ ko.templateEngine = function () {
     this.createJavaScriptEvaluatorBlock = function (script) {
         throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";
     }
-};﻿/// <reference path="templateEngine.js" />
+};/// <reference path="templateEngine.js" />
 
 ko.templateRewriting = (function () {
     var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])(.*?)\5/g;
@@ -1036,7 +1036,7 @@ ko.templateRewriting = (function () {
             }
         }
     };
-})();﻿/// <reference path="../../utils.js" />
+})();/// <reference path="../../utils.js" />
 
 // Simple calculation based on Levenshtein distance.
 (function () {
@@ -1118,7 +1118,7 @@ ko.templateRewriting = (function () {
             return findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray);
         }
     };
-})();﻿/// <reference path="compareArrays.js" />
+})();/// <reference path="compareArrays.js" />
 
 (function () {
     // Objective:

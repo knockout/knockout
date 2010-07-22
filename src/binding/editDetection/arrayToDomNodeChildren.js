@@ -1,4 +1,4 @@
-﻿/// <reference path="compareArrays.js" />
+/// <reference path="compareArrays.js" />
 
 (function () {
     // Objective:
