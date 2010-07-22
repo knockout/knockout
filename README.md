@@ -5,3 +5,7 @@ For more details, see
 <li>Online examples at <a href="http://knockoutjs.com/">http://knockoutjs.com/</a></li>
 <li>Introductory tutorial at <a href="http://blog.stevensanderson.com/2010/07/05/introducing-knockout-a-ui-library-for-javascript/">Steve Sanderson's blog</a></li>
 </ul>
+
+To build on Linux, run <code>build/build-linux</code>. To build on Windows, run <code>build\build-windows.bat</code>. 
+
+The <code>.sln</code> and <code>.csproj</code> files are provided only for the convenience of developers using Visual Studio. Developers using other editors or IDEs can ignore these two files.
