@@ -181,5 +181,5 @@ describe('Array to DOM node children mapping', {
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [1, null, "B"], mapping); // Add to beginning; delete from end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["1", "null", "B"]);
         value_of(mappingInvocations).should_be([1, null]);
-    },
+    }
 });

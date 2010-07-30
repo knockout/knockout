@@ -58,11 +58,15 @@ ko.utils = new (function () {
             return result;
         },
 
-        setDomNodeChildren: function (domNode, childNodes) {
+        emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
                 ko.utils.domData.cleanNodeAndDescendants(domNode.firstChild);
                 domNode.removeChild(domNode.firstChild);
             }
+        },
+
+        setDomNodeChildren: function (domNode, childNodes) {
+            ko.utils.emptyDomNode(domNode);
             if (childNodes) {
                 ko.utils.arrayForEach(childNodes, function (childNode) {
                     domNode.appendChild(childNode);
@@ -82,6 +86,14 @@ ko.utils = new (function () {
                     parent.removeChild(nodesToReplaceArray[i]);
                 }
             }
+        },
+
+        setOptionNodeSelectionState: function (optionNode, isSelected) {
+            // IE6 sometimes throws "unknown error" if you try to write to .selected directly, whereas Firefox struggles with setAttribute. Pick one based on browser.
+            if (navigator.userAgent.indexOf("MSIE 6") >= 0)
+                optionNode.setAttribute("selected", isSelected);
+            else
+                optionNode.selected = isSelected;
         },
 
         getElementsHavingAttribute: function (rootNode, attributeName) {

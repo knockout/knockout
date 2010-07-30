@@ -80,6 +80,7 @@ ko.bindingHandlers.value = {
 
 ko.bindingHandlers.options = {
     update: function (element, value, allBindings) {
+
         if (element.tagName != "SELECT")
             throw new Error("values binding applies only to SELECT elements");
 
@@ -91,7 +92,8 @@ ko.bindingHandlers.options = {
 
         value = ko.utils.unwrapObservable(value);
         var selectedValue = element.value;
-        element.innerHTML = "";
+        ko.utils.emptyDomNode(element);
+
         if (value) {
             if (typeof value.length != "number")
                 value = [value];
@@ -102,12 +104,13 @@ ko.bindingHandlers.options = {
                 option.innerHTML = (typeof allBindings.options_text == "string" ? value[i][allBindings.options_text] : optionValue).toString();
                 element.appendChild(option);
             }
+
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
             var newOptions = element.getElementsByTagName("OPTION");
             for (var i = 0, j = newOptions.length; i < j; i++) {
                 if (ko.utils.arrayIndexOf(previousSelectedValues, newOptions[i].value) >= 0)
-                    newOptions[i].selected = true;
+                    ko.utils.setOptionNodeSelectionState(newOptions[i], true);
             }
         }
     }
@@ -125,6 +128,7 @@ ko.bindingHandlers.selectedOptions = {
         return result;
     },
     init: function (element, value, allBindings) {
+
         if (ko.isWriteableObservable(value))
             ko.utils.registerEventHandler(element, "change", function () { value(ko.bindingHandlers.selectedOptions.getSelectedValuesFromSelectNode(this)); });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
@@ -140,7 +144,7 @@ ko.bindingHandlers.selectedOptions = {
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
                 if (node.tagName == "OPTION")
-                    node.selected = ko.utils.arrayIndexOf(newValue, node.value) >= 0;
+                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, node.value) >= 0);
             }
         }
     }
