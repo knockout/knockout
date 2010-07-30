@@ -166,6 +166,18 @@ ko.bindingHandlers.css = {
     }
 };
 
+ko.bindingHandlers.style = {
+    update: function (element, value) {
+        value = ko.utils.unwrapObservable(value || {});
+        for (var styleName in value) {
+            if (typeof styleName == "string") {
+                var styleValue = ko.utils.unwrapObservable(value[styleName]);
+                element.style[styleName] = styleValue || ""; // Empty string removes the value, whereas null/undefined have no effect
+            }
+        }
+    }
+};
+
 ko.bindingHandlers.uniqueName = {
     init: function (element, value) {
         if (value)

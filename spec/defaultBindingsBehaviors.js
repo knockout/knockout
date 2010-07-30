@@ -237,7 +237,7 @@ describe('Binding: Click', {
     }
 });
 
-describe('Binding: CSS rule', {
+describe('Binding: CSS class name', {
     before_each: prepareTestNode,
 
     'Should give the element the specific CSS class only when the specified value is true': function () {
@@ -251,6 +251,22 @@ describe('Binding: CSS rule', {
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 anotherRule myRule");
         observable2(false);
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
+    }
+});
+
+describe('Binding: CSS style', {
+    before_each: prepareTestNode,
+
+    'Should give the element the specified CSS style value': function () {
+        var myObservable = new ko.observable("red");
+        testNode.innerHTML = "<div data-bind='style: { backgroundColor: colorValue }'>Hallo</div>";
+        ko.applyBindings(testNode, { colorValue: myObservable });
+
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
+        myObservable("green");
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["green", "#008000"]);
+        myObservable(undefined);
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be("");
     }
 });
 

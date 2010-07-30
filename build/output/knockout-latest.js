@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.02
+// Knockout JavaScript library v1.03
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -154,9 +154,15 @@ ko.utils = new (function () {
             if (!(element && element.nodeType))
                 throw new Error("element must be a DOM node when calling triggerEvent");
 
-            if (typeof element.fireEvent != "undefined")
+            if (typeof element.fireEvent != "undefined") {
+                // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
+                // so to make it consistent, we'll do it manually here
+                if (eventType == "click") {
+                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
+                        element.checked = element.checked !== true;
+                }
                 element.fireEvent("on" + eventType);
-            else if (typeof document.createEvent == "function") {
+            } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = (eventType == "click" ? "MouseEvents" : "HTMLEvents"); // Might need to account for other event names at some point
                     var event = document.createEvent(eventCategory);
@@ -839,6 +845,18 @@ ko.bindingHandlers.css = {
             if (typeof className == "string") {
                 var shouldHaveClass = ko.utils.unwrapObservable(value[className]);
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
+            }
+        }
+    }
+};
+
+ko.bindingHandlers.style = {
+    update: function (element, value) {
+        value = ko.utils.unwrapObservable(value || {});
+        for (var styleName in value) {
+            if (typeof styleName == "string") {
+                var styleValue = ko.utils.unwrapObservable(value[styleName]);
+                element.style[styleName] = styleValue || ""; // Empty string removes the value, whereas null/undefined have no effect
             }
         }
     }

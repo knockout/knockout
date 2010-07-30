@@ -6,6 +6,18 @@
 
         <script type="text/javascript" src="lib/diff_match_patch.js"></script>
         <script type="text/javascript" src="lib/JSSpec.js"></script>
+        <script type="text/javascript">
+            JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
+                for (var i = 0; i < expectedPossibilities.length; i++) {
+                    var matcher = JSSpec.EqualityMatcher.createInstance(expectedPossibilities[i], this.target);
+                    if (matcher.matches())
+                        return;
+                }
+                JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
+                throw JSSpec._assertionFailure;
+            };
+        </script>
+
         <script type="text/javascript" src="../build/knockout-debug.js"></script>
         
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
