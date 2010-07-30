@@ -180,8 +180,13 @@ ko.bindingHandlers.style = {
 
 ko.bindingHandlers.uniqueName = {
     init: function (element, value) {
-        if (value)
+        if (value) {
             element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
+
+            // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
+            if (/MSIE 6/i.test(navigator.userAgent))
+                element.mergeAttributes(document.createElement("<INPUT name='" + element.name + "'/>"), false);
+        }
     }
 };
 ko.bindingHandlers.uniqueName.currentIndex = 0;
@@ -209,6 +214,10 @@ ko.bindingHandlers.checked = {
                 ko.utils.registerEventHandler(element, "click", updateHandler);
             }
         }
+
+        // IE 6 won't allow radio buttons to be selected unless they have a name
+        if ((element.type == "radio") && !element.name)
+            ko.bindingHandlers.uniqueName.init(element, true);
     },
     update: function (element, value) {
         value = ko.utils.unwrapObservable(value);
