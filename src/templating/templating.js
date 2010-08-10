@@ -79,7 +79,12 @@
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
 
-            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, unwrappedArray, function (arrayValue) {
+			// Filter out any entries marked as destroyed
+			var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
+				return options.includeDestroyed || !item._destroy;
+			});
+
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
             }, options);
         }, null, { disposeWhen: whenToDispose });
@@ -91,7 +96,7 @@
 
             if (typeof bindingValue.foreach != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove }, element);
+                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove, includeDestroyed: bindingValue.includeDestroyed }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)

@@ -196,5 +196,23 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is frank</div><div>the item is steve</div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
         value_of(testNode.childNodes[0].childNodes[1]).should_be(originalFrankNode);
-    }
+    },
+    
+    'Data binding syntax should omit any items whose \'_destroy\' flag is set' : function() {
+        var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings(testNode, { myCollection: myArray });    	
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>someprop=1</div><div>someprop=3</div>");
+    },
+    
+    'Data binding syntax should include any items whose \'_destroy\' flag is set if you use includeDestroyed' : function() {
+        var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: true }'></div>";
+
+        ko.applyBindings(testNode, { myCollection: myArray });    	
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
+    }    
 })
