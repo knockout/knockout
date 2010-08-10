@@ -19,7 +19,7 @@ ko.bindingHandlers.submit = {
         if (typeof value != "function")
             throw new Error("The value for a submit binding must be a function to invoke on submit");
         ko.utils.registerEventHandler(element, "submit", function (event) {
-            try { value.call(viewModel); }
+            try { value.call(viewModel, element); }
             finally {
                 if (event.preventDefault)
                     event.preventDefault();
