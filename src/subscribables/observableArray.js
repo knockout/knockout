@@ -42,6 +42,25 @@ ko.observableArray = function (initialValues) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
     };
+    
+    result.destroy = function (valueOrPredicate) {
+		var underlyingArray = result();
+		var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+    	for (var i = underlyingArray.length - 1; i >= 0; i--) {
+    		var value = underlyingArray[i];
+			if (predicate(value))
+				underlyingArray[i]._destroy = true;
+		}
+		result.valueHasMutated();
+    };
+    
+    result.destroyAll = function (arrayOfValues) {
+        if (!arrayOfValues)
+            return [];
+        return result.destroy(function (value) {
+            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
+        });		    	
+    };
 
     result.indexOf = function (item) {
         var underlyingArray = result();
