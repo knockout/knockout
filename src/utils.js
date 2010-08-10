@@ -214,6 +214,23 @@ ko.utils = new (function () {
                 result.push(i);
             return result;
         },
+        
+        makeArray: function(arrayLikeObject) {
+        	var result = [];
+        	for (var i = arrayLikeObject.length - 1; i >= 0; i--){
+        		result.push(arrayLikeObject[i]);
+        	};
+        	return result;
+        },
+        
+        getFormFieldValue: function(form, fieldName) {
+        	var inputs = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+        	for (var i = inputs.length - 1; i >= 0; i--){
+        		if (inputs[i].name === fieldName)
+        			return inputs[i].value;
+        	};
+        	return null;
+        },
 
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
@@ -221,7 +238,19 @@ ko.utils = new (function () {
             return JSON.stringify(ko.utils.unwrapObservable(data));
         },
 
-        postJson: function (url, data) {
+        postJson: function (urlOrForm, data, extraParams, includeFormFields, submitter) {
+        	extraParams = extraParams || {};
+        	includeFormFields = includeFormFields || ['authenticity_token'];
+        	var url = urlOrForm;
+        	if(urlOrForm.tagName == "FORM") {
+        		url = urlOrForm.action;
+        		for (var i = includeFormFields.length - 1; i >= 0; i--) {
+        			var name = includeFormFields[i];
+        			var value = ko.utils.getFormFieldValue(urlOrForm, name);
+        			extraParams[name] = value;
+        		}
+        	}        	
+        	
             data = ko.utils.unwrapObservable(data);
             var form = document.createElement("FORM");
             form.style.display = "none";
@@ -233,8 +262,14 @@ ko.utils = new (function () {
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
+            for (var key in extraParams) {
+                var input = document.createElement("INPUT");
+                input.name = key;
+                input.value = extraParams[key];
+                form.appendChild(input);
+            }            
             document.body.appendChild(form);
-            form.submit();
+            submitter ? submitter(form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         },
 

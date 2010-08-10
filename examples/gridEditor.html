@@ -6,7 +6,7 @@
         <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
         <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
         <script type="text/javascript" src="../lib/jquery.validate.js"></script>        
-        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
+        <script type="text/javascript" src="../build/knockout-debug.js"></script>
         <style type="text/css">
             tr { vertical-align: top; }
             input.error { border: 1px solid red; background-color: #FDC; }
@@ -32,7 +32,7 @@
                 see <a href="http://blog.stevensanderson.com/2010/07/12/editing-a-variable-length-list-knockout-style/">this blog post</a>.
             </p>
             <hr />
-            <form>
+            <form action="/blah.aspx">
                 <p>You have asked for <span data-bind="text: gifts().length">&nbsp;</span> gift(s)</p>
                 <table data-bind="visible: gifts().length > 0">
                     <thead>
@@ -73,7 +73,8 @@
                     this.gifts.remove(gift);
                 },
 
-                save: function () {
+                save: function (form) {
+                	ko.utils.postJson($("form")[0], this.gifts);
                     alert("Could now transmit to server: " + ko.utils.stringifyJson(this.gifts));
                 }
             };
