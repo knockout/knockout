@@ -204,7 +204,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings(testNode, { myCollection: myArray });    	
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>someprop=1</div><div>someprop=3</div>");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=3</div>");
     },
     
     'Data binding syntax should include any items whose \'_destroy\' flag is set if you use includeDestroyed' : function() {
@@ -213,6 +213,6 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: true }'></div>";
 
         ko.applyBindings(testNode, { myCollection: myArray });    	
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
     }    
 })

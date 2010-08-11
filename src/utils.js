@@ -2,8 +2,10 @@
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-
+	
     return {
+    	fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+    	
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
@@ -223,13 +225,17 @@ ko.utils = new (function () {
         	return result;
         },
         
-        getFormFieldValue: function(form, fieldName) {
-        	var inputs = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
-        	for (var i = inputs.length - 1; i >= 0; i--){
-        		if (inputs[i].name === fieldName)
-        			return inputs[i].value;
+        getFormFields: function(form, fieldName) {
+        	var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+        	var isMatchingField = (typeof fieldName == 'string') 
+        		? function(field) { return field.name === fieldName }
+        		: function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
+        	var matches = [];
+        	for (var i = fields.length - 1; i >= 0; i--) {
+        		if (isMatchingField(fields[i]))
+        			matches.push(fields[i]);
         	};
-        	return null;
+        	return matches;
         },
 
         stringifyJson: function (data) {
@@ -238,16 +244,20 @@ ko.utils = new (function () {
             return JSON.stringify(ko.utils.unwrapObservable(data));
         },
 
-        postJson: function (urlOrForm, data, extraParams, includeFormFields, submitter) {
-        	extraParams = extraParams || {};
-        	includeFormFields = includeFormFields || ['authenticity_token'];
+        postJson: function (urlOrForm, data, options) {
+        	options = options || {};
+        	var params = options.params || {};
+        	var includeFields = options.includeFields || this.fieldsIncludedWithJsonPost;
         	var url = urlOrForm;
-        	if(urlOrForm.tagName == "FORM") {
-        		url = urlOrForm.action;
-        		for (var i = includeFormFields.length - 1; i >= 0; i--) {
-        			var name = includeFormFields[i];
-        			var value = ko.utils.getFormFieldValue(urlOrForm, name);
-        			extraParams[name] = value;
+        	
+        	// If we were given a form, use its 'action' URL and pick out any requested field values 	
+        	if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+        		var originalForm = urlOrForm;
+        		url = originalForm.action;
+        		for (var i = includeFields.length - 1; i >= 0; i--) {
+        			var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
+        			for (var j = fields.length - 1; j >= 0; j--)        				
+        				params[fields[j].name] = fields[j].value;
         		}
         	}        	
         	
@@ -262,14 +272,14 @@ ko.utils = new (function () {
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
-            for (var key in extraParams) {
+            for (var key in params) {
                 var input = document.createElement("INPUT");
                 input.name = key;
-                input.value = extraParams[key];
+                input.value = params[key];
                 form.appendChild(input);
             }            
             document.body.appendChild(form);
-            submitter ? submitter(form) : form.submit();
+            options.submitter ? options.submitter(form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         },
 
