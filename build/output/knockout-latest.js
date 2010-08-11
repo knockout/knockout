@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.03
+// Knockout JavaScript library v1.04
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -7,8 +7,10 @@ var ko = window.ko = {};
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-
+	
     return {
+    	fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+    	
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
@@ -219,6 +221,27 @@ ko.utils = new (function () {
                 result.push(i);
             return result;
         },
+        
+        makeArray: function(arrayLikeObject) {
+        	var result = [];
+        	for (var i = arrayLikeObject.length - 1; i >= 0; i--){
+        		result.push(arrayLikeObject[i]);
+        	};
+        	return result;
+        },
+        
+        getFormFields: function(form, fieldName) {
+        	var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+        	var isMatchingField = (typeof fieldName == 'string') 
+        		? function(field) { return field.name === fieldName }
+        		: function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
+        	var matches = [];
+        	for (var i = fields.length - 1; i >= 0; i--) {
+        		if (isMatchingField(fields[i]))
+        			matches.push(fields[i]);
+        	};
+        	return matches;
+        },
 
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
@@ -226,7 +249,23 @@ ko.utils = new (function () {
             return JSON.stringify(ko.utils.unwrapObservable(data));
         },
 
-        postJson: function (url, data) {
+        postJson: function (urlOrForm, data, options) {
+        	options = options || {};
+        	var params = options.params || {};
+        	var includeFields = options.includeFields || this.fieldsIncludedWithJsonPost;
+        	var url = urlOrForm;
+        	
+        	// If we were given a form, use its 'action' URL and pick out any requested field values 	
+        	if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+        		var originalForm = urlOrForm;
+        		url = originalForm.action;
+        		for (var i = includeFields.length - 1; i >= 0; i--) {
+        			var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
+        			for (var j = fields.length - 1; j >= 0; j--)        				
+        				params[fields[j].name] = fields[j].value;
+        		}
+        	}        	
+        	
             data = ko.utils.unwrapObservable(data);
             var form = document.createElement("FORM");
             form.style.display = "none";
@@ -238,8 +277,14 @@ ko.utils = new (function () {
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
+            for (var key in params) {
+                var input = document.createElement("INPUT");
+                input.name = key;
+                input.value = params[key];
+                form.appendChild(input);
+            }            
             document.body.appendChild(form);
-            form.submit();
+            options.submitter ? options.submitter(form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         },
 
@@ -482,6 +527,25 @@ ko.observableArray = function (initialValues) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
     };
+    
+    result.destroy = function (valueOrPredicate) {
+		var underlyingArray = result();
+		var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+    	for (var i = underlyingArray.length - 1; i >= 0; i--) {
+    		var value = underlyingArray[i];
+			if (predicate(value))
+				underlyingArray[i]._destroy = true;
+		}
+		result.valueHasMutated();
+    };
+    
+    result.destroyAll = function (arrayOfValues) {
+        if (!arrayOfValues)
+            return [];
+        return result.destroy(function (value) {
+            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
+        });		    	
+    };
 
     result.indexOf = function (item) {
         var underlyingArray = result();
@@ -715,7 +779,7 @@ ko.bindingHandlers.submit = {
         if (typeof value != "function")
             throw new Error("The value for a submit binding must be a function to invoke on submit");
         ko.utils.registerEventHandler(element, "submit", function (event) {
-            try { value.call(viewModel); }
+            try { value.call(viewModel, element); }
             finally {
                 if (event.preventDefault)
                     event.preventDefault();
@@ -1058,7 +1122,12 @@ ko.templateRewriting = (function () {
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
 
-            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, unwrappedArray, function (arrayValue) {
+			// Filter out any entries marked as destroyed
+			var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
+				return options.includeDestroyed || !item._destroy;
+			});
+
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
             }, options);
         }, null, { disposeWhen: whenToDispose });
@@ -1070,7 +1139,7 @@ ko.templateRewriting = (function () {
 
             if (typeof bindingValue.foreach != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove }, element);
+                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove, includeDestroyed: bindingValue.includeDestroyed }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
