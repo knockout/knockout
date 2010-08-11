@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="build\build-linux" />
     <None Include="build\build-windows.bat" />
     <None Include="README.md" />
   </ItemGroup>
@@ -70,6 +71,8 @@
     <Content Include="spec\bindingAttributeBehaviors.js" />
     <Content Include="spec\editDetectionBehaviors.js" />
     <Content Include="spec\jsonExpressionRewritingBehaviors.js" />
+    <Content Include="spec\jsonPostingBehaviors.js" />
+    <Content Include="spec\lib\json2.js" />
     <Content Include="spec\memoizationBehaviors.js" />
     <Content Include="spec\observableArrayBehaviors.js" />
     <Content Include="spec\defaultBindingsBehaviors.js" />
