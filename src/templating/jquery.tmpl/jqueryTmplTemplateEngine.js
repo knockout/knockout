@@ -8,14 +8,17 @@ ko.jqueryTmplTemplateEngine = function () {
         return templateNode;
     }
 
+	var aposMarker = "__ko_apos__";
+	var aposRegex = new RegExp(aposMarker, "g");
     this.renderTemplate = function (template, data, options) {
         // jquery.tmpl doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
         // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
         // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
-        // parse that text into a document fragment using jQuery.clean().
-        var templateTextInWrapper = "<script type=\"text/html\">" + ko.utils.stringTrim(getTemplateNode(template).text) + "</script>";
+        // parse that text into a document fragment using jQuery.clean().        
+        var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(template).text + "</script>";
         var renderedMarkupInWrapper = $.tmpl(templateTextInWrapper, data);
-        return jQuery.clean([renderedMarkupInWrapper[0].text], document);
+        var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");
+        return jQuery.clean([renderedMarkup], document);
     },
 
     this.isTemplateRewritten = function (template) {
@@ -24,7 +27,19 @@ ko.jqueryTmplTemplateEngine = function () {
 
     this.rewriteTemplate = function (template, rewriterCallback) {
         var templateNode = getTemplateNode(template);
-        var rewritten = rewriterCallback(templateNode.text)
+        var rewritten = rewriterCallback(templateNode.text);
+        
+        // jquery.tmpl falls over if you use single-quotes, so replace these with a temporary marker for template rendering, 
+        // and then replace back after the template was rendered. This is slightly complicated by the fact that we must not interfere
+        // with any code blocks - only replace apos characters outside code blocks.
+        rewritten = ko.utils.stringTrim(rewritten);
+        rewritten = rewritten.replace(/([\s\S]*?)(\$\{[\s\S]*?\}|\{\{\=[\s\S]*?\}\}|$)/g, function(match) {
+        	// Called for each non-code-block followed by a code block (or end of template)
+        	var nonCodeSnippet = arguments[1];
+        	var codeSnippet = arguments[2];
+        	return nonCodeSnippet.replace(/\'/g, aposMarker) + codeSnippet;
+        });        
+        
         templateNode.text = rewritten;
         templateNode.isRewritten = true;
     },
