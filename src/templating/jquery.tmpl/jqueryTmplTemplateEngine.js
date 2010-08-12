@@ -33,7 +33,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // and then replace back after the template was rendered. This is slightly complicated by the fact that we must not interfere
         // with any code blocks - only replace apos characters outside code blocks.
         rewritten = ko.utils.stringTrim(rewritten);
-        rewritten = rewritten.replace(/([\s\S]*?)(\$\{[\s\S]*?\}|\{\{\=[\s\S]*?\}\}|$)/g, function(match) {
+        rewritten = rewritten.replace(/([\s\S]*?)(\${[\s\S]*?}|{{[\=a-z][\s\S]*?}}|$)/g, function(match) {
         	// Called for each non-code-block followed by a code block (or end of template)
         	var nonCodeSnippet = arguments[1];
         	var codeSnippet = arguments[2];
