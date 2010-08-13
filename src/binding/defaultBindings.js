@@ -54,18 +54,39 @@ ko.bindingHandlers.enable = {
 ko.bindingHandlers.disable = { update: function (element, value) { ko.bindingHandlers.enable.update(element, !ko.utils.unwrapObservable(value)); } };
 
 ko.bindingHandlers.value = {
+	readElementValue: function(element) {
+		if (element.tagName == 'OPTION') {
+			var valueAttributeValue = element.getAttribute("value");
+			if (valueAttributeValue !== null)
+				return valueAttributeValue;
+			return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+		} else if (element.tagName == 'SELECT')
+			return element.selectedIndex >= 0 ? ko.bindingHandlers.value.readElementValue(element.options[element.selectedIndex]) : undefined;
+		else
+			return element.value;
+	},
+	writeElementValue: function(element, value) {
+		if (element.tagName == 'SELECT') {
+			for (var i = element.options.length - 1; i >= 0; i--) {
+				if (ko.bindingHandlers.value.readElementValue(element.options[i]) == value) {
+					element.selectedIndex = i;
+					break;
+				}
+			}
+		} else
+			element.value = value;
+	},
     init: function (element, value, allBindings) {
         var eventName = allBindings.valueUpdate || "change";
         if (ko.isWriteableObservable(value))
-            ko.utils.registerEventHandler(element, eventName, function () { value(this.value); });
+            ko.utils.registerEventHandler(element, eventName, function () { value(ko.bindingHandlers.value.readElementValue(this)); });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
-            ko.utils.registerEventHandler(element, eventName, function () { allBindings._ko_property_writers.value(this.value); });
+            ko.utils.registerEventHandler(element, eventName, function () { allBindings._ko_property_writers.value(ko.bindingHandlers.value.readElementValue(this)); });
     },
     update: function (element, value) {
         var newValue = ko.utils.unwrapObservable(value);
-
-        if (newValue != element.value) {
-            var applyValueAction = function () { element.value = newValue; };
+        if (newValue != ko.bindingHandlers.value.readElementValue(element)) {
+            var applyValueAction = function () { ko.bindingHandlers.value.writeElementValue(element, newValue); };
             applyValueAction();
 
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
@@ -80,14 +101,13 @@ ko.bindingHandlers.value = {
 
 ko.bindingHandlers.options = {
     update: function (element, value, allBindings) {
-
         if (element.tagName != "SELECT")
-            throw new Error("values binding applies only to SELECT elements");
+            throw new Error("options binding applies only to SELECT elements");
 
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && node.tagName == "OPTION" && node.selected;
         }), function (node) {
-            return node.value || node.innerText || node.textContent;
+            return ko.bindingHandlers.value.readElementValue(node) || node.innerText || node.textContent;
         });
 
         value = ko.utils.unwrapObservable(value);
@@ -97,24 +117,36 @@ ko.bindingHandlers.options = {
         if (value) {
             if (typeof value.length != "number")
                 value = [value];
+            if (allBindings.optionsCaption) {
+            	var option = document.createElement("OPTION");
+            	option.innerHTML = allBindings.optionsCaption;
+            	element.appendChild(option);
+            }
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
-                var optionValue = typeof allBindings.options_value == "string" ? value[i][allBindings.options_value] : value[i];
-                option.value = optionValue.toString();
-                option.innerHTML = (typeof allBindings.options_text == "string" ? value[i][allBindings.options_text] : optionValue).toString();
+                var optionValue = typeof allBindings.optionsValue == "string" ? value[i][allBindings.optionsValue] : value[i];
+                if (typeof optionValue == 'object')
+                	ko.utils.domData.set(option, ko.bindingHandlers.options.optionValueDomDataKey, optionValue);
+                else
+                	option.value = optionValue.toString();
+                option.innerHTML = (typeof allBindings.optionsText == "string" ? value[i][allBindings.optionsText] : optionValue).toString();
                 element.appendChild(option);
             }
 
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
             var newOptions = element.getElementsByTagName("OPTION");
+            var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(previousSelectedValues, newOptions[i].value) >= 0)
+                if (ko.utils.arrayIndexOf(previousSelectedValues, ko.bindingHandlers.value.readElementValue(newOptions[i])) >= 0) {
                     ko.utils.setOptionNodeSelectionState(newOptions[i], true);
+                    countSelectionsRetained++;
+                }
             }
         }
     }
 };
+ko.bindingHandlers.options.optionValueDomDataKey = '__ko.bindingHandlers.options.optionValueDomData__';
 
 ko.bindingHandlers.selectedOptions = {
     getSelectedValuesFromSelectNode: function (selectNode) {
@@ -123,12 +155,11 @@ ko.bindingHandlers.selectedOptions = {
         for (var i = 0, j = nodes.length; i < j; i++) {
             var node = nodes[i];
             if ((node.tagName == "OPTION") && node.selected)
-                result.push(node.value);
+                result.push(ko.bindingHandlers.value.readElementValue(node));
         }
         return result;
     },
     init: function (element, value, allBindings) {
-
         if (ko.isWriteableObservable(value))
             ko.utils.registerEventHandler(element, "change", function () { value(ko.bindingHandlers.selectedOptions.getSelectedValuesFromSelectNode(this)); });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
@@ -144,7 +175,7 @@ ko.bindingHandlers.selectedOptions = {
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
                 if (node.tagName == "OPTION")
-                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, node.value) >= 0);
+                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.bindingHandlers.value.readElementValue(node)) >= 0);
             }
         }
     }

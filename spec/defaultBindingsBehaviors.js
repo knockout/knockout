@@ -11,7 +11,7 @@ function prepareTestNode() {
 
 function getSelectedValuesFromSelectNode(selectNode) {
     var selectedNodes = ko.utils.arrayFilter(selectNode.childNodes, function (node) { return node.selected; });
-    return ko.utils.arrayMap(selectedNodes, function (node) { return node.value; });
+    return ko.utils.arrayMap(selectedNodes, function (node) { return ko.bindingHandlers.value.readElementValue(node); });
 }
 
 describe('Binding: Enable/Disable', {
@@ -130,11 +130,66 @@ describe('Binding: Value', {
         testNode.childNodes[0].value = "DEF";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(notifiedValues.length).should_be(2);
+    },
+    
+	'For select boxes, should update selectedIndex when the model changes': function() {
+		var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
+        ko.applyBindings(testNode, { myObservable: observable });
+        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        observable('A');
+        value_of(testNode.childNodes[0].selectedIndex).should_be(0);
+	},
+    
+    'For select boxes, should display the caption when the model value changes to undefined': function() {
+		var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
+        ko.applyBindings(testNode, { myObservable: observable });
+        value_of(testNode.childNodes[0].selectedIndex).should_be(2);
+        observable(undefined);
+        value_of(testNode.childNodes[0].selectedIndex).should_be(0);    	
+    },
+    
+    'For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)': function () {
+		var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
+        ko.applyBindings(testNode, { myObservable: observable });
+        var dropdown = testNode.childNodes[0];
+        
+        dropdown.selectedIndex = 1;
+        ko.utils.triggerEvent(dropdown, "change");
+        value_of(observable()).should_be("A");           	
+
+        dropdown.selectedIndex = 0;
+        ko.utils.triggerEvent(dropdown, "change");
+        value_of(observable()).should_be(undefined);           	
+    },
+
+    'For select boxes, should be able to associate option values with arbitrary objects (not just strings)': function() {
+    	var x = {}, y = {};
+    	var selectedValue = ko.observable(y);
+    	testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
+    	var dropdown = testNode.childNodes[0];
+    	ko.applyBindings(testNode, { myOptions: [x, y], selectedValue: selectedValue });
+    	
+    	// Check the UI displays the entry corresponding to the chosen value
+    	value_of(dropdown.selectedIndex).should_be(1);
+    	    	
+    	// Check that when we change the model value, the UI is updated
+    	selectedValue(x);
+    	value_of(dropdown.selectedIndex).should_be(0);
+    	
+    	// Check that when we change the UI, this changes the model value
+    	dropdown.selectedIndex = 1;
+    	ko.utils.triggerEvent(dropdown, "change");
+    	value_of(selectedValue()).should_be(y);    	
     }
 })
 
 describe('Binding: Options', {
     before_each: prepareTestNode,
+
+	// Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
 
     'Should only be applicable to SELECT nodes': function () {
         var threw = false;
@@ -166,6 +221,13 @@ describe('Binding: Options', {
         testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'><option>A</option><option selected='selected'>B</option><option selected='selected'>X</option></select>";
         ko.applyBindings(testNode, { myValues: observable });
         value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B"]);
+    },
+    
+    'Should place a caption at the top of the options list and display it when the model value is undefined': function() {
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: \"Select one...\"'></select>";
+        ko.applyBindings(testNode, { });
+        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });        
+        value_of(displayedOptions).should_be(["Select one...", "A", "B"]);
     }
 });
 
@@ -181,18 +243,20 @@ describe('Binding: Selected Options', {
     },
 
     'Should set selection in the SELECT node to match the model': function () {
-        var values = new ko.observableArray(["A", "B", "C"]);
-        var selection = new ko.observableArray(["B"]);
+    	var bObject = {};
+        var values = new ko.observableArray(["A", bObject, "C"]);
+        var selection = new ko.observableArray([bObject]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
         ko.applyBindings(testNode, { myValues: values, mySelection: selection });
 
-        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B"]);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be([bObject]);
         selection.push("C");
-        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B", "C"]);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be([bObject, "C"]);
     },
 
     'Should update the model when selection in the SELECT node changes': function () {
-        var values = new ko.observableArray(["A", "B", "C"]);
+    	var cObject = {};
+        var values = new ko.observableArray(["A", "B", cObject]);
         var selection = new ko.observableArray(["B"]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
         ko.applyBindings(testNode, { myValues: values, mySelection: selection });
@@ -202,7 +266,9 @@ describe('Binding: Selected Options', {
         testNode.childNodes[0].childNodes[1].selected = false;
         testNode.childNodes[0].childNodes[2].selected = true;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(selection()).should_be(["A", "C"]);
+        
+        value_of(selection()).should_be(["A", cObject]);
+        value_of(selection()[1] === cObject).should_be(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     }
 });
 
