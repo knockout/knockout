@@ -7,6 +7,7 @@
     'src/subscribables/observable.js',
     'src/subscribables/observableArray.js',
     'src/subscribables/dependentObservable.js',
+    'src/binding/selectExtensions.js',
     'src/binding/jsonExpressionRewriting.js',
     'src/binding/bindingAttributeSyntax.js',
     'src/binding/defaultBindings.js',

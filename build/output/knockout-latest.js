@@ -614,7 +614,33 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     evaluate();
     return dependentObservable;
 };
-ko.dependentObservable.__ko_proto__ = ko.observable;/// <reference path="../utils.js" />
+ko.dependentObservable.__ko_proto__ = ko.observable;(function () {
+	ko.selectExtensions = {
+		readValue : function(element) {
+			if (element.tagName == 'OPTION') {
+				var valueAttributeValue = element.getAttribute("value");
+				if (valueAttributeValue !== null)
+					return valueAttributeValue;
+				return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+			} else if (element.tagName == 'SELECT')
+				return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+			else
+				return element.value;
+		},
+		
+		writeValue: function(element, value) {
+			if (element.tagName == 'SELECT') {
+				for (var i = element.options.length - 1; i >= 0; i--) {
+					if (ko.selectExtensions.readValue(element.options[i]) == value) {
+						element.selectedIndex = i;
+						break;
+					}
+				}
+			} else
+				element.value = value;
+		}
+	};
+})();/// <reference path="../utils.js" />
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
@@ -820,39 +846,17 @@ ko.bindingHandlers.enable = {
 ko.bindingHandlers.disable = { update: function (element, value) { ko.bindingHandlers.enable.update(element, !ko.utils.unwrapObservable(value)); } };
 
 ko.bindingHandlers.value = {
-	readElementValue: function(element) {
-		if (element.tagName == 'OPTION') {
-			var valueAttributeValue = element.getAttribute("value");
-			if (valueAttributeValue !== null)
-				return valueAttributeValue;
-			return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
-		} else if (element.tagName == 'SELECT')
-			return element.selectedIndex >= 0 ? ko.bindingHandlers.value.readElementValue(element.options[element.selectedIndex]) : undefined;
-		else
-			return element.value;
-	},
-	writeElementValue: function(element, value) {
-		if (element.tagName == 'SELECT') {
-			for (var i = element.options.length - 1; i >= 0; i--) {
-				if (ko.bindingHandlers.value.readElementValue(element.options[i]) == value) {
-					element.selectedIndex = i;
-					break;
-				}
-			}
-		} else
-			element.value = value;
-	},
     init: function (element, value, allBindings) {
         var eventName = allBindings.valueUpdate || "change";
         if (ko.isWriteableObservable(value))
-            ko.utils.registerEventHandler(element, eventName, function () { value(ko.bindingHandlers.value.readElementValue(this)); });
+            ko.utils.registerEventHandler(element, eventName, function () { value(ko.selectExtensions.readValue(this)); });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
-            ko.utils.registerEventHandler(element, eventName, function () { allBindings._ko_property_writers.value(ko.bindingHandlers.value.readElementValue(this)); });
+            ko.utils.registerEventHandler(element, eventName, function () { allBindings._ko_property_writers.value(ko.selectExtensions.readValue(this)); });
     },
     update: function (element, value) {
         var newValue = ko.utils.unwrapObservable(value);
-        if (newValue != ko.bindingHandlers.value.readElementValue(element)) {
-            var applyValueAction = function () { ko.bindingHandlers.value.writeElementValue(element, newValue); };
+        if (newValue != ko.selectExtensions.readValue(element)) {
+            var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
 
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
@@ -873,7 +877,7 @@ ko.bindingHandlers.options = {
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && node.tagName == "OPTION" && node.selected;
         }), function (node) {
-            return ko.bindingHandlers.value.readElementValue(node) || node.innerText || node.textContent;
+            return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
 
         value = ko.utils.unwrapObservable(value);
@@ -904,7 +908,7 @@ ko.bindingHandlers.options = {
             var newOptions = element.getElementsByTagName("OPTION");
             var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(previousSelectedValues, ko.bindingHandlers.value.readElementValue(newOptions[i])) >= 0) {
+                if (ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[i])) >= 0) {
                     ko.utils.setOptionNodeSelectionState(newOptions[i], true);
                     countSelectionsRetained++;
                 }
@@ -921,7 +925,7 @@ ko.bindingHandlers.selectedOptions = {
         for (var i = 0, j = nodes.length; i < j; i++) {
             var node = nodes[i];
             if ((node.tagName == "OPTION") && node.selected)
-                result.push(ko.bindingHandlers.value.readElementValue(node));
+                result.push(ko.selectExtensions.readValue(node));
         }
         return result;
     },
@@ -941,7 +945,7 @@ ko.bindingHandlers.selectedOptions = {
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
                 if (node.tagName == "OPTION")
-                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.bindingHandlers.value.readElementValue(node)) >= 0);
+                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
             }
         }
     }

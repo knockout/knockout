@@ -11,7 +11,7 @@ function prepareTestNode() {
 
 function getSelectedValuesFromSelectNode(selectNode) {
     var selectedNodes = ko.utils.arrayFilter(selectNode.childNodes, function (node) { return node.selected; });
-    return ko.utils.arrayMap(selectedNodes, function (node) { return ko.bindingHandlers.value.readElementValue(node); });
+    return ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
 }
 
 describe('Binding: Enable/Disable', {
