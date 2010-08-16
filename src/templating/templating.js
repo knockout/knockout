@@ -79,10 +79,10 @@
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
 
-			// Filter out any entries marked as destroyed
-			var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
-				return options.includeDestroyed || !item._destroy;
-			});
+            // Filter out any entries marked as destroyed
+            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
+                return options.includeDestroyed || !item._destroy;
+            });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
