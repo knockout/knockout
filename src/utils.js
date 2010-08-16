@@ -2,10 +2,10 @@
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-	
+    
     return {
-    	fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
-    	
+        fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+        
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
@@ -58,6 +58,11 @@ ko.utils = new (function () {
                 if (predicate(array[i]))
                     result.push(array[i]);
             return result;
+        },
+        
+        arrayPushAll: function (array, valuesToPush) {
+            for (var i = 0, j = valuesToPush.length; i < j; i++)
+                array.push(valuesToPush[i]);	
         },
 
         emptyDomNode: function (domNode) {
@@ -218,24 +223,24 @@ ko.utils = new (function () {
         },
         
         makeArray: function(arrayLikeObject) {
-        	var result = [];
-        	for (var i = arrayLikeObject.length - 1; i >= 0; i--){
-        		result.push(arrayLikeObject[i]);
-        	};
-        	return result;
+            var result = [];
+            for (var i = arrayLikeObject.length - 1; i >= 0; i--){
+                result.push(arrayLikeObject[i]);
+            };
+            return result;
         },
         
         getFormFields: function(form, fieldName) {
-        	var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
-        	var isMatchingField = (typeof fieldName == 'string') 
-        		? function(field) { return field.name === fieldName }
-        		: function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
-        	var matches = [];
-        	for (var i = fields.length - 1; i >= 0; i--) {
-        		if (isMatchingField(fields[i]))
-        			matches.push(fields[i]);
-        	};
-        	return matches;
+            var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+            var isMatchingField = (typeof fieldName == 'string') 
+                ? function(field) { return field.name === fieldName }
+                : function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
+            var matches = [];
+            for (var i = fields.length - 1; i >= 0; i--) {
+                if (isMatchingField(fields[i]))
+                    matches.push(fields[i]);
+            };
+            return matches;
         },
 
         stringifyJson: function (data) {
@@ -245,22 +250,22 @@ ko.utils = new (function () {
         },
 
         postJson: function (urlOrForm, data, options) {
-        	options = options || {};
-        	var params = options.params || {};
-        	var includeFields = options.includeFields || this.fieldsIncludedWithJsonPost;
-        	var url = urlOrForm;
-        	
-        	// If we were given a form, use its 'action' URL and pick out any requested field values 	
-        	if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
-        		var originalForm = urlOrForm;
-        		url = originalForm.action;
-        		for (var i = includeFields.length - 1; i >= 0; i--) {
-        			var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
-        			for (var j = fields.length - 1; j >= 0; j--)        				
-        				params[fields[j].name] = fields[j].value;
-        		}
-        	}        	
-        	
+            options = options || {};
+            var params = options.params || {};
+            var includeFields = options.includeFields || this.fieldsIncludedWithJsonPost;
+            var url = urlOrForm;
+            
+            // If we were given a form, use its 'action' URL and pick out any requested field values 	
+            if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+                var originalForm = urlOrForm;
+                url = originalForm.action;
+                for (var i = includeFields.length - 1; i >= 0; i--) {
+                    var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
+                    for (var j = fields.length - 1; j >= 0; j--)        				
+                        params[fields[j].name] = fields[j].value;
+                }
+            }        	
+            
             data = ko.utils.unwrapObservable(data);
             var form = document.createElement("FORM");
             form.style.display = "none";

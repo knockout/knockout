@@ -43,9 +43,23 @@
                     lastMappingResultIndex++;
                     break;
 
-                case "added":
-                    // Map this array value and insert the resulting nodes at the current insertion point
-                    var mappedNodes = mapping(editScript[i].value) || [];
+                case "added": {
+                    // Map this array value inside a dependentObservable so we re-map when any dependency changes
+                    var mappedNodes = [], valueToMap = editScript[i].value;
+                    ko.dependentObservable(function() {
+                        var newMappedNodes = mapping(valueToMap) || [];
+                        
+                        // On subsequent evaluations, just replace the previously-inserted DOM nodes
+                        if (mappedNodes.length > 0)
+                            ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+                        
+                        // Replace the contents of the mappedNodes array, thereby updating the record
+                        // of which nodes would be deleted if valueToMap was itself later removed
+                        mappedNodes.splice(0, mappedNodes.length);
+                        ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
+                    }, null, { disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+                    
+                    // On the first evaluation, insert the nodes at the current insertion point
                     newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
@@ -64,8 +78,9 @@
                                 domNode.appendChild(node);
                         }
                         insertAfterNode = node;
-                    }
+                    }                    	
                     break;
+                }
             }
         }
         

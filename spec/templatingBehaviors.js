@@ -198,6 +198,28 @@ describe('Templating', {
         value_of(testNode.childNodes[0].childNodes[1]).should_be(originalFrankNode);
     },
     
+    'Data binding \'foreach\' option should update DOM nodes when a dependency of their mapping function changes': function() {
+    	var myObservable = new ko.observable("Steve");
+        var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: myObservable }]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item is [js: ko.utils.unwrapObservable(personName)]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings(testNode, { myCollection: myArray });
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div><div>the item is steve</div>");
+    	var originalBobNode = testNode.childNodes[0].childNodes[0];
+    	
+    	myObservable("Steve2");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div><div>the item is steve2</div>");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
+        
+        // Ensure we can still remove the corresponding nodes (even though they've changed), and that doing so causes the subscription to be disposed
+        value_of(myObservable.getSubscriptionsCount()).should_be(1);
+        myArray.pop();
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div>");
+        myObservable("Something else"); // Re-evaluating the observable causes the orphaned subscriptions to be disposed
+        value_of(myObservable.getSubscriptionsCount()).should_be(0);
+    },
+    
     'Data binding syntax should omit any items whose \'_destroy\' flag is set' : function() {
         var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
