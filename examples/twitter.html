@@ -21,7 +21,7 @@
                 <div class="listChooser">
                     <button data-bind="click: deleteList, enable: editingList.name">Delete</button>
                     <button data-bind="click: saveChanges, enable: hasUnsavedChanges">Save</button>
-                    <select data-bind="options: savedLists, options_value: 'name', value: editingList.name"></select>
+                    <select data-bind="options: savedLists, optionsValue: 'name', value: editingList.name"></select>
                 </div>
 
                 <p>Currently viewing <span data-bind="text: editingList.userNames().length"></span>&nbsp;user(s):</p>
