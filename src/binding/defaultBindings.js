@@ -57,9 +57,13 @@ ko.bindingHandlers.value = {
     init: function (element, value, allBindings) {
         var eventName = allBindings.valueUpdate || "change";
         if (ko.isWriteableObservable(value))
-            ko.utils.registerEventHandler(element, eventName, function () { value(ko.selectExtensions.readValue(this)); });
+            ko.utils.registerEventHandler(element, eventName, function () { 
+                value(ko.selectExtensions.readValue(this)); 
+            });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
-            ko.utils.registerEventHandler(element, eventName, function () { allBindings._ko_property_writers.value(ko.selectExtensions.readValue(this)); });
+            ko.utils.registerEventHandler(element, eventName, function () { 
+                allBindings._ko_property_writers.value(ko.selectExtensions.readValue(this)); 
+            });
     },
     update: function (element, value) {
         var newValue = ko.utils.unwrapObservable(value);
@@ -96,17 +100,18 @@ ko.bindingHandlers.options = {
             if (typeof value.length != "number")
                 value = [value];
             if (allBindings.optionsCaption) {
-            	var option = document.createElement("OPTION");
-            	option.innerHTML = allBindings.optionsCaption;
-            	element.appendChild(option);
+                var option = document.createElement("OPTION");
+                option.innerHTML = allBindings.optionsCaption;
+                ko.selectExtensions.writeValue(option, undefined);
+                element.appendChild(option);
             }
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 var optionValue = typeof allBindings.optionsValue == "string" ? value[i][allBindings.optionsValue] : value[i];
                 if (typeof optionValue == 'object')
-                	ko.utils.domData.set(option, ko.bindingHandlers.options.optionValueDomDataKey, optionValue);
+                    ko.selectExtensions.writeValue(option, optionValue);
                 else
-                	option.value = optionValue.toString();
+                    option.value = optionValue.toString();
                 option.innerHTML = (typeof allBindings.optionsText == "string" ? value[i][allBindings.optionsText] : optionValue).toString();
                 element.appendChild(option);
             }
