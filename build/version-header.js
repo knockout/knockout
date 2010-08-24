@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.04
+// Knockout JavaScript library v1.05
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 

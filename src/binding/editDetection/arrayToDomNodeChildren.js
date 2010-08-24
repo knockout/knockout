@@ -8,6 +8,24 @@
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
+	function mapNodeAndRefreshWhenChanged(mapping, valueToMap) {
+        // Map this array value inside a dependentObservable so we re-map when any dependency changes
+        var mappedNodes = [];
+        ko.dependentObservable(function() {
+            var newMappedNodes = mapping(valueToMap) || [];
+            
+            // On subsequent evaluations, just replace the previously-inserted DOM nodes
+            if (mappedNodes.length > 0)
+                ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+            
+            // Replace the contents of the mappedNodes array, thereby updating the record
+            // of which nodes would be deleted if valueToMap was itself later removed
+            mappedNodes.splice(0, mappedNodes.length);
+            ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
+        }, null, { disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        return mappedNodes;
+	}
+
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
         // Compare the provided array against the previous one
         array = array || [];
@@ -43,44 +61,29 @@
                     lastMappingResultIndex++;
                     break;
 
-                case "added": {
-                    // Map this array value inside a dependentObservable so we re-map when any dependency changes
-                    var mappedNodes = [], valueToMap = editScript[i].value;
-                    ko.dependentObservable(function() {
-                        var newMappedNodes = mapping(valueToMap) || [];
-                        
-                        // On subsequent evaluations, just replace the previously-inserted DOM nodes
-                        if (mappedNodes.length > 0)
-                            ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
-                        
-                        // Replace the contents of the mappedNodes array, thereby updating the record
-                        // of which nodes would be deleted if valueToMap was itself later removed
-                        mappedNodes.splice(0, mappedNodes.length);
-                        ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-                    }, null, { disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
-                    
-                    // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
-                    for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
-                        var node = mappedNodes[nodeIndex];
-                        nodesAdded.push(node);
-                        if (insertAfterNode == null) {
-                            // Insert at beginning
-                            if (domNode.firstChild)
-                                domNode.insertBefore(node, domNode.firstChild);
+                case "added": 
+                	var mappedNodes = mapNodeAndRefreshWhenChanged(mapping, editScript[i].value);
+			        // On the first evaluation, insert the nodes at the current insertion point
+			        newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
+			        for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
+			            var node = mappedNodes[nodeIndex];
+			            nodesAdded.push(node);
+			            if (insertAfterNode == null) {
+			                // Insert at beginning
+			                if (domNode.firstChild)
+			                    domNode.insertBefore(node, domNode.firstChild);
+			                else
+			                    domNode.appendChild(node);
+			            } else {
+			                // Insert after insertion point
+			                if (insertAfterNode.nextSibling)
+			                    domNode.insertBefore(node, insertAfterNode.nextSibling);
                             else
-                                domNode.appendChild(node);
-                        } else {
-                            // Insert after insertion point
-                            if (insertAfterNode.nextSibling)
-                                domNode.insertBefore(node, insertAfterNode.nextSibling);
-                            else
-                                domNode.appendChild(node);
-                        }
-                        insertAfterNode = node;
-                    }                    	
+			                    domNode.appendChild(node);
+			            }
+			            insertAfterNode = node;
+			        }    		
                     break;
-                }
             }
         }
         
