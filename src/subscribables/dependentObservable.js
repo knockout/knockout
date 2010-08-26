@@ -31,8 +31,6 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
         try {
             ko.dependencyDetection.begin();
             _latestValue = evaluatorFunctionTarget ? evaluatorFunction.call(evaluatorFunctionTarget) : evaluatorFunction();
-        } catch (ex) {
-            throw ex;
         } finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
