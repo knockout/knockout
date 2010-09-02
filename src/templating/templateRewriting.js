@@ -28,9 +28,9 @@ ko.templateRewriting = (function () {
         },
 
         applyMemoizedBindingsToNextSibling: function (bindings) {
-            return ko.memoization.memoize(function (domNode) {
+            return ko.memoization.memoize(function (domNode, viewModel) {
                 if (domNode.nextSibling)
-                    ko.applyBindingsToNode(domNode.nextSibling, bindings, null);
+                    ko.applyBindingsToNode(domNode.nextSibling, bindings, viewModel);
             });
         }
     }

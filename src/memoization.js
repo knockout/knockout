@@ -42,12 +42,15 @@ ko.memoization = (function () {
             finally { delete memos[memoId]; }
         },
 
-        unmemoizeDomNodeAndDescendants: function (domNode) {
+        unmemoizeDomNodeAndDescendants: function (domNode, extraCallbackParamsArray) {
             var memos = [];
             findMemoNodes(domNode, memos);
             for (var i = 0, j = memos.length; i < j; i++) {
                 var node = memos[i].domNode;
-                ko.memoization.unmemoize(memos[i].memoId, [node]);
+                var combinedParams = [node];
+                if (extraCallbackParamsArray)
+                    ko.utils.arrayPushAll(combinedParams, extraCallbackParamsArray);
+                ko.memoization.unmemoize(memos[i].memoId, combinedParams);
                 node.nodeValue = ""; // Neuter this node so we don't try to unmemoize it again
                 if (node.parentNode)
                     node.parentNode.removeChild(node); // If possible, erase it totally (not always possible - someone else might just hold a reference to it then call unmemoizeDomNodeAndDescendants again)

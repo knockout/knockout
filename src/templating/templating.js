@@ -29,7 +29,7 @@
 
         if (renderedNodesArray)
             ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
-                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode);
+                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
             });
 
         switch (renderMode) {

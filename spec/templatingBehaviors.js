@@ -181,6 +181,21 @@ describe('Templating', {
         ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { message: "hello"} }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].value).should_be("goodbye");
     },
+    
+    'Data binding syntax should use the template\'s \'data\' object as the viewModel value (so \'this\' is set correctly when calling click handlers etc.)': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            someTemplate: "<button data-bind='click: someFunctionOnModel'>click me</button>"
+        }));
+        var viewModel = {
+        	didCallMyFunction : false,
+        	someFunctionOnModel : function() { this.didCallMyFunction = true }
+        };
+        ko.renderTemplate("someTemplate", viewModel, null, testNode);
+        var buttonNode = testNode.childNodes[0].childNodes[0];
+        value_of(buttonNode.tagName).should_be("BUTTON"); // Be sure we're clicking the right thing
+        buttonNode.click();
+        value_of(viewModel.didCallMyFunction).should_be(true);
+    },
 
     'Data binding syntax should support \'foreach\' option, whereby it renders for each item in an array but doesn\'t rerender everything if you push or splice': function () {
         var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
