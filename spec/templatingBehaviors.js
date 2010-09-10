@@ -235,6 +235,20 @@ describe('Templating', {
         value_of(myObservable.getSubscriptionsCount()).should_be(0);
     },
     
+    'Data binding \'foreach\' option should treat a null parameter as meaning \'no items\'': function() {
+        var myArray = new ko.observableArray(["A", "B"]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "hello" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings(testNode, { myCollection: myArray });    	
+        value_of(testNode.childNodes[0].childNodes.length).should_be(2);
+        
+        // Now set the observable to null and check it's treated like an empty array
+        // (because how else should null be interpreted?)
+        myArray(null);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    },
+    
     'Data binding syntax should omit any items whose \'_destroy\' flag is set' : function() {
         var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));

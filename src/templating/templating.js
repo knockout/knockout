@@ -75,7 +75,7 @@
         var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
 
         new ko.dependentObservable(function () {
-            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray);
+            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
 
