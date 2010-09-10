@@ -3,7 +3,7 @@
 For more details, see
 <ul>
 	<li>Documentation on <a href="http://github.com/SteveSanderson/knockout/wiki">the project's wiki</a></li>
-<li>Online examples at <a href="http://knockoutjs.com/">http://knockoutjs.com/</a></li>
+<li>Online examples at <a href="http://knockoutjs.com/">http://knockoutjs.com/</a> (see also the source tree of the examples web site on <a href="http://github.com/SteveSanderson/knockout/tree/gh-pages">this GitHub branch</a>)</li>
 <li>Introductory tutorial at <a href="http://blog.stevensanderson.com/2010/07/05/introducing-knockout-a-ui-library-for-javascript/">Steve Sanderson's blog</a></li>
 </ul>
 
