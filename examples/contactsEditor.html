@@ -1,0 +1,111 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
+        <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
+        <style type="text/css">
+            TR { vertical-align: top; }
+            TD A { font-size: 0.8em; text-decoration: none; }
+        </style>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Contacts editor</h1>
+
+            <p>
+                This example is a duplicate of the <a href="http://github.com/nje/jquery-datalink">contacts editor</a> sample provided with 
+                Microsoft's <a href='http://wiki.github.com/nje/jquery-datalink/jquery-data-linking-proposal'>jQuery Data Linking Proposal</a>.
+                I wanted to see whether the implementation would be harder or easier with Knockout. 
+            </p>
+            <p>
+                It's not the number of lines of code that's so important (though the Knockout implementation is quite concise); what matters 
+                is how easily you can understand the code at a glance. Check the HTML source code to see how simple the viewModel is, and
+                how straightforward it is to bind the template to it.
+            </p>
+
+            <h2>Contacts</h2>
+            <div id="contactsList" data-bind="template: 'contactsListTemplate'"></div>
+            <script type="text/html" id="contactsListTemplate">
+                <table>
+                    <tr>
+                        <th>First name</th>
+                        <th>Last name</th>
+                        <th>Phone numbers</th>
+                    </tr>
+                    {{each(i, contact) contacts()}}                    
+                        <tr>
+                            <td>
+                                <input data-bind="value: firstName" />
+                                <div><a href="#" data-bind="click: function() { viewModel.removeContact(contact) }">Delete</a></div>
+                            </td>
+                            <td><input data-bind="value: lastName" /></td>
+                            <td>
+                                <table>
+                                    {{each(i, phone) phones}}
+                                        <tr>
+                                            <td><input data-bind="value: type" /></td>
+                                            <td><input data-bind="value: number" /></td>
+                                            <td><a href="#" data-bind="click: function() { viewModel.removePhone(contact, phone) }">Delete</a></td>
+                                        </tr>
+                                    {{/each}}
+                                </table>
+                                <a href="#" data-bind="click: function() { viewModel.addPhone(contact) }">Add number</a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </table>
+            </script>
+
+            <div>
+                <button data-bind="click: addContact">Add a contact</button>
+                <button data-bind="click: save, enable: contacts().length > 0">Save to JSON</button>
+            </div>
+
+            <textarea data-bind="value: lastSavedJson" rows="20" cols="80" disabled="disabled"></textarea>
+        </div>
+
+        <script type="text/javascript">
+            var viewModel = {
+                contacts: new ko.observableArray([
+                    { firstName: "Danny", lastName: "LaRusso", phones: [
+                        { type: "Mobile", number: "(555) 121-2121" },
+                        { type: "Home", number: "(555) 123-4567"}]
+                    },
+                    { firstName: "Sensei", lastName: "Miyagi", phones: [
+                        { type: "Mobile", number: "(555) 444-2222" },
+                        { type: "Home", number: "(555) 999-1212"}]
+                    }
+                ]),
+                addContact: function () {
+                    viewModel.contacts.push({ firstName: "", lastName: "", phones: [] });
+                },
+                removeContact: function (contact) {
+                    viewModel.contacts.remove(contact);
+                },
+                addPhone: function (contact) {
+                    contact.phones.push({ type: "", number: "" });
+                    viewModel.contacts.valueHasMutated();
+                },
+                removePhone: function (contact, phone) {
+                    ko.utils.arrayRemoveItem(contact.phones, phone);
+                    viewModel.contacts.valueHasMutated();
+                },
+                save: function () {
+                    if (!window.JSON)
+                        alert("Your browser doesn't natively support JSON.stringify (you're probably using IE <= 7), so you'd need to use json2.js (http://www.json.org/json2.js) or similar to save the data as JSON");
+                    viewModel.lastSavedJson(JSON.stringify(viewModel.contacts(), null, 2));
+                },
+                lastSavedJson: new ko.observable("")
+            };
+
+            ko.applyBindings(document.body, viewModel);
+        </script>
+	</body>
+</html>

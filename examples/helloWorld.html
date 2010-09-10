@@ -1,0 +1,41 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>Knockout Examples</title>
+        <link rel="Stylesheet" href="styles.css" />
+        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
+	</head>
+	<body>
+        <div id="header">
+            <div class="menu"><a href="../homepage.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
+            <a class="logo" href="/"><img src="resources/knockout-logo.png" /></a>
+        </div>
+        <div id="main">
+            <h1>Examples &raquo; Hello World</h1>
+            <p>
+                In this example, the two text boxes are bound to <em>observable</em> variables on a data model.
+                The "full name" display is bound to a <em>dependent observable</em>, whose value is computed
+                in terms of the observables.
+            </p>
+            <p>
+                Edit either text box to see the "full name" display update. See the HTML source code and
+                notice there's no need to catch "onchange" events. Knockout knows when to update the UI.
+            </p>
+            <p>First name: <input data-bind="value:firstName" /></p>
+            <p>Last name: <input data-bind="value:lastName" /></p>
+            <h2>Hello, <span data-bind="text: fullName"></span>!</h2>
+        </div>
+
+        <script type="text/javascript">
+            // Here's my data model
+            var viewModel = { };
+            viewModel.firstName = ko.observable("Planet");
+            viewModel.lastName = ko.observable("Earth");
+            viewModel.fullName = ko.dependentObservable(function () {
+                return viewModel.firstName() + " " + viewModel.lastName(); // Knockout tracks dependencies automatically. It knows that fullName depends on firstName and lastName, because these get called when evaluating fullName.
+            });
+
+            ko.applyBindings(document.body, viewModel); // This makes Knockout get to work
+        </script>
+	</body>
+</html>
