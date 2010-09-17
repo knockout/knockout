@@ -241,8 +241,10 @@ ko.bindingHandlers.checked = {
         value = ko.utils.unwrapObservable(value);
         if (element.type == "checkbox") {
             element.checked = value;
-            if (value && ko.utils.isIe6 && (typeof(element.defaultChecked) != 'undefined')) // Workaround for IE 6 bug described at http://www.mularien.com/blog/2008/08/06/stupid-ie-6-bug-182478-check-boxes-added-through-javascript-arent-checked/
-            	element.defaultChecked = value;
+            
+            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
+            if (value && ko.utils.isIe6) 
+            	element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio")
             element.checked = (element.value == value);
     }
