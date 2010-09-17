@@ -7,6 +7,7 @@ var ko = window.ko = {};
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
@@ -234,6 +235,8 @@ ko.utils = new (function () {
             };
             return result;
         },
+        
+        isIe6 : isIe6,
         
         getFormFields: function(form, fieldName) {
             var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
@@ -1006,7 +1009,7 @@ ko.bindingHandlers.uniqueName = {
             element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
 
             // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
-            if (/MSIE 6/i.test(navigator.userAgent))
+            if (ko.utils.isIe6)
                 element.mergeAttributes(document.createElement("<INPUT name='" + element.name + "'/>"), false);
         }
     }
@@ -1043,9 +1046,11 @@ ko.bindingHandlers.checked = {
     },
     update: function (element, value) {
         value = ko.utils.unwrapObservable(value);
-        if (element.type == "checkbox")
+        if (element.type == "checkbox") {
             element.checked = value;
-        else if (element.type == "radio")
+            if (value && ko.utils.isIe6 && (typeof(element.defaultChecked) != 'undefined')) // Workaround for IE 6 bug described at http://www.mularien.com/blog/2008/08/06/stupid-ie-6-bug-182478-check-boxes-added-through-javascript-arent-checked/
+            	element.defaultChecked = value;
+        } else if (element.type == "radio")
             element.checked = (element.value == value);
     }
 };/// <reference path="../utils.js" />

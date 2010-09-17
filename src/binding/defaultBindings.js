@@ -202,7 +202,7 @@ ko.bindingHandlers.uniqueName = {
             element.name = "ko_unique_" + (++ko.bindingHandlers.uniqueName.currentIndex);
 
             // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
-            if (/MSIE 6/i.test(navigator.userAgent))
+            if (ko.utils.isIe6)
                 element.mergeAttributes(document.createElement("<INPUT name='" + element.name + "'/>"), false);
         }
     }
@@ -239,9 +239,11 @@ ko.bindingHandlers.checked = {
     },
     update: function (element, value) {
         value = ko.utils.unwrapObservable(value);
-        if (element.type == "checkbox")
+        if (element.type == "checkbox") {
             element.checked = value;
-        else if (element.type == "radio")
+            if (value && ko.utils.isIe6 && (typeof(element.defaultChecked) != 'undefined')) // Workaround for IE 6 bug described at http://www.mularien.com/blog/2008/08/06/stupid-ie-6-bug-182478-check-boxes-added-through-javascript-arent-checked/
+            	element.defaultChecked = value;
+        } else if (element.type == "radio")
             element.checked = (element.value == value);
     }
 };

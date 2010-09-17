@@ -265,5 +265,11 @@ describe('Templating', {
 
         ko.applyBindings(testNode, { myCollection: myArray });    	
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
-    }    
+    },
+    
+    'Should be able to populate checkboxes from inside templates, despite IE6 limitations': function () {    	
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input type='checkbox' data-bind='checked:isChecked' />" }));
+        ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { isChecked: true } }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].checked).should_be(true);
+    }
 })

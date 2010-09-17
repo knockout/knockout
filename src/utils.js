@@ -2,6 +2,7 @@
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
@@ -229,6 +230,8 @@ ko.utils = new (function () {
             };
             return result;
         },
+        
+        isIe6 : isIe6,
         
         getFormFields: function(form, fieldName) {
             var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
