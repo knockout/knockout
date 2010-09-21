@@ -130,6 +130,13 @@ ko.utils = new (function () {
             }
             return result;
         },
+        
+        stringStartsWith: function (string, startsWith) {        	
+        	string = string || "";
+        	if (startsWith.length > string.length)
+        		return false;
+        	return string.substring(0, startsWith.length) === startsWith;
+        },
 
         evalWithinScope: function (expression, scope) {
             if (scope === undefined)

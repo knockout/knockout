@@ -135,6 +135,13 @@ ko.utils = new (function () {
             }
             return result;
         },
+        
+        stringStartsWith: function (string, startsWith) {        	
+        	string = string || "";
+        	if (startsWith.length > string.length)
+        		return false;
+        	return string.substring(0, startsWith.length) === startsWith;
+        },
 
         evalWithinScope: function (expression, scope) {
             if (scope === undefined)
@@ -861,15 +868,31 @@ ko.bindingHandlers.enable = {
 ko.bindingHandlers.disable = { update: function (element, value) { ko.bindingHandlers.enable.update(element, !ko.utils.unwrapObservable(value)); } };
 
 ko.bindingHandlers.value = {
-    init: function (element, value, allBindings) {
+    init: function (element, value, allBindings) {    	
         var eventName = allBindings.valueUpdate || "change";
+        
+        // The syntax "after<eventname>" means "run the handler asynchronously after the event"
+        // This is useful, for example, to catch "keydown" events after the browser has updated the control
+        // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
+        var handleEventAsynchronously = false;
+        if (ko.utils.stringStartsWith(eventName, "after")) {
+            handleEventAsynchronously = true;
+            eventName = eventName.substring("after".length);
+        }
+        var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
+                                                        : function(handler) { handler() };
+                                                        
         if (ko.isWriteableObservable(value))
             ko.utils.registerEventHandler(element, eventName, function () { 
-                value(ko.selectExtensions.readValue(this)); 
+                runEventHandler(function() {
+                    value(ko.selectExtensions.readValue(this)); 
+                }.bind(this));
             });
         else if (allBindings._ko_property_writers && allBindings._ko_property_writers.value)
             ko.utils.registerEventHandler(element, eventName, function () { 
-                allBindings._ko_property_writers.value(ko.selectExtensions.readValue(this)); 
+                runEventHandler(function() {
+                    allBindings._ko_property_writers.value(ko.selectExtensions.readValue(this)); 
+                }.bind(this));
             });
     },
     update: function (element, value) {
@@ -1051,7 +1074,7 @@ ko.bindingHandlers.checked = {
             
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
             if (value && ko.utils.isIe6) 
-            	element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
+                element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio")
             element.checked = (element.value == value);
     }
