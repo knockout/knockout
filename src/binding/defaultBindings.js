@@ -3,12 +3,15 @@
 ko.bindingHandlers.click = {
     init: function (element, value, allBindings, viewModel) {
         ko.utils.registerEventHandler(element, "click", function (event) {
-            try { value.call(viewModel); }
+            var handlerReturnValue;
+            try { handlerReturnValue = value.call(viewModel); }
             finally {
-                if (event.preventDefault)
-                    event.preventDefault();
-                else
-                    event.returnValue = false;
+                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                    if (event.preventDefault)
+                        event.preventDefault();
+                    else
+                        event.returnValue = false;
+                }
             }
         });
     }
@@ -19,12 +22,15 @@ ko.bindingHandlers.submit = {
         if (typeof value != "function")
             throw new Error("The value for a submit binding must be a function to invoke on submit");
         ko.utils.registerEventHandler(element, "submit", function (event) {
-            try { value.call(viewModel, element); }
+            var handlerReturnValue;
+            try { handlerReturnValue = value.call(viewModel, element); }
             finally {
-                if (event.preventDefault)
-                    event.preventDefault();
-                else
-                    event.returnValue = false;
+                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                    if (event.preventDefault)
+                        event.preventDefault();
+                    else
+                        event.returnValue = false;
+                }
             }
         });
     }
