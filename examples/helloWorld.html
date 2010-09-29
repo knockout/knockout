@@ -35,7 +35,7 @@
                 return viewModel.firstName() + " " + viewModel.lastName(); // Knockout tracks dependencies automatically. It knows that fullName depends on firstName and lastName, because these get called when evaluating fullName.
             });
 
-            ko.applyBindings(document.body, viewModel); // This makes Knockout get to work
+            ko.applyBindings(viewModel); // This makes Knockout get to work
         </script>
 	</body>
 </html>

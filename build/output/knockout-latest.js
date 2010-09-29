@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.05
+// Knockout JavaScript library v1.1.0pre
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -137,10 +137,10 @@ ko.utils = new (function () {
         },
         
         stringStartsWith: function (string, startsWith) {        	
-        	string = string || "";
-        	if (startsWith.length > string.length)
-        		return false;
-        	return string.substring(0, startsWith.length) === startsWith;
+            string = string || "";
+            if (startsWith.length > string.length)
+                return false;
+            return string.substring(0, startsWith.length) === startsWith;
         },
 
         evalWithinScope: function (expression, scope) {
@@ -181,15 +181,7 @@ ko.utils = new (function () {
             if (!(element && element.nodeType))
                 throw new Error("element must be a DOM node when calling triggerEvent");
 
-            if (typeof element.fireEvent != "undefined") {
-                // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
-                // so to make it consistent, we'll do it manually here
-                if (eventType == "click") {
-                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
-                        element.checked = element.checked !== true;
-                }
-                element.fireEvent("on" + eventType);
-            } else if (typeof document.createEvent == "function") {
+            if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = (eventType == "click" ? "MouseEvents" : "HTMLEvents"); // Might need to account for other event names at some point
                     var event = document.createEvent(eventCategory);
@@ -198,6 +190,14 @@ ko.utils = new (function () {
                 }
                 else
                     throw new Error("The supplied element doesn't support dispatchEvent");
+            } else if (typeof element.fireEvent != "undefined") {
+                // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
+                // so to make it consistent, we'll do it manually here
+                if (eventType == "click") {
+                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
+                        element.checked = element.checked !== true;
+                }
+                element.fireEvent("on" + eventType);
             }
             else
                 throw new Error("Browser doesn't support triggering events");
@@ -480,13 +480,16 @@ ko.observable = function (initialValue) {
 
     function observable(newValue) {
         if (arguments.length > 0) {
+        	// Write
             _latestValue = newValue;
             observable.notifySubscribers(_latestValue);
+            return this; // Permits chained assignments
         }
-        else // The caller only needs to be notified of changes if they did a "read" operation
-            ko.dependencyDetection.registerDependency(observable);
-
-        return _latestValue;
+        else {
+        	// Read
+            ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
+        	return _latestValue;
+    	}
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
@@ -806,7 +809,11 @@ ko.jsonExpressionRewriting = (function () {
         isFirstEvaluation = false;
     };
 
-    ko.applyBindings = function (rootNode, viewModel) {
+    ko.applyBindings = function (viewModel, rootNode) {
+    	if (rootNode && (rootNode.nodeType == undefined))
+    		throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+    	rootNode = rootNode || document.body; // Make "rootNode" parameter optional
+    			
         var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
@@ -817,12 +824,15 @@ ko.jsonExpressionRewriting = (function () {
 ko.bindingHandlers.click = {
     init: function (element, value, allBindings, viewModel) {
         ko.utils.registerEventHandler(element, "click", function (event) {
-            try { value.call(viewModel); }
+            var handlerReturnValue;
+            try { handlerReturnValue = value.call(viewModel); }
             finally {
-                if (event.preventDefault)
-                    event.preventDefault();
-                else
-                    event.returnValue = false;
+                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                    if (event.preventDefault)
+                        event.preventDefault();
+                    else
+                        event.returnValue = false;
+                }
             }
         });
     }
@@ -833,12 +843,15 @@ ko.bindingHandlers.submit = {
         if (typeof value != "function")
             throw new Error("The value for a submit binding must be a function to invoke on submit");
         ko.utils.registerEventHandler(element, "submit", function (event) {
-            try { value.call(viewModel, element); }
+            var handlerReturnValue;
+            try { handlerReturnValue = value.call(viewModel, element); }
             finally {
-                if (event.preventDefault)
-                    event.preventDefault();
-                else
-                    event.returnValue = false;
+                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                    if (event.preventDefault)
+                        event.preventDefault();
+                    else
+                        event.returnValue = false;
+                }
             }
         });
     }

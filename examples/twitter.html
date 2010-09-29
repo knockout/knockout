@@ -140,7 +140,7 @@
                 twitterApi.getTweetsForUsers(this.editingList.userNames(), function (data) { viewModel.currentTweets(data) })
             }, viewModel);
 
-            ko.applyBindings(document.body, viewModel);
+            ko.applyBindings(viewModel);
 
             $(".loadingIndicator").ajaxStart(function () { $(this).fadeIn(); })      // Using jQuery for Ajax loading indicator - nothing to do with Knockout
                                   .ajaxComplete(function () { $(this).fadeOut(); }); 

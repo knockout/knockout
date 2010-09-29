@@ -79,7 +79,7 @@
                 }
             };
 
-            ko.applyBindings(document.body, viewModel);
+            ko.applyBindings(viewModel);
 
             $("form").validate({ submitHandler: function () { viewModel.save() } });
         </script>
