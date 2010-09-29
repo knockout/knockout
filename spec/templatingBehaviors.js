@@ -128,14 +128,14 @@ describe('Templating', {
     'Should be able to render a template using data-bind syntax': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "template output" }));
         testNode.innerHTML = "<div data-bind='template:\"someTemplate\"'></div>";
-        ko.applyBindings(testNode);
+        ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>template output</div>");
     },
 
     'Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
-        ko.applyBindings(testNode, { someProp: { childProp: 123} });
+        ko.applyBindings({ someProp: { childProp: 123} }, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
     },
 
@@ -145,7 +145,7 @@ describe('Templating', {
             innerTemplate: "inner template output"
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
-        ko.applyBindings(testNode);
+        ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>outer template output, <div>inner template output</div></div>");
     },
 
@@ -157,7 +157,7 @@ describe('Templating', {
             innerTemplate: function () { timesRenderedInner++; return observable() }
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
-        ko.applyBindings(testNode);
+        ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>outer template output, <div>abc</div></div>");
         value_of(timesRenderedOuter).should_be(1);
         value_of(timesRenderedInner).should_be(1);
@@ -202,7 +202,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item is [js: personName]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
-        ko.applyBindings(testNode, { myCollection: myArray });
+        ko.applyBindings({ myCollection: myArray }, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div><div>the item is frank</div>");
         var originalBobNode = testNode.childNodes[0].childNodes[0];
         var originalFrankNode = testNode.childNodes[0].childNodes[1];
@@ -219,7 +219,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item is [js: ko.utils.unwrapObservable(personName)]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
-        ko.applyBindings(testNode, { myCollection: myArray });
+        ko.applyBindings({ myCollection: myArray }, testNode);
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is steve</div><div>the item is another</div>");
         var originalBobNode = testNode.childNodes[0].childNodes[0];
         
@@ -240,7 +240,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "hello" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
-        ko.applyBindings(testNode, { myCollection: myArray });    	
+        ko.applyBindings({ myCollection: myArray }, testNode);    	
         value_of(testNode.childNodes[0].childNodes.length).should_be(2);
         
         // Now set the observable to null and check it's treated like an empty array
@@ -254,7 +254,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
-        ko.applyBindings(testNode, { myCollection: myArray });    	
+        ko.applyBindings({ myCollection: myArray }, testNode);    	
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=3</div>");
     },
     
@@ -263,7 +263,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: true }'></div>";
 
-        ko.applyBindings(testNode, { myCollection: myArray });    	
+        ko.applyBindings({ myCollection: myArray }, testNode);    	
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
     },
     

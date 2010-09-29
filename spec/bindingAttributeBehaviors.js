@@ -9,15 +9,66 @@ describe('Binding attribute syntax', {
         testNode.id = "testNode";
         document.body.appendChild(testNode);
     },
+    
+    'applyBindings should accept no parameters and then act on document.body with undefined model': function() {
+    	var didInit = false;
+        ko.bindingHandlers.test = {
+            init: function (element, dataValue, allBindings, viewModel) {
+                value_of(element.id).should_be("testElement");
+                value_of(viewModel).should_be(undefined);
+                didInit = true;
+            }
+        };
+        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        ko.applyBindings();
+        value_of(didInit).should_be(true);
+    },
+
+    'applyBindings should accept one parameter and then act on document.body with parameter as model': function() {
+    	var didInit = false;
+    	var suppliedViewModel = {};
+        ko.bindingHandlers.test = {
+            init: function (element, dataValue, allBindings, viewModel) {
+                value_of(element.id).should_be("testElement");
+                value_of(viewModel).should_be(suppliedViewModel);
+                didInit = true;
+            }
+        };
+        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        ko.applyBindings(suppliedViewModel);
+        value_of(didInit).should_be(true);
+    },
+    
+	'applyBindings should accept two parameters and then act on second param as DOM node with first param as model': function() {
+    	var didInit = false;
+    	var suppliedViewModel = {};
+        ko.bindingHandlers.test = {
+            init: function (element, dataValue, allBindings, viewModel) {
+                value_of(element.id).should_be("testElement");
+                value_of(viewModel).should_be(suppliedViewModel);
+                didInit = true;
+            }
+        };
+        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        var shouldNotMatchNode = document.createElement("DIV");
+        shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test:123'></div>";
+        document.body.appendChild(shouldNotMatchNode);
+        try {
+        	ko.applyBindings(suppliedViewModel, testNode);
+        	value_of(didInit).should_be(true);    	
+		} finally {
+			shouldNotMatchNode.parentNode.removeChild(shouldNotMatchNode);
+		}
+    },
 
     'Should tolerate whitespace and nonexistent handlers': function () {
         testNode.innerHTML = "<div data-bind=' nonexistentHandler : \"Hello\" '></div>";
-        ko.applyBindings(testNode); // No exception means success
+        ko.applyBindings(null, testNode); // No exception means success
     },
 
     'Should tolerate arbitrary literals as the values for a handler': function () {
         testNode.innerHTML = "<div data-bind='stringLiteral: \"hello\", numberLiteral: 123, boolLiteral: true, objectLiteral: {}, functionLiteral: function() { }'></div>";
-        ko.applyBindings(testNode); // No exception means success
+        ko.applyBindings(null, testNode); // No exception means success
     },
 
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
@@ -37,7 +88,7 @@ describe('Binding attribute syntax', {
             }
         }
         testNode.innerHTML = "<div id='testElement' data-bind='test:\"Hello\", another:123'></div>";
-        ko.applyBindings(testNode);
+        ko.applyBindings(null, testNode);
         value_of(methodsInvoked.length).should_be(2);
         value_of(methodsInvoked[0]).should_be("init");
         value_of(methodsInvoked[1]).should_be("update");
@@ -52,7 +103,7 @@ describe('Binding attribute syntax', {
         };
         testNode.innerHTML = "<div data-bind='test: myObservable'></div>";
 
-        ko.applyBindings(testNode, { myObservable: observable });
+        ko.applyBindings({ myObservable: observable }, testNode);
         value_of(initPassedValues.length).should_be(1);
         value_of(updatePassedValues.length).should_be(1);
         value_of(initPassedValues[0]).should_be(undefined);
@@ -70,7 +121,7 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.test = { update: function (element, value) { passedValues.push(value); } };
         testNode.innerHTML = "<div data-bind='test: myObservable()'></div>";
 
-        ko.applyBindings(testNode, { myObservable: observable });
+        ko.applyBindings({ myObservable: observable }, testNode);
         observable("B");
         value_of(passedValues.length).should_be(2);
 
@@ -85,7 +136,7 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.test = { update: function (element, value) { passedValues.push(value); } };
         testNode.innerHTML = "<div data-bind='test: myObservable().message'></div>";
 
-        ko.applyBindings(testNode, { myObservable: observable });
+        ko.applyBindings({ myObservable: observable }, testNode);
         value_of(passedValues.length).should_be(1);
         value_of(passedValues[0]).should_be("hello");
 

@@ -44,7 +44,11 @@
         isFirstEvaluation = false;
     };
 
-    ko.applyBindings = function (rootNode, viewModel) {
+    ko.applyBindings = function (viewModel, rootNode) {
+    	if (rootNode && (rootNode.nodeType == undefined))
+    		throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+    	rootNode = rootNode || document.body; // Make "rootNode" parameter optional
+    			
         var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
