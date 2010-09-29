@@ -5,13 +5,16 @@ ko.observable = function (initialValue) {
 
     function observable(newValue) {
         if (arguments.length > 0) {
+        	// Write
             _latestValue = newValue;
             observable.notifySubscribers(_latestValue);
+            return this; // Permits chained assignments
         }
-        else // The caller only needs to be notified of changes if they did a "read" operation
-            ko.dependencyDetection.registerDependency(observable);
-
-        return _latestValue;
+        else {
+        	// Read
+            ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
+        	return _latestValue;
+    	}
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }

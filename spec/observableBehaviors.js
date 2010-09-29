@@ -15,6 +15,17 @@ describe('Observable', {
         var instance = new ko.observable();
         instance(123);
     },
+    
+    'Should be able to write to multiple observable properties on a model object using chaining syntax': function() {
+    	var model = {
+    		prop1: new ko.observable(),
+    		prop2: new ko.observable()
+    	};
+    	model.prop1('A').prop2('B');
+    	
+    	value_of(model.prop1()).should_be('A');
+    	value_of(model.prop2()).should_be('B');
+    },
 
     'Should advertise that instances can have values written to them': function () {
         var instance = new ko.observable(function () { });
