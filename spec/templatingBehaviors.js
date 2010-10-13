@@ -271,5 +271,11 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input type='checkbox' data-bind='checked:isChecked' />" }));
         ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { isChecked: true } }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].checked).should_be(true);
-    }
+    },
+    
+    'Should be able to populate radio buttons from inside templates, despite IE6 limitations': function () {    	
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input type='radio' name='somename' value='abc' data-bind='checked:someValue' />" }));
+        ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { someValue: 'abc' } }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].checked).should_be(true);
+    }    
 })

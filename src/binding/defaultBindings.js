@@ -261,13 +261,19 @@ ko.bindingHandlers.checked = {
     },
     update: function (element, value) {
         value = ko.utils.unwrapObservable(value);
+        
         if (element.type == "checkbox") {
             element.checked = value;
             
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
             if (value && ko.utils.isIe6) 
                 element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
-        } else if (element.type == "radio")
+        } else if (element.type == "radio") {
             element.checked = (element.value == value);
+            
+            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
+            if ((element.value == value) && ko.utils.isIe6) 
+                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);            
+        }
     }
 };
