@@ -19,9 +19,9 @@
         var dataForTemplate = ko.utils.unwrapObservable(data);
 
         options = options || {};
-        var templateEngineToUse = (options.templateEngine || _templateEngine);
+        var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
-        var renderedNodesArray = templateEngineToUse.renderTemplate(template, dataForTemplate, options);
+        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, dataForTemplate, options);
 
         // Loosely check result is an array of DOM nodes
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
@@ -44,14 +44,13 @@
 
     ko.renderTemplate = function (template, data, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
-        if ((options.templateEngine || _templateEngine) == undefined)
+        if ((options['templateEngine'] || _templateEngine) == undefined)
             throw "Set a template engine before calling renderTemplate";
         renderMode = renderMode || "replaceChildren";
 
         if (targetNodeOrNodeArray) {
             var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); };
-
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
                     var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options);
@@ -61,7 +60,7 @@
                     }
                 },
                 null,
-                { disposeWhen: whenToDispose }
+                { 'disposeWhen': whenToDispose }
             );
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
@@ -81,28 +80,31 @@
 
             // Filter out any entries marked as destroyed
             var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
-                return options.includeDestroyed || !item._destroy;
+                return options['includeDestroyed'] || !item['_destroy'];
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
             }, options);
-        }, null, { disposeWhen: whenToDispose });
+        }, null, { 'disposeWhen': whenToDispose });
     };
 
-    ko.bindingHandlers.template = {
-        update: function (element, bindingValue, allBindings, viewModel) {
+    ko.bindingHandlers['template'] = {
+        'update': function (element, bindingValue, allBindings, viewModel) {
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
 
-            if (typeof bindingValue.foreach != "undefined") {
+            if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue.foreach || [], { afterAdd: bindingValue.afterAdd, beforeRemove: bindingValue.beforeRemove, includeDestroyed: bindingValue.includeDestroyed }, element);
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'] }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
-                var templateData = bindingValue.data;
+                var templateData = bindingValue['data'];
                 ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
             }
         }
     };
 })();
+
+goog.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
+goog.exportSymbol('ko.renderTemplate', ko.renderTemplate);

@@ -161,7 +161,7 @@ ko.utils = new (function () {
 
         registerEventHandler: function (element, eventType, handler) {
             if (typeof jQuery != "undefined")
-                jQuery(element).bind(eventType, handler);
+                jQuery(element)['bind'](eventType, handler);
             else if (typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
             else if (typeof element.attachEvent != "undefined")
@@ -261,8 +261,8 @@ ko.utils = new (function () {
 
         postJson: function (urlOrForm, data, options) {
             options = options || {};
-            var params = options.params || {};
-            var includeFields = options.includeFields || this.fieldsIncludedWithJsonPost;
+            var params = options['params'] || {};
+            var includeFields = options['includeFields'] || this.fieldsIncludedWithJsonPost;
             var url = urlOrForm;
             
             // If we were given a form, use its 'action' URL and pick out any requested field values 	
@@ -294,7 +294,7 @@ ko.utils = new (function () {
                 form.appendChild(input);
             }            
             document.body.appendChild(form);
-            options.submitter ? options.submitter(form) : form.submit();
+            options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         },
 
@@ -339,10 +339,20 @@ ko.utils = new (function () {
     }
 })();
 
-if (!Function.prototype.bind) {
+goog.exportSymbol('ko.utils', ko.utils);
+goog.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
+goog.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
+goog.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
+goog.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
+goog.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
+goog.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+goog.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
+goog.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+
+if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)
     // In case the browser doesn't implement it natively, provide a JavaScript implementation. This implementation is based on the one in prototype.js
-    Function.prototype.bind = function (object) {
+    Function.prototype['bind'] = function (object) {
         var originalFunction = this, args = Array.prototype.slice.call(arguments), object = args.shift();
         return function () {
             return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));

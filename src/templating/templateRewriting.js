@@ -5,8 +5,8 @@ ko.templateRewriting = (function () {
 
     return {
         ensureTemplateIsRewritten: function (template, templateEngine) {
-            if (!templateEngine.isTemplateRewritten(template))
-                templateEngine.rewriteTemplate(template, function (htmlString) {
+            if (!templateEngine['isTemplateRewritten'](template))
+                templateEngine['rewriteTemplate'](template, function (htmlString) {
                     return ko.templateRewriting.memoizeBindingAttributeSyntax(htmlString, templateEngine);
                 });
         },
@@ -23,7 +23,7 @@ ko.templateRewriting = (function () {
                 var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
                     return (function() { return { " + dataBindAttributeValue + " } })() \
                 })";
-                return templateEngine.createJavaScriptEvaluatorBlock(applyBindingsToNextSiblingScript) + tagToRetain;
+                return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
             });
         },
 
@@ -35,3 +35,6 @@ ko.templateRewriting = (function () {
         }
     }
 })();
+
+goog.exportSymbol('ko.templateRewriting', ko.templateRewriting);
+goog.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template

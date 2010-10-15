@@ -29,5 +29,9 @@
             } else
                 element.value = value;
         }
-    };
+    };        
 })();
+
+goog.exportSymbol('ko.selectExtensions', ko.selectExtensions);
+goog.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
+goog.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);

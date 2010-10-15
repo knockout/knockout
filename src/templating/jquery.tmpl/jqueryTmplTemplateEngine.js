@@ -6,9 +6,9 @@ ko.jqueryTmplTemplateEngine = function () {
     this.jQueryTmplVersion = (function() {
         var missingDependenciesError = "To use KO's default template engine, reference jQuery and jquery-tmpl. See Knockout installation documentation for more details.";
         if (typeof(jQuery) == "undefined")
-            throw new Error("jQuery not detected.\n" + missingDependenciesError);
+            return 0; //throw new Error("jQuery not detected.\n" + missingDependenciesError);
         if (!jQuery.tmpl)
-            throw new Error("jquery.tmpl not detected.\n" + missingDependenciesError);
+            return 0; //throw new Error("jquery.tmpl not detected.\n" + missingDependenciesError);
         if (jQuery.tmpl.tag)
             return 2; // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
         return 1;
@@ -25,7 +25,7 @@ ko.jqueryTmplTemplateEngine = function () {
     var aposMarker = "__ko_apos__";
     var aposRegex = new RegExp(aposMarker, "g");
     
-    this.renderTemplate = function (template, data, options) {
+    this['renderTemplate'] = function (template, data, options) {
         if (this.jQueryTmplVersion == 1) {    	
             // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
             // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
@@ -43,11 +43,11 @@ ko.jqueryTmplTemplateEngine = function () {
         return $.tmpl(templateText, data);
     },
 
-    this.isTemplateRewritten = function (template) {
+    this['isTemplateRewritten'] = function (template) {
         return getTemplateNode(template).isRewritten === true;
     },
 
-    this.rewriteTemplate = function (template, rewriterCallback) {
+    this['rewriteTemplate'] = function (template, rewriterCallback) {
         var templateNode = getTemplateNode(template);
         var rewritten = rewriterCallback(templateNode.text);     
         
@@ -68,7 +68,7 @@ ko.jqueryTmplTemplateEngine = function () {
         templateNode.isRewritten = true;
     },
 
-    this.createJavaScriptEvaluatorBlock = function (script) {
+    this['createJavaScriptEvaluatorBlock'] = function (script) {
         if (this.jQueryTmplVersion == 1)
             return "{{= " + script + "}}";
             

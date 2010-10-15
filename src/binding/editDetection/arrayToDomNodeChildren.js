@@ -22,7 +22,7 @@
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-        }, null, { disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        }, null, { 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
         return mappedNodes;
 	}
 
@@ -91,10 +91,10 @@
 
         var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {
-            if (options.afterAdd)
-                options.afterAdd(nodesAdded);
-            if (options.beforeRemove) {
-                options.beforeRemove(nodesToDelete);
+            if (options['afterAdd'])
+                options['afterAdd'](nodesAdded);
+            if (options['beforeRemove']) {
+                options['beforeRemove'](nodesToDelete);
                 invokedBeforeRemoveCallback = true;
             }
         }
@@ -108,3 +108,5 @@
         ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);
     }
 })();
+
+goog.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
