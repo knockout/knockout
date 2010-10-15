@@ -21,7 +21,7 @@ ko.observable = function (initialValue) {
 
     ko.subscribable.call(observable);
     
-    goog.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
+    ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     
     return observable;
 }
@@ -35,6 +35,6 @@ ko.isWriteableObservable = function (instance) {
 }
 
 
-goog.exportSymbol('ko.observable', ko.observable);
-goog.exportSymbol('ko.isObservable', ko.isObservable);
-goog.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+ko.exportSymbol('ko.observable', ko.observable);
+ko.exportSymbol('ko.isObservable', ko.isObservable);
+ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);

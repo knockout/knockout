@@ -56,11 +56,11 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     ko.subscribable.call(dependentObservable);
     evaluate();
     
-    goog.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
-    goog.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
+    ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
+    ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
     
     return dependentObservable;
 };
 ko.dependentObservable.__ko_proto__ = ko.observable;
 
-goog.exportSymbol('ko.dependentObservable', ko.dependentObservable);
+ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);

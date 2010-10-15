@@ -32,6 +32,6 @@
     };        
 })();
 
-goog.exportSymbol('ko.selectExtensions', ko.selectExtensions);
-goog.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
-goog.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);
+ko.exportSymbol('ko.selectExtensions', ko.selectExtensions);
+ko.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
+ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);

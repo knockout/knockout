@@ -36,5 +36,5 @@ ko.templateRewriting = (function () {
     }
 })();
 
-goog.exportSymbol('ko.templateRewriting', ko.templateRewriting);
-goog.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
+ko.exportSymbol('ko.templateRewriting', ko.templateRewriting);
+ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template

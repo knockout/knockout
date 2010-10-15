@@ -339,15 +339,15 @@ ko.utils = new (function () {
     }
 })();
 
-goog.exportSymbol('ko.utils', ko.utils);
-goog.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
-goog.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
-goog.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
-goog.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
-goog.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
-goog.exportSymbol('ko.utils.postJson', ko.utils.postJson);
-goog.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
-goog.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+ko.exportSymbol('ko.utils', ko.utils);
+ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
+ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
+ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
+ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
+ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
+ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)

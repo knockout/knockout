@@ -4,7 +4,7 @@ ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;
     this.dispose = disposeCallback;
     
-    goog.exportProperty(this, 'dispose', this.dispose);
+    ko.exportProperty(this, 'dispose', this.dispose);
 };
 
 ko.subscribable = function () {
@@ -31,14 +31,14 @@ ko.subscribable = function () {
         return _subscriptions.length;
     };
     
-    goog.exportProperty(this, 'subscribe', this.subscribe);
-    goog.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
-    goog.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
+    ko.exportProperty(this, 'subscribe', this.subscribe);
+    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
+    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
 }
 
 ko.isSubscribable = function (instance) {
     return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
 };
 
-goog.exportSymbol('ko.subscribable', ko.subscribable);
-goog.exportSymbol('ko.isSubscribable', ko.isSubscribable);
+ko.exportSymbol('ko.subscribable', ko.subscribable);
+ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);

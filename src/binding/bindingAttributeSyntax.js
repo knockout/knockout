@@ -55,6 +55,6 @@
         });
     };
     
-    goog.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
-	goog.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
+	ko.exportSymbol('ko.applyBindings', ko.applyBindings);
 })();

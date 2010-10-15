@@ -2,109 +2,18 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-// This code is used only to make the minified file smaller
-// Extraced from http://closure-library.googlecode.com/svn/docs/closure_goog_base.js.source.html
-
-var goog = window.goog = window.goog || { };
-
-/**
- * Reference to the global context.  In most cases this will be 'window'.
- */
-goog.global = goog.global || this;
-
-/**
- * Returns true if the specified value is not |undefined|.
- * WARNING: Do not use this to test if an object has a property. Use the in
- * operator instead.  Additionally, this function assumes that the global
- * undefined variable has not been redefined.
- * @param {*} val Variable to test.
- * @return {boolean} Whether variable is defined.
- */
-goog.isDef = goog.isDef || function(val) {
-  return val !== undefined;
+var ko = window["ko"] = {};
+// Google Closure Compiler helpers (used only to make the minified file smaller)
+ko.exportSymbol = function(publicPath, object) {
+	var tokens = publicPath.split(".");
+	var target = window;
+	for (var i = 0; i < tokens.length - 1; i++)
+		target = target[tokens[i]];
+	target[tokens[tokens.length - 1]] = object;
 };
-
-/**
- * Exposes an unobfuscated global namespace path for the given object.
- * Note that fields of the exported object *will* be obfuscated,
- * unless they are exported in turn via this function or
- * goog.exportProperty
- *
- * <p>Also handy for making public items that are defined in anonymous
- * closures.
- *
- * ex. goog.exportSymbol('Foo', Foo);
- *
- * ex. goog.exportSymbol('public.path.Foo.staticFunction',
- *                       Foo.staticFunction);
- *     public.path.Foo.staticFunction();
- *
- * ex. goog.exportSymbol('public.path.Foo.prototype.myMethod',
- *                       Foo.prototype.myMethod);
- *     new public.path.Foo().myMethod();
- *
- * @param {string} publicPath Unobfuscated name to export.
- * @param {*} object Object the name should point to.
- * @param {Object=} opt_objectToExportTo The object to add the path to; default
- *     is |goog.global|.
- */
-goog.exportSymbol = goog.exportSymbol || function(publicPath, object, opt_objectToExportTo) {
-  goog.exportPath_(publicPath, object, opt_objectToExportTo);
-};
-
-/**
- * Exports a property unobfuscated into the object's namespace.
- * ex. goog.exportProperty(Foo, 'staticFunction', Foo.staticFunction);
- * ex. goog.exportProperty(Foo.prototype, 'myMethod', Foo.prototype.myMethod);
- * @param {Object} object Object whose static property is being exported.
- * @param {string} publicName Unobfuscated name to export.
- * @param {*} symbol Object the name should point to.
- */
-goog.exportProperty = goog.exportProperty || function(object, publicName, symbol) {
-  object[publicName] = symbol;
-};
-
-/**
- * Builds an object structure for the provided namespace path,
- * ensuring that names that already exist are not overwritten. For
- * example:
- * "a.b.c" -> a = {};a.b={};a.b.c={};
- * Used by goog.provide and goog.exportSymbol.
- * @param {string} name name of the object that this file defines.
- * @param {*=} opt_object the object to expose at the end of the path.
- * @param {Object=} opt_objectToExportTo The object to add the path to; default
- *     is |goog.global|.
- * @private
- */
-goog.exportPath_ = goog.exportPath_ || function(name, opt_object, opt_objectToExportTo) {
-  var parts = name.split('.');
-  var cur = opt_objectToExportTo || goog.global;
-
-  // Internet Explorer exhibits strange behavior when throwing errors from
-  // methods externed in this manner.  See the testExportSymbolExceptions in
-  // base_test.html for an example.
-  if (!(parts[0] in cur) && cur.execScript) {
-    cur.execScript('var ' + parts[0]);
-  }
-
-  // Certain browsers cannot parse code in the form for((a in b); c;);
-  // This pattern is produced by the JSCompiler when it collapses the
-  // statement above into the conditional loop below. To prevent this from
-  // happening, use a for-loop and reserve the init logic as below.
-
-  // Parentheses added to eliminate strict JS warning in Firefox.
-  for (var part; parts.length && (part = parts.shift());) {
-    if (!parts.length && goog.isDef(opt_object)) {
-      // last part and we have an object; use it
-      cur[part] = opt_object;
-    } else if (cur[part]) {
-      cur = cur[part];
-    } else {
-      cur = cur[part] = {};
-    }
-  }
-};var ko = window["ko"] = {};
-/// <reference path="namespace.js" />
+ko.exportProperty = function(owner, publicName, object) {
+  owner[publicName] = object;
+};/// <reference path="namespace.js" />
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
@@ -445,15 +354,15 @@ ko.utils = new (function () {
     }
 })();
 
-goog.exportSymbol('ko.utils', ko.utils);
-goog.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
-goog.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
-goog.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
-goog.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
-goog.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
-goog.exportSymbol('ko.utils.postJson', ko.utils.postJson);
-goog.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
-goog.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+ko.exportSymbol('ko.utils', ko.utils);
+ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
+ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
+ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
+ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
+ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
+ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)
@@ -530,17 +439,18 @@ ko.memoization = (function () {
     };
 })();
 
-goog.exportSymbol('ko.memoization', ko.memoization);
-goog.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
-goog.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
-goog.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
-goog.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);/// <reference path="../utils.js" />
+ko.exportSymbol('ko.memoization', ko.memoization);
+ko.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
+ko.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
+ko.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
+ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);
+/// <reference path="../utils.js" />
 
 ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;
     this.dispose = disposeCallback;
     
-    goog.exportProperty(this, 'dispose', this.dispose);
+    ko.exportProperty(this, 'dispose', this.dispose);
 };
 
 ko.subscribable = function () {
@@ -567,17 +477,18 @@ ko.subscribable = function () {
         return _subscriptions.length;
     };
     
-    goog.exportProperty(this, 'subscribe', this.subscribe);
-    goog.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
-    goog.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
+    ko.exportProperty(this, 'subscribe', this.subscribe);
+    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
+    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
 }
 
 ko.isSubscribable = function (instance) {
     return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
 };
 
-goog.exportSymbol('ko.subscribable', ko.subscribable);
-goog.exportSymbol('ko.isSubscribable', ko.isSubscribable);/// <reference path="subscribable.js" />
+ko.exportSymbol('ko.subscribable', ko.subscribable);
+ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);
+/// <reference path="subscribable.js" />
 
 ko.dependencyDetection = (function () {
     var _detectedDependencies = [];
@@ -622,7 +533,7 @@ ko.observable = function (initialValue) {
 
     ko.subscribable.call(observable);
     
-    goog.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
+    ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     
     return observable;
 }
@@ -636,9 +547,10 @@ ko.isWriteableObservable = function (instance) {
 }
 
 
-goog.exportSymbol('ko.observable', ko.observable);
-goog.exportSymbol('ko.isObservable', ko.isObservable);
-goog.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);/// <reference path="observable.js" />
+ko.exportSymbol('ko.observable', ko.observable);
+ko.exportSymbol('ko.isObservable', ko.isObservable);
+ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+/// <reference path="observable.js" />
 
 ko.observableArray = function (initialValues) {
     var result = new ko.observable(initialValues);
@@ -707,16 +619,17 @@ ko.observableArray = function (initialValues) {
         return ko.utils.arrayIndexOf(underlyingArray, item);
     };
     
-    goog.exportProperty(result, "remove", result.remove);
-    goog.exportProperty(result, "removeAll", result.removeAll);
-	goog.exportProperty(result, "destroy", result.destroy);
-	goog.exportProperty(result, "destroyAll", result.destroyAll);
-	goog.exportProperty(result, "indexOf", result.indexOf);
+    ko.exportProperty(result, "remove", result.remove);
+    ko.exportProperty(result, "removeAll", result.removeAll);
+	ko.exportProperty(result, "destroy", result.destroy);
+	ko.exportProperty(result, "destroyAll", result.destroyAll);
+	ko.exportProperty(result, "indexOf", result.indexOf);
 	
     return result;
 }
 
-goog.exportSymbol('ko.observableArray', ko.observableArray);/// <reference path="observable.js" />
+ko.exportSymbol('ko.observableArray', ko.observableArray);
+/// <reference path="observable.js" />
 
 ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
     if (typeof evaluatorFunction != "function")
@@ -774,14 +687,15 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     ko.subscribable.call(dependentObservable);
     evaluate();
     
-    goog.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
-    goog.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
+    ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
+    ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
     
     return dependentObservable;
 };
 ko.dependentObservable.__ko_proto__ = ko.observable;
 
-goog.exportSymbol('ko.dependentObservable', ko.dependentObservable);(function () {
+ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
+(function () {
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
     // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
@@ -815,9 +729,10 @@ goog.exportSymbol('ko.dependentObservable', ko.dependentObservable);(function ()
     };        
 })();
 
-goog.exportSymbol('ko.selectExtensions', ko.selectExtensions);
-goog.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
-goog.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);/// <reference path="../utils.js" />
+ko.exportSymbol('ko.selectExtensions', ko.selectExtensions);
+ko.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
+ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);
+/// <reference path="../utils.js" />
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
@@ -917,9 +832,10 @@ ko.jsonExpressionRewriting = (function () {
     };
 })();
 
-goog.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
-goog.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
-goog.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);/// <reference path="../subscribables/dependentObservable.js" />
+ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
+ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+/// <reference path="../subscribables/dependentObservable.js" />
 
 (function () {
     var bindingAttributeName = "data-bind";
@@ -976,8 +892,8 @@ goog.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', 
         });
     };
     
-    goog.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
-	goog.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
+	ko.exportSymbol('ko.applyBindings', ko.applyBindings);
 })();/// <reference path="bindingAttributeSyntax.js" />
 
 ko.bindingHandlers['click'] = {
@@ -1273,7 +1189,8 @@ ko.templateEngine = function () {
     }
 };
 
-goog.exportSymbol('ko.templateEngine', ko.templateEngine);/// <reference path="templateEngine.js" />
+ko.exportSymbol('ko.templateEngine', ko.templateEngine);
+/// <reference path="templateEngine.js" />
 
 ko.templateRewriting = (function () {
     var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])(.*?)\5/g;
@@ -1311,8 +1228,8 @@ ko.templateRewriting = (function () {
     }
 })();
 
-goog.exportSymbol('ko.templateRewriting', ko.templateRewriting);
-goog.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
+ko.exportSymbol('ko.templateRewriting', ko.templateRewriting);
+ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
 /// <reference path="templating.js" />
 /// <reference path="../subscribables/dependentObservable.js" />
 
@@ -1421,8 +1338,9 @@ goog.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.
     };
 })();
 
-goog.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
-goog.exportSymbol('ko.renderTemplate', ko.renderTemplate);/// <reference path="../../utils.js" />
+ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
+ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+/// <reference path="../../utils.js" />
 
 // Simple calculation based on Levenshtein distance.
 (function () {
@@ -1506,7 +1424,8 @@ goog.exportSymbol('ko.renderTemplate', ko.renderTemplate);/// <reference path=".
     };    
 })();
 
-goog.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);/// <reference path="compareArrays.js" />
+ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
+/// <reference path="compareArrays.js" />
 
 (function () {
     // Objective:
@@ -1617,7 +1536,8 @@ goog.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);/// <referen
     }
 })();
 
-goog.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);/// <reference path="../templating.js" />
+ko.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
+/// <reference path="../templating.js" />
 
 ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 

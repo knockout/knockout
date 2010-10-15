@@ -82,4 +82,4 @@
     };    
 })();
 
-goog.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
+ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);

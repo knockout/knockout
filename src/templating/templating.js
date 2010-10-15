@@ -106,5 +106,5 @@
     };
 })();
 
-goog.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
-goog.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
+ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);

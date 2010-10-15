@@ -67,13 +67,13 @@ ko.observableArray = function (initialValues) {
         return ko.utils.arrayIndexOf(underlyingArray, item);
     };
     
-    goog.exportProperty(result, "remove", result.remove);
-    goog.exportProperty(result, "removeAll", result.removeAll);
-	goog.exportProperty(result, "destroy", result.destroy);
-	goog.exportProperty(result, "destroyAll", result.destroyAll);
-	goog.exportProperty(result, "indexOf", result.indexOf);
+    ko.exportProperty(result, "remove", result.remove);
+    ko.exportProperty(result, "removeAll", result.removeAll);
+	ko.exportProperty(result, "destroy", result.destroy);
+	ko.exportProperty(result, "destroyAll", result.destroyAll);
+	ko.exportProperty(result, "indexOf", result.indexOf);
 	
     return result;
 }
 
-goog.exportSymbol('ko.observableArray', ko.observableArray);
+ko.exportSymbol('ko.observableArray', ko.observableArray);

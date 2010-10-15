@@ -15,4 +15,4 @@ ko.templateEngine = function () {
     }
 };
 
-goog.exportSymbol('ko.templateEngine', ko.templateEngine);
+ko.exportSymbol('ko.templateEngine', ko.templateEngine);

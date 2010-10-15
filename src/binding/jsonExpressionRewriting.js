@@ -98,6 +98,6 @@ ko.jsonExpressionRewriting = (function () {
     };
 })();
 
-goog.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
-goog.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
-goog.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
+ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
