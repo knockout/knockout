@@ -49,7 +49,7 @@ ko.observableArray = function (initialValues) {
     	for (var i = underlyingArray.length - 1; i >= 0; i--) {
     		var value = underlyingArray[i];
 			if (predicate(value))
-				underlyingArray[i]._destroy = true;
+				underlyingArray[i]["_destroy"] = true;
 		}
 		result.valueHasMutated();
     };
@@ -66,6 +66,14 @@ ko.observableArray = function (initialValues) {
         var underlyingArray = result();
         return ko.utils.arrayIndexOf(underlyingArray, item);
     };
-
+    
+    goog.exportProperty(result, "remove", result.remove);
+    goog.exportProperty(result, "removeAll", result.removeAll);
+	goog.exportProperty(result, "destroy", result.destroy);
+	goog.exportProperty(result, "destroyAll", result.destroyAll);
+	goog.exportProperty(result, "indexOf", result.indexOf);
+	
     return result;
 }
+
+goog.exportSymbol('ko.observableArray', ko.observableArray);

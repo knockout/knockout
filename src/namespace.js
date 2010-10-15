@@ -1,1 +1,1 @@
-var ko = window.ko = {};
+var ko = window["ko"] = {};

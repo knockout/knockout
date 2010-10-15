@@ -20,6 +20,9 @@ ko.observable = function (initialValue) {
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
 
     ko.subscribable.call(observable);
+    
+    goog.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
+    
     return observable;
 }
 ko.isObservable = function (instance) {
@@ -30,3 +33,8 @@ ko.isObservable = function (instance) {
 ko.isWriteableObservable = function (instance) {
     return (typeof instance == "function") && instance.__ko_proto__ === ko.observable;
 }
+
+
+goog.exportSymbol('ko.observable', ko.observable);
+goog.exportSymbol('ko.isObservable', ko.isObservable);
+goog.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);

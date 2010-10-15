@@ -1,4 +1,5 @@
 ﻿knockoutDebugCallback([
+    'src/google-closure-compiler-utils.js',
     'src/namespace.js',
     'src/utils.js',
     'src/memoization.js',    

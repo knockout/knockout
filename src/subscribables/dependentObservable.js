@@ -21,8 +21,8 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
     var _latestValue, _isFirstEvaluation = true;
     function evaluate() {
-        if ((!_isFirstEvaluation) && options && typeof options.disposeWhen == "function") {
-            if (options.disposeWhen()) {
+        if ((!_isFirstEvaluation) && options && typeof options["disposeWhen"] == "function") {
+            if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
             }
@@ -55,6 +55,12 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
     ko.subscribable.call(dependentObservable);
     evaluate();
+    
+    goog.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
+    goog.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
+    
     return dependentObservable;
 };
 ko.dependentObservable.__ko_proto__ = ko.observable;
+
+goog.exportSymbol('ko.dependentObservable', ko.dependentObservable);
