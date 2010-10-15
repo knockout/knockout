@@ -3,12 +3,9 @@
 ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
     // doesn't expose a version number, so we have to infer it.
-    this.jQueryTmplVersion = (function() {
-        var missingDependenciesError = "To use KO's default template engine, reference jQuery and jquery-tmpl. See Knockout installation documentation for more details.";
-        if (typeof(jQuery) == "undefined")
-            return 0; //throw new Error("jQuery not detected.\n" + missingDependenciesError);
-        if (!jQuery.tmpl)
-            return 0; //throw new Error("jquery.tmpl not detected.\n" + missingDependenciesError);
+    this.jQueryTmplVersion = (function() {        
+        if ((typeof(jQuery) == "undefined") || !jQuery.tmpl)
+            return 0;
         if (jQuery.tmpl.tag)
             return 2; // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
         return 1;
@@ -26,6 +23,9 @@ ko.jqueryTmplTemplateEngine = function () {
     var aposRegex = new RegExp(aposMarker, "g");
     
     this['renderTemplate'] = function (template, data, options) {
+    	if (this.jQueryTmplVersion == 0)
+    		throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
+    	
         if (this.jQueryTmplVersion == 1) {    	
             // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
             // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
