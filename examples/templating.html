@@ -1,16 +1,16 @@
 ﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-	<head>
-		<title>Knockout Examples</title>
+    <head>
+        <title>Knockout Examples</title>
         <link rel="Stylesheet" href="styles.css" />
         <script type="text/javascript" src="../lib/jquery-1.4.2.js"></script>
         <script type="text/javascript" src="../lib/jquery.tmpl.js"></script>
-        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>
+        <script type="text/javascript" src="../build/output/knockout-latest.min.js"></script>        
         <style type="text/css">
             .renderTime { color: #777; font-style: italic; font-size: 0.8em; }
         </style>
-	</head>
-	<body>
+    </head>
+    <body>
         <div id="header">
             <div class="menu"><a href="../index.html">Home</a>|<a href="index.html">Examples</a>|<a href="http://github.com/SteveSanderson/knockout/downloads">Download</a></div>
             <a class="logo" href="../index.html"><img src="resources/knockout-logo.png" /></a>
@@ -26,7 +26,7 @@
             </p>
 
             <div data-bind="template: 'peopleTemplate'"></div>
-            <label><input type="checkbox" data-bind="value: showRenderTimes" /> Show render times</label>
+            <label><input type="checkbox" data-bind="checked: showRenderTimes" /> Show render times</label>
 
             <script type="text/html" id="peopleTemplate">
                 <h2>People</h2>
@@ -36,7 +36,9 @@
                             <div>
                                 ${ name } has <span data-bind="text: children().length">&nbsp;</span> children:
                                 <a href="#" data-bind="click: addChild ">Add child</a>
-                                <span class="renderTime" data-bind="visible: showRenderTimes">(person rendered at ${ new Date().getSeconds() })</span>
+                                <span class="renderTime" data-bind="visible: showRenderTimes">
+                                    (person rendered at <span data-bind="text: new Date().getSeconds()"></span>)
+                                </span>
                             </div>
                             <div data-bind="template: { name: 'childrenTemplate', data: children }"></div>
                         </li>
@@ -48,7 +50,9 @@
                     {{each $data}}
                         <li>
                             ${ this }
-                            <span class="renderTime" data-bind="visible: viewModel.showRenderTimes">(child rendered at ${ new Date().getSeconds() })</span>
+                            <span class="renderTime" data-bind="visible: viewModel.showRenderTimes">
+                                (child rendered at <span data-bind="text: new Date().getSeconds()"></span>)
+                            </span>
                         </li>
                     {{/each}}
                 </ul>
@@ -59,8 +63,8 @@
             // Define a "person" class that tracks its own name and children, and has a method to add a new child
             var person = function (name, children) {
                 this.name = name;
-                this.children = ko.observableArray(children);
-
+                this.children = ko.observableArray(children);				
+                
                 this.addChild = function () {
                     this.children.push("New child");
                 }.bind(this);
@@ -78,5 +82,5 @@
 
             ko.applyBindings(viewModel);
         </script>
-	</body>
+    </body>
 </html>
