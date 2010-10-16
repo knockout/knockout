@@ -1,7 +1,7 @@
-﻿// This script adds <script> tags referencing each of the knockout.js source files in the correct order
+// This script adds <script> tags referencing each of the knockout.js source files in the correct order
 // It uses JSONP to fetch the list of source files from source-references.js
 (function () {
-    var debugFileName = "build/knockout-debug.js";
+    var debugFileName = "build/knockout-raw.js";
     var sourcesReferenceFile = "build/source-references.js";
 
     function getPathToScriptTagSrc(scriptTagSrc) {

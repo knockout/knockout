@@ -5,8 +5,8 @@ SourceFiles=`grep js < source-references.js | # Find JS references
              sed -e 's/.*/..\/&/' |           # Fix the paths by prefixing with ../
              tr '\n' ' '`                     # Combine into single line
 
-cat version-header.js $SourceFiles > output/knockout-latest.js # Concatenate all the files
+cat version-header.js $SourceFiles > output/knockout-latest.debug.js # Concatenate all the files
 
 # Now call Google Closure Compiler to produce a minified version
-cp version-header.js output/knockout-latest.min.js
-curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@output/knockout-latest.js "http://closure-compiler.appspot.com/compile" >> output/knockout-latest.min.js
+cp version-header.js output/knockout-latest.js
+curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@output/knockout-latest.debug.js "http://closure-compiler.appspot.com/compile" >> output/knockout-latest.js
