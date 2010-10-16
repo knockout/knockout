@@ -1551,9 +1551,9 @@ ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
     // doesn't expose a version number, so we have to infer it.
     this.jQueryTmplVersion = (function() {        
-        if ((typeof(jQuery) == "undefined") || !jQuery.tmpl)
+        if ((typeof(jQuery) == "undefined") || !jQuery['tmpl'])
             return 0;
-        if (jQuery.tmpl.tag)
+        if (jQuery['tmpl']['tag'])
             return 2; // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
         return 1;
     })();
@@ -1579,15 +1579,15 @@ ko.jqueryTmplTemplateEngine = function () {
             // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
             // parse that text into a document fragment using jQuery.clean().        
             var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(template).text + "</script>";
-            var renderedMarkupInWrapper = $.tmpl(templateTextInWrapper, data);
+            var renderedMarkupInWrapper = jQuery['tmpl'](templateTextInWrapper, data);
             var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");;
-            return jQuery.clean([renderedMarkup], document);
+            return jQuery['clean']([renderedMarkup], document);
         }
         
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
         var templateText = getTemplateNode(template).text;
-        return $.tmpl(templateText, data);
+        return jQuery['tmpl'](templateText, data);
     },
 
     this['isTemplateRewritten'] = function (template) {
@@ -1629,7 +1629,7 @@ ko.jqueryTmplTemplateEngine = function () {
     }
     
     if (this.jQueryTmplVersion > 1) {
-        jQuery.tmpl.tag.ko_code = {
+        jQuery['tmpl']['tag']['ko_code'] = {
             open: "_.push($1 || '');"
         };
     }    
