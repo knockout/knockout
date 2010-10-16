@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.1.0pre
+// Knockout JavaScript library v1.1.0pre2
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -596,14 +596,14 @@ ko.observableArray = function (initialValues) {
     };
     
     result.destroy = function (valueOrPredicate) {
-		var underlyingArray = result();
-		var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
-    	for (var i = underlyingArray.length - 1; i >= 0; i--) {
-    		var value = underlyingArray[i];
-			if (predicate(value))
-				underlyingArray[i]["_destroy"] = true;
-		}
-		result.valueHasMutated();
+        var underlyingArray = result();
+        var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+        for (var i = underlyingArray.length - 1; i >= 0; i--) {
+            var value = underlyingArray[i];
+            if (predicate(value))
+                underlyingArray[i]["_destroy"] = true;
+        }
+        result.valueHasMutated();
     };
     
     result.destroyAll = function (arrayOfValues) {
@@ -619,12 +619,20 @@ ko.observableArray = function (initialValues) {
         return ko.utils.arrayIndexOf(underlyingArray, item);
     };
     
+    result.replace = function(oldItem, newItem) {
+        var index = result.indexOf(oldItem);
+        if (index >= 0) {
+            result()[index] = newItem;
+            result.valueHasMutated();
+        }	
+    };
+    
     ko.exportProperty(result, "remove", result.remove);
     ko.exportProperty(result, "removeAll", result.removeAll);
-	ko.exportProperty(result, "destroy", result.destroy);
-	ko.exportProperty(result, "destroyAll", result.destroyAll);
-	ko.exportProperty(result, "indexOf", result.indexOf);
-	
+    ko.exportProperty(result, "destroy", result.destroy);
+    ko.exportProperty(result, "destroyAll", result.destroyAll);
+    ko.exportProperty(result, "indexOf", result.indexOf);
+    
     return result;
 }
 

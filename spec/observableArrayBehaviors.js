@@ -80,6 +80,13 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([["Beta"]]);
     },
     
+    'Should notify subscribers on replace': function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        notifiedValues = [];
+        testObservableArray.replace("Beta", "Delta");
+        value_of(notifiedValues).should_be([["Alpha", "Delta", "Gamma"]]);
+    },    
+    
     'Should notify subscribers after marking items as destroyed': function () {
     	var x = {}, y = {}, didNotify = false;
         testObservableArray([x, y]);
