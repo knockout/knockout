@@ -361,6 +361,7 @@ ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
 ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.range', ko.utils.range);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 
@@ -1627,6 +1628,7 @@ ko.jqueryTmplTemplateEngine = function () {
     this.addTemplate = function (templateName, templateMarkup) {
         document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
     }
+    ko.exportProperty(this, 'addTemplate', this.addTemplate);
     
     if (this.jQueryTmplVersion > 1) {
         jQuery['tmpl']['tag']['ko_code'] = {
@@ -1639,3 +1641,5 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
+
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);

@@ -346,6 +346,7 @@ ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
 ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.range', ko.utils.range);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 

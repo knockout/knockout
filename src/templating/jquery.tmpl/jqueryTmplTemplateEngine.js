@@ -80,6 +80,7 @@ ko.jqueryTmplTemplateEngine = function () {
     this.addTemplate = function (templateName, templateMarkup) {
         document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
     }
+    ko.exportProperty(this, 'addTemplate', this.addTemplate);
     
     if (this.jQueryTmplVersion > 1) {
         jQuery['tmpl']['tag']['ko_code'] = {
@@ -92,3 +93,5 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
+
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
