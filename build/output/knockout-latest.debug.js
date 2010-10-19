@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.1.0pre2
+// Knockout JavaScript library v1.1.0
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -355,11 +355,15 @@ ko.utils = new (function () {
 })();
 
 ko.exportSymbol('ko.utils', ko.utils);
-ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
 ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
 ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
+ko.exportSymbol('ko.utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
+ko.exportSymbol('ko.utils.arrayIndexOf', ko.utils.arrayIndexOf);
+ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
+ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
+ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
