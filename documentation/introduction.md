@@ -93,7 +93,7 @@ The price formatting shows that you can write arbitrary JavaScript in your bindi
 
 It's possible to create nested chains of observables computed from other observables (e.g., a total value defined as a sum of prices multiplied by a quantities). When anything in the chain changes, the dependencies further down from there are re-evaluated, and all associated UI updated. You don't have to declare associations between observables explicitly; the framework infers them from the code execution at runtime. 
 
-You can learn more about [observables](observables.html) and [observable arrays](observableArrays.html). The previous example was simple and didn't cover a lot of what makes KO effective. You can learn more about other built-in bindings and [templating](binding-template.html).
+You can learn more about [observables](observables.html) and [observable arrays](observableArrays.html). The previous example was simple and didn't cover a lot of what makes KO effective. You can learn more about other built-in bindings and [templating](template-binding.html).
 
 ## Is KO intended to compete with jQuery (or Prototype, etc.) or work with it?
 
