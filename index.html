@@ -1,0 +1,103 @@
+---
+layout: default
+title: Home
+mainmenukey: home
+---
+<div id="masthead">
+    <div id="slogan">
+        <p class="engraved">Simplify dynamic JavaScript UIs by applying the Model-View-View Model (MVVM) pattern</p>
+        <a class="download-button" href="http://github.com/downloads/SteveSanderson/knockout/knockout-1.1.0.js">
+            <p>Download</p>
+            <p class="smallprint">v1.1.0 - 23kb minified</p>
+        </a>
+    </div>
+    <img src="img/ko-logo.png" />
+</div>
+<div class="clear vspace"></div>
+
+<div class="sticker fullWidth">
+    <div class="stickerHeading titillium">
+        <h1>Key concepts</h1>
+    </div>
+    <ul id="introBadges">
+        <li>
+            <img src="img/feature-icons/declarative-bindings.png" />					
+            <p class="titillium heading">Declarative Bindings</p>
+            <p>Easily associate DOM elements with model data using a concise, readable syntax</p>						
+        </li>					
+        <li>
+            <img src="img/feature-icons/automatic-refreshing.png" />					
+            <p class="titillium heading">Automatic UI Refresh</p>
+            <p>When your data model's state changes, your UI updates automatically</p>						
+        </li>
+        <li>
+            <img src="img/feature-icons/dependency-tracking.png" />					
+            <p class="titillium heading">Dependency Tracking</p>
+            <p>Implicitly set up chains of relationships between model data, to transform and combine it</p>
+        </li>
+        <li>
+            <img src="img/feature-icons/templating.png" />					
+            <p class="titillium heading">Templating</p>
+            <p>Quickly generate sophisticated, nested UIs as a function of your model data</p>						
+        </li>					
+    </ul>
+    <div class="clear"></div>
+</div>
+
+<div class="floatLeft">
+	<div class="sticker" style="width: 380px">
+	    <div class="stickerHeading titillium">
+	        <h1>More features</h1>
+	    </div>
+	    <ul class="tickIcons">
+	        <li>Free, open source</li>
+	        <li>Pure JavaScript &mdash; works with any web framework</li>
+	        <li>
+	        	Small & lightweight &mdash; under 25kb minified
+	        	<p class="smallprint">... in fact, under 10kb when using HTTP compression</p>
+			</li>
+	        <li>
+	            Supports all mainstream browsers
+	            <p class="smallprint">IE 6 - 9, Firefox 2+, Chrome, Opera, Safari (Win/Mac/iPhone)</p>
+	        </li>
+	        <li>
+	            Use your choice of template engine
+	            <p class="smallprint">Works with the jquery.tmpl template engine, or others</p>
+	        </li>
+	        <li>Fully documented</li>
+	    </ul>
+    </div>
+    
+	<div class="sticker" style="width: 380px">
+	    <div class="stickerHeading titillium">
+	        <h1>Get started</h1>
+	    </div>
+	    <ul class="stickerList">
+	        <li>
+	        	<a href="documentation/introduction.html">Introduction to Knockout</a>
+	        	<p class="smallprint">Tutorial, benefits, comparisons with other frameworks</p>
+        	</li>
+        	<li>
+        		<a href="documentation/observables.html#mvvm_and_view_models">Introduction to the Model-View-View Model pattern</a>
+        		<p class="smallprint">How KO enables it with observables and dependent observables</p>
+        	</li>
+        	<li>
+        		<a href="examples/">More live examples</a>
+        	</li>           	
+        	<li>
+        		<a href="documentation/links.html">External links and blog posts</a>
+        	</li>        	
+	        <li>
+	        	<a href="http://github.com/SteveSanderson/knockout/">Source code on Github</a>
+        	</li>
+	    </ul>
+    </div>    
+</div>	
+		
+<div class="sticker floatRight homepageExample" style="width:494px">
+    <div class="stickerHeading titillium">
+        <h1>Live example</h1>
+    </div>
+    {% include homepage-example.html %}
+    <p>By encapsulating data and behavior into a view model, you get a clean, extensible foundation on which to build sophisticated UIs without getting lost in a tangle of event handlers and manual DOM updates.</p>
+</div>		

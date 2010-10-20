@@ -1,0 +1,16 @@
+
+{% if live_example_view %}
+<h2>Live example</h2>
+<div class="liveExample">
+{{ live_example_view }}
+<script type="text/javascript">
+/*<![CDATA[*/{{ live_example_viewmodel }}/*]]>*/
+</script>
+</div>
+
+<h2>Source code: View</h2>
+<pre class="brush:html">{{ live_example_view | replace:'/*<![CDATA[*/','' | replace:'/*]]>*/','' | escape }}</pre>
+<h2>Source code: View model</h2>
+<pre class="brush:js">{{ live_example_viewmodel | replace:'/*<![CDATA[*/','' | replace:'/*]]>*/','' | escape }}</pre>
+
+{% endif %}

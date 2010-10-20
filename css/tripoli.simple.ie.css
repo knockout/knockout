@@ -1,0 +1,16 @@
+/*
+ *   Tripoli is a generic CSS standard for HTML rendering. 
+ *   Copyright (C) 2007-2008 David Hellsing
+ *   
+ *   http://devkick.com/lab/tripoli/
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**
+_______________________________
+BASE.IE */
+textarea{white-space:pre}.content legend{margin-bottom:1.6em}.content fieldset{padding-top:0}sup,sub{font-size:100%}.content legend:first-child{margin-top:0}a abbr,a acronym{text-decoration:underline}* html .content blockquote *{margin:.8em 0}* html input{cursor:expression(this.type=='text' || this.type=='password' ? 'text' : 'pointer');display:expression(this.type=='hidden' ? 'none' : 'inline')}* html .content textarea,* html .content input,.content input[type='submit'],.content input[type='button']{padding:0}/*
+_______________________________
+END */
+
+.content button { height: 1.7em; line-height: 1em; padding: 0.2em 0.7em; }

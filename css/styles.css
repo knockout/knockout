@@ -1,0 +1,156 @@
+/* Tripoli overrides */
+.content { font-size: 1.1em !important; }
+.content p + ul { margin-top: -0.8em; }
+.sticker .content h1 { font-size: 1.6em; margin: 0.4em 0 0.4em 0; }
+.sticker .content h2 { font-size: 1.4em ;}
+.sticker .content h3 { font-size: 1.2em ;}
+.sticker .content a, .sticker a { color: #A71500; text-decoration: underline; }
+.sticker .content form { margin: 0; padding: 0; }
+
+/* Basics */
+a { text-decoration: none; }
+code { font-family: Consolas, Monaco, "Courier New", mono-space, monospace !important; }
+.content .syntaxhighlighter table, .content .syntaxhighlighter td { border-width: 0; }
+.content .syntaxhighlighter table { margin-bottom: 0; }
+.syntaxhighlighter { 
+	width: 680px; overflow-x: auto; margin-bottom: 1.8em; 
+	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em;
+}
+.syntaxhighlighter .line {
+    white-space: pre !important;
+    line-height: 1.2em;
+}
+.syntaxhighlighter code {
+    white-space: pre !important;	
+}
+.syntaxhighlighter.ie {
+	overflow-y: hidden;
+}
+
+.center { text-align: center }
+.left { text-align: left }
+.right { text-align: right }
+.justify { text-align: justify }
+
+.floatLeft { float: left !important; }
+.floatRight { float: right !important; }
+.floatNone { float: none !important; }
+
+.clear { clear: both}
+.clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden }
+
+.relative { position: relative !important }
+.absolute { position: absolute }
+
+.inline { display: inline; }
+.cursor { cursor: pointer }
+
+ul.tickIcons li { list-style-type: none; 
+	background-image: url(../img/checkIcon.gif); background-repeat: no-repeat; background-position: 0px 6px;
+	margin-left: -0.5em; padding-left: 2em; line-height: 2em; margin-bottom: 0.3em; 
+}
+
+li p.smallprint { margin-top: -0.25em; line-height: 1.4em; font-size: 0.9em; margin-bottom: 0.9em; font-style: italic; color: #444; }
+
+ul.stickerList li { margin: 0.5em 0 0.9em 0; }
+ul.stickerList li p.smallprint { margin-top: 0.1em; }
+
+/* Page */
+#wrapper {margin: 0 auto; width: 982px; }
+html { background: #d05400 url(../img/main-background.jpg) no-repeat top center; }
+body { font-family: arial; font-size: 14px; }
+.sticker { 
+	background-color: white; padding: 1.25em 1.45em 1.25em 1.55em; margin: 0.5em 0 3em 0; -moz-border-radius: 1em; -webkit-border-radius: 1em; border-radius: 1em; 
+	opacity:0.9; -moz-box-shadow: 0 0 1.1em #666; -webkit-box-shadow: 0 0 1.1em #666; box-shadow: 0 0 1.1em #666;
+}
+.sticker .heading, .sticker h1 { color: #A71500; margin: 0.25em 0 0.25em 0; font-weight: bold; font-size: 1.2em; }
+.stickerHeading { 
+	background-color: rgb(229, 218, 214); height: 1.3em; margin: -2em -1.45em 1.25em -1.55em; padding: 0.7em 1em 1.1em 1.75em;
+	-moz-border-radius-topright: 1em; -moz-border-radius-topleft: 1em; 
+	-webkit-border-top-right-radius: 1em; -webkit-border-top-left-radius: 1em; 
+	border-top-right-radius: 1em; border-top-left-radius: 1em; 	
+}
+
+.engraved { 
+	color: #350808;	
+	text-shadow: rgba(253, 204, 197, 0.4) 1px 1px 0px;
+}
+
+.vspace { height: 2em;}
+
+.liveExample { padding: 1em; background-color: #EEEEDD; border: 1px solid #CCC; max-width: 655px; }
+.liveExample input { font-family: Arial; }
+.liveExample b { font-weight: bold; }
+.liveExample p { margin-top: 0.9em; margin-bottom: 0.9em; }
+.liveExample select[multiple] { width: 100%; height: 8em; }
+.liveExample h2 { margin-top: 0.4em; }
+
+/* Menu */
+.main-menu { display:table; float:right; margin: 1em 0 0.5em 0; font-size: 14px; font-weight: bold; }
+.main-menu ul li { display: inline; }
+.main-menu ul li a { 
+	display: inline-block; padding: 0.4em 1.5em; text-decoration: none; 
+	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em; 
+}
+.main-menu ul li a, .main-menu ul li a:visited { color: white; }
+.main-menu ul li a.active, .main-menu ul li a:hover { background-color: rgb(81, 29, 0); }
+
+/* Intro */
+#introBadges li { width: 215px; float:left; text-align: center; padding: 0 0.5em 0 0.5em; color: #555; margin-bottom: 0.5em; }
+
+/* Homepage */
+#slogan { 
+	float:right; width: 17em;
+	padding-left: 1.4em;
+	background: url(../img/vertical-bar.png) no-repeat;
+	font-size: 20px;
+	margin-bottom: 0.6em;
+}
+
+.download-button {
+	background: url(../img/download-button-bg.png);
+	width: 173px; height: 51px;
+	display: block;
+	margin-top: 0.6em;	
+}
+.download-button p {
+	color: #005500;
+	font-size: 17px;
+	padding: 0.6em 0 0 9px;
+}
+.download-button p.smallprint {
+	font-size: 12px;
+	padding: 0.1em 0 0 11px;
+}
+.download-button:hover p { text-decoration: underline; }
+
+/* Columns */
+div.leftCol { position: absolute; width: 16em; padding-top: 1em; }
+div.rightCol { margin-left: 16em; }
+div.rightCol .sticker { min-height: 64em;}
+div.leftColContents { width: 15em; padding: 1em; }
+div.leftColBackground { background-color: black; opacity:0.5; position: absolute; 
+	width: 16em; height:100%; z-index: -1; 
+	-moz-border-radius-topleft: 1em; -moz-border-radius-bottomleft: 1em; 
+	-webkit-border-top-left-radius: 1em; -webkit-border-bottom-left-radius: 1em; 
+	border-top-left-radius: 1em; border-bottom-left-radius: 1em; 	
+}
+
+div.leftCol h1 { font-size: 1.2em; margin: 1.5em 0 0.75em 0; }
+div.leftCol h1:first-child { margin-top: 0.5em;}
+div.leftCol h2 { font-size: 1em; font-weight: bold; margin-bottom: 0.4em; margin-left: 0.25em; }
+div.leftCol, div.leftCol a, div.leftCol code { color: #FED; }
+div.leftCol a:hover, div.leftCol a:hover code { color: yellow; }
+div.leftCol ul li { list-style-type: disc; }
+div.leftCol li small { display: block; color: silver; margin-bottom: 1em; line-height: 1.3em; }
+div.leftCol ol, div.leftCol ul { margin: 0 0 1em 1.6em; line-height: 1.5em; }
+div.leftCol ol code, div.leftCol ul code { font-weight: bold; }
+div.leftCol li.active, div.leftCol li.active a, div.leftCol li.active code, div.leftCol li.active small { color: orange; font-weight: bold; }
+
+.homepageExample h2 { margin: 0.75em 0 0.5em 0;}
+.homepageExample .liveExample { padding: 0.5em 1em 0.5em 1.3em; }
+.homepageExample .liveExample button { padding: 0.2em 0.6em; margin-left: 0.5em; }
+.homepageExample p { margin: 1.3em 0 0.8em 0; }
+
+/* Footer */
+#page-footer { padding: 15px; text-align: right; }
