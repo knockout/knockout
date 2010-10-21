@@ -31,7 +31,7 @@ Consider a screen on which airline passengers can choose to purchase premium mea
 	var availableMeals = [        	
 		{ mealName: 'Standard', description: 'Dry crusts of bread', extraCost: 0 },
 		{ mealName: 'Premium', description: 'Fresh bread with cheese', extraCost: 9.95 },
-		{ mealName: 'Deluxe', description: 'Caviar and vintage Dr Pepper', extraCost: 18.50 },
+		{ mealName: 'Deluxe', description: 'Caviar and vintage Dr Pepper', extraCost: 18.50 }
 	];
 
 If we want to display these options in the UI, we can bind a drop-down list (i.e., an HTML `<select>` element) to it. For example,
@@ -40,14 +40,21 @@ If we want to display these options in the UI, we can bind a drop-down list (i.e
     <p>Make your flight more bearable by selecting a meal to match your social and economic status.</p>
     Chosen meal: <select data-bind="options: availableMeals, 
     							    optionsText: 'mealName'"></select>
+
+To activate Knockout and bring your bindings to life, add the following lines right after your declaration of `availableMeals`:
 	
-This will render as follows:
+	var viewModel = {
+		/* we'll populate this in a moment */
+	};
+	ko.applyBindings(viewModel); // Makes Knockout get to work
+
+You can learn more about view models and MVVM [here](observables.html). But now, your page will render as follows:
     							    
 ![](images/introduction/working-dropdown.png)
 
 ### Responding to selections
 
-Next, define a simple data model to describe which item they've chosen:
+Next, define a simple data model to describe which item they've chosen. Add a property to your existing view model as follows:
 
     var viewModel = { 
     	chosenMeal: ko.observable(availableMeals[0])
