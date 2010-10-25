@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/bindingAttributeSyntax.js" />
 
 describe('Binding attribute syntax', {
     before_each: function () {

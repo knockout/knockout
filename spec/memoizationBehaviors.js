@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/memoization.js" />
 
 function parseMemoCommentHtml(commentHtml) {
     commentHtml = commentHtml.replace("<!--", "").replace("-->", "");

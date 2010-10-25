@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/observable.js" />
 
 describe('Observable', {
     'Should be subscribable': function () {

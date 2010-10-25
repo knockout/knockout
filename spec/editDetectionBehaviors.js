@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/binding/editDetection/arrayToDomNodeChildren.js" />
 
 function copyDomNodeChildren(domNode) {
     var copy = [];

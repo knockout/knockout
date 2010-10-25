@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/dependentObservable.js" />
 
 describe('Dependent Observable', {
     'Should be subscribable': function () {

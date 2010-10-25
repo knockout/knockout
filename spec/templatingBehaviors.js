@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/templating/templating.js" />
 
 var dummyTemplateEngine = function (templates) {
     templates = templates || [];

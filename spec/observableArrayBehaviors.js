@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/subscribables/observableArray.js" />
 
 describe('Observable Array', {
     before_each: function () {

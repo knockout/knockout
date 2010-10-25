@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/binding/jsonExpressionRewriting.js" />
 
 describe('JSON Expression Rewriting', {
     'Should be able to get the source code corresponding to a top-level key': function () {

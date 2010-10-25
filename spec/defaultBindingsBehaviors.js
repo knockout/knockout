@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/subscribables/observable.js" />
 
 function prepareTestNode() {
     var existingNode = document.getElementById("testNode");

@@ -1,4 +1,3 @@
-﻿/// <reference path="../src/subscribable.js" />
 
 describe('Subscribable', {
     'Should declare that it is subscribable': function () {
