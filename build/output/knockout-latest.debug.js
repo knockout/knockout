@@ -377,6 +377,7 @@ ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
+ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
 ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
 ko.exportSymbol('ko.utils.range', ko.utils.range);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
@@ -722,7 +723,7 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
         if (arguments.length == 0)
             throw new Error("When calling ko.fromJS, pass the object you want to convert.");
         
-        return mapJsObjectGraph(jsObject, function(valueToMap, isArrayMember) {
+        return mapJsObjectGraph(jsObject, function(x) { return x /* No input mapping needed */ }, function(valueToMap, isArrayMember) {
             valueToMap = ko.utils.unwrapObservable(valueToMap); // Don't add an extra layer of observability
             
             // Don't map direct array members (although we will map any child properties they may have)
@@ -741,10 +742,25 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
             return ko.observable(valueToMap);
         });
     };
-    
+        
+    ko.toJS = function(rootObject) {
+        if (arguments.length == 0)
+            throw new Error("When calling ko.toJS, pass the object you want to convert.");
+        
+        // We just unwrap everything at every level in the object graph
+        return mapJsObjectGraph(rootObject, function(valueToMap) {
+            return ko.utils.unwrapObservable(valueToMap);
+        }, function(x) { return x /* No output mapping needed */ });
+    };
+
     ko.fromJSON = function(jsonString) {
         var parsed = ko.utils.parseJson(jsonString);
         return ko.fromJS(parsed);
+    };    
+
+    ko.toJSON = function(rootObject) {
+        var plainJavaScriptObject = ko.toJS(rootObject);
+        return ko.utils.stringifyJson(plainJavaScriptObject);
     };
     
     function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
@@ -757,34 +773,35 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
         }
     };
     
-    function mapJsObjectGraph(rootObject, callback, visitedObjects, isArrayMember) {
+    function mapJsObjectGraph(rootObject, mapInputCallback, mapOutputCallback, visitedObjects, isArrayMember) {
         visitedObjects = visitedObjects || new objectLookup();
         
+        rootObject = mapInputCallback(rootObject);
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
         if (!canHaveProperties)
-            return callback(rootObject, isArrayMember);
+            return mapOutputCallback(rootObject, isArrayMember);
             
         var rootObjectIsArray = rootObject instanceof Array;
         var outputProperties = rootObjectIsArray ? [] : {};
-        var mappedRootObject = callback(outputProperties, isArrayMember);
+        var mappedRootObject = mapOutputCallback(outputProperties, isArrayMember);
         visitedObjects.save(rootObject, mappedRootObject);            
         
         visitPropertiesOrArrayEntries(rootObject, function(indexer) {
-            var propertyValue = rootObject[indexer];
+            var propertyValue = mapInputCallback(rootObject[indexer]);
             
             switch (typeof propertyValue) {
                 case "boolean":
                 case "number":
                 case "string":
                 case "function":
-                    outputProperties[indexer] = callback(propertyValue, rootObjectIsArray);
+                    outputProperties[indexer] = mapOutputCallback(propertyValue, rootObjectIsArray);
                     break;
                 case "object":
                 case "undefined":				
                     var previouslyMappedValue = visitedObjects.get(propertyValue);
                     outputProperties[indexer] = (previouslyMappedValue !== undefined)
                         ? previouslyMappedValue
-                        : mapJsObjectGraph(propertyValue, callback, visitedObjects, rootObjectIsArray);
+                        : mapJsObjectGraph(propertyValue, mapInputCallback, mapOutputCallback, visitedObjects, rootObjectIsArray);
                     break;							
             }
         });
@@ -812,7 +829,9 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
 })();
 
 ko.exportSymbol('ko.fromJS', ko.fromJS);
-ko.exportSymbol('ko.fromJSON', ko.fromJSON);(function () {
+ko.exportSymbol('ko.fromJSON', ko.fromJSON);
+ko.exportSymbol('ko.toJS', ko.toJS);
+ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
     // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
