@@ -7,19 +7,36 @@ describe('Mapping helpers', {
         value_of(didThow).should_be(true);
     },
     
-    'ko.fromJS should return an observable': function() {
-        var result = ko.fromJS({});
-        value_of(ko.isObservable(result)).should_be(true);
+    'ko.fromJS should return an observable if you supply an atomic value': function() {
+    	var atomicValues = ["hello", 123, true, null, undefined];
+    	for (var i = 0; i < atomicValues.length; i++) {
+	        var result = ko.fromJS(atomicValues[i]);
+	        value_of(ko.isObservable(result)).should_be(true);
+	        value_of(result()).should_be(atomicValues[i]);
+	    }
     },
+    
+    'ko.fromJS should return an observableArray if you supply an array, but should not wrap its entries in further observables': function() {
+    	var sampleArray = ["a", "b"];
+    	var result = ko.fromJS(sampleArray);
+    	value_of(typeof result.destroyAll).should_be('function'); // Just an example of a function on ko.observableArray but not on Array
+    	value_of(result().length).should_be(2);
+    	value_of(result()[0]).should_be("a");
+    	value_of(result()[1]).should_be("b");
+    },    
+    
+    'ko.fromJS should not return an observable if you supply an object that could have properties': function() {
+    	value_of(ko.isObservable(ko.fromJS({}))).should_be(false);
+    },    
     
     'ko.fromJS should map the top-level properties on the supplied object as observables': function() {
         var result = ko.fromJS({ a : 123, b : 'Hello', c : true });
-        value_of(ko.isObservable(result().a)).should_be(true);
-        value_of(ko.isObservable(result().b)).should_be(true);
-        value_of(ko.isObservable(result().c)).should_be(true);
-        value_of(result().a()).should_be(123);
-        value_of(result().b()).should_be('Hello');
-        value_of(result().c()).should_be(true);
+        value_of(ko.isObservable(result.a)).should_be(true);
+        value_of(ko.isObservable(result.b)).should_be(true);
+        value_of(ko.isObservable(result.c)).should_be(true);
+        value_of(result.a()).should_be(123);
+        value_of(result.b()).should_be('Hello');
+        value_of(result.c()).should_be(true);
     },
     
     'ko.fromJS should map descendant properties on the supplied object as observables': function() {
@@ -33,29 +50,22 @@ describe('Mapping helpers', {
             }, 
             b : { b1 : null, b2 : undefined }
         });
-        value_of(result().a().a1()).should_be('a1value');
-        value_of(result().a().a2().a21()).should_be('a21value');
-        value_of(result().a().a2().a22()).should_be('a22value');
-        value_of(result().b().b1()).should_be(null);
-        value_of(result().b().b2()).should_be(undefined);
+        value_of(result.a.a1()).should_be('a1value');
+        value_of(result.a.a2.a21()).should_be('a21value');
+        value_of(result.a.a2.a22()).should_be('a22value');
+        value_of(result.b.b1()).should_be(null);
+        value_of(result.b.b2()).should_be(undefined);
     },
     
     'ko.fromJS should map observable properties, but without adding a further observable wrapper': function() {
         var result = ko.fromJS({ a : ko.observable('Hey') });
-        value_of(result().a()).should_be('Hey');    	
-    },
-    
-    'ko.fromJS should map arrays as observableArrays': function() {
-        var result1 = ko.fromJS([ 1, 'a', true]);
-        value_of(result1().length).should_be(3);
-        value_of(result1()[1]()).should_be('a');
-        value_of(typeof result1.destroyAll).should_be('function'); // Just an example of a function on ko.observableArray but not on Array
+        value_of(result.a()).should_be('Hey');    	
     },
     
     'ko.fromJS should escape from reference cycles': function() {
         var obj = {};
         obj.someProp = { owner : obj };
         var result = ko.fromJS(obj);
-        value_of(result().someProp().owner).should_be(result);
+        value_of(result.someProp.owner).should_be(result);
     }
 })
