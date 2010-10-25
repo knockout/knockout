@@ -266,6 +266,18 @@ ko.utils = new (function () {
             };
             return matches;
         },
+        
+        parseJson: function (jsonString) {
+            if (typeof jsonString == "string") {
+                jsonString = ko.utils.stringTrim(jsonString);
+                if (jsonString) {
+                    if (window.JSON && window.JSON.parse) // Use native parsing where available
+                        return window.JSON.parse(jsonString);
+                    return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
+                }
+            }	
+            return null;
+        },
 
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
@@ -705,7 +717,7 @@ ko.dependentObservable.__ko_proto__ = ko.observable;
 ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
 
 (function() {
-	// Clones the supplied object graph, making certain things observable as per comments
+    // Clones the supplied object graph, making certain things observable as per comments
     ko.fromJS = function(jsObject) {
         if (arguments.length == 0)
             throw new Error("When calling ko.fromJS, pass the object you want to convert.");
@@ -715,19 +727,24 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
             
             // Don't map direct array members (although we will map any child properties they may have)
             if (isArrayMember)
-            	return valueToMap;
+                return valueToMap;
             
-        	// Convert arrays to observableArrays
+            // Convert arrays to observableArrays
             if (valueToMap instanceof Array)
-            	return ko.observableArray(valueToMap);
+                return ko.observableArray(valueToMap);
             
             // Map non-atomic values as non-observable objects
             if ((typeof valueToMap == "object") && (valueToMap !== null))
-            	return valueToMap;
+                return valueToMap;
             
             // Map atomic values (other than array members) as observables
             return ko.observable(valueToMap);
         });
+    };
+    
+    ko.fromJSON = function(jsonString) {
+        var parsed = ko.utils.parseJson(jsonString);
+        return ko.fromJS(parsed);
     };
     
     function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
@@ -745,9 +762,9 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
         
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
         if (!canHaveProperties)
-        	return callback(rootObject, isArrayMember);
-        	
-    	var rootObjectIsArray = rootObject instanceof Array;
+            return callback(rootObject, isArrayMember);
+            
+        var rootObjectIsArray = rootObject instanceof Array;
         var outputProperties = rootObjectIsArray ? [] : {};
         var mappedRootObject = callback(outputProperties, isArrayMember);
         visitedObjects.save(rootObject, mappedRootObject);            
@@ -764,10 +781,10 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
                     break;
                 case "object":
                 case "undefined":				
-                	var previouslyMappedValue = visitedObjects.get(propertyValue);
-            		outputProperties[indexer] = (previouslyMappedValue !== undefined)
-            			? previouslyMappedValue
-            			: mapJsObjectGraph(propertyValue, callback, visitedObjects, rootObjectIsArray);
+                    var previouslyMappedValue = visitedObjects.get(propertyValue);
+                    outputProperties[indexer] = (previouslyMappedValue !== undefined)
+                        ? previouslyMappedValue
+                        : mapJsObjectGraph(propertyValue, callback, visitedObjects, rootObjectIsArray);
                     break;							
             }
         });
@@ -794,7 +811,8 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
     };
 })();
 
-ko.exportSymbol('ko.fromJS', ko.fromJS);(function () {
+ko.exportSymbol('ko.fromJS', ko.fromJS);
+ko.exportSymbol('ko.fromJSON', ko.fromJSON);(function () {
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
     // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.

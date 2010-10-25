@@ -251,6 +251,18 @@ ko.utils = new (function () {
             };
             return matches;
         },
+        
+        parseJson: function (jsonString) {
+            if (typeof jsonString == "string") {
+                jsonString = ko.utils.stringTrim(jsonString);
+                if (jsonString) {
+                    if (window.JSON && window.JSON.parse) // Use native parsing where available
+                        return window.JSON.parse(jsonString);
+                    return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
+                }
+            }	
+            return null;
+        },
 
         stringifyJson: function (data) {
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
