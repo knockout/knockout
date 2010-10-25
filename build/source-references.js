@@ -1,4 +1,4 @@
-﻿knockoutDebugCallback([
+knockoutDebugCallback([
     'src/namespace.js',
     'src/google-closure-compiler-utils.js',
     'src/utils.js',
@@ -8,6 +8,7 @@
     'src/subscribables/observable.js',
     'src/subscribables/observableArray.js',
     'src/subscribables/dependentObservable.js',
+    'src/subscribables/mappingHelpers.js',
     'src/binding/selectExtensions.js',
     'src/binding/jsonExpressionRewriting.js',
     'src/binding/bindingAttributeSyntax.js',
