@@ -1,4 +1,3 @@
-/// <reference path="dependencyDetection.js" />
 
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;

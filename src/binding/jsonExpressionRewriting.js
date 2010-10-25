@@ -1,4 +1,3 @@
-/// <reference path="../utils.js" />
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;

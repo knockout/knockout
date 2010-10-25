@@ -1,4 +1,3 @@
-/// <reference path="observable.js" />
 
 ko.observableArray = function (initialValues) {
     var result = new ko.observable(initialValues);

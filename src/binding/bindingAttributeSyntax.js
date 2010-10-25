@@ -1,4 +1,3 @@
-/// <reference path="../subscribables/dependentObservable.js" />
 
 (function () {
     var bindingAttributeName = "data-bind";

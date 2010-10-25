@@ -1,4 +1,3 @@
-/// <reference path="../templating.js" />
 
 ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 

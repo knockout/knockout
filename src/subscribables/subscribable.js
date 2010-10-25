@@ -1,4 +1,3 @@
-/// <reference path="../utils.js" />
 
 ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;

@@ -1,4 +1,3 @@
-/// <reference path="subscribable.js" />
 
 ko.dependencyDetection = (function () {
     var _detectedDependencies = [];

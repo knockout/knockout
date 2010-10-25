@@ -1,4 +1,3 @@
-/// <reference path="../utils.js" />
 
 ko.templateEngine = function () {
     this['renderTemplate'] = function (templateName, data, options) {

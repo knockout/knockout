@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.1.0
+// Knockout JavaScript library v1.1.1pre
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -13,8 +13,7 @@ ko.exportSymbol = function(publicPath, object) {
 };
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
-};/// <reference path="namespace.js" />
-
+};
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     var isIe6 = /MSIE 6/i.test(navigator.userAgent);
@@ -380,8 +379,7 @@ if (!Function.prototype['bind']) {
             return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));
         }; 
     };
-}/// <reference path="utils.js" />
-
+}
 ko.memoization = (function () {
     var memos = {};
 
@@ -451,7 +449,6 @@ ko.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
 ko.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
 ko.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
 ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);
-/// <reference path="../utils.js" />
 
 ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;
@@ -495,7 +492,6 @@ ko.isSubscribable = function (instance) {
 
 ko.exportSymbol('ko.subscribable', ko.subscribable);
 ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);
-/// <reference path="subscribable.js" />
 
 ko.dependencyDetection = (function () {
     var _detectedDependencies = [];
@@ -517,8 +513,7 @@ ko.dependencyDetection = (function () {
             }
         }
     };
-})();/// <reference path="dependencyDetection.js" />
-
+})();
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
@@ -557,7 +552,6 @@ ko.isWriteableObservable = function (instance) {
 ko.exportSymbol('ko.observable', ko.observable);
 ko.exportSymbol('ko.isObservable', ko.isObservable);
 ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
-/// <reference path="observable.js" />
 
 ko.observableArray = function (initialValues) {
     var result = new ko.observable(initialValues);
@@ -644,7 +638,6 @@ ko.observableArray = function (initialValues) {
 }
 
 ko.exportSymbol('ko.observableArray', ko.observableArray);
-/// <reference path="observable.js" />
 
 ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
     if (typeof evaluatorFunction != "function")
@@ -747,7 +740,6 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
 ko.exportSymbol('ko.selectExtensions', ko.selectExtensions);
 ko.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
 ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);
-/// <reference path="../utils.js" />
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
@@ -850,7 +842,6 @@ ko.jsonExpressionRewriting = (function () {
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
 ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
-/// <reference path="../subscribables/dependentObservable.js" />
 
 (function () {
     var bindingAttributeName = "data-bind";
@@ -909,8 +900,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
 	ko.exportSymbol('ko.applyBindings', ko.applyBindings);
-})();/// <reference path="bindingAttributeSyntax.js" />
-
+})();
 ko.bindingHandlers['click'] = {
     'init' : function (element, value, allBindings, viewModel) {
         ko.utils.registerEventHandler(element, "click", function (event) {
@@ -1187,8 +1177,7 @@ ko.bindingHandlers['checked'] = {
                 element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);            
         }
     }
-};/// <reference path="../utils.js" />
-
+};
 ko.templateEngine = function () {
     this['renderTemplate'] = function (templateName, data, options) {
         throw "Override renderTemplate in your ko.templateEngine subclass";
@@ -1205,7 +1194,6 @@ ko.templateEngine = function () {
 };
 
 ko.exportSymbol('ko.templateEngine', ko.templateEngine);
-/// <reference path="templateEngine.js" />
 
 ko.templateRewriting = (function () {
     var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])(.*?)\5/g;
@@ -1245,8 +1233,6 @@ ko.templateRewriting = (function () {
 
 ko.exportSymbol('ko.templateRewriting', ko.templateRewriting);
 ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
-/// <reference path="templating.js" />
-/// <reference path="../subscribables/dependentObservable.js" />
 
 (function () {
     var _templateEngine;
@@ -1355,11 +1341,9 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
 ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
 ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
-/// <reference path="../../utils.js" />
 
-// Simple calculation based on Levenshtein distance.
 (function () {
-
+	// Simple calculation based on Levenshtein distance.
     function calculateEditDistanceMatrix(oldArray, newArray, maxAllowedDistance) {
         var distances = [];
         for (var i = 0; i <= newArray.length; i++)
@@ -1440,7 +1424,6 @@ ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
 })();
 
 ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
-/// <reference path="compareArrays.js" />
 
 (function () {
     // Objective:
@@ -1552,7 +1535,6 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
 })();
 
 ko.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
-/// <reference path="../templating.js" />
 
 ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 

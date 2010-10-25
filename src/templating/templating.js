@@ -1,5 +1,3 @@
-/// <reference path="templating.js" />
-/// <reference path="../subscribables/dependentObservable.js" />
 
 (function () {
     var _templateEngine;

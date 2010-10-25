@@ -1,4 +1,3 @@
-/// <reference path="observable.js" />
 
 ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
     if (typeof evaluatorFunction != "function")

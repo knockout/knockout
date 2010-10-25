@@ -1,4 +1,3 @@
-/// <reference path="utils.js" />
 
 ko.memoization = (function () {
     var memos = {};

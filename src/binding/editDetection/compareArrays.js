@@ -1,8 +1,6 @@
-/// <reference path="../../utils.js" />
 
-// Simple calculation based on Levenshtein distance.
 (function () {
-
+    // Simple calculation based on Levenshtein distance.
     function calculateEditDistanceMatrix(oldArray, newArray, maxAllowedDistance) {
         var distances = [];
         for (var i = 0; i <= newArray.length; i++)

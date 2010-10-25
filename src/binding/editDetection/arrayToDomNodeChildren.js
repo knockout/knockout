@@ -1,4 +1,3 @@
-/// <reference path="compareArrays.js" />
 
 (function () {
     // Objective:

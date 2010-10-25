@@ -1,4 +1,3 @@
-/// <reference path="bindingAttributeSyntax.js" />
 
 ko.bindingHandlers['click'] = {
     'init' : function (element, value, allBindings, viewModel) {

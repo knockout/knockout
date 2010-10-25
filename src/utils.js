@@ -1,4 +1,3 @@
-/// <reference path="namespace.js" />
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
