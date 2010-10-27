@@ -94,21 +94,21 @@
             }
         }
         
-        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node); });
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node.element); });
 
         var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {
             if (options['afterAdd'])
-                options['afterAdd'](nodesAdded);
+                options['afterAdd'](nodesAdded.element, nodesAdded.index, nodesAdded.value);
             if (options['beforeRemove']) {
-                options['beforeRemove'](nodesToDelete);
+                options['beforeRemove'](nodesToDelete.element, nodesToDelete.index, nodesToDelete.value);
                 invokedBeforeRemoveCallback = true;
             }
         }
         if (!invokedBeforeRemoveCallback)
             ko.utils.arrayForEach(nodesToDelete, function (node) {
-                if (node.parentNode)
-                    node.parentNode.removeChild(node);
+                if (node.element.parentNode)
+                    node.element.parentNode.removeChild(node.element);
             });
 
         // Store a copy of the array items we just considered so we can difference it next time
