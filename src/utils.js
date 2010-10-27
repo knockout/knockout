@@ -349,7 +349,7 @@ ko.utils = new (function () {
         },
 		
 		type: function(x) {
-			if ((typeof (x) === "object") && (x.constructor.toString().match(/date/i) !== null)) return "date";
+			if ((x) && (typeof (x) === "object") && (x.constructor.toString().match(/date/i) !== null)) return "date";
 			return typeof x;
 		}
 
