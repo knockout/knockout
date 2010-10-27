@@ -54,7 +54,11 @@
                 case "deleted":
                     // Queue these nodes for later removal
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
-                        nodesToDelete.push(node);
+			            nodesToDelete.push({
+			              element: node,
+			              index: i,
+			              value: editScript[i].value
+			            });
                         insertAfterNode = node;
                     });
                     lastMappingResultIndex++;
@@ -66,7 +70,11 @@
 			        newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
 			        for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
 			            var node = mappedNodes[nodeIndex];
-			            nodesAdded.push(node);
+			            nodesAdded.push({
+			              element: node,
+			              index: i,
+			              value: editScript[i].value
+			            });
 			            if (insertAfterNode == null) {
 			                // Insert at beginning
 			                if (domNode.firstChild)
