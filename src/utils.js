@@ -346,7 +346,13 @@ ko.utils = new (function () {
                 for (var i = 0, j = descendants.length; i < j; i++)
                     ko.utils.domData.cleanNode(descendants[i]);
             }
-        }
+        },
+		
+		type: function(x) {
+			if ((typeof (x) === "object") && (x.constructor.toString().match(/date/i) !== null)) return "date";
+			return typeof x;
+		}
+
     }
 })();
 
@@ -366,6 +372,7 @@ ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
 ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
 ko.exportSymbol('ko.utils.range', ko.utils.range);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
+ko.exportSymbol('ko.utils.type', ko.utils.type);
 ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 
 if (!Function.prototype['bind']) {
