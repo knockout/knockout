@@ -17,7 +17,7 @@ var dummyTemplateEngine = function (templates) {
                 });
 
                 // Dummy [js:...] syntax
-                result = result.replace(/\[js\:(.*?)\]/g, function (match, script) {
+                result = result.replace(/\[js\:([\s\S]*?)\]/g, function (match, script) {
                     try {
                         var evalResult = eval(script);
                         return (evalResult === null) || (evalResult === undefined) ? "" : evalResult.toString();
@@ -167,6 +167,19 @@ describe('Templating', {
         value_of(timesRenderedInner).should_be(2);
     },
 
+    'Should handle data-bind attributes from inside templates': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:\"Hi\"' />" }));
+        ko.renderTemplate("someTemplate", null, null, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
+    },
+    
+    'Should handle data-bind attributes that include newlines from inside templates': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:\n\"Hi\"' />" }));
+        debugger;
+        ko.renderTemplate("someTemplate", null, null, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
+    },    
+
     'Data binding syntax should be able to reference variables put into scope by the template engine': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:message' />" }));
         ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { message: "hello"} }, testNode);
@@ -186,8 +199,8 @@ describe('Templating', {
             someTemplate: "<button data-bind='click: someFunctionOnModel'>click me</button>"
         }));
         var viewModel = {
-        	didCallMyFunction : false,
-        	someFunctionOnModel : function() { this.didCallMyFunction = true }
+            didCallMyFunction : false,
+            someFunctionOnModel : function() { this.didCallMyFunction = true }
         };
         ko.renderTemplate("someTemplate", viewModel, null, testNode);
         var buttonNode = testNode.childNodes[0].childNodes[0];
