@@ -2,10 +2,10 @@
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
-    function observable(newValue) {
+    function observable() {
         if (arguments.length > 0) {
         	// Write
-            _latestValue = newValue;
+            _latestValue = arguments[0];
             observable.notifySubscribers(_latestValue);
             return this; // Permits chained assignments
         }

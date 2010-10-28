@@ -20,22 +20,22 @@ describe('Observable Array', {
     },
     
     'Should be able to mark single items as destroyed' : function() {
-    	var x = {}, y = {};
-    	testObservableArray([x, y]);
-    	testObservableArray.destroy(y);
-    	value_of(testObservableArray().length).should_be(2);
-    	value_of(x._destroy).should_be(undefined);
-    	value_of(y._destroy).should_be(true);
+        var x = {}, y = {};
+        testObservableArray([x, y]);
+        testObservableArray.destroy(y);
+        value_of(testObservableArray().length).should_be(2);
+        value_of(x._destroy).should_be(undefined);
+        value_of(y._destroy).should_be(true);
     },
     
     'Should be able to mark multiple items as destroyed' : function() {
-    	var x = {}, y = {}, z = {};
-    	testObservableArray([x, y, z]);
-    	testObservableArray.destroyAll([x, z]);
-    	value_of(testObservableArray().length).should_be(3);
-    	value_of(x._destroy).should_be(true);
-    	value_of(y._destroy).should_be(undefined);    	
-    	value_of(z._destroy).should_be(true);
+        var x = {}, y = {}, z = {};
+        testObservableArray([x, y, z]);
+        testObservableArray.destroyAll([x, z]);
+        value_of(testObservableArray().length).should_be(3);
+        value_of(x._destroy).should_be(true);
+        value_of(y._destroy).should_be(undefined);    	
+        value_of(z._destroy).should_be(true);
     },
 
     'Should notify subscribers on push': function () {
@@ -87,12 +87,12 @@ describe('Observable Array', {
     },    
     
     'Should notify subscribers after marking items as destroyed': function () {
-    	var x = {}, y = {}, didNotify = false;
+        var x = {}, y = {}, didNotify = false;
         testObservableArray([x, y]);
         testObservableArray.subscribe(function(value) {
-        	value_of(x._destroy).should_be(undefined);
-        	value_of(y._destroy).should_be(true);
-        	didNotify = true;
+            value_of(x._destroy).should_be(undefined);
+            value_of(y._destroy).should_be(true);
+            didNotify = true;
         });
         testObservableArray.destroy(y);
         value_of(didNotify).should_be(true);
@@ -104,5 +104,11 @@ describe('Observable Array', {
         value_of(testObservableArray.indexOf("Gamma")).should_be(2);
         value_of(testObservableArray.indexOf("Alpha")).should_be(0);
         value_of(testObservableArray.indexOf("fake")).should_be(-1);
-    }    
+    },
+    
+    'Should return 0 when you call myArray.length, and the true length when you call myArray().length': function() {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        value_of(testObservableArray.length).should_be(0); // Because JavaScript won't let us override "length" directly
+        value_of(testObservableArray().length).should_be(3);
+    }
 })
