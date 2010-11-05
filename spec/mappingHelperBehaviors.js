@@ -1,90 +1,10 @@
 
 describe('Mapping helpers', {    
-    'ko.fromJS should require a parameter': function() {
+    'ko.toJS should require a parameter': function() {
         var didThrow = false;
-        try { ko.fromJS() }
+        try { ko.toJS() }
         catch(ex) { didThow = true }    	
         value_of(didThow).should_be(true);
-    },
-    
-    'ko.fromJS should return an observable if you supply an atomic value': function() {
-        var atomicValues = ["hello", 123, true, null, undefined];
-        for (var i = 0; i < atomicValues.length; i++) {
-            var result = ko.fromJS(atomicValues[i]);
-            value_of(ko.isObservable(result)).should_be(true);
-            value_of(result()).should_be(atomicValues[i]);
-        }
-    },
-    
-    'ko.fromJS should return an observableArray if you supply an array, but should not wrap its entries in further observables': function() {
-        var sampleArray = ["a", "b"];
-        var result = ko.fromJS(sampleArray);
-        value_of(typeof result.destroyAll).should_be('function'); // Just an example of a function on ko.observableArray but not on Array
-        value_of(result().length).should_be(2);
-        value_of(result()[0]).should_be("a");
-        value_of(result()[1]).should_be("b");
-    },    
-    
-    'ko.fromJS should not return an observable if you supply an object that could have properties': function() {
-        value_of(ko.isObservable(ko.fromJS({}))).should_be(false);
-    },    
-    
-    'ko.fromJS should map the top-level properties on the supplied object as observables': function() {
-        var result = ko.fromJS({ a : 123, b : 'Hello', c : true });
-        value_of(ko.isObservable(result.a)).should_be(true);
-        value_of(ko.isObservable(result.b)).should_be(true);
-        value_of(ko.isObservable(result.c)).should_be(true);
-        value_of(result.a()).should_be(123);
-        value_of(result.b()).should_be('Hello');
-        value_of(result.c()).should_be(true);
-    },
-    
-    'ko.fromJS should map descendant properties on the supplied object as observables': function() {
-        var result = ko.fromJS({ 
-            a : { 
-                a1 : 'a1value',
-                a2 : {
-                    a21 : 'a21value',
-                    a22 : 'a22value'
-                }
-            }, 
-            b : { b1 : null, b2 : undefined }
-        });
-        value_of(result.a.a1()).should_be('a1value');
-        value_of(result.a.a2.a21()).should_be('a21value');
-        value_of(result.a.a2.a22()).should_be('a22value');
-        value_of(result.b.b1()).should_be(null);
-        value_of(result.b.b2()).should_be(undefined);
-    },
-    
-    'ko.fromJS should map observable properties, but without adding a further observable wrapper': function() {
-        var result = ko.fromJS({ a : ko.observable('Hey') });
-        value_of(result.a()).should_be('Hey');    	
-    },
-    
-    'ko.fromJS should escape from reference cycles': function() {
-        var obj = {};
-        obj.someProp = { owner : obj };
-        var result = ko.fromJS(obj);
-        value_of(result.someProp.owner).should_be(result);
-    },
-    
-    'ko.fromJSON should parse and then map in the same way': function() {
-        var jsonString = ko.utils.stringifyJson({  // Note that "undefined" property values are omitted by the stringifier, so not testing those
-            a : { 
-                a1 : 'a1value',
-                a2 : {
-                    a21 : 'a21value',
-                    a22 : 'a22value'
-                }
-            }, 
-            b : { b1 : null }
-        });
-        var result = ko.fromJSON(jsonString);
-        value_of(result.a.a1()).should_be('a1value');
-        value_of(result.a.a2.a21()).should_be('a21value');
-        value_of(result.a.a2.a22()).should_be('a22value');
-        value_of(result.b.b1()).should_be(null);
     },
     
     'ko.toJS should unwrap observable values': function() {
@@ -97,18 +17,31 @@ describe('Mapping helpers', {
         }
     },
     
+    'ko.toJS should recursively unwrap observables whose values are themselves observable': function() {
+        var weirdlyNestedObservable = ko.observable(
+            ko.observable(
+                ko.observable(
+                    ko.observable('Hello')
+                )
+            )
+        );
+        var result = ko.toJS(weirdlyNestedObservable);
+        value_of(result).should_be('Hello');
+    },
+    
     'ko.toJS should unwrap observable properties, including nested ones': function() {
         var data = {
             a : ko.observable(123),
             b : {
                 b1 : ko.observable(456),
-                b2 : 789
+                b2 : [789, ko.observable('X')]
             }
         };
         var result = ko.toJS(data);
         value_of(result.a).should_be(123);
         value_of(result.b.b1).should_be(456);
-        value_of(result.b.b2).should_be(789);
+        value_of(result.b.b2[0]).should_be(789);
+        value_of(result.b.b2[1]).should_be('X');
     },
     
     'ko.toJS should unwrap observable arrays and things inside them': function() {
@@ -119,6 +52,13 @@ describe('Mapping helpers', {
         value_of(result[1]).should_be(1);
         value_of(result[2].someProp).should_be('Hey');
     },
+    
+    'ko.toJS should resolve reference cycles': function() {
+        var obj = {};
+        obj.someProp = { owner : ko.observable(obj) };
+        var result = ko.toJS(obj);
+        value_of(result.someProp.owner).should_be(result);
+    },    
     
     'ko.toJSON should unwrap everything and then stringify': function() {
         var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);	

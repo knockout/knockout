@@ -717,74 +717,37 @@ ko.dependentObservable.__ko_proto__ = ko.observable;
 
 ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
 
-(function() {
-    // Clones the supplied object graph, making certain things observable as per comments
-    ko.fromJS = function(jsObject) {
-        if (arguments.length == 0)
-            throw new Error("When calling ko.fromJS, pass the object you want to convert.");
-        
-        return mapJsObjectGraph(jsObject, function(x) { return x /* No input mapping needed */ }, function(valueToMap, isArrayMember) {
-            valueToMap = ko.utils.unwrapObservable(valueToMap); // Don't add an extra layer of observability
-            
-            // Don't map direct array members (although we will map any child properties they may have)
-            if (isArrayMember)
-                return valueToMap;
-            
-            // Convert arrays to observableArrays
-            if (valueToMap instanceof Array)
-                return ko.observableArray(valueToMap);
-            
-            // Map non-atomic values as non-observable objects
-            if ((typeof valueToMap == "object") && (valueToMap !== null))
-                return valueToMap;
-            
-            // Map atomic values (other than array members) as observables
-            return ko.observable(valueToMap);
-        });
-    };
-        
+(function() {    
+    var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
+    
     ko.toJS = function(rootObject) {
         if (arguments.length == 0)
             throw new Error("When calling ko.toJS, pass the object you want to convert.");
         
         // We just unwrap everything at every level in the object graph
         return mapJsObjectGraph(rootObject, function(valueToMap) {
-            return ko.utils.unwrapObservable(valueToMap);
-        }, function(x) { return x /* No output mapping needed */ });
+            // Loop because an observable's value might in turn be another observable wrapper
+            for (var i = 0; ko.isObservable(valueToMap) && (i < maxNestedObservableDepth); i++)
+                valueToMap = valueToMap();
+            return valueToMap;
+        });
     };
-
-    ko.fromJSON = function(jsonString) {
-        var parsed = ko.utils.parseJson(jsonString);
-        return ko.fromJS(parsed);
-    };    
 
     ko.toJSON = function(rootObject) {
         var plainJavaScriptObject = ko.toJS(rootObject);
         return ko.utils.stringifyJson(plainJavaScriptObject);
     };
     
-    function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
-        if (rootObject instanceof Array) {
-            for (var i = 0; i < rootObject.length; i++)
-                visitorCallback(i);
-        } else {
-            for (var propertyName in rootObject)
-                visitorCallback(propertyName);
-        }
-    };
-    
-    function mapJsObjectGraph(rootObject, mapInputCallback, mapOutputCallback, visitedObjects, isArrayMember) {
+    function mapJsObjectGraph(rootObject, mapInputCallback, visitedObjects) {
         visitedObjects = visitedObjects || new objectLookup();
         
         rootObject = mapInputCallback(rootObject);
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
         if (!canHaveProperties)
-            return mapOutputCallback(rootObject, isArrayMember);
+            return rootObject;
             
-        var rootObjectIsArray = rootObject instanceof Array;
-        var outputProperties = rootObjectIsArray ? [] : {};
-        var mappedRootObject = mapOutputCallback(outputProperties, isArrayMember);
-        visitedObjects.save(rootObject, mappedRootObject);            
+        var outputProperties = rootObject instanceof Array ? [] : {};
+        visitedObjects.save(rootObject, outputProperties);            
         
         visitPropertiesOrArrayEntries(rootObject, function(indexer) {
             var propertyValue = mapInputCallback(rootObject[indexer]);
@@ -794,20 +757,30 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
                 case "number":
                 case "string":
                 case "function":
-                    outputProperties[indexer] = mapOutputCallback(propertyValue, rootObjectIsArray);
+                    outputProperties[indexer] = propertyValue;
                     break;
                 case "object":
                 case "undefined":				
                     var previouslyMappedValue = visitedObjects.get(propertyValue);
                     outputProperties[indexer] = (previouslyMappedValue !== undefined)
                         ? previouslyMappedValue
-                        : mapJsObjectGraph(propertyValue, mapInputCallback, mapOutputCallback, visitedObjects, rootObjectIsArray);
+                        : mapJsObjectGraph(propertyValue, mapInputCallback, visitedObjects);
                     break;							
             }
         });
         
-        return mappedRootObject;
+        return outputProperties;
     }
+    
+    function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
+        if (rootObject instanceof Array) {
+            for (var i = 0; i < rootObject.length; i++)
+                visitorCallback(i);
+        } else {
+            for (var propertyName in rootObject)
+                visitorCallback(propertyName);
+        }
+    };    
     
     function objectLookup() {
         var keys = [];
@@ -828,8 +801,6 @@ ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
     };
 })();
 
-ko.exportSymbol('ko.fromJS', ko.fromJS);
-ko.exportSymbol('ko.fromJSON', ko.fromJSON);
 ko.exportSymbol('ko.toJS', ko.toJS);
 ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
