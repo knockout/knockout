@@ -990,23 +990,38 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
         var isFirstEvaluation = true;
+
+        // Each time the dependentObservable is evaluated (after data changes),
+        // the binding attribute is reparsed so that it can pick out the correct
+        // model properties in the context of the changed data.
+        // DOM event callbacks need to be able to access this changed data,
+        // so we need a single parsedBindings variable (shared by all callbacks
+        // associated with this node's bindings) that all the closures can access.
+        var parsedBindings;
+        function makeValueAccessor(bindingKey) {
+            return function () { return parsedBindings[bindingKey] }
+        }
+        function parsedBindingsAccessor() {
+            return parsedBindings;
+        }
+        
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                var parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
                 
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
-	                for (var bindingKey in parsedBindings) {
-	                    if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-	                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, parsedBindings[bindingKey], parsedBindings, viewModel);
-	                }                	
+                    for (var bindingKey in parsedBindings) {
+                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
+                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
+                    }                	
                 }
                 
                 // ... then run all the updates, which might trigger changes even on the first evaluation
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, parsedBindings[bindingKey], parsedBindings, viewModel);
+                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
                 }
             },
             null,
@@ -1016,10 +1031,10 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
-    	if (rootNode && (rootNode.nodeType == undefined))
-    		throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
-    	rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-    			
+        if (rootNode && (rootNode.nodeType == undefined))
+            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
+                
         var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
@@ -1027,12 +1042,13 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     };
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
-	ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindings', ko.applyBindings);
 })();
 ko.bindingHandlers['click'] = {
-    'init' : function (element, value, allBindings, viewModel) {
+    'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
         ko.utils.registerEventHandler(element, "click", function (event) {
             var handlerReturnValue;
+            var value = valueAccessor();
             try { handlerReturnValue = value.call(viewModel); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
@@ -1047,11 +1063,12 @@ ko.bindingHandlers['click'] = {
 };
 
 ko.bindingHandlers['submit'] = {
-    'init': function (element, value, allBindings, viewModel) {
-        if (typeof value != "function")
+    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        if (typeof valueAccessor() != "function")
             throw new Error("The value for a submit binding must be a function to invoke on submit");
         ko.utils.registerEventHandler(element, "submit", function (event) {
             var handlerReturnValue;
+            var value = valueAccessor();
             try { handlerReturnValue = value.call(viewModel, element); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
@@ -1066,8 +1083,8 @@ ko.bindingHandlers['submit'] = {
 };
 
 ko.bindingHandlers['visible'] = {
-    'update': function (element, value) {
-        value = ko.utils.unwrapObservable(value);
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
         var isCurrentlyVisible = !(element.style.display == "none");
         if (value && !isCurrentlyVisible)
             element.style.display = "";
@@ -1077,8 +1094,8 @@ ko.bindingHandlers['visible'] = {
 }
 
 ko.bindingHandlers['enable'] = {
-    'update': function (element, value) {
-        value = ko.utils.unwrapObservable(value);
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
         if (value && element.disabled)
             element.removeAttribute("disabled");
         else if ((!value) && (!element.disabled))
@@ -1086,11 +1103,15 @@ ko.bindingHandlers['enable'] = {
     }
 };
 
-ko.bindingHandlers['disable'] = { 'update': function (element, value) { ko.bindingHandlers['enable'].update(element, !ko.utils.unwrapObservable(value)); } };
+ko.bindingHandlers['disable'] = { 
+    'update': function (element, valueAccessor) { 
+        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) }); 		
+    } 	
+};
 
 ko.bindingHandlers['value'] = {
-    'init': function (element, value, allBindings) {    	
-        var eventName = allBindings["valueUpdate"] || "change";
+    'init': function (element, valueAccessor, allBindingsAccessor) {    	
+        var eventName = allBindingsAccessor()["valueUpdate"] || "change";
         
         // The syntax "after<eventname>" means "run the handler asynchronously after the event"
         // This is useful, for example, to catch "keydown" events after the browser has updated the control
@@ -1102,22 +1123,23 @@ ko.bindingHandlers['value'] = {
         }
         var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
                                                         : function(handler) { handler() };
-                                                        
-        if (ko.isWriteableObservable(value))        	
-            ko.utils.registerEventHandler(element, eventName, function () {             	
-                runEventHandler(function() {
-                    value(ko.selectExtensions.readValue(this)); 
-                }['bind'](this));
+        
+        ko.utils.registerEventHandler(element, eventName, function () {
+            runEventHandler(function() {
+                var modelValue = valueAccessor();
+                var elementValue = ko.selectExtensions.readValue(element);
+                if (ko.isWriteableObservable(modelValue))
+                    modelValue(elementValue);
+                else {
+                    var allBindings = allBindingsAccessor();
+                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                        allBindings['_ko_property_writers']['value'](elementValue); 
+                }
             });
-        else if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers'].value)
-            ko.utils.registerEventHandler(element, eventName, function () {             	
-                runEventHandler(function() {
-                    allBindings['_ko_property_writers'].value(ko.selectExtensions.readValue(this)); 
-                }['bind'](this));
-            });
+        });
     },
-    'update': function (element, value) {
-        var newValue = ko.utils.unwrapObservable(value);
+    'update': function (element, valueAccessor) {
+        var newValue = ko.utils.unwrapObservable(valueAccessor());
         if (newValue != ko.selectExtensions.readValue(element)) {
             var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
@@ -1133,7 +1155,7 @@ ko.bindingHandlers['value'] = {
 };
 
 ko.bindingHandlers['options'] = {
-    'update': function (element, value, allBindings) {
+    'update': function (element, valueAccessor, allBindingsAccessor) {
         if (element.tagName != "SELECT")
             throw new Error("options binding applies only to SELECT elements");
 
@@ -1143,11 +1165,12 @@ ko.bindingHandlers['options'] = {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
 
-        value = ko.utils.unwrapObservable(value);
+        var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
         ko.utils.emptyDomNode(element);
 
         if (value) {
+            var allBindings = allBindingsAccessor();
             if (typeof value.length != "number")
                 value = [value];
             if (allBindings['optionsCaption']) {
@@ -1193,17 +1216,23 @@ ko.bindingHandlers['selectedOptions'] = {
         }
         return result;
     },
-    'init': function (element, value, allBindings) {
-        if (ko.isWriteableObservable(value))
-            ko.utils.registerEventHandler(element, "change", function () { value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this)); });
-        else if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers'].value)
-            ko.utils.registerEventHandler(element, "change", function () { allBindings['_ko_property_writers'].value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this)); });
+    'init': function (element, valueAccessor, allBindingsAccessor) {
+        ko.utils.registerEventHandler(element, "change", function () { 
+            var value = valueAccessor();
+            if (ko.isWriteableObservable(value))
+                value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+            else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                    allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+            }
+        });    	
     },
-    'update': function (element, value) {
+    'update': function (element, valueAccessor) {
         if (element.tagName != "SELECT")
             throw new Error("values binding applies only to SELECT elements");
 
-        var newValue = ko.utils.unwrapObservable(value);
+        var newValue = ko.utils.unwrapObservable(valueAccessor());
         if (newValue && typeof newValue.length == "number") {
             var nodes = element.childNodes;
             for (var i = 0, j = nodes.length; i < j; i++) {
@@ -1216,16 +1245,16 @@ ko.bindingHandlers['selectedOptions'] = {
 };
 
 ko.bindingHandlers['text'] = {
-    'update': function (element, value) {
-        value = ko.utils.unwrapObservable(value);
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
         typeof element.innerText == "string" ? element.innerText = value
                                              : element.textContent = value;
     }
 };
 
 ko.bindingHandlers['css'] = {
-    'update': function (element, value) {
-        value = value || {};
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
         for (var className in value) {
             if (typeof className == "string") {
                 var shouldHaveClass = ko.utils.unwrapObservable(value[className]);
@@ -1236,8 +1265,8 @@ ko.bindingHandlers['css'] = {
 };
 
 ko.bindingHandlers['style'] = {
-    'update': function (element, value) {
-        value = ko.utils.unwrapObservable(value || {});
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
         for (var styleName in value) {
             if (typeof styleName == "string") {
                 var styleValue = ko.utils.unwrapObservable(value[styleName]);
@@ -1248,8 +1277,8 @@ ko.bindingHandlers['style'] = {
 };
 
 ko.bindingHandlers['uniqueName'] = {
-    'init': function (element, value) {
-        if (value) {
+    'init': function (element, valueAccessor) {
+        if (valueAccessor()) {
             element.name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
 
             // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
@@ -1261,35 +1290,35 @@ ko.bindingHandlers['uniqueName'] = {
 ko.bindingHandlers['uniqueName'].currentIndex = 0;
 
 ko.bindingHandlers['checked'] = {
-    'init': function (element, value, allBindings) {
-        if (ko.isWriteableObservable(value)) {
-            var updateHandler;
-            if (element.type == "checkbox")
-                updateHandler = function () { value(this.checked) };
-            else if (element.type == "radio")
-                updateHandler = function () { if (this.checked) value(this.value) };
-            if (updateHandler) {
-                ko.utils.registerEventHandler(element, "change", updateHandler);
-                ko.utils.registerEventHandler(element, "click", updateHandler);
+    'init': function (element, valueAccessor, allBindingsAccessor) {
+        var updateHandler = function() {
+            var value = valueAccessor();
+            if (ko.isWriteableObservable(value)) {
+                if (element.type == "checkbox") {
+                    value(element.checked);
+                } else if ((element.type == "radio") && (element.checked)) {
+                    value(element.value);
+                }
+            } else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
+                    if (element.type == "checkbox") {
+                        allBindings['_ko_property_writers']['checked'](element.checked);
+                    } else if ((element.type == "radio") && (element.checked)) {
+                        allBindings['_ko_property_writers']['checked'](element.value);
+                    }
+                }
             }
-        } else if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers'].checked) {
-            var updateHandler;
-            if (element.type == "checkbox")
-                updateHandler = function () { allBindings['_ko_property_writers'].checked(this.checked) };
-            else if (element.type == "radio")
-                updateHandler = function () { if (this.checked) allBindings['_ko_property_writers'].checked(this.value) };
-            if (updateHandler) {
-                ko.utils.registerEventHandler(element, "change", updateHandler);
-                ko.utils.registerEventHandler(element, "click", updateHandler);
-            }
-        }
+        };
+        ko.utils.registerEventHandler(element, "change", updateHandler);
+        ko.utils.registerEventHandler(element, "click", updateHandler);
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
         if ((element.type == "radio") && !element.name)
-            ko.bindingHandlers['uniqueName']['init'](element, true);
+            ko.bindingHandlers['uniqueName']['init'](element, function() { return true });
     },
-    'update': function (element, value) {
-        value = ko.utils.unwrapObservable(value);
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
         
         if (element.type == "checkbox") {
             element.checked = value;
@@ -1451,7 +1480,8 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
     };
 
     ko.bindingHandlers['template'] = {
-        'update': function (element, bindingValue, allBindings, viewModel) {
+        'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
 
             if (typeof bindingValue['foreach'] != "undefined") {

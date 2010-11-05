@@ -109,6 +109,26 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(model.modelProperty).should_be(456);
     },
+    
+    'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
+        // This spec represents https://github.com/SteveSanderson/knockout/issues#issue/13
+        var originalSubproperty = ko.observable("original value");
+        var newSubproperty = ko.observable();
+        var model = { myprop: ko.observable({ subproperty : originalSubproperty }) };
+        
+        // Set up a text box whose value is linked to the subproperty of the observable's current value
+        testNode.innerHTML = "<input data-bind='value: myprop().subproperty' />";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].value).should_be("original value");
+        
+        model.myprop({ subproperty : newSubproperty }); // Note that myprop (and hence its subproperty) is changed *after* the bindings are applied
+        testNode.childNodes[0].value = "Some new value";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");    	
+        
+        // Verify that the change was written to the *new* subproperty, not the one referenced when the bindings were first established
+        value_of(newSubproperty()).should_be("Some new value");
+        value_of(originalSubproperty()).should_be("original value");
+    },
 
     'Should only register one single onchange handler': function () {
         var notifiedValues = [];
@@ -131,17 +151,17 @@ describe('Binding: Value', {
         value_of(notifiedValues.length).should_be(2);
     },
     
-	'For select boxes, should update selectedIndex when the model changes': function() {
-		var observable = new ko.observable('B');
+    'For select boxes, should update selectedIndex when the model changes': function() {
+        var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
         observable('A');
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
-	},
+    },
     
     'For select boxes, should display the caption when the model value changes to undefined': function() {
-		var observable = new ko.observable('B');
+        var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(2);
@@ -150,7 +170,7 @@ describe('Binding: Value', {
     },
     
     'For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)': function () {
-		var observable = new ko.observable('B');
+        var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         var dropdown = testNode.childNodes[0];
@@ -165,30 +185,30 @@ describe('Binding: Value', {
     },
 
     'For select boxes, should be able to associate option values with arbitrary objects (not just strings)': function() {
-    	var x = {}, y = {};
-    	var selectedValue = ko.observable(y);
-    	testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
-    	var dropdown = testNode.childNodes[0];
-    	ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
-    	
-    	// Check the UI displays the entry corresponding to the chosen value
-    	value_of(dropdown.selectedIndex).should_be(1);
-    	    	
-    	// Check that when we change the model value, the UI is updated
-    	selectedValue(x);
-    	value_of(dropdown.selectedIndex).should_be(0);
-    	
-    	// Check that when we change the UI, this changes the model value
-    	dropdown.selectedIndex = 1;
-    	ko.utils.triggerEvent(dropdown, "change");
-    	value_of(selectedValue()).should_be(y);    	
+        var x = {}, y = {};
+        var selectedValue = ko.observable(y);
+        testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
+        var dropdown = testNode.childNodes[0];
+        ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
+        
+        // Check the UI displays the entry corresponding to the chosen value
+        value_of(dropdown.selectedIndex).should_be(1);
+                
+        // Check that when we change the model value, the UI is updated
+        selectedValue(x);
+        value_of(dropdown.selectedIndex).should_be(0);
+        
+        // Check that when we change the UI, this changes the model value
+        dropdown.selectedIndex = 1;
+        ko.utils.triggerEvent(dropdown, "change");
+        value_of(selectedValue()).should_be(y);    	
     }
 })
 
 describe('Binding: Options', {
     before_each: prepareTestNode,
 
-	// Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
+    // Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
 
     'Should only be applicable to SELECT nodes': function () {
         var threw = false;
@@ -242,7 +262,7 @@ describe('Binding: Selected Options', {
     },
 
     'Should set selection in the SELECT node to match the model': function () {
-    	var bObject = {};
+        var bObject = {};
         var values = new ko.observableArray(["A", bObject, "C"]);
         var selection = new ko.observableArray([bObject]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
@@ -254,7 +274,7 @@ describe('Binding: Selected Options', {
     },
 
     'Should update the model when selection in the SELECT node changes': function () {
-    	var cObject = {};
+        var cObject = {};
         var values = new ko.observableArray(["A", "B", cObject]);
         var selection = new ko.observableArray(["B"]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
@@ -275,7 +295,7 @@ describe('Binding: Submit', {
     before_each: prepareTestNode,
 
     'Should invoke the supplied function on submit and prevent default action, using model as \'this\' param and the form node as a param to the handler': function () {
-    	var firstParamStored;
+        var firstParamStored;
         var model = { wasCalled: false, doCall: function (firstParam) { this.wasCalled = true; firstParamStored = firstParam; } };
         testNode.innerHTML = "<form data-bind='submit:doCall' />";
         var formNode = testNode.childNodes[0];

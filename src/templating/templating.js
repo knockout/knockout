@@ -88,7 +88,8 @@
     };
 
     ko.bindingHandlers['template'] = {
-        'update': function (element, bindingValue, allBindings, viewModel) {
+        'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
 
             if (typeof bindingValue['foreach'] != "undefined") {
