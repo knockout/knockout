@@ -1562,7 +1562,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-	function mapNodeAndRefreshWhenChanged(mapping, valueToMap) {
+    function mapNodeAndRefreshWhenChanged(mapping, valueToMap) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         ko.dependentObservable(function() {
@@ -1578,7 +1578,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
         }, null, { 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
         return mappedNodes;
-	}
+    }
 
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
         // Compare the provided array against the previous one
@@ -1609,42 +1609,42 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                 case "deleted":
                     // Queue these nodes for later removal
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
-			            nodesToDelete.push({
-			              element: node,
-			              index: i,
-			              value: editScript[i].value
-			            });
+                        nodesToDelete.push({
+                          element: node,
+                          index: i,
+                          value: editScript[i].value
+                        });
                         insertAfterNode = node;
                     });
                     lastMappingResultIndex++;
                     break;
 
                 case "added": 
-                	var mappedNodes = mapNodeAndRefreshWhenChanged(mapping, editScript[i].value);
-			        // On the first evaluation, insert the nodes at the current insertion point
-			        newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
-			        for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
-			            var node = mappedNodes[nodeIndex];
-			            nodesAdded.push({
-			              element: node,
-			              index: i,
-			              value: editScript[i].value
-			            });
-			            if (insertAfterNode == null) {
-			                // Insert at beginning
-			                if (domNode.firstChild)
-			                    domNode.insertBefore(node, domNode.firstChild);
-			                else
-			                    domNode.appendChild(node);
-			            } else {
-			                // Insert after insertion point
-			                if (insertAfterNode.nextSibling)
-			                    domNode.insertBefore(node, insertAfterNode.nextSibling);
+                    var mappedNodes = mapNodeAndRefreshWhenChanged(mapping, editScript[i].value);
+                    // On the first evaluation, insert the nodes at the current insertion point
+                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
+                    for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
+                        var node = mappedNodes[nodeIndex];
+                        nodesAdded.push({
+                          element: node,
+                          index: i,
+                          value: editScript[i].value
+                        });
+                        if (insertAfterNode == null) {
+                            // Insert at beginning
+                            if (domNode.firstChild)
+                                domNode.insertBefore(node, domNode.firstChild);
                             else
-			                    domNode.appendChild(node);
-			            }
-			            insertAfterNode = node;
-			        }    		
+                                domNode.appendChild(node);
+                        } else {
+                            // Insert after insertion point
+                            if (insertAfterNode.nextSibling)
+                                domNode.insertBefore(node, insertAfterNode.nextSibling);
+                            else
+                                domNode.appendChild(node);
+                        }
+                        insertAfterNode = node;
+                    }    		
                     break;
             }
         }
@@ -1653,10 +1653,13 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
 
         var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {
-            if (options['afterAdd'])
-                options['afterAdd'](nodesAdded.element, nodesAdded.index, nodesAdded.value);
+            if (options['afterAdd']) {
+                for (var i = 0; i < nodesAdded.length; i++)
+                    options['afterAdd'](nodesAdded[i].element, nodesAdded[i].index, nodesAdded[i].value);
+            }
             if (options['beforeRemove']) {
-                options['beforeRemove'](nodesToDelete.element, nodesToDelete.index, nodesToDelete.value);
+                for (var i = 0; i < nodesToDelete.length; i++)
+                    options['beforeRemove'](nodesToDelete[i].element, nodesToDelete[i].index, nodesToDelete[i].value);
                 invokedBeforeRemoveCallback = true;
             }
         }
