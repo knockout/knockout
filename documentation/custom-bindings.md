@@ -7,6 +7,8 @@ You're not limited to using the built-in bindings like `click`, `value`, and so 
 
 For example, you can create interactive components like grids, tabsets, and so on, in the form of custom bindings (see the [grid example](../examples/grid.html)).
 
+**Important**: The following documentation applies to Knockout 1.1.1 and later. The API for registering bindings was different in Knockout 1.1.0 and earlier.
+
 ### Registering your binding
 
 To register a binding, add it as a subproperty of `ko.bindingHandlers`:
