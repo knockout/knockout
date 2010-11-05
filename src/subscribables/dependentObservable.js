@@ -51,11 +51,17 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     dependentObservable.dispose = function () {
         disposeAllSubscriptionsToDependencies();
     };
+    dependentObservable.evaluate = function () {
+        evaluate();
+    };
 
     ko.subscribable.call(dependentObservable);
-    evaluate();
+    if (!options || !options["deferEvaluation"]) {
+		evaluate();
+	}
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
+    ko.exportProperty(dependentObservable, 'evaluate', dependentObservable.evaluate);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
     
     return dependentObservable;

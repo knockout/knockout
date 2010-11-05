@@ -140,5 +140,15 @@ describe('Dependent Observable', {
         underlyingObservable(101);
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
+    },
+	
+    'Should allow deferring of dependency calculation': function () {
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable(function () { timesEvaluated++; return 123; }, undefined, { deferEvaluation: true });
+        value_of(instance()).should_be(undefined);
+        value_of(timesEvaluated).should_be(0);
+		instance.evaluate();
+        value_of(instance()).should_be(123);
+        value_of(timesEvaluated).should_be(1);
     }
 })
