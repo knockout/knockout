@@ -49,8 +49,8 @@ All of these functions are equivalent to running the native JavaScript array fun
 
  * `myObservableArray.push('Some new value')` adds a new item to the end of array
  * `myObservableArray.pop()` removes the last value from the array and returns it 
- * `myObservableArray.shift('Some new value')` inserts a new item at the beginning of the array
- * `myObservableArray.unshift()` removes the first value from the array and returns it
+ * `myObservableArray.unshift('Some new value')` inserts a new item at the beginning of the array
+ * `myObservableArray.shift()` removes the first value from the array and returns it
  * `myObservableArray.reverse()` reverses the order of the array
  * `myObservableArray.sort()` sorts the array contents.
    * By default, it sorts alphabetically (for strings) or numerically (for numbers). 
