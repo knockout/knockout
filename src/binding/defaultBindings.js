@@ -123,7 +123,7 @@ ko.bindingHandlers['options'] = {
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
         ko.utils.emptyDomNode(element);
-
+		
         if (value) {
             var allBindings = allBindingsAccessor();
             if (typeof value.length != "number")
@@ -133,7 +133,13 @@ ko.bindingHandlers['options'] = {
                 option.innerHTML = allBindings['optionsCaption'];
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
-            }
+            } else {
+				if (ko.utils.unwrapObservable(allBindings['value']) === undefined) {
+					if (ko.isWriteableObservable(allBindings['value'])) {
+						allBindings['value'](value[0]);
+					}
+				}
+			}
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
