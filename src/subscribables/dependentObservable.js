@@ -42,6 +42,10 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     function dependentObservable() {
         if (arguments.length > 0)
             throw "Cannot write a value to a dependentObservable. Do not pass any parameters to it";
+			
+		if (_isFirstEvaluation) {
+			evaluate();
+		}
 
         ko.dependencyDetection.registerDependency(dependentObservable);
         return _latestValue;
