@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.1.1
+// Knockout JavaScript library v1.1.2pre
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -1153,11 +1153,14 @@ ko.bindingHandlers['options'] = {
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                var optionText = typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue;
+                optionValue = ko.utils.unwrapObservable(optionValue);
+                optionText = ko.utils.unwrapObservable(optionText);
                 if (typeof optionValue == 'object')
                     ko.selectExtensions.writeValue(option, optionValue);
                 else
                     option.value = optionValue.toString();
-                option.innerHTML = (typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue).toString();
+                option.innerHTML = optionText.toString();
                 element.appendChild(option);
             }
 
