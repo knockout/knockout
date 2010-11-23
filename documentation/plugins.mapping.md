@@ -69,6 +69,7 @@ Let's say you have a Javascript object that looks like this:
 		name: 'Scot',
 		children: [
 			{ id : 1, name : 'Alicw' }
+		]
 	}
 
 You can map this to a viewModel without any problems:
@@ -81,6 +82,7 @@ Now, let's say the data is updated to be without any typos:
 		name: 'Scott',
 		children: [
 			{ id : 1, name : 'Alice' }
+		]
 	}
 	
 Two things have happened here: `name` was changed from `Scot` to `Scott` and `children[0].name` was changed from `Alicw` to the typo-free `Alice`. You can update `viewModel` based on this new data:
@@ -114,6 +116,7 @@ Let's say you have a Javascript object that looks like this:
 		name: 'Graham',
 		children: [
 			{ id : 1, name : 'Lisa' }
+		]
 	}
 
 If you want to map the children array yourself, you can specify that like this:
