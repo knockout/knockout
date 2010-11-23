@@ -27,7 +27,7 @@ In order for KO to notice that these values has changed, you would have to creat
 	
 Your HTML would look like this:
 
-	The time on the server is: <span data-bind='text: observableTime'></span> and <span data-bind='text: observableUsers'></span> user(s) are connected.
+	The time on the server is: <span data-bind='text: serverTime'></span> and <span data-bind='text: numUsers'></span> user(s) are connected.
 	
 Finally, to connect the Javascript object to the observables, you would write:
 
