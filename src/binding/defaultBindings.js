@@ -58,16 +58,16 @@ ko.bindingHandlers['enable'] = {
     }
 };
 
-ko.bindingHandlers['disable'] = { 
-    'update': function (element, valueAccessor) { 
-        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) }); 		
-    } 	
+ko.bindingHandlers['disable'] = {
+    'update': function (element, valueAccessor) {
+        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) });
+    }
 };
 
 ko.bindingHandlers['value'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {    	
+    'init': function (element, valueAccessor, allBindingsAccessor) {
         var eventName = allBindingsAccessor()["valueUpdate"] || "change";
-        
+
         // The syntax "after<eventname>" means "run the handler asynchronously after the event"
         // This is useful, for example, to catch "keydown" events after the browser has updated the control
         // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
@@ -78,7 +78,7 @@ ko.bindingHandlers['value'] = {
         }
         var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
                                                         : function(handler) { handler() };
-        
+
         ko.utils.registerEventHandler(element, eventName, function () {
             runEventHandler(function() {
                 var modelValue = valueAccessor();
@@ -88,7 +88,7 @@ ko.bindingHandlers['value'] = {
                 else {
                     var allBindings = allBindingsAccessor();
                     if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                        allBindings['_ko_property_writers']['value'](elementValue); 
+                        allBindings['_ko_property_writers']['value'](elementValue);
                 }
             });
         });
@@ -175,16 +175,18 @@ ko.bindingHandlers['selectedOptions'] = {
         return result;
     },
     'init': function (element, valueAccessor, allBindingsAccessor) {
-        ko.utils.registerEventHandler(element, "change", function () { 
+        ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor();
-            if (ko.isWriteableObservable(value))
+            var selectPosition = element.scrollTop;
+            if (ko.isWriteableObservable(value)) {
                 value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
-            else {
+                element.scrollTop = selectPosition;
+            } else {
                 var allBindings = allBindingsAccessor();
                 if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
                     allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             }
-        });    	
+        });
     },
     'update': function (element, valueAccessor) {
         if (element.tagName != "SELECT")
@@ -277,19 +279,20 @@ ko.bindingHandlers['checked'] = {
     },
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        
+
         if (element.type == "checkbox") {
             element.checked = value;
-            
+
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
-            if (value && ko.utils.isIe6) 
+            if (value && ko.utils.isIe6)
                 element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
-            
+
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
-            if ((element.value == value) && ko.utils.isIe6) 
-                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);            
+            if ((element.value == value) && ko.utils.isIe6)
+                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);
         }
     }
 };
+
