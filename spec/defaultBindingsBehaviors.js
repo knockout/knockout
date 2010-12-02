@@ -100,14 +100,14 @@ describe('Binding: Value', {
     },
 
     'For non-observable property values, should catch the node\'s onchange and write values back to the property': function () {
-        var model = { modelProperty: 123 };
-        testNode.innerHTML = "<input data-bind='value: modelProperty' />";
+        var model = { modelProperty123: 456 };
+        testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be(456);
 
-        testNode.childNodes[0].value = 456;
+        testNode.childNodes[0].value = 789;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(model.modelProperty).should_be(456);
+        value_of(model.modelProperty123).should_be(789);
     },
     
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
