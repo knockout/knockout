@@ -37,6 +37,13 @@ describe('Dependent Observable', {
         value_of(instance()).should_be(123);
         value_of(threw).should_be(true);
     },
+    
+    'Should be able to pass evaluator function using "options" parameter called "read"': function() {
+        var instance = new ko.dependentObservable({
+            read: function () { return 123; }
+        });
+        value_of(instance()).should_be(123);    		
+    },
 
     'Should cache result of evaluator function and not call it again until dependencies change': function () {
         var timesEvaluated = 0;
