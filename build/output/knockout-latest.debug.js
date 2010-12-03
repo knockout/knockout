@@ -532,16 +532,16 @@ ko.observable = function (initialValue) {
 
     function observable() {
         if (arguments.length > 0) {
-        	// Write
+            // Write
             _latestValue = arguments[0];
             observable.notifySubscribers(_latestValue);
             return this; // Permits chained assignments
         }
         else {
-        	// Read
+            // Read
             ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
-        	return _latestValue;
-    	}
+            return _latestValue;
+        }
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
@@ -558,7 +558,14 @@ ko.isObservable = function (instance) {
     return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
-    return (typeof instance == "function") && instance.__ko_proto__ === ko.observable;
+    // Observable
+    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+        return true;
+    // Writeable dependent observable
+    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+        return true;
+    // Anything else
+    return false;
 }
 
 
@@ -652,8 +659,18 @@ ko.observableArray = function (initialValues) {
 
 ko.exportSymbol('ko.observableArray', ko.observableArray);
 
-ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
-    if (typeof evaluatorFunction != "function")
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
+        // Single-parameter syntax - everything is on this "options" param
+        options = evaluatorFunctionOrOptions;
+    } else {
+        // Multi-parameter syntax - construct the options according to the params passed
+        options = options || {};
+        options["read"] = evaluatorFunctionOrOptions || options["read"];
+        options["owner"] = evaluatorFunctionTarget || options["owner"];
+    }
+    
+    if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
 
     var _subscriptionsToDependencies = [];
@@ -673,7 +690,7 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
     var _latestValue, _isFirstEvaluation = true;
     function evaluate() {
-        if ((!_isFirstEvaluation) && options && typeof options["disposeWhen"] == "function") {
+        if ((!_isFirstEvaluation) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -682,7 +699,7 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
         try {
             ko.dependencyDetection.begin();
-            _latestValue = evaluatorFunctionTarget ? evaluatorFunction.call(evaluatorFunctionTarget) : evaluatorFunction();
+            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
@@ -693,14 +710,23 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
     }
 
     function dependentObservable() {
-        if (arguments.length > 0)
-            throw "Cannot write a value to a dependentObservable. Do not pass any parameters to it";
-
-        ko.dependencyDetection.registerDependency(dependentObservable);
-        return _latestValue;
+        if (arguments.length > 0) {
+            if (typeof options["write"] === "function") {
+                // Writing a value
+                var valueToWrite = arguments[0];
+                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+            } else {
+                throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+            }
+        } else {
+            // Reading the value
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
+        }
     }
     dependentObservable.__ko_proto__ = ko.dependentObservable;
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
+    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
         disposeAllSubscriptionsToDependencies();
     };

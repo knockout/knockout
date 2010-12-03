@@ -50,14 +50,23 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function dependentObservable() {
-        if (arguments.length > 0)
-            throw "Cannot write a value to a dependentObservable. Do not pass any parameters to it";
-
-        ko.dependencyDetection.registerDependency(dependentObservable);
-        return _latestValue;
+        if (arguments.length > 0) {
+            if (typeof options["write"] === "function") {
+                // Writing a value
+                var valueToWrite = arguments[0];
+                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+            } else {
+                throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+            }
+        } else {
+            // Reading the value
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
+        }
     }
     dependentObservable.__ko_proto__ = ko.dependentObservable;
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
+    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
         disposeAllSubscriptionsToDependencies();
     };
