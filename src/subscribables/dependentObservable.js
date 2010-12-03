@@ -1,6 +1,16 @@
 
-ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
-    if (typeof evaluatorFunction != "function")
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
+        // Single-parameter syntax - everything is on this "options" param
+        options = evaluatorFunctionOrOptions;
+    } else {
+        // Multi-parameter syntax - construct the options according to the params passed
+        options = options || {};
+        options["read"] = evaluatorFunctionOrOptions || options["read"];
+        options["owner"] = evaluatorFunctionTarget || options["owner"];
+    }
+    
+    if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
 
     var _subscriptionsToDependencies = [];
@@ -20,7 +30,7 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
     var _latestValue, _isFirstEvaluation = true;
     function evaluate() {
-        if ((!_isFirstEvaluation) && options && typeof options["disposeWhen"] == "function") {
+        if ((!_isFirstEvaluation) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -29,7 +39,7 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
         try {
             ko.dependencyDetection.begin();
-            _latestValue = evaluatorFunctionTarget ? evaluatorFunction.call(evaluatorFunctionTarget) : evaluatorFunction();
+            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
