@@ -669,6 +669,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         options["read"] = evaluatorFunctionOrOptions || options["read"];
         options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
+    // By here, "options" is always non-null
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
@@ -688,9 +689,12 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
     };
 
-    var _latestValue, _isFirstEvaluation = true;
+    var _latestValue, _hasBeenEvaluated = false;
     function evaluate() {
-        if ((!_isFirstEvaluation) && typeof options["disposeWhen"] == "function") {
+        // Don't dispose on first evaluation, because the "disposeWhen" callback might
+        // e.g., dispose when the associated DOM element isn't in the doc, and it's not
+        // going to be in the doc until *after* the first evaluation
+        if ((_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -706,7 +710,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         dependentObservable.notifySubscribers(_latestValue);
-        _isFirstEvaluation = false;
+        _hasBeenEvaluated = true;
     }
 
     function dependentObservable() {
@@ -720,6 +724,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             }
         } else {
             // Reading the value
+            if (!_hasBeenEvaluated)
+                evaluate();
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
@@ -732,7 +738,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     };
 
     ko.subscribable.call(dependentObservable);
-    evaluate();
+    if (options['deferEvaluation'] !== true)
+        evaluate();
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);

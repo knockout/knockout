@@ -166,5 +166,16 @@ describe('Dependent Observable', {
             write: function() {}
         });
         value_of(ko.isWriteableObservable(instance)).should_be(true);    	
-    }
+    },
+    
+    'Should allow deferring of evaluation (and hence dependency detection)': function () {
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({ 
+            read: function () { timesEvaluated++; return 123 },
+            deferEvaluation: true 
+        });
+        value_of(timesEvaluated).should_be(0);
+        value_of(instance()).should_be(123);
+        value_of(timesEvaluated).should_be(1);
+     }    
 })
