@@ -10,6 +10,31 @@ ko.jqueryTmplTemplateEngine = function () {
         return 1;
     })();
 
+    // n2d is a system for linking DOM nodes to modelView data.
+    // It works by inserting <n2d> elements into the DOM, which are linked
+    // back to viewModle objects by the n2dMap.
+    // FIXME: There is an outstanding memory leak.  The references to 
+    // viewModel objects in the n2dMap will stop these viewModel objects from being 
+    // garbage collected.
+    var n2dNextIndex = 0;
+    var n2dMagicString = "n2d";	// each template gets a new DOM node of
+    							// type <n2dMagicString> with a class of 
+    							// n2dNextIndex
+    var n2dMap = {};
+    // The n2d function accepts a DOM node and returns the first data object
+    // under it.
+    this['nodeToData'] = function(node) {
+    	var marker = jQuery(node).find(n2dMagicString);
+    	if (marker.length === 0) {
+    		throw "n2d marker not found";
+    	}
+    	//console.log("marker", marker);
+    	var n2dIndex = jQuery(marker[0]).attr("class");
+    	return n2dMap[n2dIndex];
+    }
+    
+    
+    
     function getTemplateNode(template) {
         var templateNode = document.getElementById(template);
         if (templateNode == null)
@@ -39,6 +64,12 @@ ko.jqueryTmplTemplateEngine = function () {
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
         var templateText = getTemplateNode(template).text;
+        
+        // Add to the n2d system
+        n2dMap["" + n2dNextIndex] = data;
+        templateText = '<' + n2dMagicString + ' class="' + n2dNextIndex + '" />' + templateText;
+        n2dNextIndex++;
+        
         return jQuery['tmpl'](templateText, data);
     },
 

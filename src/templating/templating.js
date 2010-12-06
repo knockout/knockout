@@ -103,7 +103,17 @@
             }
         }
     };
+    
+    ko.nodeToData = function(node) {
+        if (_templateEngine === undefined) {
+            throw "Set a template engine before calling nodeToData";
+        }
+        return _templateEngine.nodeToData(node);
+    }
+
 })();
 
 ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
 ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+ko.exportSymbol('ko.nodeToData', ko.nodeToData);

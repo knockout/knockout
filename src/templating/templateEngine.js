@@ -12,6 +12,9 @@ ko.templateEngine = function () {
     this['createJavaScriptEvaluatorBlock'] = function (script) {
         throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";
     }
+    this['nodeToData'] = function (node) {
+        throw "Override nodeToData in your ko.templateEngine subclass";
+    }
 };
 
 ko.exportSymbol('ko.templateEngine', ko.templateEngine);
