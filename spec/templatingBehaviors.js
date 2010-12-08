@@ -175,7 +175,6 @@ describe('Templating', {
     
     'Should handle data-bind attributes that include newlines from inside templates': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:\n\"Hi\"' />" }));
-        debugger;
         ko.renderTemplate("someTemplate", null, null, testNode);
         value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
     },    
