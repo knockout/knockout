@@ -40,6 +40,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         try {
             ko.dependencyDetection.begin();
             _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
+        } catch(e) {
+        	// This 'fixes' an 'Object not found exception', which occurs in IE only.
+        	// See https://github.com/SteveSanderson/knockout/issues/#issue/20
         } finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
