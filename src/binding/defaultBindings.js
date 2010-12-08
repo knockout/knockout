@@ -119,6 +119,7 @@ ko.bindingHandlers['options'] = {
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
+        var previousScrollTop = element.scrollTop;
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -158,6 +159,9 @@ ko.bindingHandlers['options'] = {
                     countSelectionsRetained++;
                 }
             }
+            
+            if (previousScrollTop)
+                element.scrollTop = previousScrollTop;
         }
     }
 };
