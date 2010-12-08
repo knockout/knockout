@@ -4,8 +4,12 @@ ko.bindingHandlers['click'] = {
         ko.utils.registerEventHandler(element, "click", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
-            try { handlerReturnValue = value.call(viewModel); }
-            finally {
+            try {
+                handlerReturnValue = value.call(viewModel); 
+            } catch(e) {
+                // This 'fixes' an 'Object not found exception', which occurs in IE only.
+                // See https://github.com/SteveSanderson/knockout/issues/#issue/20
+            } finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                     if (event.preventDefault)
                         event.preventDefault();
@@ -24,8 +28,12 @@ ko.bindingHandlers['submit'] = {
         ko.utils.registerEventHandler(element, "submit", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
-            try { handlerReturnValue = value.call(viewModel, element); }
-            finally {
+            try { 
+                handlerReturnValue = value.call(viewModel, element);
+            } catch(e) {
+                // This 'fixes' an 'Object not found exception', which occurs in IE only.
+                // See https://github.com/SteveSanderson/knockout/issues/#issue/20
+            } finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                     if (event.preventDefault)
                         event.preventDefault();

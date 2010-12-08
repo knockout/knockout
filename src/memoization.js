@@ -37,8 +37,10 @@ ko.memoization = (function () {
             try {
                 callback.apply(null, callbackParams || []);
                 return true;
-            }
-            finally { delete memos[memoId]; }
+            } catch(e) {
+                // This 'fixes' an 'Object not found exception', which occurs in IE only.
+                // See https://github.com/SteveSanderson/knockout/issues/#issue/20
+            } finally { delete memos[memoId]; }
         },
 
         unmemoizeDomNodeAndDescendants: function (domNode, extraCallbackParamsArray) {

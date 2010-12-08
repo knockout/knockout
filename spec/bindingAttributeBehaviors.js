@@ -55,6 +55,9 @@ describe('Binding attribute syntax', {
         try {
             ko.applyBindings(suppliedViewModel, testNode);
             value_of(didInit).should_be(true);    	
+        } catch(e) {
+            // This 'fixes' an 'Object not found exception', which occurs in IE only.
+            // See https://github.com/SteveSanderson/knockout/issues/#issue/20
         } finally {
             shouldNotMatchNode.parentNode.removeChild(shouldNotMatchNode);
         }
