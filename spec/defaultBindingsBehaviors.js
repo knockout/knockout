@@ -80,6 +80,12 @@ describe('Binding: Value', {
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].value).should_be(123);
     },
+    
+    'Should treat null values as empty strings': function () {
+        testNode.innerHTML = "<input data-bind='value:myProp' />";
+        ko.applyBindings({ myProp: ko.observable(0) }, testNode);
+        value_of(testNode.childNodes[0].value).should_be("0");
+    },    
 
     'For observable values, should unwrap the value and update on change': function () {
         var myobservable = new ko.observable(123);
