@@ -7,6 +7,11 @@ Knockout is designed to allow you to use arbitrary JavaScript objects as view mo
 
 Most applications need to fetch data from a backend server. Since the server doesn't have any concept of observables, it will just supply a plain JavaScript object (usually serialized as JSON). The mapping plugin gives you a straightforward way to map that plain JavaScript object into a view model with the appropriate observables. This is an alternative to manually writing your own JavaScript code that constructs a view model based on some data you've fetched from the server.
 
+{% capture plugin_download_link %}
+ * __[Version 0.5(beta)](https://github.com/SteveSanderson/knockout.mapping/tree/master/build/output)__ (4.6kb minified)
+{% endcapture %}
+{% include plugin-download-link.html %}
+
 ### Example: Manual mapping without the ko.mapping plugin
 
 You want to display the current server-time and the number of users on your web page. You could represent this information using the following view model:
@@ -160,3 +165,5 @@ If, like in the example above, you are performing the mapping inside of a class,
 So, if you would like to map a JavaScript object to `this`, you can pass `this` as the third argument:
 
 	ko.mapping.fromJS(data, {}, this);
+
+{% include plugin-download-link.html %}
