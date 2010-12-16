@@ -11,7 +11,15 @@ ko.jqueryTmplTemplateEngine = function () {
     })();
 
     function getTemplateNode(template) {
-        var templateNode = document.getElementById(template);
+        var templateNode;
+        if (template instanceof Array) {
+            for (var i = 0, l = template.length; i < l; i += 1) {
+                templateNode = document.getElementById(template[i]);
+                if (templateNode) return templateNode;
+            }
+        } else {
+            templateNode = document.getElementById(template);
+        }
         if (templateNode == null)
             throw new Error("Cannot find template with ID=" + template);
         return templateNode;
