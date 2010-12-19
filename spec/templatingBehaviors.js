@@ -78,6 +78,20 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML).should_be("ABC");
     },
 
+    'Should be able to access newly rendered/inserted elements in \'afterRender\' callaback': function () {
+        var passedElement, passedDataItem;
+        var myCallback = function(elementsArray, dataItem) { 
+            value_of(elementsArray.length).should_be(1);
+            passedElement = elementsArray[0]; 
+            passedDataItem = dataItem;     		
+        }
+        var myModel = {};
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "ABC" }));
+        ko.renderTemplate("someTemplate", myModel, { afterRender: myCallback }, testNode);
+        value_of(passedElement.innerHTML).should_be("ABC");
+        value_of(passedDataItem).should_be(myModel);
+    },
+
     'Should automatically rerender into DOM element when dependencies change': function () {
         var dependency = new ko.observable("A");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: function () {

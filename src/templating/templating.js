@@ -37,6 +37,9 @@
             default: throw new Error("Unknown renderMode: " + renderMode);
         }
 
+        if (options['afterRender'])
+            options['afterRender'](renderedNodesArray, data);
+
         return renderedNodesArray;
     }
 
@@ -94,12 +97,12 @@
 
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'] }, element);
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var templateData = bindingValue['data'];
-                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, null, element);
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'afterRender': bindingValue['afterRender'] }, element);
             }
         }
     };
