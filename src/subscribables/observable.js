@@ -4,16 +4,16 @@ ko.observable = function (initialValue) {
 
     function observable() {
         if (arguments.length > 0) {
-        	// Write
+            // Write
             _latestValue = arguments[0];
             observable.notifySubscribers(_latestValue);
             return this; // Permits chained assignments
         }
         else {
-        	// Read
+            // Read
             ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
-        	return _latestValue;
-    	}
+            return _latestValue;
+        }
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
@@ -30,7 +30,14 @@ ko.isObservable = function (instance) {
     return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
-    return (typeof instance == "function") && instance.__ko_proto__ === ko.observable;
+    // Observable
+    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+        return true;
+    // Writeable dependent observable
+    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+        return true;
+    // Anything else
+    return false;
 }
 
 

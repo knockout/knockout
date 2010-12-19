@@ -27,7 +27,7 @@ describe('Dependent Observable', {
         value_of(instance()).should_be(123);
     },
 
-    'Should not be able to write a value to it': function () {
+    'Should not be able to write a value to it if there is no "write" callback': function () {
         var instance = new ko.dependentObservable(function () { return 123; });
 
         var threw = false;
@@ -36,6 +36,24 @@ describe('Dependent Observable', {
 
         value_of(instance()).should_be(123);
         value_of(threw).should_be(true);
+    },
+    
+    'Should invoke the "write" callback, where present, if you attempt to write a value to it': function() {
+        var invokedWriteWithValue;
+        var instance = new ko.dependentObservable({ 
+            read: function() {},
+            write: function(value) { invokedWriteWithValue = value }
+        });
+
+        instance("some value");
+        value_of(invokedWriteWithValue).should_be("some value");
+    },
+    
+    'Should be able to pass evaluator function using "options" parameter called "read"': function() {
+        var instance = new ko.dependentObservable({
+            read: function () { return 123; }
+        });
+        value_of(instance()).should_be(123);    		
     },
 
     'Should cache result of evaluator function and not call it again until dependencies change': function () {
@@ -140,5 +158,24 @@ describe('Dependent Observable', {
         underlyingObservable(101);
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
-    }
+    },
+    
+    'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
+        var instance = new ko.dependentObservable({ 
+            read: function() {},
+            write: function() {}
+        });
+        value_of(ko.isWriteableObservable(instance)).should_be(true);    	
+    },
+    
+    'Should allow deferring of evaluation (and hence dependency detection)': function () {
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({ 
+            read: function () { timesEvaluated++; return 123 },
+            deferEvaluation: true 
+        });
+        value_of(timesEvaluated).should_be(0);
+        value_of(instance()).should_be(123);
+        value_of(timesEvaluated).should_be(1);
+     }    
 })

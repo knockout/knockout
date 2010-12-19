@@ -532,16 +532,16 @@ ko.observable = function (initialValue) {
 
     function observable() {
         if (arguments.length > 0) {
-        	// Write
+            // Write
             _latestValue = arguments[0];
             observable.notifySubscribers(_latestValue);
             return this; // Permits chained assignments
         }
         else {
-        	// Read
+            // Read
             ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
-        	return _latestValue;
-    	}
+            return _latestValue;
+        }
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
@@ -558,7 +558,14 @@ ko.isObservable = function (instance) {
     return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
-    return (typeof instance == "function") && instance.__ko_proto__ === ko.observable;
+    // Observable
+    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+        return true;
+    // Writeable dependent observable
+    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+        return true;
+    // Anything else
+    return false;
 }
 
 
@@ -652,8 +659,19 @@ ko.observableArray = function (initialValues) {
 
 ko.exportSymbol('ko.observableArray', ko.observableArray);
 
-ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, options) {
-    if (typeof evaluatorFunction != "function")
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
+        // Single-parameter syntax - everything is on this "options" param
+        options = evaluatorFunctionOrOptions;
+    } else {
+        // Multi-parameter syntax - construct the options according to the params passed
+        options = options || {};
+        options["read"] = evaluatorFunctionOrOptions || options["read"];
+        options["owner"] = evaluatorFunctionTarget || options["owner"];
+    }
+    // By here, "options" is always non-null
+    
+    if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
 
     var _subscriptionsToDependencies = [];
@@ -671,9 +689,12 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
         });
     };
 
-    var _latestValue, _isFirstEvaluation = true;
+    var _latestValue, _hasBeenEvaluated = false;
     function evaluate() {
-        if ((!_isFirstEvaluation) && options && typeof options["disposeWhen"] == "function") {
+        // Don't dispose on first evaluation, because the "disposeWhen" callback might
+        // e.g., dispose when the associated DOM element isn't in the doc, and it's not
+        // going to be in the doc until *after* the first evaluation
+        if ((_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -682,31 +703,43 @@ ko.dependentObservable = function (evaluatorFunction, evaluatorFunctionTarget, o
 
         try {
             ko.dependencyDetection.begin();
-            _latestValue = evaluatorFunctionTarget ? evaluatorFunction.call(evaluatorFunctionTarget) : evaluatorFunction();
+            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
         }
 
         dependentObservable.notifySubscribers(_latestValue);
-        _isFirstEvaluation = false;
+        _hasBeenEvaluated = true;
     }
 
     function dependentObservable() {
-        if (arguments.length > 0)
-            throw "Cannot write a value to a dependentObservable. Do not pass any parameters to it";
-
-        ko.dependencyDetection.registerDependency(dependentObservable);
-        return _latestValue;
+        if (arguments.length > 0) {
+            if (typeof options["write"] === "function") {
+                // Writing a value
+                var valueToWrite = arguments[0];
+                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+            } else {
+                throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+            }
+        } else {
+            // Reading the value
+            if (!_hasBeenEvaluated)
+                evaluate();
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
+        }
     }
     dependentObservable.__ko_proto__ = ko.dependentObservable;
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
+    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
         disposeAllSubscriptionsToDependencies();
     };
 
     ko.subscribable.call(dependentObservable);
-    evaluate();
+    if (options['deferEvaluation'] !== true)
+        evaluate();
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
@@ -845,7 +878,7 @@ ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z]*(\[.*?\])*(\.[\_$a-z][\_$a-z]*(\[.*?\])*)*$/i;
+    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
@@ -1114,7 +1147,15 @@ ko.bindingHandlers['value'] = {
     },
     'update': function (element, valueAccessor) {
         var newValue = ko.utils.unwrapObservable(valueAccessor());
-        if (newValue != ko.selectExtensions.readValue(element)) {
+        var elementValue = ko.selectExtensions.readValue(element);
+        var valueHasChanged = (newValue != elementValue);
+        
+        // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same). 
+        // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.
+        if ((newValue === 0) && (elementValue !== 0) && (elementValue !== "0"))
+            valueHasChanged = true;
+        
+        if (valueHasChanged) {
             var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
 
@@ -1138,6 +1179,7 @@ ko.bindingHandlers['options'] = {
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
+        var previousScrollTop = element.scrollTop;
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -1177,6 +1219,9 @@ ko.bindingHandlers['options'] = {
                     countSelectionsRetained++;
                 }
             }
+            
+            if (previousScrollTop)
+                element.scrollTop = previousScrollTop;
         }
     }
 };
@@ -1332,7 +1377,7 @@ ko.templateEngine = function () {
 ko.exportSymbol('ko.templateEngine', ko.templateEngine);
 
 ko.templateRewriting = (function () {
-    var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/g;
+    var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/g;
 
     return {
         ensureTemplateIsRewritten: function (template, templateEngine) {
