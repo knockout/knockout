@@ -26,8 +26,11 @@
                         break;
                     }
                 }
-            } else
+            } else {
+                if ((value === null) || (value === undefined))
+                    value = "";
                 element.value = value;
+            }
         }
     };        
 })();

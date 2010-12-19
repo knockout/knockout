@@ -72,6 +72,29 @@ describe('Binding: Visible', {
     }
 });
 
+describe('Binding: Text', {
+    before_each: prepareTestNode,
+
+    'Should assign the value to the node': function () {    	
+        var model = { textProp: "'Val <with> \"special\" characters'" };
+        testNode.innerHTML = "<span data-bind='text:textProp'></span>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be(model.textProp);
+    },
+
+    'Should assign an empty string as value if the model value is null': function () {
+        testNode.innerHTML = "<span data-bind='text:null' ></span>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be("");
+    },
+    
+    'Should assign an empty string as value if the model value is undefined': function () {
+        testNode.innerHTML = "<span data-bind='text:undefined' ></span>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be("");
+    }	    	
+});
+
 describe('Binding: Value', {
     before_each: prepareTestNode,
 
@@ -79,6 +102,18 @@ describe('Binding: Value', {
         testNode.innerHTML = "<input data-bind='value:123' />";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].value).should_be(123);
+    },
+
+    'Should assign an empty string as value if the model value is null': function () {
+        testNode.innerHTML = "<input data-bind='value:null' />";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].value).should_be("");
+    },
+
+    'Should assign an empty string as value if the model value is undefined': function () {
+        testNode.innerHTML = "<input data-bind='value:undefined' />";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].value).should_be("");
     },
 
     'For observable values, should unwrap the value and update on change': function () {

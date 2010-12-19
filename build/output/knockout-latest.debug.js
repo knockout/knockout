@@ -830,8 +830,11 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
                         break;
                     }
                 }
-            } else
+            } else {
+                if ((value === null) || (value === undefined))
+                    value = "";
                 element.value = value;
+            }
         }
     };        
 })();
@@ -1221,6 +1224,8 @@ ko.bindingHandlers['selectedOptions'] = {
 ko.bindingHandlers['text'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
+        if ((value === null) || (value === undefined))
+            value = "";
         typeof element.innerText == "string" ? element.innerText = value
                                              : element.textContent = value;
     }
