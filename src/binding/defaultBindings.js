@@ -263,24 +263,31 @@ ko.bindingHandlers['uniqueName'].currentIndex = 0;
 
 ko.bindingHandlers['checked'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
+        var queuedUpdate;
         var updateHandler = function() {
-            var value = valueAccessor();
-            if (ko.isWriteableObservable(value)) {
-                if (element.type == "checkbox") {
-                    value(element.checked);
-                } else if ((element.type == "radio") && (element.checked)) {
-                    value(element.value);
-                }
-            } else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
+            if(typeof(queuedUpdate) === 'number') {
+                clearTimeout(queuedUpdate);
+            }
+            queuedUpdate = setTimeout(function() {
+                var value = valueAccessor();
+                if (ko.isWriteableObservable(value)) {
                     if (element.type == "checkbox") {
-                        allBindings['_ko_property_writers']['checked'](element.checked);
+                        value(element.checked);
                     } else if ((element.type == "radio") && (element.checked)) {
-                        allBindings['_ko_property_writers']['checked'](element.value);
+                        value(element.value);
+                    }
+                } else {
+                    var allBindings = allBindingsAccessor();
+                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
+                        if (element.type == "checkbox") {
+                            allBindings['_ko_property_writers']['checked'](element.checked);
+                        } else if ((element.type == "radio") && (element.checked)) {
+                            allBindings['_ko_property_writers']['checked'](element.value);
+                        }
                     }
                 }
-            }
+                queuedUpdate = null;
+            }, 0);
         };
         ko.utils.registerEventHandler(element, "change", updateHandler);
         ko.utils.registerEventHandler(element, "click", updateHandler);
