@@ -842,10 +842,9 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
     ko.selectExtensions = {
         readValue : function(element) {
             if (element.tagName == 'OPTION') {
-                var valueAttributeValue = element.getAttribute("value");
-                if (valueAttributeValue !== ko.bindingHandlers.options.optionValueDomDataKey)
-                    return valueAttributeValue;
-                return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+                if (element['__ko__hasDomDataOptionValue__'] === true)
+                    return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+                return element.getAttribute("value");
             } else if (element.tagName == 'SELECT')
                 return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
             else
@@ -858,12 +857,14 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
                     case "string":
                     case "number":
                         ko.utils.domData.cleanNode(element);
-                        element.value = value;            		
+                        delete element['__ko__hasDomDataOptionValue__'];
+                        element.value = value;                                   
                         break;
                     default:
                         // Store arbitrary object using DomData
                         ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                        element.value = ko.bindingHandlers.options.optionValueDomDataKey;
+                        element['__ko__hasDomDataOptionValue__'] = true;
+                        element.value = "";
                         break;
                 }			
             } else if (element.tagName == 'SELECT') {
