@@ -16,9 +16,19 @@
         },
         
         writeValue: function(element, value) {
-            if (element.tagName == 'OPTION') {				
-                ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                element.value = ko.bindingHandlers.options.optionValueDomDataKey;
+            if (element.tagName == 'OPTION') {
+                switch(typeof value) {
+                    case "string":
+                    case "number":
+                        ko.utils.domData.cleanNode(element);
+                        element.value = value;            		
+                        break;
+                    default:
+                        // Store arbitrary object using DomData
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
+                        element.value = ko.bindingHandlers.options.optionValueDomDataKey;
+                        break;
+                }			
             } else if (element.tagName == 'SELECT') {
                 for (var i = element.options.length - 1; i >= 0; i--) {
                     if (ko.selectExtensions.readValue(element.options[i]) == value) {

@@ -149,10 +149,7 @@ ko.bindingHandlers['options'] = {
                 var optionText = typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue;
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 optionText = ko.utils.unwrapObservable(optionText);
-                if (typeof optionValue == 'object')
-                    ko.selectExtensions.writeValue(option, optionValue);
-                else
-                    option.value = optionValue.toString();
+                ko.selectExtensions.writeValue(option, optionValue);
                 option.innerHTML = optionText.toString();
                 element.appendChild(option);
             }

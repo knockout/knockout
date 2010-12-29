@@ -853,9 +853,19 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
         },
         
         writeValue: function(element, value) {
-            if (element.tagName == 'OPTION') {				
-                ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                element.value = ko.bindingHandlers.options.optionValueDomDataKey;
+            if (element.tagName == 'OPTION') {
+                switch(typeof value) {
+                    case "string":
+                    case "number":
+                        ko.utils.domData.cleanNode(element);
+                        element.value = value;            		
+                        break;
+                    default:
+                        // Store arbitrary object using DomData
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
+                        element.value = ko.bindingHandlers.options.optionValueDomDataKey;
+                        break;
+                }			
             } else if (element.tagName == 'SELECT') {
                 for (var i = element.options.length - 1; i >= 0; i--) {
                     if (ko.selectExtensions.readValue(element.options[i]) == value) {
@@ -1201,10 +1211,7 @@ ko.bindingHandlers['options'] = {
                 var optionText = typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue;
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 optionText = ko.utils.unwrapObservable(optionText);
-                if (typeof optionValue == 'object')
-                    ko.selectExtensions.writeValue(option, optionValue);
-                else
-                    option.value = optionValue.toString();
+                ko.selectExtensions.writeValue(option, optionValue);
                 option.innerHTML = optionText.toString();
                 element.appendChild(option);
             }
