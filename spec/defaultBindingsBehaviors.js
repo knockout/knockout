@@ -83,15 +83,17 @@ describe('Binding: Text', {
     },
 
     'Should assign an empty string as value if the model value is null': function () {
-        testNode.innerHTML = "<span data-bind='text:null' ></span>";
+        testNode.innerHTML = "<span data-bind='text:(null)' ></span>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be("");
+        var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
+        value_of(actualText).should_be("");
     },
     
     'Should assign an empty string as value if the model value is undefined': function () {
         testNode.innerHTML = "<span data-bind='text:undefined' ></span>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be("");
+        var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
+        value_of(actualText).should_be("");
     }	    	
 });
 
@@ -111,7 +113,7 @@ describe('Binding: Value', {
     },    
 
     'Should assign an empty string as value if the model value is null': function () {
-        testNode.innerHTML = "<input data-bind='value:null' />";
+        testNode.innerHTML = "<input data-bind='value:(null)' />";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].value).should_be("");
     },
