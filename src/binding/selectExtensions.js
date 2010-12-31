@@ -20,7 +20,9 @@
                     case "string":
                     case "number":
                         ko.utils.domData.cleanNode(element);
-                        delete element['__ko__hasDomDataOptionValue__'];
+                        if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                            delete element['__ko__hasDomDataOptionValue__'];
+                        }
                         element.value = value;                                   
                         break;
                     default:
