@@ -309,9 +309,9 @@ ko.bindingHandlers['checked'] = {
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
             
-            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
-            if ((element.value == value) && ko.utils.isIe6) 
-                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);            
+            // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
+            if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
+                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);
         }
     }
 };
