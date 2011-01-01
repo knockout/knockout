@@ -245,6 +245,28 @@ describe('Binding: Value', {
         dropdown.selectedIndex = 1;
         ko.utils.triggerEvent(dropdown, "change");
         value_of(selectedValue()).should_be(y);    	
+    },
+    
+    'For select boxes, should automatically initialize the model property to match the first option value if no option value matches the current model property value': function() {
+        // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
+        //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
+        //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
+        //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
+        var observable = new ko.observable(); // Undefined by default
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");
+    },
+    
+    'For select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
+        var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        
+        observable('D'); // This change should be rejected, as there's no corresponding option in the UI
+        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        value_of(observable()).should_be('B');
     }
 })
 

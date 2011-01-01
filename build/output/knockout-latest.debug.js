@@ -1179,6 +1179,14 @@ ko.bindingHandlers['value'] = {
             if (alsoApplyAsynchronously)
                 setTimeout(applyValueAction, 0);
         }
+        
+        // For SELECT nodes, you're not allowed to have a model value that disagrees with the UI selection, so if there is a
+        // difference, treat it as a change that should be written back to the model
+        if (element.tagName == "SELECT") {
+            elementValue = ko.selectExtensions.readValue(element);
+            if(elementValue !== newValue)
+                ko.utils.triggerEvent(element, "change");
+        }
     }
 };
 
