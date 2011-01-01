@@ -1333,22 +1333,25 @@ ko.bindingHandlers['uniqueName'].currentIndex = 0;
 
 ko.bindingHandlers['checked'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
-        var updateHandler = function() {
-            var value = valueAccessor();
-            if (ko.isWriteableObservable(value)) {
-                if (element.type == "checkbox") {
-                    value(element.checked);
-                } else if ((element.type == "radio") && (element.checked)) {
-                    value(element.value);
+        var updateHandler = function() {            
+            var valueToWrite;
+            if (element.type == "checkbox") {
+                valueToWrite = element.checked;
+            } else if ((element.type == "radio") && (element.checked)) {
+                valueToWrite = element.value;
+            } else {
+                return; // "checked" binding only responds to checkboxes and selected radio buttons
+            }
+            
+            var modelValue = valueAccessor();            
+            if (ko.isWriteableObservable(modelValue)) {            	
+                if (modelValue() !== valueToWrite) { // Suppress repeated events when there's nothing new to notify (some browsers raise them)
+                    modelValue(valueToWrite);
                 }
             } else {
                 var allBindings = allBindingsAccessor();
                 if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
-                    if (element.type == "checkbox") {
-                        allBindings['_ko_property_writers']['checked'](element.checked);
-                    } else if ((element.type == "radio") && (element.checked)) {
-                        allBindings['_ko_property_writers']['checked'](element.value);
-                    }
+                    allBindings['_ko_property_writers']['checked'](valueToWrite);
                 }
             }
         };

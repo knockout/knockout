@@ -472,6 +472,25 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(myobservable()).should_be(true);
     },
+    
+    'Should only notify observable properties on the underlying model *once* even if the checkbox change/click events fire multiple times': function () {
+        var myobservable = new ko.observable();
+        var timesNotified = 0;
+        myobservable.subscribe(function() { timesNotified++ });
+        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+
+        // Multiple events only cause one notification...
+        testNode.childNodes[0].checked = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(timesNotified).should_be(1);
+        
+        // ... until the checkbox value actually changes
+        testNode.childNodes[0].checked = false;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(timesNotified).should_be(2);        
+    },    
 
     'Should update non-observable properties on the underlying model when the checkbox change event fires': function () {
         var model = { someProp: false };
@@ -520,6 +539,25 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(myobservable()).should_be("this radio button value");
     },
+    
+    'Should only notify observable properties on the underlying model *once* even if the radio button change/click events fire multiple times': function () {
+        var myobservable = new ko.observable("original value");
+        var timesNotified = 0;
+        myobservable.subscribe(function() { timesNotified++ });
+        testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' /><input type='radio' value='different value' data-bind='checked:someProp' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+
+        // Multiple events only cause one notification...
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(timesNotified).should_be(1);
+        
+        // ... until you click something with a different value
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        value_of(timesNotified).should_be(2);        
+    },     
 
     'Should set a non-observable model property to this radio button\'s value when checked': function () {
         var model = { someProp: "another value" };
