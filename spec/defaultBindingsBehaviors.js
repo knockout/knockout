@@ -265,8 +265,7 @@ describe('Binding: Value', {
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
         
         observable('D'); // This change should be rejected, as there's no corresponding option in the UI
-        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
-        value_of(observable()).should_be('B');
+        value_of(observable()).should_not_be('D');
     }
 })
 
@@ -352,16 +351,24 @@ describe('Binding: Selected Options', {
     },
 
     'Should update the model when selection in the SELECT node changes': function () {
+        function setMultiSelectOptionSelectionState(optionElement, state) {
+            // Workaround an IE 6 bug (http://benhollis.net/experiments/browserdemos/ie6-adding-options.html)
+            if (/MSIE 6/i.test(navigator.userAgent)) 
+                optionElement.setAttribute('selected', state);
+            else
+                optionElement.selected = state;    			
+        }
+        
         var cObject = {};
         var values = new ko.observableArray(["A", "B", cObject]);
         var selection = new ko.observableArray(["B"]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
-        ko.applyBindings({ myValues: values, mySelection: selection }, testNode);
+        ko.applyBindings({ myValues: values, mySelection: selection }, testNode);		
 
-        value_of(selection()).should_be(["B"]);
-        testNode.childNodes[0].childNodes[0].selected = true;
-        testNode.childNodes[0].childNodes[1].selected = false;
-        testNode.childNodes[0].childNodes[2].selected = true;
+        value_of(selection()).should_be(["B"]);        
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0], true);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[1], false);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         
         value_of(selection()).should_be(["A", cObject]);
