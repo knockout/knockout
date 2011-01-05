@@ -1524,6 +1524,8 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
+                var tt = typeof(template);
+                if (tt == 'function' || tt == 'object') template = template(arrayValue);
                 return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
             }, options);
         }, null, { 'disposeWhen': whenToDispose });
