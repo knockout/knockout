@@ -154,7 +154,7 @@ ko.bindingHandlers['options'] = {
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
-                var optionText = typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue;
+                var optionText = typeof allBindings['optionsText'] == "function" ? allBindings['optionsText'](value[i]) : (typeof allBindings['optionsText'] == "string" ? value[i][allBindings['optionsText']] : optionValue);
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 optionText = ko.utils.unwrapObservable(optionText);
                 ko.selectExtensions.writeValue(option, optionValue);
