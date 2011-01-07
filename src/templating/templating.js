@@ -99,12 +99,12 @@
 
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'options': bindingValue['options'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var templateData = bindingValue['data'];
-                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'afterRender': bindingValue['afterRender'] }, element);
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'options': bindingValue['options'], 'afterRender': bindingValue['afterRender'] }, element);
             }
         }
     };

@@ -1538,7 +1538,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'options': bindingValue['options'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
@@ -1797,7 +1797,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
         var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data);
+        return jQuery['tmpl'](templateText, data, options);
     },
 
     this['isTemplateRewritten'] = function (template) {
