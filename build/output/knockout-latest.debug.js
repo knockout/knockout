@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.1.2
+// Knockout JavaScript library v1.2.0pre
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
@@ -1293,6 +1293,15 @@ ko.bindingHandlers['text'] = {
             value = "";
         typeof element.innerText == "string" ? element.innerText = value
                                              : element.textContent = value;
+    }
+};
+
+ko.bindingHandlers['html'] = {
+    'update': function (element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if ((value === null) || (value === undefined))
+            value = "";
+        element.innerHTML = value;
     }
 };
 

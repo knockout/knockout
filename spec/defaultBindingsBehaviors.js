@@ -75,8 +75,8 @@ describe('Binding: Visible', {
 describe('Binding: Text', {
     before_each: prepareTestNode,
 
-    'Should assign the value to the node': function () {    	
-        var model = { textProp: "'Val <with> \"special\" characters'" };
+    'Should assign the value to the node, HTML-encoding the value': function () {    	
+        var model = { textProp: "'Val <with> \"special\" <i>characters</i>'" };
         testNode.innerHTML = "<span data-bind='text:textProp'></span>";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].textContent || testNode.childNodes[0].innerText).should_be(model.textProp);
@@ -94,6 +94,30 @@ describe('Binding: Text', {
         ko.applyBindings(null, testNode);
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
+    }	    	
+});
+
+describe('Binding: HTML', {
+    before_each: prepareTestNode,
+
+    'Should assign the value to the node without HTML-encoding the value': function () {    	
+        var model = { textProp: "My <span>HTML-containing</span> value" };
+        testNode.innerHTML = "<span data-bind='html:textProp'></span>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be(model.textProp);
+        value_of(testNode.childNodes[0].childNodes[1].innerHTML).should_be("HTML-containing");
+    },
+
+    'Should assign an empty string as value if the model value is null': function () {
+        testNode.innerHTML = "<span data-bind='html:(null)' ></span>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("");
+    },
+    
+    'Should assign an empty string as value if the model value is undefined': function () {
+        testNode.innerHTML = "<span data-bind='html:undefined' ></span>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("");
     }	    	
 });
 
