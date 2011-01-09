@@ -25,6 +25,13 @@ var dummyTemplateEngine = function (templates) {
                         throw new Error("Error evaluating script: [js: " + script + "]\n\nException: " + ex.toString());
                     }
                 });
+                
+                // Dummy ${$item....} syntax
+                result = result.replace(/\$\{\$item\.(.*?)\}/g, function(match, optionName){
+                    var s = options[optionName];
+                    if (s && typeof s == 'function') s = s();
+                    return s;
+                });
             }
         }
 
@@ -302,5 +309,26 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input type='radio' name='somename' value='abc' data-bind='checked:someValue' />" }));
         ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { someValue: 'abc' } }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].checked).should_be(true);
-    }    
+    },
+    
+    'Data binding \'name\' option should support function to return different template name while \'foreach\' option is presented': function() {
+        var myArray = new ko.observableArray([{type: 'text', name: 'firstName'}, {type: 'submit', value: 'submit'}]);
+        ko.setTemplateEngine(new dummyTemplateEngine({textInput: "<input type='text' name='[js: ko.utils.unwrapObservable(name)]'>", submitInput: "<input type='submit' value='[js: ko.utils.unwrapObservable(value)]'>"}));
+        var getTemplate = function(ctrl) {
+            return ctrl.type == 'text' ? 'textInput' : 'submitInput';
+        };
+        testNode.innerHTML = "<div data-bind='template: {name: getTemplate, foreach: myCollection}'></div>";
+        
+        ko.applyBindings({ myCollection: myArray, getTemplate: getTemplate }, testNode);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div><input type=\"text\" name=\"firstname\"></div><div><input type=\"submit\" value=\"submit\"></div>");
+    },
+    
+    'Data binding \'options\' should be passed to template': function() {
+        var myModel = {type: new ko.observable('radio'), name: new ko.observable('title'), options: new ko.observableArray([{caption: ko.observable('Mr.')}, {caption: ko.observable('Ms.')}])};
+        ko.setTemplateEngine(new dummyTemplateEngine({radioInput: "<input type='radio' name='${$item.name}' data-bind='value: caption'>"}));
+        testNode.innerHTML = "<div data-bind='template: {name: \"radioInput\", foreach: options, options:{name: name}}'></div>";
+
+        ko.applyBindings(myModel, testNode);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div><input type=\"radio\" name=\"title\" value=\"mr.\"></div><div><input type=\"radio\" name=\"title\" value=\"ms.\"></div>");
+    }
 })
