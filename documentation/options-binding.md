@@ -85,6 +85,8 @@ Note: For a multi-select list, to set which of the options are selected, or to r
    * `optionsText`
      
      See Example 3 above to see how you can bind `options` to an array of arbitrary JavaScript object - not just strings. In this case, you need to choose which of the objects' properties should be displayed as the text in the drop-down list or multi-select list. Example 3 shows how you can specify that property name by passing an additional parameter called `optionsText`.
+
+      As of version 1.2.0, you can also choose to pass a function to `optionsText`. It accepts a single parameter (an object from your array) and should return the string used for that option.
      
    * `optionsValue`
      
