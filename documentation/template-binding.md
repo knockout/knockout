@@ -54,7 +54,7 @@ When using `{{'{{'}}each someArray}}`, if your value is an [`observableArray`](o
      * `data` (optional) --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your whole view model object.
      * `foreach` (optional) --- instructs KO to render the template in "foreach" mode - see [Note 3](#note_3_using_the__option) for details.
      * `afterAdd` and/or `beforeRemove` (optional) --- used in conjunction with [`foreach` mode](#note_3_using_the__option).
-     * `afterRender` (optional) --- a callback function with two parameters, the first of which is a list of all DOM nodes added by the template.
+     * `afterRender` (optional) --- a callback function with two parameters. The first is a list of all DOM nodes rendered by the template. The second is the optional "data" parameter you passed in.
      
 Example of passing multiple parameters:
 
