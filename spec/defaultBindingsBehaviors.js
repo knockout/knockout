@@ -336,7 +336,7 @@ describe('Binding: Options', {
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsStyle: { color: function(v) { return v[\"job\"] == \"manager\" ? \"red\" : \"green\"; } }'></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
 
-		var options = testNode.childNodes[0].childNodes;
+        var options = testNode.childNodes[0].childNodes;
         value_of(options[0].style.color).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
         value_of(options[1].style.color).should_be_one_of(["green", "#008000"]);
     },
