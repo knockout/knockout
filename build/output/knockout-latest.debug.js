@@ -611,6 +611,11 @@ ko.observableArray = function (initialValues) {
     };
 
     result.removeAll = function (arrayOfValues) {
+		if (arrayOfValues === undefined) {
+        	var underlyingArray = result();
+			result([]);
+			return underlyingArray;
+		}
         if (!arrayOfValues)
             return [];
         return result.remove(function (value) {
