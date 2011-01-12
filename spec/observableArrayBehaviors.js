@@ -79,13 +79,13 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([["Beta"]]);
     },
 
-	'Should clear observable array with removeAll(undefined)': function() {
+    'Should clear observable array with removeAll(undefined)': function() {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         notifiedValues = [];
         var removed = testObservableArray.removeAll();
         value_of(removed).should_be(["Alpha", "Beta", "Gamma"]);
         value_of(notifiedValues).should_be([[]]);
-	},
+    },
     
     'Should notify subscribers on replace': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
