@@ -162,10 +162,10 @@ ko.bindingHandlers['options'] = {
                 element.appendChild(option);
 
 				if (allBindings['optionsStyle']) {
-					for (var styleAttr in allBindings['optionsStyle']) {
-						var styleValue = typeof allBindings['optionsStyle'][styleAttr] == "function" ? allBindings['optionsStyle'][styleAttr](value[i]) : allBindings['optionsStyle'][styleAttr];
+					for (var styleName in allBindings['optionsStyle']) {
+						var styleValue = typeof allBindings['optionsStyle'][styleName] == "function" ? allBindings['optionsStyle'][styleName](value[i]) : ko.utils.unwrapObservable(allBindings['optionsStyle'][styleName]);
 						if (styleValue !== undefined) {
-							option.style[styleAttr] = styleValue;
+							option.style[styleName] = styleValue;
 						}
 					}
 				}
