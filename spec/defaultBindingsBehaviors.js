@@ -327,6 +327,20 @@ describe('Binding: Options', {
         value_of(displayedValues).should_be([6, 13]);
     },
 
+    'Should accept optionsStyle parameter to give option CSS styles': function() {
+        var modelValues = new ko.observableArray([
+            { name: 'bob', job: 'manager' }, 
+            { name: 'frank', job: 'coder' }
+        ]);	
+        var myObservable = new ko.observable("red");
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsStyle: { color: function(v) { return v[\"job\"] == \"manager\" ? \"red\" : \"green\"; } }'></select>";
+        ko.applyBindings({ myValues: modelValues }, testNode);
+
+		var options = testNode.childNodes[0].childNodes;
+        value_of(options[0].style.color).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
+        value_of(options[1].style.color).should_be_one_of(["green", "#008000"]);
+    },
+
     'Should update the SELECT node\'s options if the model changes': function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
