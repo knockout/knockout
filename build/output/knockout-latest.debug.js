@@ -1227,6 +1227,15 @@ ko.bindingHandlers['options'] = {
                 ko.selectExtensions.writeValue(option, optionValue);
                 option.innerHTML = optionText.toString();
                 element.appendChild(option);
+
+				if (allBindings['optionsStyle']) {
+					for (var styleName in allBindings['optionsStyle']) {
+						var styleValue = typeof allBindings['optionsStyle'][styleName] == "function" ? allBindings['optionsStyle'][styleName](value[i]) : ko.utils.unwrapObservable(allBindings['optionsStyle'][styleName]);
+						if (styleValue !== undefined) {
+							option.style[styleName] = styleValue;
+						}
+					}
+				}
             }
 
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
