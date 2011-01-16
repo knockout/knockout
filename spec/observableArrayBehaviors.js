@@ -38,6 +38,16 @@ describe('Observable Array', {
         value_of(z._destroy).should_be(true);
     },
 
+    'Should be able to mark all items as destroyed by passing no args to destroyAll()' : function() {
+        var x = {}, y = {}, z = {};
+        testObservableArray([x, y, z]);
+        testObservableArray.destroyAll();
+        value_of(testObservableArray().length).should_be(3);
+        value_of(x._destroy).should_be(true);
+        value_of(y._destroy).should_be(true);    	
+        value_of(z._destroy).should_be(true);
+    },
+
     'Should notify subscribers on push': function () {
         testObservableArray.push("Some new value");
         value_of(notifiedValues).should_be([[1, 2, 3, "Some new value"]]);
@@ -79,7 +89,7 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([["Beta"]]);
     },
 
-    'Should clear observable array with removeAll(undefined)': function() {
+    'Should clear observable array entirely if you pass no args to removeAll()': function() {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         notifiedValues = [];
         var removed = testObservableArray.removeAll();

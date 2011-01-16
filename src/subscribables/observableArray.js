@@ -35,11 +35,14 @@ ko.observableArray = function (initialValues) {
     };
 
     result.removeAll = function (arrayOfValues) {
+        // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var underlyingArray = result();
+            var allValues = result();
             result([]);
-            return underlyingArray;
+            return allValues;
         }
+        
+        // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
         return result.remove(function (value) {
@@ -59,6 +62,11 @@ ko.observableArray = function (initialValues) {
     };
     
     result.destroyAll = function (arrayOfValues) {
+        // If you passed zero args, we destroy everything
+        if (arrayOfValues === undefined)
+            return result.destroy(function() { return true });
+                
+        // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
         return result.destroy(function (value) {
