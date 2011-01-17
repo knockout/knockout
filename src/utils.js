@@ -365,8 +365,10 @@ ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWi
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
+ko.exportSymbol('ko.utils.registerEventHandler', ko.utils.registerEventHandler);
 ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
 ko.exportSymbol('ko.utils.range', ko.utils.range);
+ko.exportSymbol('ko.utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 

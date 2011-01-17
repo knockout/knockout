@@ -96,9 +96,6 @@
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-            if (templateName == "dt-radio-control-row") {
-              alert(0);
-            }
             var options = bindingValue['options'] || {};
             var _addToOption = function(bindingNames) {
                 for(var i = 0, j = bindingNames.length; i < j; ++i) {

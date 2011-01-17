@@ -380,8 +380,10 @@ ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWi
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
+ko.exportSymbol('ko.utils.registerEventHandler', ko.utils.registerEventHandler);
 ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
 ko.exportSymbol('ko.utils.range', ko.utils.range);
+ko.exportSymbol('ko.utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
 ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
 
@@ -1292,7 +1294,8 @@ ko.bindingHandlers['text'] = {
         if ((value === null) || (value === undefined))
             value = "";
         typeof element.innerText == "string" ? element.innerText = value
-                                             : element.textContent = value;
+                                             : typeof element.textContent == "string" ? element.textContent = value
+                                             : element.text = value;
     }
 };
 
@@ -1535,9 +1538,6 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-            if (templateName == "dt-radio-control-row") {
-              alert(0);
-            }
             var options = bindingValue['options'] || {};
             var _addToOption = function(bindingNames) {
                 for(var i = 0, j = bindingNames.length; i < j; ++i) {
