@@ -22,6 +22,7 @@ ko.jqueryTmplTemplateEngine = function () {
     var aposRegex = new RegExp(aposMarker, "g");
     
     this['renderTemplate'] = function (template, data, options) {
+    	options = options || {};
     	if (this.jQueryTmplVersion == 0)
     		throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
     	
@@ -39,7 +40,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
         var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data, options);
+        return jQuery['tmpl'](templateText, data, options['templateOptions']);
     },
 
     this['isTemplateRewritten'] = function (template) {

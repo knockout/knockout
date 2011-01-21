@@ -8,6 +8,7 @@ var dummyTemplateEngine = function (templates) {
             result = result(data, options);
 
         result = options.showParams ? result + ", data=" + data + ", options=" + options : result;
+        var templateOptions = options.templateOptions; // Have templateOptions in scope to support [js:templateOptions.foo] syntax
 
         with (data || {}) {
             with (options.templateRenderingVariablesInScope || {}) {
@@ -24,13 +25,6 @@ var dummyTemplateEngine = function (templates) {
                     } catch (ex) {
                         throw new Error("Error evaluating script: [js: " + script + "]\n\nException: " + ex.toString());
                     }
-                });
-                
-                // Dummy ${$item....} syntax
-                result = result.replace(/\$\{\$item\.(.*?)\}/g, function(match, optionName){
-                    var s = options[optionName];
-                    if (s && typeof s == 'function') s = s();
-                    return s;
                 });
             }
         }
@@ -339,12 +333,18 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
     },
     
-    'Data binding \'options\' should be passed to template': function() {
-        var myModel = {type: new ko.observable('radio'), name: new ko.observable('title'), options: new ko.observableArray([{caption: ko.observable('Mr.')}, {caption: ko.observable('Ms.')}])};
-        ko.setTemplateEngine(new dummyTemplateEngine({radioInput: "<input type='radio' name='${$item.name}' data-bind='value: caption'>"}));
-        testNode.innerHTML = "<div data-bind='template: {name: \"radioInput\", foreach: options, options:{name: name}}'></div>";
+    'Data binding \'templateOptions\' should be passed to template': function() {
+        var myModel = { 
+            someAdditionalData: { myAdditionalProp: "someAdditionalValue" },
+            people: new ko.observableArray([
+                { name: "Alpha" }, 
+                { name: "Beta" }
+            ])
+        };
+        ko.setTemplateEngine(new dummyTemplateEngine({myTemplate: "Person [js:name] has additional property [js:templateOptions.myAdditionalProp]"}));
+        testNode.innerHTML = "<div data-bind='template: {name: \"myTemplate\", foreach: people, templateOptions: someAdditionalData }'></div>";
 
         ko.applyBindings(myModel, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div><input type=\"radio\" name=\"title\" value=\"mr.\"></div><div><input type=\"radio\" name=\"title\" value=\"ms.\"></div>");
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>person alpha has additional property someadditionalvalue</div><div>person beta has additional property someadditionalvalue</div>");
     }
 })

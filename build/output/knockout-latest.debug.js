@@ -1317,8 +1317,7 @@ ko.bindingHandlers['text'] = {
         if ((value === null) || (value === undefined))
             value = "";
         typeof element.innerText == "string" ? element.innerText = value
-                                             : typeof element.textContent == "string" ? element.textContent = value
-                                             : element.text = value;
+                                             : element.textContent = value;
     }
 };
 
@@ -1529,7 +1528,10 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); };
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options);
+                    // Support selecting template as a function of the data being rendered
+                    var templateName = typeof(template) == 'function' ? template(data) : template; 
+
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, data, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -1560,9 +1562,10 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
-                var tt = typeof(template);
-                var tmpl = (tt == 'function' || tt == 'object') ? template(arrayValue) : template;
-                return executeTemplate(null, "ignoreTargetNode", tmpl, arrayValue, options);
+                // Support selecting template as a function of the data being rendered
+                var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
+                
+                return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
             }, options);
         }, null, { 'disposeWhen': whenToDispose });
     };
@@ -1571,23 +1574,15 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-            var options = bindingValue['options'] || {};
-            var _addToOption = function(bindingNames) {
-                for(var i = 0, j = bindingNames.length; i < j; ++i) {
-                    var bn = bindingNames[i];
-                    options[bn] = bindingValue[bn];
-                }
-            }
+ 
             if (typeof bindingValue['foreach'] != "undefined") {
-                // Render once for each data point
-                _addToOption(['afterAdd', 'beforeRemove', 'includeDestroyed', 'afterRender']);
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], options, element);
+            	// Render once for each data point
+            	ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
-                // Render once for this single data point (or use the viewModel if no data was provided)
-                _addToOption(['afterRender']);
-                var templateData = bindingValue['data'];
-                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, options, element);
+            	// Render once for this single data point (or use the viewModel if no data was provided)
+            	var templateData = bindingValue['data'];
+            	ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
             }
         }
     };
@@ -1824,6 +1819,7 @@ ko.jqueryTmplTemplateEngine = function () {
     var aposRegex = new RegExp(aposMarker, "g");
     
     this['renderTemplate'] = function (template, data, options) {
+    	options = options || {};
     	if (this.jQueryTmplVersion == 0)
     		throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
     	
@@ -1841,7 +1837,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
         var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data, options);
+        return jQuery['tmpl'](templateText, data, options['templateOptions']);
     },
 
     this['isTemplateRewritten'] = function (template) {
