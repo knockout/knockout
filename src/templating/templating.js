@@ -54,7 +54,10 @@
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); };
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options);
+                    // Support selecting template as a function of the data being rendered
+                    var templateName = typeof(template) == 'function' ? template(data) : template; 
+
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, data, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -85,9 +88,10 @@
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
-                var tt = typeof(template);
-                var tmpl = (tt == 'function' || tt == 'object') ? template(arrayValue) : template;
-                return executeTemplate(null, "ignoreTargetNode", tmpl, arrayValue, options);
+                // Support selecting template as a function of the data being rendered
+                var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
+                
+                return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
             }, options);
         }, null, { 'disposeWhen': whenToDispose });
     };

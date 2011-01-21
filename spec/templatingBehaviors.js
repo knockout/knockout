@@ -159,6 +159,16 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
     },
 
+    'Should be able to pick template as a function of the data item using data-bind syntax': function () {
+        var templatePicker = function(dataItem) {
+            return dataItem.myTemplate;	
+        };
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: templateSelectorFunction, data: someProp }'></div>";
+        ko.applyBindings({ someProp: { childProp: 123, myTemplate: "someTemplate" }, templateSelectorFunction: templatePicker }, testNode);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
+    },
+
     'Should be able to chain templates, rendering one from inside another': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({
             outerTemplate: "outer template output, [renderTemplate:innerTemplate]", // [renderTemplate:...] is special syntax supported by dummy template engine
@@ -311,16 +321,22 @@ describe('Templating', {
         value_of(testNode.childNodes[0].childNodes[0].checked).should_be(true);
     },
     
-    'Data binding \'name\' option should support function to return different template name while \'foreach\' option is presented': function() {
-        var myArray = new ko.observableArray([{type: 'text', name: 'firstName'}, {type: 'submit', value: 'submit'}]);
-        ko.setTemplateEngine(new dummyTemplateEngine({textInput: "<input type='text' name='[js: ko.utils.unwrapObservable(name)]'>", submitInput: "<input type='submit' value='[js: ko.utils.unwrapObservable(value)]'>"}));
-        var getTemplate = function(ctrl) {
-            return ctrl.type == 'text' ? 'textInput' : 'submitInput';
-        };
-        testNode.innerHTML = "<div data-bind='template: {name: getTemplate, foreach: myCollection}'></div>";
+    'Should be able to render a different template for each array entry by passing a function as template name': function() {
+        var myArray = new ko.observableArray([
+            { preferredTemplate: 1, someProperty: 'firstItemValue' }, 
+            { preferredTemplate: 2, someProperty: 'secondItemValue' }
+        ]);
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "Template1Output, [js:someProperty]", 
+            secondTemplate: "Template2Output, [js:someProperty]"
+        }));
+        testNode.innerHTML = "<div data-bind='template: {name: getTemplateModelProperty, foreach: myCollection}'></div>";
         
-        ko.applyBindings({ myCollection: myArray, getTemplate: getTemplate }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div><input type=\"text\" name=\"firstname\"></div><div><input type=\"submit\" value=\"submit\"></div>");
+        var getTemplate = function(dataItem) {
+            return dataItem.preferredTemplate == 1 ? 'firstTemplate' : 'secondTemplate';
+        };
+        ko.applyBindings({ myCollection: myArray, getTemplateModelProperty: getTemplate }, testNode);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
     },
     
     'Data binding \'options\' should be passed to template': function() {
