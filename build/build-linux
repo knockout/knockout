@@ -3,16 +3,26 @@
 OutDebugFile='output/knockout-latest.debug.js'
 OutMinFile='output/knockout-latest.js'
 
+# Combine the source files
 SourceFiles=`grep js < source-references.js | # Find JS references 
              sed "s/[ \',]//g" |              # Strip off JSON fluff (whitespace, commas, quotes)
              sed -e 's/.*/..\/&/' |           # Fix the paths by prefixing with ../
              tr '\n' ' '`                     # Combine into single line
-
-cp version-header.js $OutDebugFile
-echo "(function(window,undefined){" >> $OutDebugFile
-cat $SourceFiles                    >> $OutDebugFile
-echo "})(window);"                  >> $OutDebugFile
+cat $SourceFiles                    > $OutDebugFile.temp
 
 # Now call Google Closure Compiler to produce a minified version
 cp version-header.js $OutMinFile
-curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@$OutDebugFile "http://closure-compiler.appspot.com/compile" >> $OutMinFile
+curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
+
+# Finalise each file by prefixing with version header and surrounding in function closure
+cp version-header.js $OutDebugFile
+echo "(function(window,undefined){" >> $OutDebugFile
+cat $OutDebugFile.temp				>> $OutDebugFile
+echo "})(window);"                  >> $OutDebugFile
+rm $OutDebugFile.temp
+
+cp version-header.js $OutMinFile
+echo "(function(window,undefined){" >> $OutMinFile
+cat $OutMinFile.temp				>> $OutMinFile
+echo "})(window);"                  >> $OutMinFile
+rm $OutMinFile.temp

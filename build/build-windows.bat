@@ -14,11 +14,21 @@ goto :Combine
 goto :EOF 
 
 :Combine
-copy /y version-header.js %OutDebugFile%
-echo (function(window,undefined){ >> %OutDebugFile%
-type %AllFiles%                   >> %OutDebugFile%
-echo })(window);                  >> %OutDebugFile%
+type %AllFiles%                   > %OutDebugFile%.temp
 
 @rem Now call Google Closure Compiler to produce a minified version
 copy /y version-header.js %OutMinFile%
-tools\curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@%OutDebugFile% "http://closure-compiler.appspot.com/compile" >> %OutMinFile%
+tools\curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@%OutDebugFile%.temp "http://closure-compiler.appspot.com/compile" > %OutMinFile%.temp
+
+@rem Finalise each file by prefixing with version header and surrounding in function closure
+copy /y version-header.js %OutDebugFile%
+echo (function(window,undefined){ >> %OutDebugFile%
+type %OutDebugFile%.temp		  >> %OutDebugFile%
+echo })(window);                  >> %OutDebugFile%
+del %OutDebugFile%.temp
+
+copy /y version-header.js %OutMinFile%
+echo (function(window,undefined){ >> %OutMinFile%
+type %OutMinFile%.temp		  	  >> %OutMinFile%
+echo })(window);                  >> %OutMinFile%
+del %OutMinFile%.temp
