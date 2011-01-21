@@ -85,7 +85,9 @@
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
-                return executeTemplate(null, "ignoreTargetNode", template, arrayValue, options);
+                var tt = typeof(template);
+                var tmpl = (tt == 'function' || tt == 'object') ? template(arrayValue) : template;
+                return executeTemplate(null, "ignoreTargetNode", tmpl, arrayValue, options);
             }, options);
         }, null, { 'disposeWhen': whenToDispose });
     };
@@ -94,15 +96,23 @@
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
-
+            var options = bindingValue['options'] || {};
+            var _addToOption = function(bindingNames) {
+                for(var i = 0, j = bindingNames.length; i < j; ++i) {
+                    var bn = bindingNames[i];
+                    options[bn] = bindingValue[bn];
+                }
+            }
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                _addToOption(['afterAdd', 'beforeRemove', 'includeDestroyed', 'afterRender']);
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], options, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
+                _addToOption(['afterRender']);
                 var templateData = bindingValue['data'];
-                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'afterRender': bindingValue['afterRender'] }, element);
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, options, element);
             }
         }
     };
