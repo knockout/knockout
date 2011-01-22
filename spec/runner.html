@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>JSSpec results</title>
+        <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
+
+        <script type="text/javascript" src="lib/diff_match_patch.js"></script>
+        <script type="text/javascript" src="lib/JSSpec.js"></script>        
+        <script type="text/javascript">
+            JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
+                for (var i = 0; i < expectedPossibilities.length; i++) {
+                    var matcher = JSSpec.EqualityMatcher.createInstance(expectedPossibilities[i], this.target);
+                    if (matcher.matches())
+                        return;
+                }
+                JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
+                throw JSSpec._assertionFailure;
+            };
+        </script>
+		<script type="text/javascript" src="lib/json2.js"></script>
+        <script type="text/javascript" src="lib/knockout-latest.js"></script>
+        
+        <script type="text/javascript" src="memoizationBehaviors.js"></script>
+        <script type="text/javascript" src="subscribableBehaviors.js"></script>
+        <script type="text/javascript" src="observableBehaviors.js"></script>
+        <script type="text/javascript" src="observableArrayBehaviors.js"></script>
+        <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
+        <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
+        <script type="text/javascript" src="jsonExpressionRewritingBehaviors.js"></script>
+        <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindingsBehaviors.js"></script>
+        <script type="text/javascript" src="templatingBehaviors.js"></script>
+        <script type="text/javascript" src="editDetectionBehaviors.js"></script>
+        <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
+    </head>
+    <body>
+        <div style="display:none;"><p>A</p><p>B</p></div>
+    </body>
+</html>
