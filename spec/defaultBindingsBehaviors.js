@@ -104,7 +104,7 @@ describe('Binding: HTML', {
         var model = { textProp: "My <span>HTML-containing</span> value" };
         testNode.innerHTML = "<span data-bind='html:textProp'></span>";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].innerHTML).should_be(model.textProp);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be(model.textProp.toLowerCase());
         value_of(testNode.childNodes[0].childNodes[1].innerHTML).should_be("HTML-containing");
     },
 
