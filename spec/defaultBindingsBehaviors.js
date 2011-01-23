@@ -632,5 +632,40 @@ describe('Binding: Checked', {
 
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be("this radio button value");
-    }
+    },
+    
+    'When a checkbox is bound to an array, the checkbox should control whether its value is in that array': function() {
+        var model = { myArray: ["Existing value", "Unrelated value"] };
+        testNode.innerHTML = "<input type='checkbox' value='Existing value' data-bind='checked:myArray' />"
+                           + "<input type='checkbox' value='New value'      data-bind='checked:myArray' />";
+        ko.applyBindings(model, testNode);
+
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
+
+        // Checkbox initial state is determined by whether the value is in the array
+        value_of(testNode.childNodes[0].checked).should_be(true);
+        value_of(testNode.childNodes[1].checked).should_be(false);
+        // Checking the checkbox puts it in the array
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value", "New value"]);
+        // Unchecking the checkbox removes it from the array
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
+    },
+    
+    'When a checkbox is bound to an observable array, the checkbox checked state responds to changes in the array': function() {
+        var model = { myObservableArray: ko.observableArray(["Unrelated value"]) };
+        testNode.innerHTML = "<input type='checkbox' value='My value' data-bind='checked:myObservableArray' />";
+        ko.applyBindings(model, testNode);
+
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        
+        // Put the value in the array; observe the checkbox reflect this
+        model.myObservableArray.push("My value");
+        value_of(testNode.childNodes[0].checked).should_be(true);
+
+        // Remove the value from the array; observe the checkbox reflect this
+        model.myObservableArray.remove("My value");
+        value_of(testNode.childNodes[0].checked).should_be(false);
+    }    
 });
