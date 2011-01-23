@@ -442,6 +442,30 @@ describe('Binding: Click', {
         ko.applyBindings(null, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
+    },
+    
+    'Should let click events bubble to parent elements by default': function() {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='click:outerDoCall'><button data-bind='click:innerDoCall'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(true);    	
+    },
+    
+    'Should be able to prevent bubbling using the clickBubble:false option': function() {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='click:outerDoCall'><button data-bind='click:innerDoCall, clickBubble:false'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(false);    	
     }
 });
 

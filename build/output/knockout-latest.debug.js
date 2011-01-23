@@ -1087,6 +1087,8 @@ ko.bindingHandlers['click'] = {
         ko.utils.registerEventHandler(element, "click", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
+            var allBindings = allBindingsAccessor();
+            
             try { handlerReturnValue = value.call(viewModel); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
@@ -1095,6 +1097,13 @@ ko.bindingHandlers['click'] = {
                     else
                         event.returnValue = false;
                 }
+            }
+            
+            var bubble = allBindings['clickBubble'] !== false;
+            if (!bubble) {
+                event.cancelBubble = true;
+                if (event.stopPropagation)
+                    event.stopPropagation();
             }
         });
     }
@@ -1576,13 +1585,13 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
  
             if (typeof bindingValue['foreach'] != "undefined") {
-            	// Render once for each data point
-            	ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                // Render once for each data point
+                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
-            	// Render once for this single data point (or use the viewModel if no data was provided)
-            	var templateData = bindingValue['data'];
-            	ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
+                // Render once for this single data point (or use the viewModel if no data was provided)
+                var templateData = bindingValue['data'];
+                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
             }
         }
     };

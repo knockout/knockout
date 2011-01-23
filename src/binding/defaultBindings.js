@@ -4,6 +4,8 @@ ko.bindingHandlers['click'] = {
         ko.utils.registerEventHandler(element, "click", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
+            var allBindings = allBindingsAccessor();
+            
             try { handlerReturnValue = value.call(viewModel); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
@@ -12,6 +14,13 @@ ko.bindingHandlers['click'] = {
                     else
                         event.returnValue = false;
                 }
+            }
+            
+            var bubble = allBindings['clickBubble'] !== false;
+            if (!bubble) {
+                event.cancelBubble = true;
+                if (event.stopPropagation)
+                    event.stopPropagation();
             }
         });
     }
