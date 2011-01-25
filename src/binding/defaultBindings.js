@@ -5,7 +5,7 @@ ko.bindingHandlers['click'] = {
             var handlerReturnValue;
             var value = valueAccessor();
             var allBindings = allBindingsAccessor();
-            
+
             try { handlerReturnValue = value.call(viewModel); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
@@ -15,7 +15,7 @@ ko.bindingHandlers['click'] = {
                         event.returnValue = false;
                 }
             }
-            
+
             var bubble = allBindings['clickBubble'] !== false;
             if (!bubble) {
                 event.cancelBubble = true;
@@ -67,16 +67,16 @@ ko.bindingHandlers['enable'] = {
     }
 };
 
-ko.bindingHandlers['disable'] = { 
-    'update': function (element, valueAccessor) { 
-        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) }); 		
-    } 	
+ko.bindingHandlers['disable'] = {
+    'update': function (element, valueAccessor) {
+        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) });
+    }
 };
 
 ko.bindingHandlers['value'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {    	
+    'init': function (element, valueAccessor, allBindingsAccessor) {
         var eventName = allBindingsAccessor()["valueUpdate"] || "change";
-        
+
         // The syntax "after<eventname>" means "run the handler asynchronously after the event"
         // This is useful, for example, to catch "keydown" events after the browser has updated the control
         // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
@@ -87,7 +87,7 @@ ko.bindingHandlers['value'] = {
         }
         var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
                                                         : function(handler) { handler() };
-        
+
         ko.utils.registerEventHandler(element, eventName, function () {
             runEventHandler(function() {
                 var modelValue = valueAccessor();
@@ -97,21 +97,23 @@ ko.bindingHandlers['value'] = {
                 else {
                     var allBindings = allBindingsAccessor();
                     if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                        allBindings['_ko_property_writers']['value'](elementValue); 
+                        allBindings['_ko_property_writers']['value'](elementValue);
                 }
             });
         });
     },
-    'update': function (element, valueAccessor) {
+    'update': function (element, valueAccessor, allBindingsAccessor) {
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
-        
-        // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same). 
+		var allBindings = allBindingsAccessor(), options = allBindings.options,
+			optionsValue = allBindings.optionsValue;
+
+        // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same).
         // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.
         if ((newValue === 0) && (elementValue !== 0) && (elementValue !== "0"))
             valueHasChanged = true;
-        
+
         if (valueHasChanged) {
             var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
@@ -123,12 +125,16 @@ ko.bindingHandlers['value'] = {
             if (alsoApplyAsynchronously)
                 setTimeout(applyValueAction, 0);
         }
-        
+
         // For SELECT nodes, you're not allowed to have a model value that disagrees with the UI selection, so if there is a
         // difference, treat it as a change that should be written back to the model
         if (element.tagName == "SELECT") {
             elementValue = ko.selectExtensions.readValue(element);
-            if(elementValue !== newValue)
+			var match = options && ko.utils.arrayFirst(options,
+				function(option){
+					return (optionsValue ? option[optionsValue] : option) == newValue;
+				});
+            if(elementValue !== newValue && !match)
                 ko.utils.triggerEvent(element, "change");
         }
     }
@@ -163,7 +169,7 @@ ko.bindingHandlers['options'] = {
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
-                
+
                 // Pick some text to appear in the drop-down list for this data value
                 var optionsTextValue = allBindings['optionsText'];
                 if (typeof optionsTextValue == "function")
@@ -172,7 +178,7 @@ ko.bindingHandlers['options'] = {
                     optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
                 else
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
-                    
+
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 optionText = ko.utils.unwrapObservable(optionText);
                 ko.selectExtensions.writeValue(option, optionValue);
@@ -190,7 +196,7 @@ ko.bindingHandlers['options'] = {
                     countSelectionsRetained++;
                 }
             }
-            
+
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
         }
@@ -210,7 +216,7 @@ ko.bindingHandlers['selectedOptions'] = {
         return result;
     },
     'init': function (element, valueAccessor, allBindingsAccessor) {
-        ko.utils.registerEventHandler(element, "change", function () { 
+        ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor();
             if (ko.isWriteableObservable(value))
                 value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
@@ -219,7 +225,7 @@ ko.bindingHandlers['selectedOptions'] = {
                 if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
                     allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             }
-        });    	
+        });
     },
     'update': function (element, valueAccessor) {
         if (element.tagName != "SELECT")
@@ -295,7 +301,7 @@ ko.bindingHandlers['uniqueName'].currentIndex = 0;
 
 ko.bindingHandlers['checked'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
-        var updateHandler = function() {            
+        var updateHandler = function() {
             var valueToWrite;
             if (element.type == "checkbox") {
                 valueToWrite = element.checked;
@@ -304,8 +310,8 @@ ko.bindingHandlers['checked'] = {
             } else {
                 return; // "checked" binding only responds to checkboxes and selected radio buttons
             }
-            
-            var modelValue = valueAccessor();                 
+
+            var modelValue = valueAccessor();
             if ((element.type == "checkbox") && (ko.utils.unwrapObservable(modelValue) instanceof Array)) {
                 // For checkboxes bound to an array, we add/remove the checkbox value to that array
                 // This works for both observable and non-observable arrays
@@ -314,7 +320,7 @@ ko.bindingHandlers['checked'] = {
                     modelValue.push(element.value);
                 else if ((!element.checked) && (existingEntryIndex >= 0))
                     modelValue.splice(existingEntryIndex, 1);
-            } else if (ko.isWriteableObservable(modelValue)) {            	
+            } else if (ko.isWriteableObservable(modelValue)) {
                 if (modelValue() !== valueToWrite) { // Suppress repeated events when there's nothing new to notify (some browsers raise them)
                     modelValue(valueToWrite);
                 }
@@ -334,22 +340,22 @@ ko.bindingHandlers['checked'] = {
     },
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        
-        if (element.type == "checkbox") {        	
+
+        if (element.type == "checkbox") {
             if (value instanceof Array) {
                 // When bound to an array, the checkbox being checked represents its value being present in that array
                 element.checked = ko.utils.arrayIndexOf(value, element.value) >= 0;
             } else {
                 // When bound to anything other value (not an array), the checkbox being checked represents the value being trueish
-                element.checked = value;	
-            }            
-            
+                element.checked = value;
+            }
+
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
-            if (value && ko.utils.isIe6) 
+            if (value && ko.utils.isIe6)
                 element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
-            
+
             // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
             if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
                 element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);

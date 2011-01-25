@@ -75,7 +75,7 @@ describe('Binding: Visible', {
 describe('Binding: Text', {
     before_each: prepareTestNode,
 
-    'Should assign the value to the node, HTML-encoding the value': function () {    	
+    'Should assign the value to the node, HTML-encoding the value': function () {
         var model = { textProp: "'Val <with> \"special\" <i>characters</i>'" };
         testNode.innerHTML = "<span data-bind='text:textProp'></span>";
         ko.applyBindings(model, testNode);
@@ -88,19 +88,19 @@ describe('Binding: Text', {
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
     },
-    
+
     'Should assign an empty string as value if the model value is undefined': function () {
         testNode.innerHTML = "<span data-bind='text:undefined' ></span>";
         ko.applyBindings(null, testNode);
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
-    }	    	
+    }
 });
 
 describe('Binding: HTML', {
     before_each: prepareTestNode,
 
-    'Should assign the value to the node without HTML-encoding the value': function () {    	
+    'Should assign the value to the node without HTML-encoding the value': function () {
         var model = { textProp: "My <span>HTML-containing</span> value" };
         testNode.innerHTML = "<span data-bind='html:textProp'></span>";
         ko.applyBindings(model, testNode);
@@ -113,12 +113,12 @@ describe('Binding: HTML', {
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
     },
-    
+
     'Should assign an empty string as value if the model value is undefined': function () {
         testNode.innerHTML = "<span data-bind='html:undefined' ></span>";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
-    }	    	
+    }
 });
 
 describe('Binding: Value', {
@@ -129,12 +129,12 @@ describe('Binding: Value', {
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].value).should_be(123);
     },
-    
+
     'Should treat null values as empty strings': function () {
         testNode.innerHTML = "<input data-bind='value:myProp' />";
         ko.applyBindings({ myProp: ko.observable(0) }, testNode);
         value_of(testNode.childNodes[0].value).should_be("0");
-    },    
+    },
 
     'Should assign an empty string as value if the model value is null': function () {
         testNode.innerHTML = "<input data-bind='value:(null)' />";
@@ -176,22 +176,22 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(model.modelProperty123).should_be(789);
     },
-    
+
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
         // This spec represents https://github.com/SteveSanderson/knockout/issues#issue/13
         var originalSubproperty = ko.observable("original value");
         var newSubproperty = ko.observable();
         var model = { myprop: ko.observable({ subproperty : originalSubproperty }) };
-        
+
         // Set up a text box whose value is linked to the subproperty of the observable's current value
         testNode.innerHTML = "<input data-bind='value: myprop().subproperty' />";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].value).should_be("original value");
-        
+
         model.myprop({ subproperty : newSubproperty }); // Note that myprop (and hence its subproperty) is changed *after* the bindings are applied
         testNode.childNodes[0].value = "Some new value";
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");    	
-        
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+
         // Verify that the change was written to the *new* subproperty, not the one referenced when the bindings were first established
         value_of(newSubproperty()).should_be("Some new value");
         value_of(originalSubproperty()).should_be("original value");
@@ -217,7 +217,7 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(notifiedValues.length).should_be(2);
     },
-    
+
     'For select boxes, should update selectedIndex when the model changes': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
@@ -226,29 +226,29 @@ describe('Binding: Value', {
         observable('A');
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
     },
-    
+
     'For select boxes, should display the caption when the model value changes to undefined': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(2);
         observable(undefined);
-        value_of(testNode.childNodes[0].selectedIndex).should_be(0);    	
+        value_of(testNode.childNodes[0].selectedIndex).should_be(0);
     },
-    
+
     'For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)': function () {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         var dropdown = testNode.childNodes[0];
-        
+
         dropdown.selectedIndex = 1;
         ko.utils.triggerEvent(dropdown, "change");
-        value_of(observable()).should_be("A");           	
+        value_of(observable()).should_be("A");
 
         dropdown.selectedIndex = 0;
         ko.utils.triggerEvent(dropdown, "change");
-        value_of(observable()).should_be(undefined);           	
+        value_of(observable()).should_be(undefined);
     },
 
     'For select boxes, should be able to associate option values with arbitrary objects (not just strings)': function() {
@@ -257,20 +257,20 @@ describe('Binding: Value', {
         testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
         var dropdown = testNode.childNodes[0];
         ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
-        
+
         // Check the UI displays the entry corresponding to the chosen value
         value_of(dropdown.selectedIndex).should_be(1);
-                
+
         // Check that when we change the model value, the UI is updated
         selectedValue(x);
         value_of(dropdown.selectedIndex).should_be(0);
-        
+
         // Check that when we change the UI, this changes the model value
         dropdown.selectedIndex = 1;
         ko.utils.triggerEvent(dropdown, "change");
-        value_of(selectedValue()).should_be(y);    	
+        value_of(selectedValue()).should_be(y);
     },
-    
+
     'For select boxes, should automatically initialize the model property to match the first option value if no option value matches the current model property value': function() {
         // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
         //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
@@ -281,13 +281,34 @@ describe('Binding: Value', {
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(observable()).should_be("A");
     },
-    
+
+	'For select boxes, should automatically initialize the model property to match the first option value - event when value is included before options': function(){
+        var observable = new ko.observable();
+        testNode.innerHTML = "<select data-bind='value: myObservable, options:[\"A\", \"B\"]'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");
+	},
+
+    'For select boxes, model property should be initialized even if included before options in data-bind': function() {
+        var observable = new ko.observable("A");
+        testNode.innerHTML = "<select data-bind='value: myObservable, options:[\"A\", \"B\"]'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");
+    },
+
+	'For select boxes, model property should be initialized if included before options with optionsValue binding': function(){
+        var observable = new ko.observable("A");
+        testNode.innerHTML = "<select data-bind='value: myObservable, optionsValue: \"value\", options:[{ \"value\": \"A\" }, { \"value\": \"B\" }]'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");
+	},
+
     'For select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
-        
+
         observable('D'); // This change should be rejected, as there's no corresponding option in the UI
         value_of(observable()).should_not_be('D');
     }
@@ -313,28 +334,28 @@ describe('Binding: Options', {
         var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         value_of(displayedOptions).should_be(["A", "B", "C"]);
     },
-    
+
     'Should accept optionsText and optionsValue params to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', id: ko.observable(6) }, // Note that subproperties can be observable
             { name: ko.observable('frank'), id: 13 }
-        ]);	
+        ]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
-        var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });	
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
+        var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
         value_of(displayedText).should_be(["bob", "frank"]);
         value_of(displayedValues).should_be([6, 13]);
     },
 
     'Should accept function in optionsText param to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
-            { name: 'bob', job: 'manager' }, 
+            { name: 'bob', job: 'manager' },
             { name: 'frank', job: 'coder' }
-        ]);	
+        ]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }, optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         value_of(displayedText).should_be(["bob (manager)", "frank (coder)"]);
     },
 
@@ -353,11 +374,11 @@ describe('Binding: Options', {
         ko.applyBindings({ myValues: observable }, testNode);
         value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B"]);
     },
-    
+
     'Should place a caption at the top of the options list and display it when the model value is undefined': function() {
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: \"Select one...\"'></select>";
         ko.applyBindings({}, testNode);
-        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });        
+        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         value_of(displayedOptions).should_be(["Select one...", "A", "B"]);
     }
 });
@@ -388,24 +409,24 @@ describe('Binding: Selected Options', {
     'Should update the model when selection in the SELECT node changes': function () {
         function setMultiSelectOptionSelectionState(optionElement, state) {
             // Workaround an IE 6 bug (http://benhollis.net/experiments/browserdemos/ie6-adding-options.html)
-            if (/MSIE 6/i.test(navigator.userAgent)) 
+            if (/MSIE 6/i.test(navigator.userAgent))
                 optionElement.setAttribute('selected', state);
             else
-                optionElement.selected = state;    			
+                optionElement.selected = state;
         }
-        
+
         var cObject = {};
         var values = new ko.observableArray(["A", "B", cObject]);
         var selection = new ko.observableArray(["B"]);
         testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
-        ko.applyBindings({ myValues: values, mySelection: selection }, testNode);		
+        ko.applyBindings({ myValues: values, mySelection: selection }, testNode);
 
-        value_of(selection()).should_be(["B"]);        
+        value_of(selection()).should_be(["B"]);
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0], true);
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[1], false);
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        
+
         value_of(selection()).should_be(["A", cObject]);
         value_of(selection()[1] === cObject).should_be(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     }
@@ -443,29 +464,29 @@ describe('Binding: Click', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
     },
-    
+
     'Should let click events bubble to parent elements by default': function() {
-        var model = { 
+        var model = {
             innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
             outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
         };
         testNode.innerHTML = "<div data-bind='click:outerDoCall'><button data-bind='click:innerDoCall'>hey</button></div>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
-        value_of(model.innerWasCalled).should_be(true);    	
-        value_of(model.outerWasCalled).should_be(true);    	
+        value_of(model.innerWasCalled).should_be(true);
+        value_of(model.outerWasCalled).should_be(true);
     },
-    
+
     'Should be able to prevent bubbling using the clickBubble:false option': function() {
-        var model = { 
+        var model = {
             innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
             outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
         };
         testNode.innerHTML = "<div data-bind='click:outerDoCall'><button data-bind='click:innerDoCall, clickBubble:false'>hey</button></div>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
-        value_of(model.innerWasCalled).should_be(true);    	
-        value_of(model.outerWasCalled).should_be(false);    	
+        value_of(model.innerWasCalled).should_be(true);
+        value_of(model.outerWasCalled).should_be(false);
     }
 });
 
@@ -538,7 +559,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(myobservable()).should_be(true);
     },
-    
+
     'Should only notify observable properties on the underlying model *once* even if the checkbox change/click events fire multiple times': function () {
         var myobservable = new ko.observable();
         var timesNotified = 0;
@@ -551,12 +572,12 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
-        
+
         // ... until the checkbox value actually changes
         testNode.childNodes[0].checked = false;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(timesNotified).should_be(2);        
-    },    
+        value_of(timesNotified).should_be(2);
+    },
 
     'Should update non-observable properties on the underlying model when the checkbox change event fires': function () {
         var model = { someProp: false };
@@ -605,7 +626,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(myobservable()).should_be("this radio button value");
     },
-    
+
     'Should only notify observable properties on the underlying model *once* even if the radio button change/click events fire multiple times': function () {
         var myobservable = new ko.observable("original value");
         var timesNotified = 0;
@@ -619,11 +640,11 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
-        
+
         // ... until you click something with a different value
         ko.utils.triggerEvent(testNode.childNodes[1], "click");
-        value_of(timesNotified).should_be(2);        
-    },     
+        value_of(timesNotified).should_be(2);
+    },
 
     'Should set a non-observable model property to this radio button\'s value when checked': function () {
         var model = { someProp: "another value" };
@@ -633,7 +654,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be("this radio button value");
     },
-    
+
     'When a checkbox is bound to an array, the checkbox should control whether its value is in that array': function() {
         var model = { myArray: ["Existing value", "Unrelated value"] };
         testNode.innerHTML = "<input type='checkbox' value='Existing value' data-bind='checked:myArray' />"
@@ -652,14 +673,14 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[1], "click");
         value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
     },
-    
+
     'When a checkbox is bound to an observable array, the checkbox checked state responds to changes in the array': function() {
         var model = { myObservableArray: ko.observableArray(["Unrelated value"]) };
         testNode.innerHTML = "<input type='checkbox' value='My value' data-bind='checked:myObservableArray' />";
         ko.applyBindings(model, testNode);
 
         value_of(testNode.childNodes[0].checked).should_be(false);
-        
+
         // Put the value in the array; observe the checkbox reflect this
         model.myObservableArray.push("My value");
         value_of(testNode.childNodes[0].checked).should_be(true);
@@ -667,5 +688,5 @@ describe('Binding: Checked', {
         // Remove the value from the array; observe the checkbox reflect this
         model.myObservableArray.remove("My value");
         value_of(testNode.childNodes[0].checked).should_be(false);
-    }    
+    }
 });
