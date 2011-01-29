@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -216,6 +216,10 @@ ko.utils = new (function () {
 
         unwrapObservable: function (value) {
             return ko.isObservable(value) ? value() : value;
+        },
+        
+        unwrap: function(value) {
+            return typeof value == 'function' ? ko.utils.unwrapObservable(value()) : ko.utils.unwrapObservable(value);
         },
 
         domNodeHasCssClass: function (node, className) {
@@ -1440,6 +1444,42 @@ ko.bindingHandlers['checked'] = {
     }
 };
 
+ko.bindingHandlers['event'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        for (var eventName in value) {
+            if (typeof eventName == "string") {
+                var eventHandler = ko.utils.unwrapObservable(value[eventName]);
+                ko.utils.registerEventHandler(element, eventName, function(event, arg1, arg2, arg3, arg4) {
+                    var retVal;
+                    try {retVal = eventHandler.call(viewModel, element, event, arg1, arg2, arg3, arg4);}
+                    finally {
+                        if (!retVal) {
+                            if (event.preventDefault)
+                                event.preventDefault();
+                            else
+                                event.returnValue = false;
+                        }
+                    }
+                });
+            }
+        }
+    }
+};
+
+ko.bindingHandlers['attr'] = {
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
+        for (var attrName in value) {
+            if (typeof attrName == "string") {
+                var attrValue = ko.utils.unwrap(value[attrName]);
+                if (attrName == 'className') attrName = 'class';
+                element.setAttribute(attrName, attrValue);
+            }
+        }
+    }
+};
+
 ko.templateEngine = function () {
     this['renderTemplate'] = function (templateName, data, options) {
         throw "Override renderTemplate in your ko.templateEngine subclass";
@@ -1914,4 +1954,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

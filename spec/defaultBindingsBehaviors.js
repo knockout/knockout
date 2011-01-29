@@ -669,3 +669,49 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(false);
     }    
 });
+
+describe('Binding: Event', {
+    before_each: prepareTestNode,
+    
+    'Should prevent default action': function () {
+        testNode.innerHTML = "<a href='http://www.example.com/' data-bind='event: {click: function(){}}'>click me</a>";
+        ko.applyBindings(null, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
+    },
+    
+    'Should invoke the supplied function on [change] event, using model as \'this\' param': function() {
+        var model = { wasCalled: false, doCall: function () { this.wasCalled = true; } };
+        testNode.innerHTML = "<input type='text' data-bind='event: {change: doCall}'></input>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(model.wasCalled).should_be(true);
+    },
+});
+
+describe('Binding: Attr', {
+    before_each: prepareTestNode,
+  
+    'Should set source of image': function() {
+        var model = { imageUrl: "http://www.web.com/image1.gif" };
+        testNode.innerHTML = "<img data-bind='attr: {src: imageUrl}'></img>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].src).should_be(model.imageUrl);
+    },
+    
+    'Should set both title and class of div': function() {
+        var model = { clazz: 'a b', title: 'this is a div element' };
+        testNode.innerHTML = "<div data-bind='attr: {className: clazz, title: title}'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].title).should_be(model.title);
+        value_of(testNode.childNodes[0].className).should_be(model.clazz);
+    },
+    
+    'Should set attribute if binding is a function': function() {
+        var model = { clazz: ko.observable('a b'), title: function(){return 'this is a div element';} };
+        testNode.innerHTML = "<div data-bind='attr: {className: clazz, title: title}'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].title).should_be(model.title());
+        value_of(testNode.childNodes[0].className).should_be(model.clazz());
+    }
+});

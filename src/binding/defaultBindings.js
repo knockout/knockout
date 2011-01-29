@@ -356,3 +356,39 @@ ko.bindingHandlers['checked'] = {
         }
     }
 };
+
+ko.bindingHandlers['event'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        for (var eventName in value) {
+            if (typeof eventName == "string") {
+                var eventHandler = ko.utils.unwrapObservable(value[eventName]);
+                ko.utils.registerEventHandler(element, eventName, function(event, arg1, arg2, arg3, arg4) {
+                    var retVal;
+                    try {retVal = eventHandler.call(viewModel, element, event, arg1, arg2, arg3, arg4);}
+                    finally {
+                        if (!retVal) {
+                            if (event.preventDefault)
+                                event.preventDefault();
+                            else
+                                event.returnValue = false;
+                        }
+                    }
+                });
+            }
+        }
+    }
+};
+
+ko.bindingHandlers['attr'] = {
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor() || {});
+        for (var attrName in value) {
+            if (typeof attrName == "string") {
+                var attrValue = ko.utils.unwrap(value[attrName]);
+                if (attrName == 'className') attrName = 'class';
+                element.setAttribute(attrName, attrValue);
+            }
+        }
+    }
+};
