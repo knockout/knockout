@@ -1,18 +1,18 @@
 
-ko.primitivesEqual = function (oldValue, newValue) {
+function comparePrimitives(oldValue, newValue) {
     return oldValue != newValue;
 };
 
-ko.setupCheckValueChanged = function (options) {
+function setupCheckValueChanged(options) {
     // checkValueChanged can be a comparator function(old, new) for object equality or a boolean for primitives equality
     if(typeof options["checkValueChanged"] != "function")
     {
-        options["checkValueChanged"] = options["checkValueChanged"] ? ko.primitivesEqual : false;
+        options["checkValueChanged"] = options["checkValueChanged"] ? comparePrimitives : false;
     }
 
     return options;
 };
 
-ko.checkValueChanged = function (oldValue, newValue, options) {
+function checkValueChanged(oldValue, newValue, options) {
     return !options["checkValueChanged"] || options["checkValueChanged"](oldValue, newValue);
 }

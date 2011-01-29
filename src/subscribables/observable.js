@@ -3,12 +3,12 @@ ko.observable = function (initialValue, options) {
     var _latestValue = initialValue;
     options = options || {};
 
-    options = ko.setupCheckValueChanged(options);
+    options = setupCheckValueChanged(options);
 
     function observable() {
         if (arguments.length > 0) {
             var valueToWrite = arguments[0];
-            if(ko.checkValueChanged(_latestValue, valueToWrite, options))
+            if(checkValueChanged(_latestValue, valueToWrite, options))
             {
               // Write
               _latestValue = valueToWrite;

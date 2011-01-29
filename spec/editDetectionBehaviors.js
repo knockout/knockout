@@ -187,34 +187,34 @@ describe('checkValueChanged helpers', {
     'Should always indicate changes when "checkValueChanged" is undefined or false': function () {
         var options = {};
 
-        ko.setupCheckValueChanged(options);
+        setupCheckValueChanged(options);
         value_of(options["checkValueChanged"]).should_be(false);
 
         options = {checkValueChanged: false};
 
-        ko.setupCheckValueChanged(options);
+        setupCheckValueChanged(options);
         value_of(options["checkValueChanged"]).should_be(false);
 
-        value_of(ko.checkValueChanged("a", "a", options)).should_be(true);
+        value_of(checkValueChanged("a", "a", options)).should_be(true);
     },
 
-    'Should use primitivesEqual and indicate only "real" changes when "checkValueChanged" is true': function () {
+    'Should use comparePrimitives and indicate only "real" changes when "checkValueChanged" is true': function () {
         options = {checkValueChanged: true};
 
-        ko.setupCheckValueChanged(options);
+        setupCheckValueChanged(options);
         value_of(typeof options["checkValueChanged"]).should_be("function");
 
-        value_of(ko.checkValueChanged("a", "a", options)).should_be(false);
-        value_of(ko.checkValueChanged("a", "b", options)).should_be(true);
+        value_of(checkValueChanged("a", "a", options)).should_be(false);
+        value_of(checkValueChanged("a", "b", options)).should_be(true);
     },
 
     'Should indicate only "real" changes when "checkValueChanged" is a custom function': function () {
         options = {checkValueChanged: function(oldValue, newValue){return oldValue.val != newValue.val;}};
 
-        ko.setupCheckValueChanged(options);
+        setupCheckValueChanged(options);
         value_of(typeof options["checkValueChanged"]).should_be("function");
 
-        value_of(ko.checkValueChanged({val:"a"}, {val:"a"}, options)).should_be(false);
-        value_of(ko.checkValueChanged({val:"a"}, {val:"b"}, options)).should_be(true);
+        value_of(checkValueChanged({val:"a"}, {val:"a"}, options)).should_be(false);
+        value_of(checkValueChanged({val:"a"}, {val:"b"}, options)).should_be(true);
     }
 });

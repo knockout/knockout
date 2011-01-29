@@ -10,7 +10,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
     // By here, "options" is always non-null
-    options = ko.setupCheckValueChanged(options);
+    options = setupCheckValueChanged(options);
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
@@ -60,7 +60,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 // Writing a value..
                 var valueToWrite = arguments[0];
                 // ..when it should be written.
-                if (ko.checkValueChanged(_latestValue, valueToWrite, options)) {
+                if (checkValueChanged(_latestValue, valueToWrite, options)) {
                     options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
                 }
             } else {

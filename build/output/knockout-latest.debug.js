@@ -532,21 +532,21 @@ ko.dependencyDetection = (function () {
         }
     };
 })();
-ko.primitivesEqual = function (oldValue, newValue) {
+function comparePrimitives(oldValue, newValue) {
     return oldValue != newValue;
 };
 
-ko.setupCheckValueChanged = function (options) {
+function setupCheckValueChanged(options) {
     // checkValueChanged can be a comparator function(old, new) for object equality or a boolean for primitives equality
     if(typeof options["checkValueChanged"] != "function")
     {
-        options["checkValueChanged"] = options["checkValueChanged"] ? ko.primitivesEqual : false;
+        options["checkValueChanged"] = options["checkValueChanged"] ? comparePrimitives : false;
     }
 
     return options;
 };
 
-ko.checkValueChanged = function (oldValue, newValue, options) {
+function checkValueChanged(oldValue, newValue, options) {
     return !options["checkValueChanged"] || options["checkValueChanged"](oldValue, newValue);
 }
 
@@ -554,12 +554,12 @@ ko.observable = function (initialValue, options) {
     var _latestValue = initialValue;
     options = options || {};
 
-    options = ko.setupCheckValueChanged(options);
+    options = setupCheckValueChanged(options);
 
     function observable() {
         if (arguments.length > 0) {
             var valueToWrite = arguments[0];
-            if(ko.checkValueChanged(_latestValue, valueToWrite, options))
+            if(checkValueChanged(_latestValue, valueToWrite, options))
             {
               // Write
               _latestValue = valueToWrite;
@@ -714,7 +714,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
     // By here, "options" is always non-null
-    options = ko.setupCheckValueChanged(options);
+    options = setupCheckValueChanged(options);
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
@@ -764,7 +764,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 // Writing a value..
                 var valueToWrite = arguments[0];
                 // ..when it should be written.
-                if (ko.checkValueChanged(_latestValue, valueToWrite, options)) {
+                if (checkValueChanged(_latestValue, valueToWrite, options)) {
                     options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
                 }
             } else {
