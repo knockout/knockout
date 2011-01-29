@@ -384,14 +384,10 @@ ko.bindingHandlers['attr'] = {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
-                var attrValue = ko.utils.unwrapObservable(value[attrName]);
-                
-                // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
-                // when someProp===false (because that's how to mark an element as not checked, not disabled, etc.)
-                if (attrValue === false) 
-                    element.removeAttribute(attrName);
-                else 
-                    element.setAttribute(attrName, attrValue.toString());
+                var attrValue = ko.utils.unwrapObservable(value[attrName]);                
+                if (attrName == 'className') attrName = 'class';
+                if (!attrValue || attrValue == 'false') element.removeAttribute(attrName);
+                else element.setAttribute(attrName, attrValue.toString());
             }
         }
     }
