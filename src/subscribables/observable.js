@@ -1,12 +1,19 @@
 
-ko.observable = function (initialValue) {
+ko.observable = function (initialValue, options) {
     var _latestValue = initialValue;
+    options = options || {};
+
+    options = ko.setupCheckValueChanged(options);
 
     function observable() {
         if (arguments.length > 0) {
-            // Write
-            _latestValue = arguments[0];
-            observable.notifySubscribers(_latestValue);
+            var valueToWrite = arguments[0];
+            if(ko.checkValueChanged(_latestValue, valueToWrite, options))
+            {
+              // Write
+              _latestValue = valueToWrite;
+              observable.notifySubscribers(_latestValue);
+            }
             return this; // Permits chained assignments
         }
         else {
@@ -15,6 +22,7 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
+
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
 

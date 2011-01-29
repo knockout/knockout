@@ -532,14 +532,39 @@ ko.dependencyDetection = (function () {
         }
     };
 })();
-ko.observable = function (initialValue) {
+ko.primitivesEqual = function (oldValue, newValue) {
+    return oldValue != newValue;
+};
+
+ko.setupCheckValueChanged = function (options) {
+    // checkValueChanged can be a comparator function(old, new) for object equality or a boolean for primitives equality
+    if(typeof options["checkValueChanged"] != "function")
+    {
+        options["checkValueChanged"] = options["checkValueChanged"] ? ko.primitivesEqual : false;
+    }
+
+    return options;
+};
+
+ko.checkValueChanged = function (oldValue, newValue, options) {
+    return !options["checkValueChanged"] || options["checkValueChanged"](oldValue, newValue);
+}
+
+ko.observable = function (initialValue, options) {
     var _latestValue = initialValue;
+    options = options || {};
+
+    options = ko.setupCheckValueChanged(options);
 
     function observable() {
         if (arguments.length > 0) {
-            // Write
-            _latestValue = arguments[0];
-            observable.notifySubscribers(_latestValue);
+            var valueToWrite = arguments[0];
+            if(ko.checkValueChanged(_latestValue, valueToWrite, options))
+            {
+              // Write
+              _latestValue = valueToWrite;
+              observable.notifySubscribers(_latestValue);
+            }
             return this; // Permits chained assignments
         }
         else {
@@ -548,6 +573,7 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
+
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
 
@@ -688,6 +714,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
     // By here, "options" is always non-null
+    options = ko.setupCheckValueChanged(options);
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
@@ -734,9 +761,12 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     function dependentObservable() {
         if (arguments.length > 0) {
             if (typeof options["write"] === "function") {
-                // Writing a value
+                // Writing a value..
                 var valueToWrite = arguments[0];
-                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+                // ..when it should be written.
+                if (ko.checkValueChanged(_latestValue, valueToWrite, options)) {
+                    options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+                }
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
             }

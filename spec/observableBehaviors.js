@@ -79,5 +79,69 @@ describe('Observable', {
         instance.valueHasMutated();
         value_of(notifiedValues.length).should_be(2);
         value_of(notifiedValues[1]).should_be("B");
+    },
+
+    'Should be able to write a new value to it, when "checkValueChanged" is present and true': function() {
+        var observable = new ko.observable("", { checkValueChanged: true });
+        var timesChanged = 0;
+        observable.subscribe(function(){timesChanged++});
+
+        observable("some value");
+        value_of(observable()).should_be("some value");
+        observable("some other value");
+        value_of(observable()).should_be("some other value");
+        value_of(timesChanged).should_be(2);
+    },
+
+    'Should not be able to write the currently set value to it, when "checkValueChanged" is present and true': function() {
+        var observable = new ko.observable("", { checkValueChanged: true });
+        var timesChanged = 0;
+        observable.subscribe(function(){timesChanged++});
+
+        observable("some value");
+        value_of(observable()).should_be("some value");
+        observable("some value");
+        value_of(observable()).should_be("some value");
+        value_of(timesChanged).should_be(1);
+    },
+
+    'Should be able to write a new object to it, when "checkValueChanged" provides a custom comparator function': function() {
+        var model1 = {
+            id: new ko.observable(123),
+            data: new ko.observable("somedata")
+        };
+        var model2 = {
+            id: new ko.observable(456),
+            data: new ko.observable("someotherdata")
+        };
+        var observable = new ko.observable(undefined,
+            { checkValueChanged: function(oldM, newM) {
+                return (oldM ? oldM.id() : undefined) != (newM ? newM.id() : undefined);} });
+        var timesChanged = 0;
+        observable.subscribe(function(){timesChanged++});
+
+        observable(model1);
+        value_of(observable().id()).should_be(model1.id());
+        observable(model2);
+        value_of(observable().id()).should_be(model2.id());
+        value_of(timesChanged).should_be(2);
+    },
+
+    'Should not be able to write the currently set object to it, when "checkValueChanged" provides a custom comparator function': function() {
+        var model = {
+            id: new ko.observable(123),
+            data: new ko.observable("somedata")
+        };
+        var observable = new ko.observable(undefined,
+            { checkValueChanged: function(oldM, newM) {
+                return (oldM ? oldM.id() : undefined) != (newM ? newM.id() : undefined);} });
+        var timesChanged = 0;
+        observable.subscribe(function(){timesChanged++});
+
+        observable(model);
+        value_of(observable().id()).should_be(model.id());
+        observable(model);
+        value_of(observable().id()).should_be(model.id());
+        value_of(timesChanged).should_be(1);
     }
 });

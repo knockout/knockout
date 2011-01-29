@@ -48,7 +48,83 @@ describe('Dependent Observable', {
         instance("some value");
         value_of(invokedWriteWithValue).should_be("some value");
     },
-    
+
+    'Should be able to write a new value to it, when "checkValueChanged" is present and true': function() {
+        var observable = new ko.observable();
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({
+            read: function() {return observable();},
+            write: function(value) { timesEvaluated++; observable(value); },
+            checkValueChanged: true
+        });
+
+        instance("some value");
+        value_of(instance()).should_be("some value");
+        instance("some other value");
+        value_of(instance()).should_be("some other value");
+        value_of(timesEvaluated).should_be(2);
+    },
+
+    'Should not be able to write the currently set value to it, when "checkValueChanged" is present and true': function() {
+        var observable = new ko.observable();
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({
+            read: function() { return observable(); },
+            write: function(value) { timesEvaluated++; observable(value); },
+            checkValueChanged: true
+        });
+
+        instance("some value");
+        value_of(instance()).should_be("some value");
+        instance("some value");
+        value_of(instance()).should_be("some value");
+        value_of(timesEvaluated).should_be(1);
+    },
+
+    'Should be able to write a new object to it, when "checkValueChanged" provides a custom comparator function': function() {
+        var model1 = {
+          id: new ko.observable(123),
+          data: new ko.observable("somedata")
+        };
+        var model2 = {
+          id: new ko.observable(456),
+          data: new ko.observable("someotherdata")
+        };
+        var observable = new ko.observable();
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({
+            read: function() { return observable(); },
+            write: function(value) { timesEvaluated++; observable(value); },
+            checkValueChanged: function(oldM, newM){return (oldM ? oldM.id() : undefined) != (newM ? newM.id() : undefined);}
+        });
+
+        instance(model1);
+        value_of(instance().id()).should_be(model1.id());
+        instance(model2);
+        value_of(instance().id()).should_be(model2.id());
+        value_of(timesEvaluated).should_be(2);
+    },
+
+    'Should not be able to write the currently set object to it, when "checkValueChanged" provides a custom comparator function': function() {
+        var model = {
+          id: new ko.observable(123),
+          data: new ko.observable("somedata")
+        };
+        var observable = new ko.observable();
+        var timesEvaluated = 0;
+        var instance = new ko.dependentObservable({
+            read: function() { return observable(); },
+            write: function(value) { timesEvaluated++; observable(value); },
+            checkValueChanged: function(oldM, newM){return (oldM ? oldM.id() : undefined) != (newM ? newM.id() : undefined);}
+        });
+
+        instance(model);
+        value_of(instance().id()).should_be(model.id());
+        instance(model);
+        value_of(instance().id()).should_be(model.id());
+        value_of(timesEvaluated).should_be(1);
+    },
+
     'Should be able to pass evaluator function using "options" parameter called "read"': function() {
         var instance = new ko.dependentObservable({
             read: function () { return 123; }

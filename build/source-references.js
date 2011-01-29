@@ -5,6 +5,7 @@ knockoutDebugCallback([
     'src/memoization.js',    
     'src/subscribables/subscribable.js',
     'src/subscribables/dependencyDetection.js',
+    'src/subscribables/checkValueChanged.js',
     'src/subscribables/observable.js',
     'src/subscribables/observableArray.js',
     'src/subscribables/dependentObservable.js',
