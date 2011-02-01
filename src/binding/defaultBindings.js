@@ -387,7 +387,8 @@ ko.bindingHandlers['attr'] = {
             if (typeof attrName == "string") {
                 var attrValue = ko.utils.unwrap(value[attrName]);
                 if (attrName == 'className') attrName = 'class';
-                element.setAttribute(attrName, attrValue);
+                if (!attrValue || attrValue == 'false') element.removeAttribute(attrName);
+                else element.setAttribute(attrName, attrValue);
             }
         }
     }
