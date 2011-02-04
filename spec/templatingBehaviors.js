@@ -202,6 +202,12 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:\n\"Hi\"' />" }));
         ko.renderTemplate("someTemplate", null, null, testNode);
         value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
+    },
+
+    'Should handle data-bind attributes where the element name is not all lowercase from inside templates': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<INPUT data-bind='value:\n\"Hi\"' />" }));
+        ko.renderTemplate("someTemplate", null, null, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
     },    
 
     'Data binding syntax should be able to reference variables put into scope by the template engine': function () {

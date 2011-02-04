@@ -1458,7 +1458,7 @@ ko.templateEngine = function () {
 ko.exportSymbol('ko.templateEngine', ko.templateEngine);
 
 ko.templateRewriting = (function () {
-    var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/g;
+    var memoizeBindingAttributeSyntaxRegex = /(<[a-zA-Z]+\d*(\s+(?!data-bind=)[a-z0-9]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/g;
 
     return {
         ensureTemplateIsRewritten: function (template, templateEngine) {
