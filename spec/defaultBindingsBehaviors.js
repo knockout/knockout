@@ -669,3 +669,49 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(false);
     }    
 });
+
+describe('Binding: Event', {
+    before_each: prepareTestNode,
+    
+    'Should prevent default action': function () {
+        testNode.innerHTML = "<a href='http://www.example.com/' data-bind='event: {click: function(){}}'>click me</a>";
+        ko.applyBindings(null, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
+    },
+    
+    'Should invoke the supplied function on [change] event, using model as \'this\' param': function() {
+        var model = { wasCalled: false, doCall: function () { this.wasCalled = true; } };
+        testNode.innerHTML = "<input type='text' data-bind='event: {change: doCall}'></input>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(model.wasCalled).should_be(true);
+    },
+});
+
+describe('Binding: Attr', {
+    before_each: prepareTestNode,
+  
+    'Should be able to set arbitrary attribute values': function() {
+        var model = { myValue: "first value" };
+        testNode.innerHTML = "<div data-bind='attr: {firstAttribute: myValue, \"second-attribute\": true}'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].getAttribute("firstAttribute")).should_be("first value");
+        value_of(testNode.childNodes[0].getAttribute("second-attribute")).should_be("true");
+    },
+    
+    'Should respond to changes in an observable value, removing the attribute if the value is undefined': function() {
+        var model = { myprop : ko.observable("initial value") };
+        testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
+        
+        // Change the observable; observe it reflected in the DOM
+        model.myprop("new value");
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
+        
+        // Set to undefined; see the attribute vanish
+        model.myprop(undefined);
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
+    }
+});
