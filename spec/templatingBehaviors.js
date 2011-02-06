@@ -192,8 +192,8 @@ describe('Templating', {
         value_of(timesRenderedInner).should_be(2);
     },
 
-    'Should handle data-bind attributes from inside templates': function () {
-        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind='value:\"Hi\"' />" }));
+    'Should handle data-bind attributes from inside templates, regardless of element and attribute casing': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<INPUT Data-Bind='value:\"Hi\"' />" }));
         ko.renderTemplate("someTemplate", null, null, testNode);
         value_of(testNode.childNodes[0].childNodes[0].value).should_be("Hi");
     },
