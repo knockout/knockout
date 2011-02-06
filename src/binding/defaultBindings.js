@@ -1,28 +1,49 @@
+// For certain common events (currently just 'click'), allow a simplified data-binding syntax
+// e.g. click:handler instead of the usual full-length event:{click:handler}
+var eventHandlersWithShortcuts = ['click'];
+ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
+    ko.bindingHandlers[eventName] = {
+        'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            var newValueAccessor = function () {
+                var result = {};
+                result[eventName] = valueAccessor();
+                return result;
+            };
+            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindingsAccessor, viewModel);
+        }
+    }	
+});
 
-ko.bindingHandlers['click'] = {
+
+ko.bindingHandlers['event'] = {
     'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
-        ko.utils.registerEventHandler(element, "click", function (event) {
-            var handlerReturnValue;
-            var value = valueAccessor();
-            var allBindings = allBindingsAccessor();
-            
-            try { handlerReturnValue = value.call(viewModel); }
-            finally {
-                if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
-                    if (event.preventDefault)
-                        event.preventDefault();
-                    else
-                        event.returnValue = false;
-                }
+        var eventsToHandle = valueAccessor() || {};
+        for(var eventName in eventsToHandle) {
+            if (typeof eventName == "string") {
+                ko.utils.registerEventHandler(element, eventName, function (event) {
+                    var handlerReturnValue;
+                    var handlerFunction = valueAccessor()[eventName];
+                    var allBindings = allBindingsAccessor();
+                    
+                    try { handlerReturnValue = handlerFunction.call(viewModel); }
+                    finally {
+                        if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                            if (event.preventDefault)
+                                event.preventDefault();
+                            else
+                                event.returnValue = false;
+                        }
+                    }
+                    
+                    var bubble = allBindings[eventName + 'Bubble'] !== false;
+                    if (!bubble) {
+                        event.cancelBubble = true;
+                        if (event.stopPropagation)
+                            event.stopPropagation();
+                    }
+                });
             }
-            
-            var bubble = allBindings['clickBubble'] !== false;
-            if (!bubble) {
-                event.cancelBubble = true;
-                if (event.stopPropagation)
-                    event.stopPropagation();
-            }
-        });
+        }
     }
 };
 
@@ -353,29 +374,6 @@ ko.bindingHandlers['checked'] = {
             // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
             if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
                 element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);
-        }
-    }
-};
-
-ko.bindingHandlers['event'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
-        var value = ko.utils.unwrapObservable(valueAccessor()) || {};
-        for (var eventName in value) {
-            if (typeof eventName == "string") {
-                var eventHandler = ko.utils.unwrapObservable(value[eventName]);
-                ko.utils.registerEventHandler(element, eventName, function(event, arg1, arg2, arg3, arg4) {
-                    var retVal;
-                    try {retVal = eventHandler.call(viewModel, element, event, arg1, arg2, arg3, arg4);}
-                    finally {
-                        if (!retVal) {
-                            if (event.preventDefault)
-                                event.preventDefault();
-                            else
-                                event.returnValue = false;
-                        }
-                    }
-                });
-            }
         }
     }
 };
