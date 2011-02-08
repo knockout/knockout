@@ -694,7 +694,7 @@ describe('Binding: Attr', {
         value_of(testNode.childNodes[0].getAttribute("second-attribute")).should_be("true");
     },
     
-    'Should respond to changes in an observable value, removing the attribute if the value is undefined': function() {
+    'Should respond to changes in an observable value, removing the attribute if the value is strictly false': function() {
         var model = { myprop : ko.observable("initial value") };
         testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
         ko.applyBindings(model, testNode);
@@ -705,7 +705,7 @@ describe('Binding: Attr', {
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
         
         // Set to undefined; see the attribute vanish
-        model.myprop(undefined);
+        model.myprop(false);
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
     }
 });
