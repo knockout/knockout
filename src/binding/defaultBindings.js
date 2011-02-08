@@ -25,8 +25,9 @@ ko.bindingHandlers['event'] = {
                     var handlerFunction = valueAccessor()[eventName];
                     var allBindings = allBindingsAccessor();
                     
-                    try { handlerReturnValue = handlerFunction.call(viewModel); }
-                    finally {
+                    try { 
+                        handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
+                    } finally {
                         if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                             if (event.preventDefault)
                                 event.preventDefault();
