@@ -44,7 +44,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         try {
             ko.dependencyDetection.begin();
             _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
-        } finally {
+        }
+        catch (err) {
+            // This empty catch is required for IE7.
+        }
+        finally {
             var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
             replaceSubscriptionsToDependencies(distinctDependencies);
         }
