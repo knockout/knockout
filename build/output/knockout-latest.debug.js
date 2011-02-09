@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1899,8 +1899,13 @@ ko.jqueryTmplTemplateEngine = function () {
         
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
-        var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data, options['templateOptions']);
+        var templateNode = getTemplateNode(template);
+        if (!templateNode.isTemplateCached) {
+            // Cache template with jQuery for faster repeat access
+            jQuery['template'](template, templateNode.text);
+            templateNode.isTemplateCached = true;
+        }
+        return jQuery['tmpl'](template, data, options['templateOptions']);
     },
 
     this['isTemplateRewritten'] = function (template) {
@@ -1954,4 +1959,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

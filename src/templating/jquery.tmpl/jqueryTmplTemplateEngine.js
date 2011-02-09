@@ -39,8 +39,13 @@ ko.jqueryTmplTemplateEngine = function () {
         
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
-        var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data, options['templateOptions']);
+        var templateNode = getTemplateNode(template);
+        if (!templateNode.isTemplateCached) {
+            // Cache template with jQuery for faster repeat access
+            jQuery['template'](template, templateNode.text);
+            templateNode.isTemplateCached = true;
+        }
+        return jQuery['tmpl'](template, data, options['templateOptions']);
     },
 
     this['isTemplateRewritten'] = function (template) {
