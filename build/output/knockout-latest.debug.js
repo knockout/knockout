@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1870,10 +1870,17 @@ ko.jqueryTmplTemplateEngine = function () {
         return 1;
     })();
 
+    // Cache results of getElementById for each template. Gives in a large performance boost, especially in Internet Explorer.
+    var templateElementCache = {};
+    
     function getTemplateNode(template) {
-        var templateNode = document.getElementById(template);
+        if (templateElementCache[template]) {
+        	return templateElementCache[template];
+        }
+    	var templateNode = document.getElementById(template);
         if (templateNode == null)
             throw new Error("Cannot find template with ID=" + template);
+        templateElementCache[template] = templateNode;
         return templateNode;
     }
 
@@ -1954,4 +1961,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

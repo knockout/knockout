@@ -10,10 +10,17 @@ ko.jqueryTmplTemplateEngine = function () {
         return 1;
     })();
 
+    // Cache results of getElementById for each template. Gives in a large performance boost, especially in Internet Explorer.
+    var templateElementCache = {};
+    
     function getTemplateNode(template) {
-        var templateNode = document.getElementById(template);
+        if (templateElementCache[template]) {
+        	return templateElementCache[template];
+        }
+    	var templateNode = document.getElementById(template);
         if (templateNode == null)
             throw new Error("Cannot find template with ID=" + template);
+        templateElementCache[template] = templateNode;
         return templateNode;
     }
 
