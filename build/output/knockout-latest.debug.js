@@ -1101,7 +1101,6 @@ ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
     }	
 });
 
-
 ko.bindingHandlers['event'] = {
     'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
         var eventsToHandle = valueAccessor() || {};
@@ -1109,7 +1108,7 @@ ko.bindingHandlers['event'] = {
             if (typeof eventName == "string") {
                 ko.utils.registerEventHandler(element, eventName, function (event) {
                     var handlerReturnValue;
-                    var handlerFunction = valueAccessor()[eventName];
+                    var handlerFunction = valueAccessor()[event.type];
                     var allBindings = allBindingsAccessor();
                     
                     try { 
