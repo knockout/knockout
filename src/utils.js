@@ -201,10 +201,6 @@ ko.utils = new (function () {
         unwrapObservable: function (value) {
             return ko.isObservable(value) ? value() : value;
         },
-        
-        unwrap: function(value) {
-            return typeof value == 'function' ? ko.utils.unwrapObservable(value()) : ko.utils.unwrapObservable(value);
-        },
 
         domNodeHasCssClass: function (node, className) {
             var currentClassNames = (node.className || "").split(/\s+/);
