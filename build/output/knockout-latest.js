@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 function a(f){throw f;}var m=true,o=null,p=false,q=window.ko={};q.b=function(f,b){for(var c=f.split("."),d=window,e=0;e<c.length-1;e++)d=d[c[e]];d[c[c.length-1]]=b};q.i=function(f,b,c){f[b]=c};
 q.a=new function(){var f=/^(\s|\u00A0)+|(\s|\u00A0)+$/g;return{ba:["authenticity_token",/^__RequestVerificationToken(_.*)?$/],h:function(b,c){for(var d=0,e=b.length;d<e;d++)c(b[d])},g:function(b,c){if(typeof b.indexOf=="function")return b.indexOf(c);for(var d=0,e=b.length;d<e;d++)if(b[d]==c)return d;return-1},ya:function(b,c,d){for(var e=0,g=b.length;e<g;e++)if(c.call(d,b[e]))return b[e];return o},$:function(b,c){var d=q.a.g(b,c);d>=0&&b.splice(d,1)},Z:function(b){b=b||[];for(var c=[],d=0,e=b.length;d<
 e;d++)q.a.g(c,b[d])<0&&c.push(b[d]);return c},K:function(b,c){b=b||[];for(var d=[],e=0,g=b.length;e<g;e++)d.push(c(b[e]));return d},J:function(b,c){b=b||[];for(var d=[],e=0,g=b.length;e<g;e++)c(b[e])&&d.push(b[e]);return d},L:function(b,c){for(var d=0,e=c.length;d<e;d++)b.push(c[d])},aa:function(b){for(;b.firstChild;){q.a.e.N(b.firstChild);b.removeChild(b.firstChild)}},Va:function(b,c){q.a.aa(b);c&&q.a.h(c,function(d){b.appendChild(d)})},ka:function(b,c){var d=b.nodeType?[b]:b;if(d.length>0){for(var e=
@@ -64,4 +64,4 @@ h[k];c.push(t);if(t.B.length>0)n=t.B[t.B.length-1];k++;break;case "deleted":q.a.
 q.R=function(){function f(c){var d=document.getElementById(c);if(d==o)a(Error("Cannot find template with ID="+c));return d}this.u=function(){if(typeof jQuery=="undefined"||!jQuery.tmpl)return 0;if(jQuery.tmpl.tag)return 2;return 1}();var b=RegExp("__ko_apos__","g");this.renderTemplate=function(c,d,e){e=e||{};if(this.u==0)a(Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details."));if(this.u==
 1){e='<script type="text/html">'+f(c).text+"<\/script>";d=jQuery.tmpl(e,d)[0].text.replace(b,"'");return jQuery.clean([d],document)}d=[d];c=f(c).text;return jQuery.tmpl(c,d,e.templateOptions)};this.isTemplateRewritten=function(c){return f(c).Na===m};this.rewriteTemplate=function(c,d){var e=f(c),g=d(e.text);if(this.u==1){g=q.a.l(g);g=g.replace(/([\s\S]*?)(\${[\s\S]*?}|{{[\=a-z][\s\S]*?}}|$)/g,function(h,i,j){return i.replace(/\'/g,"__ko_apos__")+j})}e.text=g;e.Na=m};this.createJavaScriptEvaluatorBlock=
 function(c){if(this.u==1)return"{{= "+c+"}}";return"{{ko_code ((function() { return "+c+" })()) }}"};this.ua=function(c,d){document.write("<script type='text/html' id='"+c+"'>"+d+"<\/script>")};q.i(this,"addTemplate",this.ua);if(this.u>1)jQuery.tmpl.tag.ko_code={open:"_.push($1 || '');"}};q.R.prototype=new q.X;q.oa(new q.R);q.b("ko.jqueryTmplTemplateEngine",q.R);
-})(window);                  
+})(window);
