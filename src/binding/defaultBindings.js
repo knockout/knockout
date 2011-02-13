@@ -312,7 +312,7 @@ ko.bindingHandlers['uniqueName'] = {
 
             // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
             if (ko.utils.isIe6)
-                element.mergeAttributes(document.createElement("<INPUT name='" + element.name + "'/>"), false);
+                element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
         }
     }
 };
@@ -371,13 +371,13 @@ ko.bindingHandlers['checked'] = {
             
             // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
             if (value && ko.utils.isIe6) 
-                element.mergeAttributes(document.createElement("<INPUT type='checkbox' checked='checked' />"), false);
+                element.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
             
             // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
             if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
-                element.mergeAttributes(document.createElement("<INPUT type='radio' checked='checked' />"), false);
+                element.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"), false);
         }
     }
 };
