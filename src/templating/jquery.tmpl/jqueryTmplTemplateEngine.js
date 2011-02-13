@@ -47,8 +47,13 @@ ko.jqueryTmplTemplateEngine = function () {
         return jQuery['tmpl'](templateId, data, options['templateOptions']);
     },
 
-    this['isTemplateRewritten'] = function (template) {
-        return getTemplateNode(template).isRewritten === true;
+    this['isTemplateRewritten'] = function (templateId) {
+    	// It must be rewritten if we've already got a cached version of it
+    	// (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
+    	if (templateId in jQuery['template'])
+    		return true;
+    	
+        return getTemplateNode(templateId).isRewritten === true;
     },
 
     this['rewriteTemplate'] = function (template, rewriterCallback) {
