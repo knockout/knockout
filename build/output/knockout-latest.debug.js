@@ -1868,9 +1868,16 @@ ko.jqueryTmplTemplateEngine = function () {
     this.jQueryTmplVersion = (function() {        
         if ((typeof(jQuery) == "undefined") || !jQuery['tmpl'])
             return 0;
-        if (jQuery['tmpl']['tag'])
-            return 2; // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
-        return 1;
+        // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
+        if (jQuery['tmpl']['tag']) {
+            if (jQuery['tmpl']['tag']['tmpl'] && jQuery['tmpl']['tag']['tmpl']['open']) {
+                if (jQuery['tmpl']['tag']['tmpl']['open'].toString().indexOf('__') >= 0) {
+                    return 3; // Since 1.0.0pre, custom tags should append markup to an array called "__"
+                }
+            }
+            return 2; // Prior to 1.0.0pre, custom tags should append markup to an array called "_"
+        }
+        return 1; // Very old version doesn't have an extensible tag system
     })();
 
     function getTemplateNode(template) {
@@ -1911,11 +1918,11 @@ ko.jqueryTmplTemplateEngine = function () {
     },
 
     this['isTemplateRewritten'] = function (templateId) {
-    	// It must be rewritten if we've already got a cached version of it
-    	// (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
-    	if (templateId in jQuery['template'])
-    		return true;
-    	
+        // It must already be rewritten if we've already got a cached version of it
+        // (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
+        if (templateId in jQuery['template'])
+            return true;
+        
         return getTemplateNode(templateId).isRewritten === true;
     },
 
@@ -1956,7 +1963,7 @@ ko.jqueryTmplTemplateEngine = function () {
     
     if (this.jQueryTmplVersion > 1) {
         jQuery['tmpl']['tag']['ko_code'] = {
-            open: "_.push($1 || '');"
+            open: (this.jQueryTmplVersion < 3 ? "_" : "__") + ".push($1 || '');"
         };
     }    
 };
