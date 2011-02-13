@@ -18,32 +18,35 @@ ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
 ko.bindingHandlers['event'] = {
     'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
         var eventsToHandle = valueAccessor() || {};
-        for(var eventName in eventsToHandle) {
-            if (typeof eventName == "string") {
-                ko.utils.registerEventHandler(element, eventName, function (event) {
-                    var handlerReturnValue;
-                    var handlerFunction = valueAccessor()[eventName];
-                    var allBindings = allBindingsAccessor();
-                    
-                    try { 
-                        handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
-                    } finally {
-                        if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
-                            if (event.preventDefault)
-                                event.preventDefault();
-                            else
-                                event.returnValue = false;
+        for(var eventNameOutsideClosure in eventsToHandle) {
+            (function() {
+                var eventName = eventNameOutsideClosure; // Separate variable to be captured by event handler closure
+                if (typeof eventName == "string") {
+                    ko.utils.registerEventHandler(element, eventName, function (event) {
+                        var handlerReturnValue;
+                        var handlerFunction = valueAccessor()[eventName];
+                        var allBindings = allBindingsAccessor();
+                        
+                        try { 
+                            handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
+                        } finally {
+                            if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
+                                if (event.preventDefault)
+                                    event.preventDefault();
+                                else
+                                    event.returnValue = false;
+                            }
                         }
-                    }
-                    
-                    var bubble = allBindings[eventName + 'Bubble'] !== false;
-                    if (!bubble) {
-                        event.cancelBubble = true;
-                        if (event.stopPropagation)
-                            event.stopPropagation();
-                    }
-                });
-            }
+                        
+                        var bubble = allBindings[eventName + 'Bubble'] !== false;
+                        if (!bubble) {
+                            event.cancelBubble = true;
+                            if (event.stopPropagation)
+                                event.stopPropagation();
+                        }
+                    });
+                }
+            })();
         }
     }
 };

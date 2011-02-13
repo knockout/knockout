@@ -430,11 +430,17 @@ describe('Binding: Event', {
     before_each: prepareTestNode,
 
     'Should invoke the supplied function when the event occurs, using model as \'this\' param': function () {
-        var model = { wasCalled: false, doCall: function () { this.wasCalled = true; } };
-        testNode.innerHTML = "<button data-bind='event:{someEvent:doCall}'>hey</button>";
+        var model = { 
+            firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
+            secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
+        };
+        testNode.innerHTML = "<button data-bind='event:{firstEvent:firstHandler, secondEvent:secondHandler}'>hey</button>";
         ko.applyBindings(model, testNode);
-        ko.utils.triggerEvent(testNode.childNodes[0], "someEvent");
-        value_of(model.wasCalled).should_be(true);
+        ko.utils.triggerEvent(testNode.childNodes[0], "firstEvent");
+        value_of(model.firstWasCalled).should_be(true);
+        value_of(model.secondWasCalled).should_be(false);
+        ko.utils.triggerEvent(testNode.childNodes[0], "secondEvent");
+        value_of(model.secondWasCalled).should_be(true);
     },
 
     'Should prevent default action': function () {
