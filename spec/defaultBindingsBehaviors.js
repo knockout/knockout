@@ -434,12 +434,12 @@ describe('Binding: Event', {
             firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
             secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
         };
-        testNode.innerHTML = "<button data-bind='event:{firstEvent:firstHandler, secondEvent:secondHandler}'>hey</button>";
+        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler}'>hey</button>";
         ko.applyBindings(model, testNode);
-        ko.utils.triggerEvent(testNode.childNodes[0], "firstEvent");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.firstWasCalled).should_be(true);
         value_of(model.secondWasCalled).should_be(false);
-        ko.utils.triggerEvent(testNode.childNodes[0], "secondEvent");
+        ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
         value_of(model.secondWasCalled).should_be(true);
     },
 
