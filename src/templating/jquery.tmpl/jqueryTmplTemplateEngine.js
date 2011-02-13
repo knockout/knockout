@@ -21,26 +21,30 @@ ko.jqueryTmplTemplateEngine = function () {
     var aposMarker = "__ko_apos__";
     var aposRegex = new RegExp(aposMarker, "g");
     
-    this['renderTemplate'] = function (template, data, options) {
-    	options = options || {};
-    	if (this.jQueryTmplVersion == 0)
-    		throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
-    	
+    this['renderTemplate'] = function (templateId, data, options) {
+        options = options || {};
+        if (this.jQueryTmplVersion == 0)
+            throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
+        
         if (this.jQueryTmplVersion == 1) {    	
             // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
             // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
             // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
             // parse that text into a document fragment using jQuery.clean().        
-            var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(template).text + "</script>";
+            var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(templateId).text + "</script>";
             var renderedMarkupInWrapper = jQuery['tmpl'](templateTextInWrapper, data);
             var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");;
             return jQuery['clean']([renderedMarkup], document);
         }
         
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
-        data = [data]; // Prewrap the data in an array to stop jquery-tmpl from trying to unwrap any arrays
-        var templateText = getTemplateNode(template).text;
-        return jQuery['tmpl'](templateText, data, options['templateOptions']);
+        if (!(templateId in jQuery['template'])) {
+            // Precache a precompiled version of this template (don't want to reparse on every render)
+            var templateText = getTemplateNode(templateId).text;
+            jQuery['template'](templateId, templateText);
+        }        
+        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays                
+        return jQuery['tmpl'](templateId, data, options['templateOptions']);
     },
 
     this['isTemplateRewritten'] = function (template) {
