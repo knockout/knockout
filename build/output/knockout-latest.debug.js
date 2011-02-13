@@ -1473,8 +1473,9 @@ ko.bindingHandlers['attr'] = {
                 var attrValue = ko.utils.unwrapObservable(value[attrName]);
                 
                 // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
-                // when someProp===false (because that's how to mark an element as not checked, not disabled, etc.)
-                if (attrValue === false) 
+                // when someProp is a "no value"-like value (strictly null, false, or undefined)
+                // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)                
+                if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
                     element.removeAttribute(attrName);
                 else 
                     element.setAttribute(attrName, attrValue.toString());
@@ -1482,7 +1483,6 @@ ko.bindingHandlers['attr'] = {
         }
     }
 };
-
 ko.templateEngine = function () {
     this['renderTemplate'] = function (templateName, data, options) {
         throw "Override renderTemplate in your ko.templateEngine subclass";
