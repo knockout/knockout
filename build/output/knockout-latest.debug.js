@@ -473,7 +473,7 @@ ko.subscription = function (callback, disposeCallback) {
     this.dispose = function () {
         this.isDisposed = true;
         disposeCallback();
-    }.bind(this);
+    }['bind'](this);
     
     ko.exportProperty(this, 'dispose', this.dispose);
 };
