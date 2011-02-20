@@ -470,7 +470,10 @@ ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.
 
 ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;
-    this.dispose = disposeCallback;
+    this.dispose = function () {
+        this.isDisposed = true;
+        disposeCallback();
+    }.bind(this);
     
     ko.exportProperty(this, 'dispose', this.dispose);
 };
@@ -490,7 +493,9 @@ ko.subscribable = function () {
 
     this.notifySubscribers = function (valueToNotify) {
         ko.utils.arrayForEach(_subscriptions.slice(0), function (subscription) {
-            if (subscription)
+            // In case a subscription was disposed during the arrayForEach cycle, check
+            // for isDisposed on each subscription before invoking its callback
+            if (subscription && (subscription.isDisposed !== true))
                 subscription.callback(valueToNotify);
         });
     };
