@@ -77,7 +77,7 @@
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
         var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
 
-        new ko.dependentObservable(function () {
+        return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
@@ -96,20 +96,32 @@
         }, null, { 'disposeWhen': whenToDispose });
     };
 
+    var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
+    function disposeOldSubscriptionAndStoreNewOne(element, newSubscription) {
+        var oldSubscription = ko.utils.domData.get(element, templateSubscriptionDomDataKey);
+        if (oldSubscription && (typeof(oldSubscription.dispose) == 'function'))
+            oldSubscription.dispose();
+        ko.utils.domData.set(element, templateSubscriptionDomDataKey, newSubscription);
+    }
+    
     ko.bindingHandlers['template'] = {
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
- 
+            
+            var templateSubscription;
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var templateData = bindingValue['data'];
-                ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
+                templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
             }
+            
+            // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
+            disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
         }
     };
 })();
