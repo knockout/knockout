@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -541,10 +541,14 @@ ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
     function observable() {
+        var suppressNotification;
         if (arguments.length > 0) {
             // Write
             _latestValue = arguments[0];
-            observable.notifySubscribers(_latestValue);
+            suppressNotification = (arguments[1] === "ko.SUPPRESS_NOTIFICATION");
+            if (!suppressNotification) {
+              observable.notifySubscribers(_latestValue);
+            }
             return this; // Permits chained assignments
         }
         else {
@@ -577,11 +581,13 @@ ko.isWriteableObservable = function (instance) {
     // Anything else
     return false;
 }
+ko.SUPPRESS_NOTIFICATION = "ko.SUPPRESS_NOTIFICATION";
 
 
 ko.exportSymbol('ko.observable', ko.observable);
 ko.exportSymbol('ko.isObservable', ko.isObservable);
 ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+ko.exportSymbol('ko.SUPPRESS_NOTIFICATION', ko.SUPPRESS_NOTIFICATION);
 
 ko.observableArray = function (initialValues) {
     var result = new ko.observable(initialValues);
@@ -1990,4 +1996,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

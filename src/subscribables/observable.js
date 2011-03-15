@@ -3,10 +3,14 @@ ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
     function observable() {
+        var suppressNotification;
         if (arguments.length > 0) {
             // Write
             _latestValue = arguments[0];
-            observable.notifySubscribers(_latestValue);
+            suppressNotification = (arguments[1] === "ko.SUPPRESS_NOTIFICATION");
+            if (!suppressNotification) {
+              observable.notifySubscribers(_latestValue);
+            }
             return this; // Permits chained assignments
         }
         else {
@@ -39,8 +43,10 @@ ko.isWriteableObservable = function (instance) {
     // Anything else
     return false;
 }
+ko.SUPPRESS_NOTIFICATION = "ko.SUPPRESS_NOTIFICATION";
 
 
 ko.exportSymbol('ko.observable', ko.observable);
 ko.exportSymbol('ko.isObservable', ko.isObservable);
 ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+ko.exportSymbol('ko.SUPPRESS_NOTIFICATION', ko.SUPPRESS_NOTIFICATION);

@@ -79,5 +79,28 @@ describe('Observable', {
         instance.valueHasMutated();
         value_of(notifiedValues.length).should_be(2);
         value_of(notifiedValues[1]).should_be("B");
+    },
+    
+    'Should be able to suppress notifications when writing a value': function () {
+      var instance, dependent, numNotifications = 0;
+      instance = ko.observable(0);
+      dependent = ko.dependentObservable(function () {
+        numNotifications++;
+        return instance();
+      });
+      
+      // numNotifications must be reset to 0 after the initial calculation
+      numNotifications = 0;
+      instance(1);
+      instance(2);
+      instance(3);
+      value_of(numNotifications).should_be(3);
+      
+      numNotifications = 0;
+      instance(1, ko.SUPPRESS_NOTIFICATION);
+      instance(2, ko.SUPPRESS_NOTIFICATION);
+      instance(3, ko.SUPPRESS_NOTIFICATION);
+      instance.valueHasMutated();
+      value_of(numNotifications).should_be(1);
     }
 });
