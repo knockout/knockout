@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -748,6 +748,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 // Writing a value
                 var valueToWrite = arguments[0];
                 options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+                evaluate();
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
             }
@@ -2000,4 +2001,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);
