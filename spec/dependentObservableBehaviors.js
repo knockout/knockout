@@ -49,6 +49,18 @@ describe('Dependent Observable', {
         value_of(invokedWriteWithValue).should_be("some value");
     },
     
+    'Should read the value set by the "write" callback': function() {
+        var instanceInternalValue = "orig value";
+        var instance = new ko.dependentObservable({ 
+            read: function() { return instanceInternalValue; },
+            write: function(value) { instanceInternalValue = value; }
+        });
+
+        value_of(instance()).should_be("orig value");
+        instance("new value");
+        value_of(instance()).should_be("new value");
+    },
+    
     'Should be able to pass evaluator function using "options" parameter called "read"': function() {
         var instance = new ko.dependentObservable({
             read: function () { return 123; }
@@ -110,6 +122,20 @@ describe('Dependent Observable', {
         value_of(notifiedValue).should_be(undefined);
         observable(2);
         value_of(notifiedValue).should_be(3);
+    },
+
+    'Should notify subscribers of changes made through a write callback': function () {
+        var notifiedValue;
+        var dependentInternalValue;
+        var dependentObservable = new ko.dependentObservable({ 
+            read: function() { return dependentInternalValue; },
+            write: function(value) { dependentInternalValue = value; }
+        });
+        dependentObservable.subscribe(function (value) { notifiedValue = value; });
+
+        value_of(notifiedValue).should_be(undefined);
+        dependentObservable("written value");
+        value_of(notifiedValue).should_be("written value");
     },
 
     'Should only update once when each dependency changes, even if evaluation calls the dependency multiple times': function () {
