@@ -355,6 +355,12 @@ ko.utils = new (function () {
                     delete ko.utils.domData[dataStoreKey];
                     node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = null;
                 }
+                
+                // Special support for jQuery here because it's so commonly used.
+                // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
+                // so notify it to tear down any resources associated with the node here.
+                if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
+                    jQuery['cleanData']([node]);
             },
             cleanNodeAndDescendants: function (node) {
                 if ((node.nodeType != 1) && (node.nodeType != 9))
@@ -1930,8 +1936,12 @@ ko.jqueryTmplTemplateEngine = function () {
             var templateText = getTemplateNode(templateId).text;
             jQuery['template'](templateId, templateText);
         }        
-        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays                
-        return jQuery['tmpl'](templateId, data, options['templateOptions']);
+        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
+        
+        var resultNodes = jQuery['tmpl'](templateId, data, options['templateOptions']);
+        resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
+        jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
+        return resultNodes; 
     },
 
     this['isTemplateRewritten'] = function (templateId) {

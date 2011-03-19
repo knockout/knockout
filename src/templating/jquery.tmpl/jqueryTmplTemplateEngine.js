@@ -50,8 +50,12 @@ ko.jqueryTmplTemplateEngine = function () {
             var templateText = getTemplateNode(templateId).text;
             jQuery['template'](templateId, templateText);
         }        
-        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays                
-        return jQuery['tmpl'](templateId, data, options['templateOptions']);
+        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
+        
+        var resultNodes = jQuery['tmpl'](templateId, data, options['templateOptions']);
+        resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
+        jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
+        return resultNodes; 
     },
 
     this['isTemplateRewritten'] = function (templateId) {
