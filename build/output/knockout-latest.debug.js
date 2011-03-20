@@ -447,9 +447,12 @@ ko.utils.domNodeDisposal = new (function () {
         }
     }
 })();
-
-ko.exportSymbol('ko.cleanNode', ko.utils.domNodeDisposal.cleanNode); // Shorthand name for convenience
-ko.exportSymbol('ko.removeNode', ko.utils.domNodeDisposal.removeNode); // Shorthand name for convenience
+ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
+ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience
+ko.exportSymbol('ko.cleanNode', ko.cleanNode); 
+ko.exportSymbol('ko.removeNode', ko.removeNode);
+ko.exportSymbol('ko.utils.domNodeDisposal', ko.utils.domNodeDisposal);
+ko.exportSymbol('ko.utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
 ko.memoization = (function () {
     var memos = {};
 
