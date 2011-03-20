@@ -53,7 +53,7 @@
                 }
             },
             null,
-            { 'disposeWhen' : function () { return !ko.utils.domNodeIsAttachedToDocument(node); } }
+            { 'disposeWhenNodeIsRemoved' : node }
         );
         isFirstEvaluation = false;
     };

@@ -1,5 +1,7 @@
 
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    var _latestValue, _hasBeenEvaluated = false;
+    
     if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = evaluatorFunctionOrOptions;
@@ -13,6 +15,20 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
+
+    // "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
+    // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.
+    if (typeof options["disposeWhenNodeIsRemoved"] == "object") {
+        var nodeToWatch = options["disposeWhenNodeIsRemoved"];
+        ko.utils.domNodeDisposal.addDisposeCallback(nodeToWatch, function() {
+            dependentObservable.dispose();
+        });
+        var existingDisposeWhenFunction = options["disposeWhen"];
+        options["disposeWhen"] = function () {
+            return (!ko.utils.domNodeIsAttachedToDocument(nodeToWatch)) 
+                || ((typeof existingDisposeWhenFunction == "function") && existingDisposeWhenFunction());
+        }
+    }
 
     var _subscriptionsToDependencies = [];
     function disposeAllSubscriptionsToDependencies() {
@@ -28,8 +44,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
         });
     };
-
-    var _latestValue, _hasBeenEvaluated = false;
+    
     function evaluate() {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
