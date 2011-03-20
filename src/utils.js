@@ -320,6 +320,11 @@ ko.utils = new (function () {
                 return allDataForNode === undefined ? undefined : allDataForNode[key];
             },
             set: function (node, key, value) {
+                if (value === undefined) {
+                    // Make sure we don't actually create a new domData key if we are actually deleting a value
+                    if (ko.utils.domData.getAll(node, false) === undefined)
+                        return;
+                }
                 var allDataForNode = ko.utils.domData.getAll(node, true);
                 allDataForNode[key] = value;
             },

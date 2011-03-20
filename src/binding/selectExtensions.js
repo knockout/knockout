@@ -19,7 +19,7 @@
                 switch(typeof value) {
                     case "string":
                     case "number":
-                        ko.utils.domData.cleanNode(element);
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
                         if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
                             delete element['__ko__hasDomDataOptionValue__'];
                         }
