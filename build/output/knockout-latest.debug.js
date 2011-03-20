@@ -84,8 +84,7 @@ ko.utils = new (function () {
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
-                ko.utils.domData.cleanNodeAndDescendants(domNode.firstChild);
-                domNode.removeChild(domNode.firstChild);
+                ko.removeNode(domNode.firstChild);
             }
         },
 
@@ -106,8 +105,7 @@ ko.utils = new (function () {
                 for (var i = 0, j = newNodesArray.length; i < j; i++)
                     parent.insertBefore(newNodesArray[i], insertionPoint);
                 for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
-                    ko.utils.domData.cleanNodeAndDescendants(nodesToReplaceArray[i]);
-                    parent.removeChild(nodesToReplaceArray[i]);
+                    ko.removeNode(nodesToReplaceArray[i]);
                 }
             }
         },
@@ -325,51 +323,6 @@ ko.utils = new (function () {
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
-        },
-
-        domData: {
-            uniqueId: 0,
-            dataStoreKeyExpandoPropertyName: "__ko__" + (new Date).getTime(),
-            dataStore: {},
-            get: function (node, key) {
-                var allDataForNode = ko.utils.domData.getAll(node, false);
-                return allDataForNode === undefined ? undefined : allDataForNode[key];
-            },
-            set: function (node, key, value) {
-                var allDataForNode = ko.utils.domData.getAll(node, true);
-                allDataForNode[key] = value;
-            },
-            getAll: function (node, createIfNotFound) {
-                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
-                if (!dataStoreKey) {
-                    if (!createIfNotFound)
-                        return undefined;
-                    dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = "ko" + ko.utils.domData.uniqueId++;
-                    ko.utils.domData[dataStoreKey] = {};
-                }
-                return ko.utils.domData[dataStoreKey];
-            },
-            cleanNode: function (node) {
-                var dataStoreKey = node[ko.utils.domData.dataStoreKeyExpandoPropertyName];
-                if (dataStoreKey) {
-                    delete ko.utils.domData[dataStoreKey];
-                    node[ko.utils.domData.dataStoreKeyExpandoPropertyName] = null;
-                }
-                
-                // Special support for jQuery here because it's so commonly used.
-                // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
-                // so notify it to tear down any resources associated with the node here.
-                if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
-                    jQuery['cleanData']([node]);
-            },
-            cleanNodeAndDescendants: function (node) {
-                if ((node.nodeType != 1) && (node.nodeType != 9))
-                    return;
-                ko.utils.domData.cleanNode(node);
-                var descendants = node.getElementsByTagName("*");
-                for (var i = 0, j = descendants.length; i < j; i++)
-                    ko.utils.domData.cleanNode(descendants[i]);
-            }
         }
     }
 })();
@@ -404,6 +357,99 @@ if (!Function.prototype['bind']) {
         }; 
     };
 }
+ko.utils.domData = new (function () {
+    var uniqueId = 0;
+    var dataStoreKeyExpandoPropertyName = "__ko__" + (new Date).getTime();
+    var dataStore = {};
+    return {
+        get: function (node, key) {
+            var allDataForNode = ko.utils.domData.getAll(node, false);
+            return allDataForNode === undefined ? undefined : allDataForNode[key];
+        },
+        set: function (node, key, value) {
+            if (value === undefined) {
+                // Make sure we don't actually create a new domData key if we are actually deleting a value
+                if (ko.utils.domData.getAll(node, false) === undefined)
+                    return;
+            }
+            var allDataForNode = ko.utils.domData.getAll(node, true);
+            allDataForNode[key] = value;
+        },
+        getAll: function (node, createIfNotFound) {
+            var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
+            if (!dataStoreKey) {
+                if (!createIfNotFound)
+                    return undefined;
+                dataStoreKey = node[dataStoreKeyExpandoPropertyName] = "ko" + uniqueId++;
+                dataStore[dataStoreKey] = {};
+            }
+            return dataStore[dataStoreKey];
+        },
+        clear: function (node) {
+            var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
+            if (dataStoreKey) {
+                delete dataStore[dataStoreKey];
+                node[dataStoreKeyExpandoPropertyName] = null;
+            }
+        }
+    }
+})();
+ko.utils.domNodeDisposal = new (function () {
+    var domDataKey = "__ko_domNodeDisposal__" + (new Date).getTime();
+    
+    function getDisposeCallbacksCollection(node, createIfNotFound) {
+        var allDisposeCallbacks = ko.utils.domData.get(node, domDataKey);
+        if ((allDisposeCallbacks === undefined) && createIfNotFound) {
+            allDisposeCallbacks = [];
+            ko.utils.domData.set(node, domDataKey, allDisposeCallbacks);
+        }
+        return allDisposeCallbacks;
+    }
+    
+    function cleanSingleNode(node) {
+        // Run all the dispose callbacks
+        var callbacks = getDisposeCallbacksCollection(node, false);
+        if (callbacks) {
+            for (var i = 0; i < callbacks.length; i++)
+                callbacks[i](node);
+        }	
+        
+        // Also erase the DOM data
+        ko.utils.domData.clear(node);		
+        
+        // Special support for jQuery here because it's so commonly used.
+        // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
+        // so notify it to tear down any resources associated with the node & descendants here.
+        if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
+            jQuery['cleanData']([node]);			
+    }
+    
+    return {
+        addDisposeCallback : function(node, callback) {
+            if (typeof callback != "function")
+                throw new Error("Callback must be a function");
+            getDisposeCallbacksCollection(node, true).push(callback);
+        },
+        
+        cleanNode : function(node) {
+            if ((node.nodeType != 1) && (node.nodeType != 9))
+                return;
+            cleanSingleNode(node);
+            var descendants = node.getElementsByTagName("*");
+            for (var i = 0, j = descendants.length; i < j; i++)
+                cleanSingleNode(descendants[i]);
+        },
+        
+        removeNode : function(node) {
+            ko.cleanNode(node);
+            if (node.parentNode)
+                node.parentNode.removeChild(node);
+        }
+    }
+})();
+
+ko.exportSymbol('ko.cleanNode', ko.utils.domNodeDisposal.cleanNode); // Shorthand name for convenience
+ko.exportSymbol('ko.removeNode', ko.utils.domNodeDisposal.removeNode); // Shorthand name for convenience
 ko.memoization = (function () {
     var memos = {};
 
@@ -689,6 +735,8 @@ ko.observableArray = function (initialValues) {
 ko.exportSymbol('ko.observableArray', ko.observableArray);
 
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    var _latestValue, _hasBeenEvaluated = false;
+    
     if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = evaluatorFunctionOrOptions;
@@ -702,6 +750,20 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
+
+    // "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
+    // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.
+    if (typeof options["disposeWhenNodeIsRemoved"] == "object") {
+        var nodeToWatch = options["disposeWhenNodeIsRemoved"];
+        ko.utils.domNodeDisposal.addDisposeCallback(nodeToWatch, function() {
+            dependentObservable.dispose();
+        });
+        var existingDisposeWhenFunction = options["disposeWhen"];
+        options["disposeWhen"] = function () {
+            return (!ko.utils.domNodeIsAttachedToDocument(nodeToWatch)) 
+                || ((typeof existingDisposeWhenFunction == "function") && existingDisposeWhenFunction());
+        }
+    }
 
     var _subscriptionsToDependencies = [];
     function disposeAllSubscriptionsToDependencies() {
@@ -717,8 +779,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
         });
     };
-
-    var _latestValue, _hasBeenEvaluated = false;
+    
     function evaluate() {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
@@ -885,7 +946,7 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
                 switch(typeof value) {
                     case "string":
                     case "number":
-                        ko.utils.domData.cleanNode(element);
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
                         if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
                             delete element['__ko__hasDomDataOptionValue__'];
                         }
@@ -1074,7 +1135,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
                 }
             },
             null,
-            { 'disposeWhen' : function () { return !ko.utils.domNodeIsAttachedToDocument(node); } }
+            { 'disposeWhenNodeIsRemoved' : node }
         );
         isFirstEvaluation = false;
     };
@@ -1858,7 +1919,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
             }
         }
         
-        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node.element); });
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.cleanNode(node.element) });
 
         var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {
