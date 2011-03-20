@@ -94,7 +94,7 @@
             }
         }
         
-        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.utils.domData.cleanNodeAndDescendants(node.element); });
+        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.cleanNode(node.element) });
 
         var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {

@@ -27,26 +27,12 @@ ko.utils.domData = new (function () {
             }
             return dataStore[dataStoreKey];
         },
-        cleanNode: function (node) {
+        clear: function (node) {
             var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
             if (dataStoreKey) {
                 delete dataStore[dataStoreKey];
                 node[dataStoreKeyExpandoPropertyName] = null;
             }
-            
-            // Special support for jQuery here because it's so commonly used.
-            // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
-            // so notify it to tear down any resources associated with the node here.
-            if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
-                jQuery['cleanData']([node]);
-        },
-        cleanNodeAndDescendants: function (node) {
-            if ((node.nodeType != 1) && (node.nodeType != 9))
-                return;
-            ko.utils.domData.cleanNode(node);
-            var descendants = node.getElementsByTagName("*");
-            for (var i = 0, j = descendants.length; i < j; i++)
-                ko.utils.domData.cleanNode(descendants[i]);
         }
     }
 })();

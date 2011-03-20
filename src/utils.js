@@ -68,8 +68,7 @@ ko.utils = new (function () {
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
-                ko.utils.domData.cleanNodeAndDescendants(domNode.firstChild);
-                domNode.removeChild(domNode.firstChild);
+                ko.removeNode(domNode.firstChild);
             }
         },
 
@@ -90,8 +89,7 @@ ko.utils = new (function () {
                 for (var i = 0, j = newNodesArray.length; i < j; i++)
                     parent.insertBefore(newNodesArray[i], insertionPoint);
                 for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
-                    ko.utils.domData.cleanNodeAndDescendants(nodesToReplaceArray[i]);
-                    parent.removeChild(nodesToReplaceArray[i]);
+                    ko.removeNode(nodesToReplaceArray[i]);
                 }
             }
         },
