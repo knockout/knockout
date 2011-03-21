@@ -51,7 +51,10 @@
 
         if (targetNodeOrNodeArray) {
             var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-            var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); };
+            
+            var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
+            var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
+            
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
                     // Support selecting template as a function of the data being rendered
@@ -64,7 +67,7 @@
                     }
                 },
                 null,
-                { 'disposeWhen': whenToDispose }
+                { 'disposeWhen': whenToDispose, 'disposeWhenNodeIsRemoved': activelyDisposeWhenNodeIsRemoved }
             );
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
@@ -75,8 +78,6 @@
     };
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
-        var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
-
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -93,7 +94,7 @@
                 
                 return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
             }, options);
-        }, null, { 'disposeWhen': whenToDispose });
+        }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
     var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
