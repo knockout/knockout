@@ -405,11 +405,15 @@ ko.utils.domNodeDisposal = new (function () {
         }
         return allDisposeCallbacks;
     }
+    function destroyCallbacksCollection(node) {
+        ko.utils.domData.set(node, domDataKey, undefined);
+    }
     
     function cleanSingleNode(node) {
         // Run all the dispose callbacks
         var callbacks = getDisposeCallbacksCollection(node, false);
         if (callbacks) {
+            callbacks = callbacks.slice(0); // Clone, as the array may be modified during iteration (typically, callbacks will remove themselves)
             for (var i = 0; i < callbacks.length; i++)
                 callbacks[i](node);
         }	
@@ -429,6 +433,15 @@ ko.utils.domNodeDisposal = new (function () {
             if (typeof callback != "function")
                 throw new Error("Callback must be a function");
             getDisposeCallbacksCollection(node, true).push(callback);
+        },
+        
+        removeDisposeCallback : function(node, callback) {
+            var callbacksCollection = getDisposeCallbacksCollection(node, false);
+            if (callbacksCollection) {
+                ko.utils.arrayRemoveItem(callbacksCollection, callback);
+                if (callbacksCollection.length == 0)
+                    destroyCallbacksCollection(node);
+            }
         },
         
         cleanNode : function(node) {
@@ -453,6 +466,7 @@ ko.exportSymbol('ko.cleanNode', ko.cleanNode);
 ko.exportSymbol('ko.removeNode', ko.removeNode);
 ko.exportSymbol('ko.utils.domNodeDisposal', ko.utils.domNodeDisposal);
 ko.exportSymbol('ko.utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
+ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);
 ko.memoization = (function () {
     var memos = {};
 
@@ -736,7 +750,6 @@ ko.observableArray = function (initialValues) {
 }
 
 ko.exportSymbol('ko.observableArray', ko.observableArray);
-
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue, _hasBeenEvaluated = false;
     
@@ -753,21 +766,22 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
-
-    // "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
-    // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.
-    if (typeof options["disposeWhenNodeIsRemoved"] == "object") {
-        var nodeToWatch = options["disposeWhenNodeIsRemoved"];
-        ko.utils.domNodeDisposal.addDisposeCallback(nodeToWatch, function() {
-            dependentObservable.dispose();
-        });
+        
+    // Build "disposeWhenNodeIsRemoved" and "disposeWhenNodeIsRemovedCallback" option values
+    // (Note: "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
+    // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
+    var disposeWhenNodeIsRemoved = (typeof options["disposeWhenNodeIsRemoved"] == "object") ? options["disposeWhenNodeIsRemoved"] : null;
+    var disposeWhenNodeIsRemovedCallback = null;
+    if (disposeWhenNodeIsRemoved) {
+        disposeWhenNodeIsRemovedCallback = function() { dependentObservable.dispose() };
+        ko.utils.domNodeDisposal.addDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
         var existingDisposeWhenFunction = options["disposeWhen"];
         options["disposeWhen"] = function () {
-            return (!ko.utils.domNodeIsAttachedToDocument(nodeToWatch)) 
+            return (!ko.utils.domNodeIsAttachedToDocument(disposeWhenNodeIsRemoved)) 
                 || ((typeof existingDisposeWhenFunction == "function") && existingDisposeWhenFunction());
-        }
+        }    	
     }
-
+    
     var _subscriptionsToDependencies = [];
     function disposeAllSubscriptionsToDependencies() {
         ko.utils.arrayForEach(_subscriptionsToDependencies, function (subscription) {
@@ -827,9 +841,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
+        if (disposeWhenNodeIsRemoved)
+            ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
         disposeAllSubscriptionsToDependencies();
     };
-
+    
     ko.subscribable.call(dependentObservable);
     if (options['deferEvaluation'] !== true)
         evaluate();
@@ -1666,7 +1682,10 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
         if (targetNodeOrNodeArray) {
             var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-            var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); };
+            
+            var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
+            var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
+            
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
                     // Support selecting template as a function of the data being rendered
@@ -1679,7 +1698,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
                     }
                 },
                 null,
-                { 'disposeWhen': whenToDispose }
+                { 'disposeWhen': whenToDispose, 'disposeWhenNodeIsRemoved': activelyDisposeWhenNodeIsRemoved }
             );
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
@@ -1690,8 +1709,6 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
     };
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
-        var whenToDispose = function () { return !ko.utils.domNodeIsAttachedToDocument(targetNode); };
-
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -1708,7 +1725,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
                 
                 return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
             }, options);
-        }, null, { 'disposeWhen': whenToDispose });
+        }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
     var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
@@ -1835,10 +1852,10 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-    function mapNodeAndRefreshWhenChanged(mapping, valueToMap) {
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
-        ko.dependentObservable(function() {
+        var dependentObservable = ko.dependentObservable(function() {
             var newMappedNodes = mapping(valueToMap) || [];
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
@@ -1849,8 +1866,8 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-        }, null, { 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
-        return mappedNodes;
+        }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
     }
 
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
@@ -1880,6 +1897,9 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                     break;
 
                 case "deleted":
+                    // Stop tracking changes to the mapping for these nodes
+                    lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
+                
                     // Queue these nodes for later removal
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
                         nodesToDelete.push({
@@ -1893,9 +1913,11 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                     break;
 
                 case "added": 
-                    var mappedNodes = mapNodeAndRefreshWhenChanged(mapping, editScript[i].value);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, editScript[i].value);
+                    var mappedNodes = mapData.mappedNodes;
+                    
                     // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes });
+                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
                         nodesAdded.push({

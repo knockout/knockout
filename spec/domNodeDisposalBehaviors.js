@@ -37,5 +37,16 @@ describe('DOM node disposal', {
         ko.removeNode(childNode);
         value_of(didRun).should_be(true);
         value_of(testNode.childNodes.length).should_be(0);
-    }    
+    },
+    
+    'Should be able to remove previously-registered disposal callbacks': function() {
+        var didRun = false;
+        var callback = function() { didRun = true };
+        ko.utils.domNodeDisposal.addDisposeCallback(testNode, callback);
+        
+        value_of(didRun).should_be(false);
+        ko.utils.domNodeDisposal.removeDisposeCallback(testNode, callback);
+        ko.cleanNode(testNode);
+        value_of(didRun).should_be(false); // Didn't run only because we removed it    		
+    }
 });

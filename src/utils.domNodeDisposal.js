@@ -10,11 +10,15 @@ ko.utils.domNodeDisposal = new (function () {
         }
         return allDisposeCallbacks;
     }
+    function destroyCallbacksCollection(node) {
+        ko.utils.domData.set(node, domDataKey, undefined);
+    }
     
     function cleanSingleNode(node) {
         // Run all the dispose callbacks
         var callbacks = getDisposeCallbacksCollection(node, false);
         if (callbacks) {
+            callbacks = callbacks.slice(0); // Clone, as the array may be modified during iteration (typically, callbacks will remove themselves)
             for (var i = 0; i < callbacks.length; i++)
                 callbacks[i](node);
         }	
@@ -34,6 +38,15 @@ ko.utils.domNodeDisposal = new (function () {
             if (typeof callback != "function")
                 throw new Error("Callback must be a function");
             getDisposeCallbacksCollection(node, true).push(callback);
+        },
+        
+        removeDisposeCallback : function(node, callback) {
+            var callbacksCollection = getDisposeCallbacksCollection(node, false);
+            if (callbacksCollection) {
+                ko.utils.arrayRemoveItem(callbacksCollection, callback);
+                if (callbacksCollection.length == 0)
+                    destroyCallbacksCollection(node);
+            }
         },
         
         cleanNode : function(node) {
@@ -58,3 +71,4 @@ ko.exportSymbol('ko.cleanNode', ko.cleanNode);
 ko.exportSymbol('ko.removeNode', ko.removeNode);
 ko.exportSymbol('ko.utils.domNodeDisposal', ko.utils.domNodeDisposal);
 ko.exportSymbol('ko.utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
+ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);
