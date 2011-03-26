@@ -653,6 +653,12 @@ ko.exportSymbol('ko.isObservable', ko.isObservable);
 ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
 
 ko.observableArray = function (initialValues) {
+    if (arguments.length == 0) {
+        // Zero-parameter constructor initializes to empty array
+        initialValues = [];
+    }
+    if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
+        throw new "The argument passed when initializing an observable array must be an array, or null, or undefined.";
     var result = new ko.observable(initialValues);
 
     ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
