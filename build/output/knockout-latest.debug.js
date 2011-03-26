@@ -551,7 +551,7 @@ ko.subscribable = function () {
     var _subscriptions = [];
 
     this.subscribe = function (callback, callbackTarget) {
-        var boundCallback = callbackTarget ? function () { callback.call(callbackTarget) } : callback;
+        var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
         var subscription = new ko.subscription(boundCallback, function () {
             ko.utils.arrayRemoveItem(_subscriptions, subscription);

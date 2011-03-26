@@ -25,11 +25,11 @@ describe('Subscribable', {
     'Should be able to specify a \'this\' pointer for the callback': function () {
         var model = {
             someProperty: 123,
-            myCallback: function () { value_of(this.someProperty).should_be(123); }
+            myCallback: function (arg) { value_of(arg).should_be('notifiedValue'); value_of(this.someProperty).should_be(123); }
         };
         var instance = new ko.subscribable();
         instance.subscribe(model.myCallback, model);
-        instance.notifySubscribers('ignored');
+        instance.notifySubscribers('notifiedValue');
     },
     
     'Should not notify subscribers after unsubscription, even if the unsubscription occurs midway through a notification cycle': function() {
