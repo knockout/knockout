@@ -32,20 +32,20 @@
         function parsedBindingsAccessor() {
             return parsedBindings;
         }
-        
+
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
                 parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
-                
+
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
-                    }                	
+                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                    }
                 }
-                
+
                 // ... then run all the updates, which might trigger changes even on the first evaluation
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
@@ -62,13 +62,29 @@
         if (rootNode && (rootNode.nodeType == undefined))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-                
+
         var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
         });
     };
-    
+
+    ko.applyBindingsToNamespace = function (viewModel, namespace, rootNode) {
+
+        // Save original attributeName
+        var originalBindingAttributeName = bindingAttributeName;
+
+        // Override attributeName
+        bindingAttributeName = 'data-' + namespace;
+
+        // Apply Bindings with user defined attributeName
+        ko.applyBindings(viewModel, rootNode);
+
+        // Reset attributeName
+        bindingAttributeName = originalBindingAttributeName;
+    };
+
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToNamespace', ko.applyBindingsToNamespace);
 })();
