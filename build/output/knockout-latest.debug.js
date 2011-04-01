@@ -1165,21 +1165,25 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         isFirstEvaluation = false;
     };
 
-    ko.applyBindings = function (viewModel, rootNode) {
-        if (rootNode && (rootNode.nodeType == undefined))
-            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
-        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
-        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
-            ko.applyBindingsToNode(element, null, viewModel);
-        });
-    };
-
-    ko.applyBindingsNs = function (viewModel, namespace, rootNode) {
-        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-
-        var bindingAttributeNameNs = bindingAttributeName + '-' + namespace,
+    /*  ko.applyBindings
+     *
+     *  4 method signatures:
+     *  applyBindings(viewModel)                      <-- best practice, simple global ViewModels
+     *  applyBindings(viewModel, rootNode)            <-- legacy support
+     *  applyBindings(viewModel, namespace)           <-- best practice, complex multi-ViewModel pages
+     *  applyBindings(viewModel, namespace, rootNode) <-- if you really must
+     */
+     
+    ko.applyBindings = function (viewModel, namespace, rootNode) {
+        if (namespace && (nameSpace.nodeType !== undefined)) {
+          rootNode = namespace;
+          namespace = '';
+        }
+        else {
+          namespace = (namespace.length > 0) ? ('-' + namespace) : '';  // Prefix -namespace
+          rootNode = rootNode || window.document.body;                  // Make "rootNode" parameter optional
+        }
+        var bindingAttributeNameNs = bindingAttributeName + namespace,
             elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeNameNs);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
