@@ -69,22 +69,17 @@
         });
     };
 
-    ko.applyBindingsToNamespace = function (viewModel, namespace, rootNode) {
+    ko.applyBindingsNs = function (viewModel, namespace, rootNode) {
+        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
 
-        // Save original attributeName
-        var originalBindingAttributeName = bindingAttributeName;
-
-        // Override attributeName
-        bindingAttributeName = 'data-' + namespace;
-
-        // Apply Bindings with user defined attributeName
-        ko.applyBindings(viewModel, rootNode);
-
-        // Reset attributeName
-        bindingAttributeName = originalBindingAttributeName;
+        var bindingAttributeNameNs = bindingAttributeName + '-' + namespace,
+            elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeNameNs);
+        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
+            ko.applyBindingsToNode(element, null, viewModel);
+        });
     };
 
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
-    ko.exportSymbol('ko.applyBindingsToNamespace', ko.applyBindingsToNamespace);
+    ko.exportSymbol('ko.applyBindingsNs', ko.applyBindingsNs);
 })();

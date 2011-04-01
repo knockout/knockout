@@ -2,7 +2,7 @@
 // (c) 2010 Steven Sanderson - http://knockoutjs.com/
 // License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1139,20 +1139,20 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         function parsedBindingsAccessor() {
             return parsedBindings;
         }
-        
+
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
                 parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
-                
+
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
-                    }                	
+                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                    }
                 }
-                
+
                 // ... then run all the updates, which might trigger changes even on the first evaluation
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
@@ -1169,15 +1169,26 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         if (rootNode && (rootNode.nodeType == undefined))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-                
+
         var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
         });
     };
-    
+
+    ko.applyBindingsNs = function (viewModel, namespace, rootNode) {
+        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
+
+        var bindingAttributeNameNs = bindingAttributeName + '-' + namespace,
+            elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeNameNs);
+        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
+            ko.applyBindingsToNode(element, null, viewModel);
+        });
+    };
+
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsNs', ko.applyBindingsNs);
 })();// For certain common events (currently just 'click'), allow a simplified data-binding syntax
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 var eventHandlersWithShortcuts = ['click'];
@@ -2092,4 +2103,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);
