@@ -1123,9 +1123,11 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         handler(element, dataValue, allBindings, viewModel);
     }
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel) {
+    ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttribute) {
         var isFirstEvaluation = true;
-
+        
+        bindingAttribute = bindingAttribute || bindingAttributeName;
+        
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
         // model properties in the context of the changed data.
@@ -1143,7 +1145,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttribute), viewModel);
 
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
@@ -1175,18 +1177,18 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
      */
      
     ko.applyBindings = function (viewModel, namespace, rootNode) {
-        if (namespace && (nameSpace.nodeType !== undefined)) {
+        if (namespace && (namespace.nodeType !== undefined)) {
           rootNode = namespace;
           namespace = '';
         }
         else {
-          namespace = (namespace.length > 0) ? ('-' + namespace) : '';  // Prefix -namespace
+          namespace = (namespace && namespace.length > 0) ? ('-' + namespace) : '';  // Prefix -namespace
           rootNode = rootNode || window.document.body;                  // Make "rootNode" parameter optional
         }
         var bindingAttributeNameNs = bindingAttributeName + namespace,
             elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeNameNs);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
-            ko.applyBindingsToNode(element, null, viewModel);
+            ko.applyBindingsToNode(element, null, viewModel, bindingAttributeNameNs);
         });
     };
 
