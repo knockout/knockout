@@ -7,7 +7,7 @@ If you want to detect and respond to changes on one object, you'd use [observabl
 
 ### Example
 
-    var myObservableArray = ko.observableArray([]);  // Initially an empty array
+    var myObservableArray = ko.observableArray();    // Initially an empty array
     myObservableArray.push('Some value');            // Adds the value and notifies observers
 
 To see how you can bind the `observableArray` to a UI and let the user modify it, see [the simple list example](../examples/simpleList.html).
@@ -15,6 +15,17 @@ To see how you can bind the `observableArray` to a UI and let the user modify it
 ### Key point: An observableArray tracks which objects are *in* the array, *not* the state of those objects
 
 Simply putting an object into an `observableArray` doesn't make all of that object's properties themselves observable. Of course, you can make those properties observable if you wish, but that's an independent choice. An `observableArray` just tracks which objects it holds, and notifies listeners when objects are added or removed.
+
+## Prepopulating an observableArray
+
+If you want your observable array **not** to start empty, but to contain some initial items, pass those items as an array to the constructor. For example,
+
+    // This observable array initially contains three objects
+    var anotherObservableArray = ko.observableArray([
+    	{ name: "Bungle", type: "Bear" },
+    	{ name: "George", type: "Hippo" },
+    	{ name: "Zippy", type: "Unknown" }
+    ]);
 
 ## Reading information from an observableArray
 
