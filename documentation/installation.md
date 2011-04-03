@@ -25,7 +25,7 @@ In case it's unclear, you'll end up with three script tags like the following, i
 
     <script type='text/javascript' src='jquery-1.4.2.min.js'></script>
     <script type='text/javascript' src='jquery-tmpl.js'></script>
-    <script type='text/javascript' src='knockout-1.1.2.js'></script>
+    <script type='text/javascript' src='knockout-1.2.0.js'></script>
     
 (Obviously, update the filenames/paths to match where you put the files.)
 
