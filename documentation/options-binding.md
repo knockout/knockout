@@ -59,7 +59,17 @@ Note: For a multi-select list, to set which of the options are selected, or to r
 	    };
     </script>
 
-    
+### Example 4: Drop-down list representing arbitrary JavaScript objects, with displayed text computed as a function of the represented item
+    <!-- Same as example 3, except the <select> box expressed as follows: -->
+    <select data-bind="options: availableCountries, 
+                       optionsText: function(item) { 
+                           return item.countryName + ' (pop: ' + item.countryPopulation + ')' 
+                       }, 
+                       value: selectedCountry, 
+                       optionsCaption: 'Choose...'"></select>    
+                       
+Note that the only difference between examples 3 and 4 is the `optionsText` value.
+
 ### Parameters
 
  * Main parameter
@@ -85,6 +95,8 @@ Note: For a multi-select list, to set which of the options are selected, or to r
    * `optionsText`
      
      See Example 3 above to see how you can bind `options` to an array of arbitrary JavaScript object - not just strings. In this case, you need to choose which of the objects' properties should be displayed as the text in the drop-down list or multi-select list. Example 3 shows how you can specify that property name by passing an additional parameter called `optionsText`.
+     
+     If you don't want to display just a simple property value as the text for each item in the dropdown, you can pass a JavaScript function for the `optionsText` option and supply your own arbitrary logic for computing the displayed text in terms of the represented object. See Example 4 above, which shows how you could generate the displayed text by concatenating together multiple property values.
      
    * `optionsValue`
      
