@@ -6,3 +6,5 @@ For more details, see
  * Online examples at [http://knockoutjs.com/examples/](http://knockoutjs.com/examples/)
 
 To build on Linux, run `build/build-linux`. To build on Windows, run `build\build-windows.bat`.
+
+License: MIT [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)
