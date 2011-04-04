@@ -65,7 +65,7 @@ Since this binding sets your text value using `innerText` or `textContent` (and 
 
 ... this would *not* render as italic text, but would render as literal text with visible angle brackets.
 
-Knockout doesn't currently have a binding called `html` (for setting HTML content), but it would be trivial to add one if required.
+If you need to set HTML content in this manner, see [the html binding](html-binding.html).
 
 ### Note 3: About an IE 6 whitespace quirk
 
