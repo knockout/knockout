@@ -38,7 +38,7 @@ Now, moving your mouse pointer on or off of the first element will invoke method
    
    You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `event { mouseover: someObject.someFunction }`. 
    
-   Functions on your view model are slightly special because you can reference them by name, i.e., you can write `event { mouseover: incrementClickCounter }` and *don't* have to write `event { mouseover: viewModel.incrementClickCounter }` (though technically that's also valid).
+   Functions on your view model are slightly special because you can reference them by name, i.e., you can write `event { mouseover: enableDetails }` and *don't* have to write `event { mouseover: viewModel.enableDetails }` (though technically that's also valid).
    
  * Additional parameters 
 
