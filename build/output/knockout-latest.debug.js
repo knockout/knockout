@@ -1,6 +1,6 @@
 // Knockout JavaScript library v1.2.0pre
-// (c) 2010 Steven Sanderson - http://knockoutjs.com/
-// License: Ms-Pl (http://www.opensource.org/licenses/ms-pl.html)
+// (c) Steven Sanderson - http://knockoutjs.com/
+// License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
 (function(window,undefined){ 
 var ko = window["ko"] = {};
@@ -337,6 +337,7 @@ ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
+ko.exportSymbol('ko.utils.getElementsHavingAttribute', ko.utils.getElementsHavingAttribute);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
@@ -1107,7 +1108,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriti
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
 
 (function () {
-    var bindingAttributeName = "data-bind";
+    var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
     function parseBindingAttribute(attributeText, viewModel) {
@@ -1123,8 +1124,9 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         handler(element, dataValue, allBindings, viewModel);
     }
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel) {
+    ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
         var isFirstEvaluation = true;
+        bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
 
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
@@ -1170,7 +1172,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
                 
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
+        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
         });
@@ -1178,6 +1180,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
 })();// For certain common events (currently just 'click'), allow a simplified data-binding syntax
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 var eventHandlersWithShortcuts = ['click'];

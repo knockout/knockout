@@ -1,6 +1,6 @@
 
 (function () {
-    var bindingAttributeName = "data-bind";
+    var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
     function parseBindingAttribute(attributeText, viewModel) {
@@ -16,8 +16,9 @@
         handler(element, dataValue, allBindings, viewModel);
     }
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel) {
+    ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
         var isFirstEvaluation = true;
+        bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
 
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
@@ -63,7 +64,7 @@
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
                 
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, bindingAttributeName);
+        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
         ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
             ko.applyBindingsToNode(element, null, viewModel);
         });
@@ -71,4 +72,5 @@
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
 })();
