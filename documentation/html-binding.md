@@ -4,7 +4,7 @@ title: The "html" binding
 ---
 
 ### Purpose
-The `html` binding inserts raw HTML from a string into the associated DOM element without escaping the content. 
+The `html` binding causes the associated DOM element to display the HTML specified by your parameter. 
 
 Typically this is useful when values in your view model are actually strings of HTML markup that you want to render.
 
@@ -34,7 +34,7 @@ Typically this is useful when values in your view model are actually strings of 
 
 ### Note: About HTML encoding
 
-Since this binding sets your element's content using `innerHTML`, it leaves you potentially vulnerable to HTML or script injection attacks.  If you cannot guarantee that the content is safe to display (perhaps it is based on user input), then you can use [the text binding](text-binding.html), which will set the element's text value using `innerText` or `textContent`. 
+Since this binding sets your element's content using `innerHTML`, you should be careful not to use it with untrusted model values, because that might open the possibility of a script injection attack.  If you cannot guarantee that the content is safe to display (for example, if it is based on a different user's input that was stored in your database), then you can use [the text binding](text-binding.html), which will set the element's text value using `innerText` or `textContent` instead. 
    
 ### Dependencies
 
