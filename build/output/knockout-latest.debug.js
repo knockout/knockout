@@ -190,7 +190,9 @@ ko.utils = new (function () {
             if (!(element && element.nodeType))
                 throw new Error("element must be a DOM node when calling triggerEvent");
 
-            if (typeof document.createEvent == "function") {
+            if (typeof jQuery != "undefined") {
+                jQuery(element)['trigger'](eventType);
+            } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = (eventType == "click" ? "MouseEvents" : "HTMLEvents"); // Might need to account for other event names at some point
                     var event = document.createEvent(eventCategory);
