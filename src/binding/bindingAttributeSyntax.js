@@ -77,6 +77,6 @@
 
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
-    ko.exportSymbol('ko.applyBindingsNs', ko.applyBindingsNs);
+    ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('ko.getBindingAttribute', ko.getBindingAttribute);
 })();

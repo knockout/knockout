@@ -321,6 +321,7 @@ ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
+ko.exportSymbol('ko.utils.getElementsHavingAttribute', ko.utils.getElementsHavingAttribute);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
