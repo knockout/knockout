@@ -13,6 +13,12 @@ function getSelectedValuesFromSelectNode(selectNode) {
     return ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
 }
 
+function simulateClickOnCheckbox(element) {
+    // For consistency across browsers, raise both events
+    ko.utils.triggerEvent(element, "click");
+    ko.utils.triggerEvent(element, "change");        	
+}
+
 describe('Binding: Enable/Disable', {
     before_each: prepareTestNode,
 
@@ -592,7 +598,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        simulateClickOnCheckbox(testNode.childNodes[0]);		
         value_of(myobservable()).should_be(true);
     },
 
@@ -601,7 +607,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        simulateClickOnCheckbox(testNode.childNodes[0]);
         value_of(model.someProp).should_be(true);
     },
 
@@ -621,7 +627,8 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        simulateClickOnCheckbox(testNode.childNodes[0]);
+        
         value_of(myobservable()).should_be("this radio button value");
     },
     
@@ -633,14 +640,12 @@ describe('Binding: Checked', {
         ko.applyBindings({ someProp: myobservable }, testNode);
 
         // Multiple events only cause one notification...
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        simulateClickOnCheckbox(testNode.childNodes[0]);
+        simulateClickOnCheckbox(testNode.childNodes[0]);
         value_of(timesNotified).should_be(1);
         
         // ... until you click something with a different value
-        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        simulateClickOnCheckbox(testNode.childNodes[1]);
         value_of(timesNotified).should_be(2);        
     },     
 
@@ -649,7 +654,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        simulateClickOnCheckbox(testNode.childNodes[0]);
         value_of(model.someProp).should_be("this radio button value");
     },
     
@@ -665,10 +670,10 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(true);
         value_of(testNode.childNodes[1].checked).should_be(false);
         // Checking the checkbox puts it in the array
-        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        simulateClickOnCheckbox(testNode.childNodes[1]);
         value_of(model.myArray).should_be(["Existing value", "Unrelated value", "New value"]);
         // Unchecking the checkbox removes it from the array
-        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        simulateClickOnCheckbox(testNode.childNodes[1]);
         value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
     },
     
