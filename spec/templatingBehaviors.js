@@ -330,7 +330,7 @@ describe('Templating', {
         ko.applyBindings({ myCollection: myArray }, testNode);
         value_of(innerObservable.getSubscriptionsCount()).should_be(2);    	
         
-        myArray.splice(1);
+        myArray.splice(1, 1);
         value_of(innerObservable.getSubscriptionsCount()).should_be(1);    	
         myArray([]);
         value_of(innerObservable.getSubscriptionsCount()).should_be(0);    	
