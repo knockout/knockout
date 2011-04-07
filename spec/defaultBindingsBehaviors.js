@@ -13,12 +13,6 @@ function getSelectedValuesFromSelectNode(selectNode) {
     return ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
 }
 
-function simulateClickOnCheckbox(element) {
-    // For consistency across browsers, raise both events
-    ko.utils.triggerEvent(element, "click");
-    ko.utils.triggerEvent(element, "change");        	
-}
-
 describe('Binding: Enable/Disable', {
     before_each: prepareTestNode,
 
@@ -543,6 +537,26 @@ describe('Binding: Unique Name', {
 describe('Binding: Checked', {
     before_each: prepareTestNode,
 
+    'Triggering a click should toggle a checkbox\'s checked state before the event handler fires': function() {
+        // This isn't strictly to do with the checked binding, but if this doesn't work, the rest of the specs aren't meaningful
+        testNode.innerHTML = "<input type='checkbox' />";	
+        var clickHandlerFireCount = 0, expectedCheckedStateInHandler;
+        ko.utils.registerEventHandler(testNode.childNodes[0], "click", function() { 
+            clickHandlerFireCount++; 
+            value_of(testNode.childNodes[0].checked).should_be(expectedCheckedStateInHandler);
+        })
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        expectedCheckedStateInHandler = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(testNode.childNodes[0].checked).should_be(true);
+        value_of(clickHandlerFireCount).should_be(1);
+        
+        expectedCheckedStateInHandler = false;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        value_of(clickHandlerFireCount).should_be(2);
+    },
+
     'Should be able to control a checkbox\'s checked state': function () {
         var myobservable = new ko.observable(true);
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
@@ -554,17 +568,16 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(false);
     },
 
-    'Should update observable properties on the underlying model when the checkbox change event fires': function () {
+    'Should update observable properties on the underlying model when the checkbox click event fires': function () {
         var myobservable = new ko.observable(false);
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        testNode.childNodes[0].checked = true;
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(myobservable()).should_be(true);
     },
     
-    'Should only notify observable properties on the underlying model *once* even if the checkbox change/click events fire multiple times': function () {
+    'Should only notify observable properties on the underlying model *once* even if the checkbox change events fire multiple times': function () {
         var myobservable = new ko.observable();
         var timesNotified = 0;
         myobservable.subscribe(function() { timesNotified++ });
@@ -572,24 +585,23 @@ describe('Binding: Checked', {
         ko.applyBindings({ someProp: myobservable }, testNode);
 
         // Multiple events only cause one notification...
-        testNode.childNodes[0].checked = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
         
         // ... until the checkbox value actually changes
-        testNode.childNodes[0].checked = false;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(2);        
     },    
 
-    'Should update non-observable properties on the underlying model when the checkbox change event fires': function () {
+    'Should update non-observable properties on the underlying model when the checkbox click event fires': function () {
         var model = { someProp: false };
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
 
-        testNode.childNodes[0].checked = true;
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be(true);
     },
 
@@ -598,7 +610,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        simulateClickOnCheckbox(testNode.childNodes[0]);		
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");		
         value_of(myobservable()).should_be(true);
     },
 
@@ -606,8 +618,8 @@ describe('Binding: Checked', {
         var model = { someProp: false };
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
-
-        simulateClickOnCheckbox(testNode.childNodes[0]);
+        
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be(true);
     },
 
@@ -627,8 +639,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        simulateClickOnCheckbox(testNode.childNodes[0]);
-        
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");        
         value_of(myobservable()).should_be("this radio button value");
     },
     
@@ -640,12 +651,15 @@ describe('Binding: Checked', {
         ko.applyBindings({ someProp: myobservable }, testNode);
 
         // Multiple events only cause one notification...
-        simulateClickOnCheckbox(testNode.childNodes[0]);
-        simulateClickOnCheckbox(testNode.childNodes[0]);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
         
         // ... until you click something with a different value
-        simulateClickOnCheckbox(testNode.childNodes[1]);
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        ko.utils.triggerEvent(testNode.childNodes[1], "change");
         value_of(timesNotified).should_be(2);        
     },     
 
@@ -654,7 +668,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
 
-        simulateClickOnCheckbox(testNode.childNodes[0]);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be("this radio button value");
     },
     
@@ -670,10 +684,12 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(true);
         value_of(testNode.childNodes[1].checked).should_be(false);
         // Checking the checkbox puts it in the array
-        simulateClickOnCheckbox(testNode.childNodes[1]);
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");        
+        value_of(testNode.childNodes[1].checked).should_be(true);
         value_of(model.myArray).should_be(["Existing value", "Unrelated value", "New value"]);
         // Unchecking the checkbox removes it from the array
-        simulateClickOnCheckbox(testNode.childNodes[1]);
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");        
+        value_of(testNode.childNodes[1].checked).should_be(false);
         value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
     },
     

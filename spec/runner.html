@@ -4,6 +4,9 @@
         <title>JSSpec results</title>
         <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
 
+        <!-- All specs should pass with or without jQuery being referenced -->
+        <!-- <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.js"></script> -->
+
         <script type="text/javascript" src="lib/diff_match_patch.js"></script>
         <script type="text/javascript" src="lib/JSSpec.js"></script>        
         <script type="text/javascript">
@@ -17,7 +20,7 @@
                 throw JSSpec._assertionFailure;
             };
         </script>
-		<script type="text/javascript" src="lib/json2.js"></script>
+        <script type="text/javascript" src="lib/json2.js"></script>
         <script type="text/javascript" src="../build/knockout-raw.js"></script>
         
         <script type="text/javascript" src="memoizationBehaviors.js"></script>

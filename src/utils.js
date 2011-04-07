@@ -3,6 +3,13 @@ ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     var isIe7 = /MSIE 7/i.test(navigator.userAgent);
+
+    function isClickOnCheckableElement(element, eventType) {
+        if ((element.tagName != "INPUT") || !element.type) return false;
+        if (eventType.toLowerCase() != "click") return false;
+        var inputType = element.type.toLowerCase();
+        return (inputType == "checkbox") || (inputType == "radio");
+    }
     
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
@@ -158,9 +165,23 @@ ko.utils = new (function () {
         },
 
         registerEventHandler: function (element, eventType, handler) {
-            if (typeof jQuery != "undefined")
+            if (typeof jQuery != "undefined") {
+                if (isClickOnCheckableElement(element, eventType)) {
+                    // For click events on checkboxes, jQuery interferes with the event handling in an awkward way:
+                    // it toggles the element checked state *after* the click event handlers run, whereas native
+                    // click events toggle the checked state *before* the event handler. 
+                    // Fix this by intecepting the handler and applying the correct checkedness before it runs.            	
+                    var originalHandler = handler;
+                    handler = function(event, eventData) {
+                        var jQuerySuppliedCheckedState = this.checked;
+                        if (eventData)
+                            this.checked = eventData.checkedStateBeforeEvent !== true;
+                        originalHandler.call(this, event);
+                        this.checked = jQuerySuppliedCheckedState; // Restore the state jQuery applied
+                    };                	
+                }
                 jQuery(element)['bind'](eventType, handler);
-            else if (typeof element.addEventListener == "function")
+            } else if (typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
             else if (typeof element.attachEvent != "undefined")
                 element.attachEvent("on" + eventType, function (event) {
@@ -175,7 +196,12 @@ ko.utils = new (function () {
                 throw new Error("element must be a DOM node when calling triggerEvent");
 
             if (typeof jQuery != "undefined") {
-                jQuery(element)['trigger'](eventType);
+                var eventData = [];
+                if (isClickOnCheckableElement(element, eventType)) {
+                    // Work around the jQuery "click events on checkboxes" issue described above by storing the original checked state before triggering the handler
+                    eventData.push({ checkedStateBeforeEvent: element.checked });
+                }
+                jQuery(element)['trigger'](eventType, eventData);
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = (eventType == "click" ? "MouseEvents" : "HTMLEvents"); // Might need to account for other event names at some point

@@ -350,7 +350,6 @@ ko.bindingHandlers['checked'] = {
                 }
             }
         };
-        ko.utils.registerEventHandler(element, "change", updateHandler);
         ko.utils.registerEventHandler(element, "click", updateHandler);
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
