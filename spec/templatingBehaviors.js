@@ -179,7 +179,7 @@ describe('Templating', {
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>outer template output, <div>inner template output</div></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>outer template output, <div>inner template output</div></div>");
     },
 
     'Should rerender chained templates when their dependencies change, without rerendering parent templates': function () {
@@ -191,12 +191,12 @@ describe('Templating', {
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>outer template output, <div>abc</div></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>outer template output, <div>abc</div></div>");
         value_of(timesRenderedOuter).should_be(1);
         value_of(timesRenderedInner).should_be(1);
 
         observable("DEF");
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>outer template output, <div>def</div></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>outer template output, <div>def</div></div>");
         value_of(timesRenderedOuter).should_be(1);
         value_of(timesRenderedInner).should_be(2);
     },
