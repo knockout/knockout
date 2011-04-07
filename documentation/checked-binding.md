@@ -22,6 +22,25 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
 	    viewModel.wantsSpam(false); // The checkbox becomes unchecked
     </script>
 
+### Example adding checkboxes bound to an array
+    <p>Send me spam: <input type="checkbox" data-bind="checked: wantsSpam" /></p>
+    <div data-bind="visible: wantsSpam">
+    	Preferred flavors of spam:
+    	<div><input type="checkbox" value="cherry" data-bind="checked: spamFlavors" /> Cherry</div>
+    	<div><input type="checkbox" value="almond" data-bind="checked: spamFlavors" /> Almond</div>
+    	<div><input type="checkbox" value="msg" data-bind="checked: spamFlavors" /> Monosodium Glutamate</div>
+    </div>
+    
+    <script type="text/javascript">
+	    var viewModel = {
+			wantsSpam: ko.observable(true),
+			spamFlavors: ko.observableArray(["cherry","almond"]) // Initially checks the Cherry and Almond checkboxes
+	    };
+	    
+	    // ... then later ...
+	    viewModel.spamFlavors.push("msg"); // Now additionally checks the Monosodium Glutamate checkbox
+    </script>
+    
 ### Example adding radio buttons
     <p>Send me spam: <input type="checkbox" data-bind="checked: wantsSpam" /></p>
     <div data-bind="visible: wantsSpam">
@@ -49,7 +68,11 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
    
    * For **checkboxes**, KO will set the element to be *checked* when the parameter value is `true`, and *unchecked* when it is `false`. If you give a value that isn't actually boolean, it will be interpreted loosely. This means that nonzero numbers and non-`null` objects and non-empty strings will all be interpreted as `true`, whereas zero, `null`, `undefined`, and empty strings will be interpreted as `false`.
    
-     When the user checks or uncheckes the checkbox, KO will set your model property to `true` or `false` accordingly.
+     When the user checks or unchecks the checkbox, KO will set your model property to `true` or `false` accordingly.
+     
+     Special consideration is given if your parameter resolves to an `array`. In this case, KO will set the element to be *checked* if the value matches an item in the array, and *unchecked* if it is not contained in the array. 
+     
+     When the user checks or unchecks the checkbox, KO will add or remove the value from the array accordingly.
    
    * For **radio buttons**, KO will set the element to be *checked* if and only if the parameter value equals the radio button node's `value` attribute. So, your parameter value should be a string. In the previous example, the radio button with `value="almond"` was checked only when the view model's `spamFlavor` property was equal to `"almond"`.
    
