@@ -50,10 +50,11 @@ When using `{{'{{'}}each someArray}}`, if your value is an [`observableArray`](o
    
    * For more control, pass a JavaScript object with the following properties:
    
-     * `name` (required) --- the ID of a template to render.
+     * `name` (required) --- the ID of a template to render - see [Note 5](#note_5_dynamically_choosing_which_template_is_used) for how to use a function to determine the ID.
      * `data` (optional) --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your whole view model object.
      * `foreach` (optional) --- instructs KO to render the template in "foreach" mode - see [Note 3](#note_3_using_the__option) for details.
      * `afterAdd` and/or `beforeRemove` (optional) --- used in conjunction with [`foreach` mode](#note_3_using_the__option).
+     * `templateOptions` (optional) --- allows you to pass additional data that is accessible during template rendering. See [Note 6](#note_6_passing_additional_data_to_your_template_using_) for details.
      
 Example of passing multiple parameters:
 
@@ -110,6 +111,49 @@ You can do this using the `afterRender` option. Simply pass a function reference
     	// "elements" is an array of DOM nodes just rendered by the template
     	// You can add custom post-processing logic here
     }
+
+### Note 5: Dynamically choosing which template is used
+
+In some scenarios, it may be useful to programmatically determine the template ID based on the state of your data. This can be accomplished by supplying a function for the `name` option that returns the ID. If you are using the `foreach` template mode, Knockout will evaluate the function for each item in your array passing that item's value as the only argument. Otherwise, the function will be given the `data` option's value or fall back to providing your whole view model.
+
+For example,
+ 
+    <ul data-bind='template: { name: displayMode,
+                               foreach: employees }'> </ul>
+
+    var viewModel = {
+        employees: ko.observableArray([
+            { name: "Kari", active: ko.observable(true) },
+            { name: "Brynn", active: ko.observable(false) },
+            { name: "Nora", active: ko.observable(false) }]),
+        displayMode: function(employee) {
+            return employee.active() ? "active" : "inactive";  // Initially "Kari" uses the "active" template, while the others use "inactive"
+        }
+    };
+
+    // ... then later ...
+    viewModel.employees()[1].active(true); // Now "Brynn" is also rendered using the "active" template.
+
+If your function references observable values, then the binding will update whenever any of those values change.  This will cause the data to be re-rendered using the appropriate template.
+    
+### Note 6: Passing additional data to your template using `templateOptions`
+
+If you need to make additional information available during template rendering besides the data that you are binding against, an easy way to do this is through the `templateOptions` object. This can help you create reusable templates that vary based on filtering criteria or string values that don't necessarily belong in your view model. This is also useful in cases where scope is a concern, as it is a way to include data that would be otherwise inaccessible from within your template.
+
+For example,
+
+    <ul data-bind='template: { name: "personTemplate",
+                               foreach: employees,
+                               templateOptions: { label: "Employee:",
+                                                  selectedPerson: selectedEmployee }'> </ul>
+
+    <script id='personTemplate' type='text/html'>
+		<div data-bind="css: { selected: $data === $item.selectedPerson()" }">
+            ${ $item.label } <input data-bind="value: name" />
+        </div>
+	</script>
+                               
+In this case, we have a `personTemplate` that is perhaps being used for both employee and customer objects. Through `templateOptions`, we supply an appropriate string for the field's label and also include the currently selected employee as `selectedPerson` to aid in styling. In `jquery.tmpl` templates, these values are accessible as properties of the $item object.  
 
 ### Note: Using a different template engine
 
