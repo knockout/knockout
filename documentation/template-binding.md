@@ -125,7 +125,8 @@ For example,
         employees: ko.observableArray([
             { name: "Kari", active: ko.observable(true) },
             { name: "Brynn", active: ko.observable(false) },
-            { name: "Nora", active: ko.observable(false) }]),
+            { name: "Nora", active: ko.observable(false) }
+        ]),
         displayMode: function(employee) {
             return employee.active() ? "active" : "inactive";  // Initially "Kari" uses the "active" template, while the others use "inactive"
         }
