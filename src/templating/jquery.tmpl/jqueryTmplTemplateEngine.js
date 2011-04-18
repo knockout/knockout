@@ -17,7 +17,7 @@ ko.jqueryTmplTemplateEngine = function () {
         return 1; // Very old version doesn't have an extensible tag system
     })();
 
-    function getTemplateNode(template) {
+    this['getTemplateNode'] = function(template) {
         var templateNode = document.getElementById(template);
         if (templateNode == null)
             throw new Error("Cannot find template with ID=" + template);
@@ -38,7 +38,7 @@ ko.jqueryTmplTemplateEngine = function () {
             // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
             // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
             // parse that text into a document fragment using jQuery.clean().        
-            var templateTextInWrapper = "<script type=\"text/html\">" + getTemplateNode(templateId).text + "</script>";
+            var templateTextInWrapper = "<script type=\"text/html\">" + this['getTemplateNode'](templateId).text + "</script>";
             var renderedMarkupInWrapper = jQuery['tmpl'](templateTextInWrapper, data);
             var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");;
             return jQuery['clean']([renderedMarkup], document);
@@ -47,7 +47,7 @@ ko.jqueryTmplTemplateEngine = function () {
         // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
         if (!(templateId in jQuery['template'])) {
             // Precache a precompiled version of this template (don't want to reparse on every render)
-            var templateText = getTemplateNode(templateId).text;
+            var templateText = this['getTemplateNode'](templateId).text;
             jQuery['template'](templateId, templateText);
         }        
         data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
@@ -64,11 +64,11 @@ ko.jqueryTmplTemplateEngine = function () {
         if (templateId in jQuery['template'])
             return true;
         
-        return getTemplateNode(templateId).isRewritten === true;
+        return this['getTemplateNode'](templateId).isRewritten === true;
     },
 
     this['rewriteTemplate'] = function (template, rewriterCallback) {
-        var templateNode = getTemplateNode(template);
+        var templateNode = this['getTemplateNode'](template);
         var rewritten = rewriterCallback(templateNode.text);     
         
         if (this.jQueryTmplVersion == 1) {
