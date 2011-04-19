@@ -156,7 +156,13 @@ For example,
                                
 In this case, we have a `personTemplate` that is perhaps being used for both employee and customer objects. Through `templateOptions`, we supply an appropriate string for the field's label and also include the currently selected employee as `selectedPerson` to aid in styling. In `jquery.tmpl` templates, these values are accessible as properties of the $item object.  
 
-### Note: Using a different template engine
+### Note 7: Templates are precompiled and cached
+
+To maximise performance, Knockout's built-in `jquery.tmpl` provider automatically uses `jquery.tmpl`'s ability to precompile your templates into runnable JavaScript code, and caches the output from this compilation process. This makes templates significantly faster to execute, and that's well worthwhile in case you're executing the same templates over and over in a `foreach` loop.
+
+Typically you won't notice that this is happening, so in most cases you can forget about it. However, it does mean that if for some reason you programmatically overwrite a template's `<script>` element, and that template has already been used at least once, your changes to the template `<script>` element won't actually make any difference because the existing precompiled template will keep being used. (If this turns out to be problematic, we will consider adding a mechanism to disable or reset template caches in a future version of KO, however it's unlikely that you will have a good reason to modify template `<script>` elements programmatically, since the whole point of templates is that they **contain** the programmatic logic to produce the different outputs that you need!)
+
+### Note 8: Using a different template engine
 
 If you want to use a different JavaScript-based template engine (perhaps because you don't want to take a dependency on jQuery for some reason), it's possible to do so by writing a KO driver for the template engine. For an example, see `jqueryTmplTemplateEngine.js` in the KO source code, though bear in mind that this is complicated by having to support multiple versions of `jquery.tmpl`. Supporting a single version of another template engine could be much simpler.
 
