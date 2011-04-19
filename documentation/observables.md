@@ -58,8 +58,6 @@ In case you're wondering what the parameters to `ko.applyBindings` do,
 
 Pretty simple, really.
 
-**Important** - this documentation refers to Knockout version 1.1.0pre. If you're using an older version of Knockout, e.g., 1.0.5, you need to pass parameters to `ko.applyBindings` in the opposite order, e.g., `ko.applyBindings(document.body, myViewModel)`.
-
 # Observables
 
 OK, you've seen how to create a basic view model and how to display one of its properties using a binding. But one of the key benefits of KO is that it updates your UI automatically when the view model changes. How can KO know when parts of your view model change? Answer: you need to declare your model properties as *observables*, because these are special JavaScript objects that can notify subscribers about changes, and can automatically detect dependencies.
@@ -104,77 +102,3 @@ The `subscribe` function is how many parts of KO work internally. You can also t
     subscription.dispose(); // I no longer want notifications
     
 Most of the time you don't need to do this, because the built-in bindings and templating system take care of managing subscriptions.
-
-# Dependent Observables
-
-What if you've got an observable for `firstName`, and another for `lastName`, and you want to display the full name? That's where *dependent observables* come in - these are functions of one or more other observables, and will automatically update whenever any of their dependencies change. 
-
-For example, given the following view model,
-
-    var viewModel = {
-    	firstName: ko.observable('Bob'),
-    	lastName: ko.observable('Smith')
-    };
-    
-... you could add a dependent observable to return the full name:
-
-    viewModel.fullName = ko.dependentObservable(function() {
-    	return this.firstName() + " " + this.lastName();
-    }, viewModel);
-    
-Now you could bind UI elements to it, e.g.:
-
-    The name is <span data-bind="text: fullName"></span>
-    
-... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other dependent observables).
-
-### Managing 'this'
-
-*Beginners may wish to skip this section - as long as you follow the same coding patterns as the examples, you won't need to know or care about it!*
-
-In case you're wondering what the second parameter to `ko.dependentObservable` is (the bit where I passed `viewModel` in the preceding code), that defines the value of `this` when evaluating the dependent observable. Without that, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're unfamiliar with JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
-
-Unfortunately, JavaScript object literals don't have any way of referring to themselves, so you must add dependent observables to view model objects by writing `myViewModelObject.myDependentObservable = ...`, and you can't just declare them inline. In other words, you *can't* write this:
-
-    var viewModel = {
-    	myDependentObservable: ko.dependentObservable(function() {
-    	    ...
-    	}, /* can't refer to viewModel from here, so this doesn't work */)
-    }
-
-... but instead must write this:
-
-    var viewModel = {
-    	// Add other properties here as you wish
-    };
-    viewModel.myDependentObservable = ko.dependentObservable(function() {
-    	...
-    }, viewModel); // This is OK
-    
-It's really not a problem as long as you know what to expect :)
-
-### Dependency chains just work
-
-Of course, you can create whole chains of dependent observables if you wish. For example, you might have:
-
-* an **observable** called `items` representing a set of items
-* another **observable** called `selectedIndexes` storing which item indexes have been 'selected' by the user
-* a **dependent observable** called `selectedItems` that returns an array of item objects corresponding to the selected indexes
-* another **dependent observable** that returns `true` or `false` depending on whether any of `selectedItems` has some property (like being new or being unsaved). Some UI element, like a button, might be enabled or disabled based on this value.
-
-Then, changes to `items` or `selectedIndexes` will ripple through the chain of dependent observables, which in turn updates any UI bound to them. Very tidy and elegant.
-
-# How dependency tracking works
-
-*Beginners don't need to know about this, but more advanced developers will want to know why I keep making all these claims about KO automatically tracking dependencies and updating the right parts of the UI...*
-
-It's actually very simple and rather lovely. The tracking algorithm goes like this:
-
-1. Whenever you declare a dependent observable, KO immediately invokes its evaluator function to get its initial value.
-1. While your evaluator function is running, KO keeps a log of any observables (or dependent observables) that your evaluator reads the value of.
-1. When your evaluator is finished, KO sets up subscriptions to each of the observables (or dependent observables) that you've touched. The subscription callback is set to cause your evaluator to run again, looping the whole process back to step 1 (disposing of any old subscriptions that no longer apply).
-1. KO notifies any subscribers about the new value of your dependent observable.
-
-So, KO doesn't just detect your dependencies the first time your evaluator runs - it redetects them every time. This means, for example, that your dependencies can vary dynamically: dependency A could determine whether you also depend on B or C. Then, you'll only be re-evaluated when either A or your current choice of B or C changes.  You don't have to declare dependencies: they're inferred at runtime from the code's execution.
-
-The other neat trick is that declarative bindings (which includes the output from templates) are simply implemented as dependent observables. So, if a template reads the value of an observable, that template binding becomes dependent on that observable, which causes that template binding to be re-evaluated if the observable changes. Nested templates work automatically: if template X renders template Y which reads the value of observable Z, then when Z changes, only Y directly touched it, so that's the only part of the screen that gets re-rendered. 

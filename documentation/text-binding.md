@@ -34,7 +34,7 @@ Typically this is useful with elements like `<span>` or `<em>` that traditionall
 
 ### Note 1: Using functions and expressions to detemine text values
 
-If you want to detemine text programmatically, one option is to create a [dependent observable](observables.html#dependent_observables), and use its evaluator function as a place for your code that works out what text to display. 
+If you want to detemine text programmatically, one option is to create a [dependent observable](dependentObservables.html), and use its evaluator function as a place for your code that works out what text to display. 
 
 For example,
 
