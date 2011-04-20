@@ -83,8 +83,8 @@ Going back to the classic "first name + last name = full name" example, you can 
 	    write: function (value) {
 	        var lastSpacePos = value.lastIndexOf(" ");
 	        if (lastSpacePos > 0) { // Ignore values with no space character
-	            this.firstName(value.substring(0, lastSpacePos));
-	            this.lastName(value.substring(lastSpacePos + 1));   
+	            this.firstName(value.substring(0, lastSpacePos)); // Update "firstName"
+	            this.lastName(value.substring(lastSpacePos + 1)); // Update "lastName"
 	        }
 	    },
 	    owner: viewModel
@@ -118,7 +118,7 @@ Sometimes you might want to represent a data point on the screen in a different 
 	    write: function (value) {
 	        // Strip out unwanted characters, parse as float, then write the raw data back to the underlying "price" observable
 	        value = parseFloat(value.replace(/[^\.\d]/g, ""));
-	        this.price(isNaN(value) ? 0 : value);
+	        this.price(isNaN(value) ? 0 : value); // Write to underlying storage
 	    },
 	    owner: viewModel
 	});
@@ -131,7 +131,7 @@ Now, whenever the user enters a new price, the text box immediately updates to s
  
 ### Example 3: Filtering and validating user input
 
-Example 1 showed how a writeable dependent observable can effectively *filter* its incoming data by choosing not to write certain values back to the underlying observables if they don't meet some criteria. The previous code ignored full name values that didn't include a space.
+Example 1 showed how a writeable dependent observable can effectively *filter* its incoming data by choosing not to write certain values back to the underlying observables if they don't meet some criteria. It ignoreded full name values that didn't include a space.
 
 Taking this a step further, you could also toggle an `isValid` flag depending on whether the latest input was satisfactory, and display a message in the UI accordingly. I'll explain in a moment an easier way of doing validation, but first consider the following view model, which demonstrates the mechanism:
 
@@ -146,7 +146,7 @@ Taking this a step further, you could also toggle an `isValid` flag depending on
 	            this.lastInputWasValid(false);    
 	        else {
 	            this.lastInputWasValid(true);
-	            this.acceptedNumericValue(value);
+	            this.acceptedNumericValue(value); // Write to underlying storage
 	        }
 	    },
 	    owner: viewModel
