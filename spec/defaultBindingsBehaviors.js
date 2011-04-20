@@ -104,7 +104,7 @@ describe('Binding: HTML', {
         var model = { textProp: "My <span>HTML-containing</span> value" };
         testNode.innerHTML = "<span data-bind='html:textProp'></span>";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].innerHTML).should_be(model.textProp);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be(model.textProp.toLowerCase());
         value_of(testNode.childNodes[0].childNodes[1].innerHTML).should_be("HTML-containing");
     },
 
@@ -426,7 +426,57 @@ describe('Binding: Submit', {
     }
 });
 
+describe('Binding: Event', {
+    before_each: prepareTestNode,
+
+    'Should invoke the supplied function when the event occurs, using model as \'this\' param': function () {
+        var model = { 
+            firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
+            secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
+        };
+        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler}'>hey</button>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(model.firstWasCalled).should_be(true);
+        value_of(model.secondWasCalled).should_be(false);
+        ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
+        value_of(model.secondWasCalled).should_be(true);
+    },
+
+    'Should prevent default action': function () {
+        testNode.innerHTML = "<a href='http://www.example.com/' data-bind='event: { click: function() { } }'>hey</button>";
+        ko.applyBindings(null, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
+    },
+    
+    'Should let bubblable events bubble to parent elements by default': function() {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='event:{click:outerDoCall}'><button data-bind='event:{click:innerDoCall}'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(true);    	
+    },
+    
+    'Should be able to prevent bubbling of bubblable events using the (eventname)Bubble:false option': function() {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='event:{click:outerDoCall}'><button data-bind='event:{click:innerDoCall}, clickBubble:false'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(false);    	
+    }
+});
+
 describe('Binding: Click', {
+    // This is just a special case of the "event" binding, so not necessary to respecify all its behaviours	
     before_each: prepareTestNode,
 
     'Should invoke the supplied function on click, using model as \'this\' param': function () {
@@ -435,13 +485,6 @@ describe('Binding: Click', {
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.wasCalled).should_be(true);
-    },
-
-    'Should prevent default action': function () {
-        testNode.innerHTML = "<a href='http://www.example.com/' data-bind='click: function() { }'>hey</button>";
-        ko.applyBindings(null, testNode);
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
-        // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
     }
 });
 
@@ -494,6 +537,26 @@ describe('Binding: Unique Name', {
 describe('Binding: Checked', {
     before_each: prepareTestNode,
 
+    'Triggering a click should toggle a checkbox\'s checked state before the event handler fires': function() {
+        // This isn't strictly to do with the checked binding, but if this doesn't work, the rest of the specs aren't meaningful
+        testNode.innerHTML = "<input type='checkbox' />";	
+        var clickHandlerFireCount = 0, expectedCheckedStateInHandler;
+        ko.utils.registerEventHandler(testNode.childNodes[0], "click", function() { 
+            clickHandlerFireCount++; 
+            value_of(testNode.childNodes[0].checked).should_be(expectedCheckedStateInHandler);
+        })
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        expectedCheckedStateInHandler = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(testNode.childNodes[0].checked).should_be(true);
+        value_of(clickHandlerFireCount).should_be(1);
+        
+        expectedCheckedStateInHandler = false;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        value_of(clickHandlerFireCount).should_be(2);
+    },
+
     'Should be able to control a checkbox\'s checked state': function () {
         var myobservable = new ko.observable(true);
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
@@ -505,17 +568,16 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[0].checked).should_be(false);
     },
 
-    'Should update observable properties on the underlying model when the checkbox change event fires': function () {
+    'Should update observable properties on the underlying model when the checkbox click event fires': function () {
         var myobservable = new ko.observable(false);
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        testNode.childNodes[0].checked = true;
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(myobservable()).should_be(true);
     },
     
-    'Should only notify observable properties on the underlying model *once* even if the checkbox change/click events fire multiple times': function () {
+    'Should only notify observable properties on the underlying model *once* even if the checkbox change events fire multiple times': function () {
         var myobservable = new ko.observable();
         var timesNotified = 0;
         myobservable.subscribe(function() { timesNotified++ });
@@ -523,24 +585,23 @@ describe('Binding: Checked', {
         ko.applyBindings({ someProp: myobservable }, testNode);
 
         // Multiple events only cause one notification...
-        testNode.childNodes[0].checked = true;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
         
         // ... until the checkbox value actually changes
-        testNode.childNodes[0].checked = false;
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(2);        
     },    
 
-    'Should update non-observable properties on the underlying model when the checkbox change event fires': function () {
+    'Should update non-observable properties on the underlying model when the checkbox click event fires': function () {
         var model = { someProp: false };
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
 
-        testNode.childNodes[0].checked = true;
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be(true);
     },
 
@@ -549,7 +610,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");		
         value_of(myobservable()).should_be(true);
     },
 
@@ -557,7 +618,7 @@ describe('Binding: Checked', {
         var model = { someProp: false };
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
-
+        
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be(true);
     },
@@ -578,7 +639,7 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");        
         value_of(myobservable()).should_be("this radio button value");
     },
     
@@ -598,6 +659,7 @@ describe('Binding: Checked', {
         
         // ... until you click something with a different value
         ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        ko.utils.triggerEvent(testNode.childNodes[1], "change");
         value_of(timesNotified).should_be(2);        
     },     
 
@@ -608,5 +670,77 @@ describe('Binding: Checked', {
 
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be("this radio button value");
-    }
+    },
+    
+    'When a checkbox is bound to an array, the checkbox should control whether its value is in that array': function() {
+        var model = { myArray: ["Existing value", "Unrelated value"] };
+        testNode.innerHTML = "<input type='checkbox' value='Existing value' data-bind='checked:myArray' />"
+                           + "<input type='checkbox' value='New value'      data-bind='checked:myArray' />";
+        ko.applyBindings(model, testNode);
+
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
+
+        // Checkbox initial state is determined by whether the value is in the array
+        value_of(testNode.childNodes[0].checked).should_be(true);
+        value_of(testNode.childNodes[1].checked).should_be(false);
+        // Checking the checkbox puts it in the array
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");        
+        value_of(testNode.childNodes[1].checked).should_be(true);
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value", "New value"]);
+        // Unchecking the checkbox removes it from the array
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");        
+        value_of(testNode.childNodes[1].checked).should_be(false);
+        value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
+    },
+    
+    'When a checkbox is bound to an observable array, the checkbox checked state responds to changes in the array': function() {
+        var model = { myObservableArray: ko.observableArray(["Unrelated value"]) };
+        testNode.innerHTML = "<input type='checkbox' value='My value' data-bind='checked:myObservableArray' />";
+        ko.applyBindings(model, testNode);
+
+        value_of(testNode.childNodes[0].checked).should_be(false);
+        
+        // Put the value in the array; observe the checkbox reflect this
+        model.myObservableArray.push("My value");
+        value_of(testNode.childNodes[0].checked).should_be(true);
+
+        // Remove the value from the array; observe the checkbox reflect this
+        model.myObservableArray.remove("My value");
+        value_of(testNode.childNodes[0].checked).should_be(false);
+    }    
+});
+
+describe('Binding: Attr', {
+    before_each: prepareTestNode,
+  
+    'Should be able to set arbitrary attribute values': function() {
+        var model = { myValue: "first value" };
+        testNode.innerHTML = "<div data-bind='attr: {firstAttribute: myValue, \"second-attribute\": true}'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].getAttribute("firstAttribute")).should_be("first value");
+        value_of(testNode.childNodes[0].getAttribute("second-attribute")).should_be("true");
+    },
+    
+    'Should respond to changes in an observable value': function() {
+        var model = { myprop : ko.observable("initial value") };
+        testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
+        
+        // Change the observable; observe it reflected in the DOM
+        model.myprop("new value");
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
+    },
+    
+    'Should remove the attribute if the value is strictly false, null, or undefined': function() {
+        var model = { myprop : ko.observable() };
+        testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.arrayForEach([false, null, undefined], function(testValue) {
+            model.myprop("nonempty value");
+            value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("nonempty value");	
+            model.myprop(testValue);
+            value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
+        });        
+    }  
 });

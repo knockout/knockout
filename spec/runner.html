@@ -4,6 +4,9 @@
         <title>JSSpec results</title>
         <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
 
+        <!-- All specs should pass with or without jQuery being referenced -->
+        <!-- <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.js"></script> -->
+
         <script type="text/javascript" src="lib/diff_match_patch.js"></script>
         <script type="text/javascript" src="lib/JSSpec.js"></script>        
         <script type="text/javascript">
@@ -16,6 +19,12 @@
                 JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
                 throw JSSpec._assertionFailure;
             };
+            JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
+                var cleanedHtml = this.target.innerHTML.toLowerCase().replace("\r\n", "");
+                // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
+                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"ko\d+\"/g, "");
+                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
+            };
         </script>
 		<script type="text/javascript" src="lib/json2.js"></script>
         <script type="text/javascript" src="lib/knockout-latest.js"></script>
@@ -25,6 +34,7 @@
         <script type="text/javascript" src="observableBehaviors.js"></script>
         <script type="text/javascript" src="observableArrayBehaviors.js"></script>
         <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
+        <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
         <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
         <script type="text/javascript" src="jsonExpressionRewritingBehaviors.js"></script>
         <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>

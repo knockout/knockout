@@ -114,19 +114,29 @@ describe('Binding attribute syntax', {
         value_of(updatePassedValues[1]).should_be("A");
     },
 
-    'If the associated DOM element was removed, handler subscriptions are disposed': function () {
+	'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
         var observable = new ko.observable("A");
-        var passedValues = [];
-        ko.bindingHandlers.test = { update: function (element, valueAccessor) { passedValues.push(valueAccessor()); } };
-        testNode.innerHTML = "<div data-bind='test: myObservable()'></div>";
-
+        testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
-        observable("B");
-        value_of(passedValues.length).should_be(2);
+        
+        value_of(observable.getSubscriptionsCount()).should_be(1);
+        
+        ko.removeNode(testNode);
+        
+        value_of(observable.getSubscriptionsCount()).should_be(0);
+	},
 
+    'If the associated DOM element was removed independently of KO, handler subscriptions are disposed on the next evaluation': function () {
+        var observable = new ko.observable("A");
+        testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        
+        value_of(observable.getSubscriptionsCount()).should_be(1);
+        
         testNode.parentNode.removeChild(testNode);
-        observable("C");
-        value_of(passedValues.length).should_be(2);
+        observable("B"); // Force re-evaluation
+        
+        value_of(observable.getSubscriptionsCount()).should_be(0);
     },
 
     'If the binding attribute involves an observable, re-invokes the bindings if the observable notifies a change': function () {

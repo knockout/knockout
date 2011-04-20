@@ -11,6 +11,25 @@ describe('Observable Array', {
     'Should be observable': function () {
         value_of(ko.isObservable(testObservableArray)).should_be(true);
     },
+    
+    'Should initialize to empty array if you pass no args to constructor' : function() {
+        var instance = new ko.observableArray();
+        value_of(instance().length).should_be(0);    	
+    },
+
+    'Should require constructor arg, if given, to be array-like or null or undefined' : function() {
+        // Try non-array-like args
+        var threw;
+        try { threw = false; new ko.observableArray(1); } catch(ex) { threw = true }
+        value_of(threw).should_be(true);
+        try { threw = false; new ko.observableArray({}); } catch(ex) { threw = true }
+        value_of(threw).should_be(true);
+        
+        // Try allowed args
+        value_of((new ko.observableArray([1,2,3]))().length).should_be(3);
+        value_of((new ko.observableArray(null))()).should_be(null);
+        value_of((new ko.observableArray(undefined))()).should_be(undefined);
+    },
 
     'Should be able to write values to it': function () {
         testObservableArray(['X', 'Y']);
