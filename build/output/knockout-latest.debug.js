@@ -1327,12 +1327,13 @@ ko.bindingHandlers['value'] = {
         
         ko.utils.registerEventHandler(element, eventName, function () {
             runEventHandler(function() {
-                var modelValue = valueAccessor();
+            	var theObservable = valueAccessor();
+                var modelValue = ko.utils.unwrapObservable(valueAccessor());
                 var elementValue = ko.selectExtensions.readValue(element);
                 if (modelValue !== elementValue) {
-                    if (ko.isWriteableObservable(modelValue))
-                        modelValue(elementValue);
-                    else {
+                    if (ko.isWriteableObservable(theObservable)) {
+                        theObservable(elementValue);
+                    } else {
                         var allBindings = allBindingsAccessor();
                         if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
                             allBindings['_ko_property_writers']['value'](elementValue); 

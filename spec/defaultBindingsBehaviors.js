@@ -166,6 +166,24 @@ describe('Binding: Value', {
         value_of(myobservable()).should_be("some user-entered value");
     },
 
+/*
+	// This test does not work, because it is async due to the DOM events triggered, and JSSpec doesn't seem to like that.
+	// That is, it always succeeds, because by the time should_fail gets called, the test runner has moved on to the next test and seen no failures for this one.
+	'For writable observable values, should not do anything if no change was made': function () {
+		var myobservable = new ko.observable(123);
+		testNode.innerHTML = "<input data-bind='value:someProp' value='original value' />";
+		ko.applyBindings({ someProp: myobservable }, testNode);
+
+		var testContext = this;
+		myobservable.subscribe(function () {
+			value_of(testContext).should_fail("subscription callback was called even though no change was made");
+		});
+
+		testNode.childNodes[0].value = "original value";
+		ko.utils.triggerEvent(testNode.childNodes[0], "change");
+	},
+*/
+
     'For non-observable property values, should catch the node\'s onchange and write values back to the property': function () {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
