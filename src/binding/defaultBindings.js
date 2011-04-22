@@ -117,12 +117,14 @@ ko.bindingHandlers['value'] = {
             runEventHandler(function() {
                 var modelValue = valueAccessor();
                 var elementValue = ko.selectExtensions.readValue(element);
-                if (ko.isWriteableObservable(modelValue))
-                    modelValue(elementValue);
-                else {
-                    var allBindings = allBindingsAccessor();
-                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                        allBindings['_ko_property_writers']['value'](elementValue); 
+                if (modelValue !== elementValue) {
+                    if (ko.isWriteableObservable(modelValue))
+                        modelValue(elementValue);
+                    else {
+                        var allBindings = allBindingsAccessor();
+                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                            allBindings['_ko_property_writers']['value'](elementValue); 
+                    }
                 }
             });
         });
@@ -130,14 +132,8 @@ ko.bindingHandlers['value'] = {
     'update': function (element, valueAccessor) {
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
-        var valueHasChanged = (newValue != elementValue);
-        
-        // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same). 
-        // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.
-        if ((newValue === 0) && (elementValue !== 0) && (elementValue !== "0"))
-            valueHasChanged = true;
-        
-        if (valueHasChanged) {
+
+        if (newValue !== elementValue) {
             var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
 
