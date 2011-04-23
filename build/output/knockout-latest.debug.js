@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.2.0
+// Knockout JavaScript library v1.2.1pre
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -478,7 +478,10 @@ ko.utils.domNodeDisposal = new (function () {
             if ((node.nodeType != 1) && (node.nodeType != 9))
                 return;
             cleanSingleNode(node);
-            var descendants = node.getElementsByTagName("*");
+            
+            // Clone the descendants list in case it changes during iteration
+            var descendants = [];
+            ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
             for (var i = 0, j = descendants.length; i < j; i++)
                 cleanSingleNode(descendants[i]);
         },
