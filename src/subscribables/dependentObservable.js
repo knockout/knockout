@@ -39,10 +39,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function replaceSubscriptionsToDependencies(newDependencies) {
-        disposeAllSubscriptionsToDependencies();
-        ko.utils.arrayForEach(newDependencies, function (dependency) {
-            _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
-        });
+        _subscriptionsToDependencies = ko.utils.arrayUpdate(_subscriptionsToDependencies, newDependencies,
+        	function(subscription) { return subscription.subscribable; },
+        	function(dependency) { return dependency; },
+			function (dependency) {
+            	return dependency.subscribe(evaluate);
+			},
+			function(subscription) {
+				subscription.dispose();
+			}
+        );
     };
     
     function evaluate() {

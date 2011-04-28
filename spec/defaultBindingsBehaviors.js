@@ -69,6 +69,28 @@ describe('Binding: Visible', {
         testNode.innerHTML = "<input data-bind='visible:myModelProperty' />";
         ko.applyBindings({ myModelProperty: observable }, testNode);
         value_of(testNode.childNodes[0].style.display).should_be("none");
+    },
+    
+    'Should bind children only when visible': function () {
+        var observable = new ko.observable(false);
+        testNode.innerHTML = "<div data-bind='visible:myModelProperty'><input data-bind='visible:myChildProperty' /></div>";
+        ko.applyBindings({ myModelProperty: observable, myChildProperty: false }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].style.display).should_be("");
+        observable(true);
+        value_of(testNode.childNodes[0].childNodes[0].style.display).should_be("none");
+    },
+    
+    'Should unbind children when node becomes invisible': function () {
+        var observable = new ko.observable(true);
+        var childObservable = new ko.observable(false);
+        testNode.innerHTML = "<div data-bind='visible:myModelProperty'><input data-bind='visible:myChildProperty' /></div>";
+        ko.applyBindings({ myModelProperty: observable, myChildProperty: childObservable }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].style.display).should_be("none");
+        observable(false);
+        childObservable(true);
+        value_of(testNode.childNodes[0].childNodes[0].style.display).should_be("none");
+        observable(true);
+        value_of(testNode.childNodes[0].childNodes[0].style.display).should_be("");
     }
 });
 

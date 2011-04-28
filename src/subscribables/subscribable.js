@@ -1,12 +1,14 @@
 
-ko.subscription = function (callback, disposeCallback) {
+ko.subscription = function (callback, disposeCallback, subscribable) {
     this.callback = callback;
+    this.subscribable = subscribable;
     this.dispose = function () {
         this.isDisposed = true;
         disposeCallback();
     }['bind'](this);
     
     ko.exportProperty(this, 'dispose', this.dispose);
+    ko.exportProperty(this, 'subscribable', this.subscribable);
 };
 
 ko.subscribable = function () {
@@ -17,7 +19,7 @@ ko.subscribable = function () {
 
         var subscription = new ko.subscription(boundCallback, function () {
             ko.utils.arrayRemoveItem(_subscriptions, subscription);
-        });
+        }, this);
         _subscriptions.push(subscription);
         return subscription;
     };
