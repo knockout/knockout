@@ -41,10 +41,18 @@
                 
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
+                	var propagateBindings = true;
                     for (var bindingKey in parsedBindings) {
-                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
-                    }                	
+                        if (ko.bindingHandlers[bindingKey]) {
+                        	if(typeof ko.bindingHandlers[bindingKey]["init"] == "function")
+                            	invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                            propagateBindings &= !ko.bindingHandlers[bindingKey]["customChildBinding"];
+                        }
+                    }
+                    
+                    // A binding can handle the binding of its element's children - in this case, we don't want to
+                    // automatically bind them.
+                    if(propagateBindings) ko.applyBindingsToChildren(viewModel, node);
                 }
                 
                 // ... then run all the updates, which might trigger changes even on the first evaluation
@@ -58,19 +66,38 @@
         );
         isFirstEvaluation = false;
     };
-
+	
+	ko.applyBindingsToChildren = function (viewModel, parentNode) {
+		ko.utils.arrayForEach(parentNode.childNodes, function(element) {
+        	if(element.nodeType === 1) ko.applyBindings(viewModel, element);
+        });
+	};
+	
     ko.applyBindings = function (viewModel, rootNode) {
         if (rootNode && (rootNode.nodeType == undefined))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-                
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
-        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
-            ko.applyBindingsToNode(element, null, viewModel);
-        });
+        
+       	if (rootNode.getAttribute(defaultBindingAttributeName) !== null) {
+            ko.applyBindingsToNode(rootNode, null, viewModel);
+       	} else {
+       		ko.applyBindingsToChildren(viewModel, rootNode);
+       	};
+    };
+    
+    ko.removeBindingsFromChildren = function (parentNode) {
+    	var children = ko.utils.arrayUpdate([], parentNode.childNodes);
+    	for(var i = 0; i < children.length; i++) {
+    		ko.removeNode(children[i]);
+    	};
+    	for(var i = 0; i < children.length; i++) {
+    		parentNode.appendChild(children[i]);
+    	};
     };
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
+    ko.exportSymbol('ko.applyBindingsToChildren', ko.applyBindingsToChildren)
+    ko.exportSymbol('ko.removeBindingsFromChildren', ko.removeBindingsFromChildren);
 })();

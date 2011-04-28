@@ -72,14 +72,25 @@ ko.bindingHandlers['submit'] = {
 };
 
 ko.bindingHandlers['visible'] = {
-    'update': function (element, valueAccessor) {
+	'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
         var value = ko.utils.unwrapObservable(valueAccessor());
         var isCurrentlyVisible = !(element.style.display == "none");
-        if (value && !isCurrentlyVisible)
+        if (value && isCurrentlyVisible)
+        	ko.applyBindingsToChildren(viewModel, element);
+    },
+    'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var isCurrentlyVisible = !(element.style.display == "none");
+        if (value && !isCurrentlyVisible) {
+        	ko.applyBindingsToChildren(viewModel, element);
             element.style.display = "";
-        else if ((!value) && isCurrentlyVisible)
+        }
+        else if ((!value) && isCurrentlyVisible) {
             element.style.display = "none";
-    }
+            ko.removeBindingsFromChildren(element);
+        }
+    },
+    'customChildBinding': true
 }
 
 ko.bindingHandlers['enable'] = {

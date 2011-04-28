@@ -4,7 +4,7 @@ ko.utils = new (function () {
     var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     var isIe7 = /MSIE 7/i.test(navigator.userAgent);
     var knownMouseEvents = { "click" : 1, "dblclick" : 1, "mousedown" : 1, "mouseup" : 1, "mousemove" : 1, "mouseover" : 1, "mouseout" : 1, "mouseenter" : 1, "mouseleave" : 1 };
-
+	
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
@@ -12,12 +12,56 @@ ko.utils = new (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
     
+    function ident(i) { return i; }
+    
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
         
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
+        },
+        
+        arrayUpdate: function (array, items, arrayKey, itemKey, ctor, dtor) {
+        	arrayKey = arrayKey || ident;
+        	itemKey = itemKey || arrayKey;
+        	ctor = ctor || ident;
+        	
+            var ai = 0, ii = 0;
+            var newarray = [];
+            while( ai < array.length && ii < items.length ) {
+            	var a = array[ai], i = items[ii];
+            	var ak = arrayKey(a), ik = itemKey(i);
+            	if( ak == ik ) {
+            		newarray.push(a);
+            		ii++;
+            		array[ai] = null;
+            	}
+            	ai++;
+            }
+            while( ii < items.length ) {
+            	var i = items[ii++];
+            	var k = itemKey(i);
+            	var found = false;
+            	for ( var ri = 0; ri < array.length; ri++ ) {
+            		var a = array[ri];
+            		if ( a && arrayKey(a) == k ) {
+            			newarray.push(a);
+            			array[ri] = null;
+            			found = true;
+            			break;
+            		}
+            	}
+            	if (!found) {
+            		newarray.push(ctor(i));
+            	}
+            }
+            if( dtor ) {
+            	for( var i = 0; i < array.length; i++ ) {
+            		if(array[i]) dtor(array[i]);
+            	}
+            }
+            return newarray;
         },
 
         arrayIndexOf: function (array, item) {
@@ -346,6 +390,7 @@ ko.utils = new (function () {
 
 ko.exportSymbol('ko.utils', ko.utils);
 ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
+ko.exportSymbol('ko.utils.arrayUpdate', ko.utils.arrayUpdate);
 ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
 ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
 ko.exportSymbol('ko.utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
