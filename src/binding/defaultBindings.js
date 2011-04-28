@@ -73,14 +73,12 @@ ko.bindingHandlers['submit'] = {
 
 ko.bindingHandlers['visible'] = {
 	'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
-		console.log("init");
         var value = ko.utils.unwrapObservable(valueAccessor());
         var isCurrentlyVisible = !(element.style.display == "none");
         if (value && isCurrentlyVisible)
         	ko.applyBindingsToChildren(viewModel, element);
     },
     'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
-    	console.log("update");
         var value = ko.utils.unwrapObservable(valueAccessor());
         var isCurrentlyVisible = !(element.style.display == "none");
         if (value && !isCurrentlyVisible) {
