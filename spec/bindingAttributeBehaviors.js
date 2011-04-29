@@ -113,8 +113,23 @@ describe('Binding attribute syntax', {
         value_of(updatePassedValues.length).should_be(2);
         value_of(updatePassedValues[1]).should_be("A");
     },
+    
+    'Should provide a separate datastore to each binding on each node': function() {
+        var acceptedValues = [];
+        ko.bindingHandlers.test1 = {
+            init: function (element, valueAccessor, allBindings, viewModel, dataStore) { dataStore.myValue = valueAccessor() },
+            update: function (element, valueAccessor, allBindings, viewModel, dataStore) { value_of(dataStore.myValue).should_be(valueAccessor()); acceptedValues.push(valueAccessor()); }
+        };    	
+        ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
+        testNode.innerHTML = "<div data-bind='test1: 123, test2: 456'></div><div data-bind='test1: 789'></div>";
+        ko.applyBindings(null, testNode);
+        acceptedValues.sort();
+        value_of(acceptedValues[0]).should_be(123);
+        value_of(acceptedValues[1]).should_be(456);
+        value_of(acceptedValues[2]).should_be(789);
+    },
 
-	'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
+    'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
         var observable = new ko.observable("A");
         testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
@@ -124,7 +139,7 @@ describe('Binding attribute syntax', {
         ko.removeNode(testNode);
         
         value_of(observable.getSubscriptionsCount()).should_be(0);
-	},
+    },
 
     'If the associated DOM element was removed independently of KO, handler subscriptions are disposed on the next evaluation': function () {
         var observable = new ko.observable("A");

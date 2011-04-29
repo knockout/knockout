@@ -12,8 +12,8 @@
         }
     }
 
-    function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
-        handler(element, dataValue, allBindings, viewModel);
+    function invokeBindingHandler(handler, element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
+        handler(element, valueAccessor, allBindingsAccessor, viewModel, dataStore);
     }
     
     function applyBindingsToDescendantsInternal (viewModel, nodeVerified) {
@@ -48,6 +48,7 @@
             return parsedBindings;
         }
         
+        var bindingsDataStores = {};
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
@@ -56,15 +57,16 @@
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
+                        bindingsDataStores[bindingKey] = {};
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
+                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingsDataStores[bindingKey]);	
                     }                	
                 }
                 
                 // ... then run all the updates, which might trigger changes even on the first evaluation
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
-                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingsDataStores[bindingKey]);
                 }
             },
             null,
