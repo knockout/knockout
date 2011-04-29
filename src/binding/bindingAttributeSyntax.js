@@ -15,11 +15,25 @@
     function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
         handler(element, dataValue, allBindings, viewModel);
     }
+    
+    function applyBindingsToDescendantsInternal (viewModel, nodeVerified) {
+        var child;
+        for (var i = 0; child = nodeVerified.childNodes[i]; i++) {
+            if (child.nodeType === 1)
+                applyBindingsToNodeAndDescendantsInternal(viewModel, child);
+        }       	
+    }
+    
+    function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified) {
+        if (nodeVerified.getAttribute(defaultBindingAttributeName))
+            ko.applyBindingsToNode(nodeVerified, null, viewModel);
+        applyBindingsToDescendantsInternal(viewModel, nodeVerified);
+    }    
 
     ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
         var isFirstEvaluation = true;
         bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
-
+            
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
         // model properties in the context of the changed data.
@@ -58,19 +72,22 @@
         );
         isFirstEvaluation = false;
     };
+    
+    ko.applyBindingsToDescendants = function(viewModel, node) {
+        if ((!node) || (node.nodeType !== 1))
+            throw new Error("ko.applyBindingsToDescendants: first parameter should be your view model; second parameter should be a DOM node");
+        applyBindingsToDescendantsInternal(viewModel, node);
+    };
 
     ko.applyBindings = function (viewModel, rootNode) {
-        if (rootNode && (rootNode.nodeType == undefined))
-            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+        if (rootNode && (rootNode.nodeType !== 1))
+            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-                
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
-        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
-            ko.applyBindingsToNode(element, null, viewModel);
-        });
+        applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode);
     };
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
 })();
