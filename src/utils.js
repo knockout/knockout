@@ -62,6 +62,7 @@ ko.utils = new (function () {
         arrayPushAll: function (array, valuesToPush) {
             for (var i = 0, j = valuesToPush.length; i < j; i++)
                 array.push(valuesToPush[i]);	
+            return array;
         },
 
         emptyDomNode: function (domNode) {
