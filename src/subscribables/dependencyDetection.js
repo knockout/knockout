@@ -1,21 +1,25 @@
 
 ko.dependencyDetection = (function () {
-    var _detectedDependencies = [];
-
+    var _frames = [];
+    
     return {
-        begin: function () {
-            _detectedDependencies.push([]);
+        begin: function (callback) {
+            _frames.push({ callback: callback, distinctDependencies:[] });
         },
 
         end: function () {
-            return _detectedDependencies.pop();
+            _frames.pop();
         },
 
         registerDependency: function (subscribable) {
             if (!ko.isSubscribable(subscribable))
                 throw "Only subscribable things can act as dependencies";
-            if (_detectedDependencies.length > 0) {
-                _detectedDependencies[_detectedDependencies.length - 1].push(subscribable);
+            if (_frames.length > 0) {
+                var topFrame = _frames[_frames.length - 1];
+                if (ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
+                    return;
+                topFrame.distinctDependencies.push(subscribable);
+                topFrame.callback(subscribable);
             }
         }
     };

@@ -42,16 +42,6 @@ ko.utils = new (function () {
                 array.splice(index, 1);
         },
 
-        arrayGetDistinctValues: function (array) {
-            array = array || [];
-            var result = [];
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
-                    result.push(array[i]);
-            }
-            return result;
-        },
-
         arrayMap: function (array, mapping) {
             array = array || [];
             var result = [];

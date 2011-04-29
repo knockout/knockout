@@ -37,13 +37,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
         _subscriptionsToDependencies = [];
     }
-
-    function replaceSubscriptionsToDependencies(newDependencies) {
-        disposeAllSubscriptionsToDependencies();
-        ko.utils.arrayForEach(newDependencies, function (dependency) {
-            _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
-        });
-    };
     
     function evaluate() {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
@@ -57,11 +50,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         try {
-            ko.dependencyDetection.begin();
+            disposeAllSubscriptionsToDependencies();
+            ko.dependencyDetection.begin(function(subscribable) {
+                _subscriptionsToDependencies.push(subscribable.subscribe(evaluate));
+            });
             _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
-            var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
-            replaceSubscriptionsToDependencies(distinctDependencies);
+            ko.dependencyDetection.end();
         }
 
         dependentObservable.notifySubscribers(_latestValue);
