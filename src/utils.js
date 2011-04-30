@@ -100,19 +100,7 @@ ko.utils = new (function () {
             else
                 optionNode.selected = isSelected;
         },
-
-        getElementsHavingAttribute: function (rootNode, attributeName) {
-            if ((!rootNode) || (rootNode.nodeType != 1)) return [];
-            var results = [];
-            if (rootNode.getAttribute(attributeName) !== null)
-                results.push(rootNode);
-            var descendants = rootNode.getElementsByTagName("*");
-            for (var i = 0, j = descendants.length; i < j; i++)
-                if (descendants[i].getAttribute(attributeName) !== null)
-                    results.push(descendants[i]);
-            return results;
-        },
-
+        
         stringTrim: function (string) {
             return (string || "").replace(stringTrimRegex, "");
         },
@@ -341,7 +329,6 @@ ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
-ko.exportSymbol('ko.utils.getElementsHavingAttribute', ko.utils.getElementsHavingAttribute);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
