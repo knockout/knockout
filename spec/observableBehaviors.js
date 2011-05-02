@@ -122,7 +122,22 @@ describe('Observable', {
         instance.subscribe(notifiedValues.push, notifiedValues);
         instance(constantObject);
         value_of(notifiedValues).should_be([constantObject]);    	
-    },        
+    },      
+    
+    'Should notify subscribers of a change even when an identical primitive is written if you\'ve set the equality comparer to null': function() {
+        var instance = new ko.observable("A");
+        var notifiedValues = [];
+        instance.subscribe(notifiedValues.push, notifiedValues);
+        
+        // No notification by default
+        instance("A");
+        value_of(notifiedValues).should_be([]);
+        
+        // But there is a notification if we null out the equality comparer
+        instance.equalityComparer = null;
+        instance("A");
+        value_of(notifiedValues).should_be(["A"]);
+    },
     
     'Should ignore writes when the equalityComparer callback states that the values are equal': function() {
         var instance = new ko.observable();
