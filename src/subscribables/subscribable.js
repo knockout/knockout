@@ -35,7 +35,10 @@ ko.subscribable = function () {
         return _subscriptions.length;
     };
     
+    this.extend = applyExtenders;
+    
     ko.exportProperty(this, 'subscribe', this.subscribe);
+    ko.exportProperty(this, 'extend', this.extend);
     ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
     ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
 }

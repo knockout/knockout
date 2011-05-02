@@ -5,6 +5,7 @@ knockoutDebugCallback([
     'src/utils.domData.js',
     'src/utils.domNodeDisposal.js',
     'src/memoization.js',    
+    'src/subscribables/extenders.js',
     'src/subscribables/subscribable.js',
     'src/subscribables/dependencyDetection.js',
     'src/subscribables/observable.js',
