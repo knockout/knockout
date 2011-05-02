@@ -124,9 +124,13 @@ ko.utils = new (function () {
         },
 
         evalWithinScope: function (expression, scope) {
+            // Always do the evaling within a "new Function" to block access to parent scope
             if (scope === undefined)
                 return (new Function("return " + expression))();
-            with (scope) { return eval("(" + expression + ")"); }
+                
+            // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
+            // the variable name "expression" itself will clash with a subproperty called "expression"
+            return (new Function("sc", "with(sc) { return (" + expression + ") }"))(scope);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
