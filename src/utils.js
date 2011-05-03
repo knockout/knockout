@@ -24,7 +24,7 @@ ko.utils = new (function () {
             if (typeof array.indexOf == "function")
                 return array.indexOf(item);
             for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] == item)
+                if (array[i] === item)
                     return i;
             return -1;
         },
