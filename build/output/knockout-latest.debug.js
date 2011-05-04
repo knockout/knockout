@@ -40,7 +40,7 @@ ko.utils = new (function () {
             if (typeof array.indexOf == "function")
                 return array.indexOf(item);
             for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] == item)
+                if (array[i] === item)
                     return i;
             return -1;
         },
@@ -642,15 +642,25 @@ ko.dependencyDetection = (function () {
             }
         }
     };
-})();
+})();var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
+
+function valuesArePrimitiveAndEqual(a, b) {
+    var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+    return oldValueIsPrimitive ? (a === b) : false;
+}
+
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
     function observable() {
         if (arguments.length > 0) {
-            // Write
-            _latestValue = arguments[0];
-            observable.notifySubscribers(_latestValue);
+            // Write            
+            
+            // Ignore writes if the value hasn't changed
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+                _latestValue = arguments[0];
+                observable.notifySubscribers(_latestValue);        		
+            }
             return this; // Permits chained assignments
         }
         else {
@@ -661,7 +671,8 @@ ko.observable = function (initialValue) {
     }
     observable.__ko_proto__ = ko.observable;
     observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
-
+    observable['equalityComparer'] = valuesArePrimitiveAndEqual;
+    
     ko.subscribable.call(observable);
     
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
