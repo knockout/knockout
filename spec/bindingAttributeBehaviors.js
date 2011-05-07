@@ -194,5 +194,25 @@ describe('Binding attribute syntax', {
         try { ko.applyBindings(null, testNode) }
         catch(ex) { didThrow = true; value_of(ex.message).should_contain('Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.') }
         value_of(didThrow).should_be(true);
-    }
+    },
+    
+    'Should be able to supply an additional scope variable whose properties are accessible in binding attributes': function() {
+        testNode.innerHTML = "<div data-bind='text: someExtraScopeValue'></div><div data-bind='text: myViewModelProperty'></div>"
+        var additionalScope = { someExtraScopeValue: 'scopePropVal' };
+        ko.applyBindings({ myViewModelProperty: 'viewModelPropVal' }, testNode, { extraScope: additionalScope });
+        
+        value_of(testNode.childNodes[1].innerHTML).should_be('viewModelPropVal');
+        value_of(testNode.childNodes[0].innerHTML).should_be('scopePropVal');
+    },
+    
+    'Should use properties on the view model in preference to properties on the additional scope object': function() {
+        testNode.innerHTML = "<div data-bind='text: viewModelProp'></div><div data-bind='text: sharedProp'></div><div data-bind='text: additionalProp'></div>"
+        var additionalScope = { additionalProp: 'additionalPropVal', sharedProp: 'valueFromAdditionalScope' };
+        var viewModel =       { viewModelProp:  'viewModelPropVal',  sharedProp: 'valueFromViewModel' };
+        ko.applyBindings(viewModel, testNode, { extraScope: additionalScope });
+        
+        value_of(testNode.childNodes[0].innerHTML).should_be('viewModelPropVal');
+        value_of(testNode.childNodes[1].innerHTML).should_be('valueFromViewModel');
+        value_of(testNode.childNodes[2].innerHTML).should_be('additionalPropVal');
+    }    
 })
