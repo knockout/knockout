@@ -25,9 +25,12 @@
     }
     
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified) {
+        var shouldBindDescendants = true;
         if (nodeVerified.getAttribute(defaultBindingAttributeName))
-            ko.applyBindingsToNode(nodeVerified, null, viewModel);
-        applyBindingsToDescendantsInternal(viewModel, nodeVerified);
+            shouldBindDescendants = ko.applyBindingsToNode(nodeVerified, null, viewModel).shouldBindDescendants;
+            
+        if (shouldBindDescendants)
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified);
     }    
 
     ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
@@ -48,7 +51,7 @@
             return parsedBindings;
         }
         
-        var bindingsDataStores = {};
+        var bindingsDataStores = {}, bindingHandlerThatControlsDescendantBindings;
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
@@ -58,21 +61,38 @@
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
                         bindingsDataStores[bindingKey] = {};
-                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingsDataStores[bindingKey]);	
+                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function") {
+                            var handlerInitFn = ko.bindingHandlers[bindingKey]["init"];
+                            var dataStore = bindingsDataStores[bindingKey];
+                            var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, dataStore);
+                            
+                            // If this binding handler claims to control descendant bindings, make a note of this
+                            if (initResult && initResult['controlsDescendantBindings']) {
+                                if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                                    throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                                bindingHandlerThatControlsDescendantBindings = bindingKey;
+                            }
+                        }
                     }                	
                 }
                 
                 // ... then run all the updates, which might trigger changes even on the first evaluation
                 for (var bindingKey in parsedBindings) {
-                    if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
-                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingsDataStores[bindingKey]);
+                    if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function") {
+                        var handlerUpdateFn = ko.bindingHandlers[bindingKey]["update"];
+                        var dataStore = bindingsDataStores[bindingKey];
+                        handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, dataStore);
+                    }
                 }
             },
             null,
             { 'disposeWhenNodeIsRemoved' : node }
         );
+        
         isFirstEvaluation = false;
+        return { 
+            shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
+        };
     };
     
     ko.applyBindingsToDescendants = function(viewModel, node) {

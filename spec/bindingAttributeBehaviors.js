@@ -167,5 +167,32 @@ describe('Binding attribute syntax', {
         observable({ message: "goodbye" });
         value_of(passedValues.length).should_be(2);
         value_of(passedValues[1]).should_be("goodbye");
+    },
+    
+    'Bindings can signal that they control descendant bindings by returning a flag from their init function': function() {
+        ko.bindingHandlers.test = {  
+            init: function() { return { controlsDescendantBindings : true } }
+        };
+        testNode.innerHTML = "<div data-bind='test: true'>"
+                           +     "<div data-bind='text: 123'>456</div>"
+                           + "</div>"
+                           + "<div data-bind='text: 123'>456</div>";
+        ko.applyBindings(null, testNode);
+        
+        value_of(testNode.childNodes[0].childNodes[0].innerHTML).should_be("456");
+        value_of(testNode.childNodes[1].innerHTML).should_be("123");
+    },
+    
+    'Should not be allowed to have multiple bindings on the same element that claim to control descendant bindings': function() {
+        ko.bindingHandlers.test1 = {  
+            init: function() { return { controlsDescendantBindings : true } }
+        };
+        ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
+        testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>"
+        var didThrow = false;
+        
+        try { ko.applyBindings(null, testNode) }
+        catch(ex) { didThrow = true; value_of(ex.message).should_contain('Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.') }
+        value_of(didThrow).should_be(true);
     }
 })
