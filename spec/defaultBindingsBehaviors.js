@@ -1,4 +1,3 @@
-
 function prepareTestNode() {
     var existingNode = document.getElementById("testNode");
     if (existingNode != null)
@@ -142,9 +141,12 @@ describe('Binding: HTML', {
         var tr = testNode.childNodes[0].childNodes[0];
         if (tr.tagName == 'TBODY')
             tr = tr.childNodes[0];
+
+        var td = tr.childNodes[0];
+
         value_of(tr.tagName).should_be("TR");
-        value_of(tr.childNodes[0].tagName).should_be("TD");
-        value_of(tr.childNodes[0].innerText || tr.childNodes[0].textContent).should_be("hello");
+        value_of(td.tagName).should_be("TD");
+        value_of('innerText' in td ? td.innerText : td.textContent).should_be("hello");
     }
 });
 
