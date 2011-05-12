@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1415,24 +1415,60 @@ ko.bindingHandlers['options'] = {
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
-            for (var i = 0, j = value.length; i < j; i++) {
-                var option = document.createElement("OPTION");
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
-                
-                // Pick some text to appear in the drop-down list for this data value
-                var optionsTextValue = allBindings['optionsText'];
-                if (typeof optionsTextValue == "function")
-                    optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
-                else if (typeof optionsTextValue == "string")
-                    optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
+
+            var optionsGroupNamesValue = allBindings['optionsGroupNames'];
+
+            // Group values into optgroups
+            var groupedOptions = [];
+            var optionsGroupValue = allBindings['optionsGroup']; // undefined if not given
+            for(var i=0, j=value.length; i < j; i++) {
+                var optionsGroup = null;
+                if (typeof optionsGroupValue == "function")
+                    optionsGroup = optionsGroupValue(value[i]);
+                else if (typeof optionsGroupValue == "string") 
+                    optionsGroup = value[i][optionsGroupValue];
                 else
-                    optionText = optionValue;				 // Given no optionsText arg; use the data value itself
-                    
-                optionValue = ko.utils.unwrapObservable(optionValue);
-                optionText = ko.utils.unwrapObservable(optionText);
-                ko.selectExtensions.writeValue(option, optionValue);
-                option.innerHTML = optionText.toString();
-                element.appendChild(option);
+                    optionsGroup = "";
+                if (typeof groupedOptions[optionsGroup] == "undefined")
+                    groupedOptions[optionsGroup] = [];
+                groupedOptions[optionsGroup].push(value[i]);
+            }
+
+            // Create HTML elements
+            for (var groupName in groupedOptions) {
+                var optgroup = null;
+                // Add an OPTGROUP for all groups except for ""
+                if(groupName != "") {
+                    optgroup = document.createElement("OPTGROUP");
+                    optgroup.label = groupName;
+                    element.appendChild(optgroup);
+                }
+
+                // Create HTML elements for options within this group
+                for (var i = 0, j = groupedOptions[groupName].length; i < j; i++) {
+                    var valueGroup = groupedOptions[groupName];
+                    var option = document.createElement("OPTION");
+                    var optionValue = typeof allBindings['optionsValue'] == "string" ? valueGroup[i][allBindings['optionsValue']] : valueGroup[groupName][i];
+
+                    // Pick some text to appear in the drop-down list for this data value
+                    var optionsTextValue = allBindings['optionsText'];
+                    if (typeof optionsTextValue == "function")
+                        optionText = optionsTextValue(valueGroup[i]); // Given a function; run it against the data value
+                    else if (typeof optionsTextValue == "string")
+                        optionText = valueGroup[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
+                    else
+                        optionText = optionValue; // Given no optionsText arg; use the data value itself
+
+                    optionValue = ko.utils.unwrapObservable(optionValue);
+                    optionText = ko.utils.unwrapObservable(optionText);
+                    ko.selectExtensions.writeValue(option, optionValue);
+                    option.innerHTML = optionText.toString();
+
+                    if (optgroup != null)
+                        optgroup.appendChild(option);
+                    else
+                        element.appendChild(option);
+                }
             }
 
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
@@ -1445,7 +1481,7 @@ ko.bindingHandlers['options'] = {
                     countSelectionsRetained++;
                 }
             }
-            
+
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
         }
@@ -1629,6 +1665,7 @@ ko.bindingHandlers['attr'] = {
         }
     }
 };
+
 ko.templateEngine = function () {
     this['renderTemplate'] = function (templateName, data, options) {
         throw "Override renderTemplate in your ko.templateEngine subclass";
@@ -2141,4 +2178,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);
