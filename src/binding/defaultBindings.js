@@ -275,9 +275,7 @@ ko.bindingHandlers['text'] = {
 ko.bindingHandlers['html'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        if ((value === null) || (value === undefined))
-            value = "";
-        element.innerHTML = value;
+        ko.utils.setHtml(element, value);
     }
 };
 

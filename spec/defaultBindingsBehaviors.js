@@ -118,7 +118,17 @@ describe('Binding: HTML', {
         testNode.innerHTML = "<span data-bind='html:undefined' ></span>";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
-    }	    	
+    },
+    
+    'Should be able to write arbitrary HTML, even if it is not semantically correct': function() {
+        // Represents issue #98 (https://github.com/SteveSanderson/knockout/issues/98)
+        // IE 8 and earlier is excessively strict about the use of .innerHTML - it throws
+        // if you try to write a <P> tag inside an existing <P> tag, for example.
+        var model = { textProp: "<p>hello</p><li>this isn't semantically correct</li>" };
+        testNode.innerHTML = "<p data-bind='html:textProp'></p>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html(model.textProp);
+    }
 });
 
 describe('Binding: Value', {
