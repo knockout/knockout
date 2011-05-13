@@ -19,6 +19,12 @@
                 JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
                 throw JSSpec._assertionFailure;
             };
+            JSSpec.DSL.Subject.prototype.should_contain = function (expected) {
+                if (this.target.indexOf(expected) >= 0)
+                    return;
+                JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
+                throw JSSpec._assertionFailure;
+            };            
             JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
                 var cleanedHtml = this.target.innerHTML.toLowerCase().replace("\r\n", "");
                 // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
