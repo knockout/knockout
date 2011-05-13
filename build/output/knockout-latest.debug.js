@@ -1377,32 +1377,42 @@ ko.bindingHandlers['disable'] = {
 };
 
 ko.bindingHandlers['value'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {    	
-        var eventName = allBindingsAccessor()["valueUpdate"] || "change";
-        
-        // The syntax "after<eventname>" means "run the handler asynchronously after the event"
-        // This is useful, for example, to catch "keydown" events after the browser has updated the control
-        // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
-        var handleEventAsynchronously = false;
-        if (ko.utils.stringStartsWith(eventName, "after")) {
-            handleEventAsynchronously = true;
-            eventName = eventName.substring("after".length);
+    'init': function (element, valueAccessor, allBindingsAccessor) { 
+        // Always catch "change" event; possibly other events too if asked
+        var eventsToCatch = ["change"];
+        var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        if (requestedEventsToCatch) {
+            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
+                requestedEventsToCatch = [requestedEventsToCatch];
+            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
+            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
         }
-        var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
-                                                        : function(handler) { handler() };
         
-        ko.utils.registerEventHandler(element, eventName, function () {
-            runEventHandler(function() {
-                var modelValue = valueAccessor();
-                var elementValue = ko.selectExtensions.readValue(element);
-                if (ko.isWriteableObservable(modelValue))
-                    modelValue(elementValue);
-                else {
-                    var allBindings = allBindingsAccessor();
-                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                        allBindings['_ko_property_writers']['value'](elementValue); 
-                }
-            });
+        ko.utils.arrayForEach(eventsToCatch, function(eventName) {
+            // The syntax "after<eventname>" means "run the handler asynchronously after the event"
+            // This is useful, for example, to catch "keydown" events after the browser has updated the control
+            // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
+            var handleEventAsynchronously = false;
+            if (ko.utils.stringStartsWith(eventName, "after")) {
+                handleEventAsynchronously = true;
+                eventName = eventName.substring("after".length);
+            }
+            var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
+                                                            : function(handler) { handler() };
+            
+            ko.utils.registerEventHandler(element, eventName, function () {
+                runEventHandler(function() {
+                    var modelValue = valueAccessor();
+                    var elementValue = ko.selectExtensions.readValue(element);
+                    if (ko.isWriteableObservable(modelValue))
+                        modelValue(elementValue);
+                    else {
+                        var allBindings = allBindingsAccessor();
+                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                            allBindings['_ko_property_writers']['value'](elementValue); 
+                    }
+                });
+            });	    	
         });
     },
     'update': function (element, valueAccessor) {
