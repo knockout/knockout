@@ -197,9 +197,13 @@ ko.bindingHandlers['options'] = {
             }
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
                 
-                // Pick some text to appear in the drop-down list for this data value
+                // Apply a value to the option element
+                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                optionValue = ko.utils.unwrapObservable(optionValue);
+                ko.selectExtensions.writeValue(option, optionValue);
+                
+                // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
@@ -207,11 +211,12 @@ ko.bindingHandlers['options'] = {
                     optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
                 else
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
-                    
-                optionValue = ko.utils.unwrapObservable(optionValue);
-                optionText = ko.utils.unwrapObservable(optionText);
-                ko.selectExtensions.writeValue(option, optionValue);
-                option.innerHTML = optionText.toString();
+                if ((optionText === null) || (optionText === undefined))
+                    optionText = "";                                    
+                optionText = ko.utils.unwrapObservable(optionText).toString();
+                typeof option.innerText == "string" ? option.innerText = optionText
+                                                    : option.textContent = optionText;
+
                 element.appendChild(option);
             }
 
