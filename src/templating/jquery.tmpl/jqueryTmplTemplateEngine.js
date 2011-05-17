@@ -2,7 +2,7 @@
 ko.jqueryTmplTemplateEngine = function () {
     // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
     // doesn't expose a version number, so we have to infer it.
-    this.jQueryTmplVersion = (function() {        
+    this.jQueryTmplVersion = (function() {      
         if ((typeof(jQuery) == "undefined") || !jQuery['tmpl'])
             return 0;
         // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
@@ -16,6 +16,11 @@ ko.jqueryTmplTemplateEngine = function () {
         }
         return 1; // Very old version doesn't have an extensible tag system
     })();
+    
+    function ensureHasReferencedJQueryTemplates() {
+        if (this.jQueryTmplVersion == 0)
+            throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");    	
+    }
 
     this['getTemplateNode'] = function (template) {
         var templateNode = document.getElementById(template);
@@ -30,8 +35,7 @@ ko.jqueryTmplTemplateEngine = function () {
     
     this['renderTemplate'] = function (templateId, data, options) {
         options = options || {};
-        if (this.jQueryTmplVersion == 0)
-            throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
+        ensureHasReferencedJQueryTemplates.call(this);
         
         if (this.jQueryTmplVersion == 1) {    	
             // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
@@ -59,6 +63,8 @@ ko.jqueryTmplTemplateEngine = function () {
     },
 
     this['isTemplateRewritten'] = function (templateId) {
+        ensureHasReferencedJQueryTemplates.call(this);
+        
         // It must already be rewritten if we've already got a cached version of it
         // (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
         if (templateId in jQuery['template'])
