@@ -380,7 +380,7 @@ ko.bindingHandlers['checked'] = {
 };
 
 ko.bindingHandlers['attr'] = {
-    update: function(element, valueAccessor, allBindingsAccessor) {
+    'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
@@ -394,6 +394,27 @@ ko.bindingHandlers['attr'] = {
                 else 
                     element.setAttribute(attrName, attrValue.toString());
             }
+        }
+    }
+};
+
+ko.bindingHandlers['if'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
+        dataStore.ifHtml = element.innerHTML;
+        return { 'controlsDescendantBindings': true }
+    },
+    
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if (value) {
+            if (dataStore.ifHasEmptied) {
+                ko.utils.setHtml(element, dataStore.ifHtml);
+                dataStore.ifHasEmptied = false;
+            }
+            ko.applyBindingsToDescendants(viewModel, element);
+        } else if (!dataStore.ifHasEmptied) {
+            ko.utils.emptyDomNode(element);
+            dataStore.ifHasEmptied = true;
         }
     }
 };

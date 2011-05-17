@@ -31,6 +31,11 @@
                 cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"ko\d+\"/g, "");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
+            JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
+            	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
+                JSSpec.DSL.Subject.prototype.should_be.call({ target: actualText }, expectedText);
+            };
+            
         </script>
         <script type="text/javascript" src="lib/json2.js"></script>
         <script type="text/javascript" src="../build/knockout-raw.js"></script>
