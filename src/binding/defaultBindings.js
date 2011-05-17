@@ -398,23 +398,30 @@ ko.bindingHandlers['attr'] = {
     }
 };
 
-ko.bindingHandlers['if'] = {
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
-        dataStore.ifHtml = element.innerHTML;
+ko.bindingHandlers['with'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
+        options['dataStore'].withHtml = element.innerHTML;
         return { 'controlsDescendantBindings': true }
     },
     
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
         var value = ko.utils.unwrapObservable(valueAccessor());
         if (value) {
-            if (dataStore.ifHasEmptied) {
-                ko.utils.setHtml(element, dataStore.ifHtml);
-                dataStore.ifHasEmptied = false;
+            if (options['dataStore'].withHasEmptied) {
+                ko.utils.setHtml(element, options['dataStore'].withHtml);
+                options['dataStore'].withHasEmptied = false;
             }
-            ko.applyBindingsToDescendants(viewModel, element);
-        } else if (!dataStore.ifHasEmptied) {
+            ko.applyBindingsToDescendants(descendantBindingContext || value, element);
+        } else if (!options['dataStore'].withHasEmptied) {
             ko.utils.emptyDomNode(element);
-            dataStore.ifHasEmptied = true;
+            options['dataStore'].withHasEmptied = true;
         }
+    }
+};
+
+ko.bindingHandlers['if'] = {
+    'init': ko.bindingHandlers['with']['init'],
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
+        ko.bindingHandlers['with']['update'](element, valueAccessor, allBindingsAccessor, viewModel, options, viewModel);
     }
 };

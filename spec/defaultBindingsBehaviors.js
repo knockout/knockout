@@ -808,3 +808,40 @@ describe('Binding: If', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     }	
 });
+
+describe('Binding: With', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is falsey': function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truey': function() {		
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: existentChildProp'></span></div>";
+        value_of(testNode.childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+    
+    'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value, performing binding in the context of the value': function() {
+        var someItem = ko.observable(undefined);
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: occasionallyExistentChildProp'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        
+        // First it's not there
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+        
+        // Then it's there
+        someItem({ occasionallyExistentChildProp: 'Child prop value' });
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+        
+        // Then it's gone again
+        someItem(null);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    }	
+});

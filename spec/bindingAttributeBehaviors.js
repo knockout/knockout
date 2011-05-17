@@ -117,8 +117,8 @@ describe('Binding attribute syntax', {
     'Should provide a separate datastore to each binding on each node': function() {
         var acceptedValues = [];
         ko.bindingHandlers.test1 = {
-            init: function (element, valueAccessor, allBindings, viewModel, dataStore) { dataStore.myValue = valueAccessor() },
-            update: function (element, valueAccessor, allBindings, viewModel, dataStore) { value_of(dataStore.myValue).should_be(valueAccessor()); acceptedValues.push(valueAccessor()); }
+            init: function (element, valueAccessor, allBindings, viewModel, options) { options.dataStore.myValue = valueAccessor() },
+            update: function (element, valueAccessor, allBindings, viewModel, options) { value_of(options.dataStore.myValue).should_be(valueAccessor()); acceptedValues.push(valueAccessor()); }
         };    	
         ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
         testNode.innerHTML = "<div data-bind='test1: 123, test2: 456'></div><div data-bind='test1: 789'></div>";

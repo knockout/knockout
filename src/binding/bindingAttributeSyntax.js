@@ -12,10 +12,6 @@
         }
     }
 
-    function invokeBindingHandler(handler, element, valueAccessor, allBindingsAccessor, viewModel, dataStore) {
-        handler(element, valueAccessor, allBindingsAccessor, viewModel, dataStore);
-    }
-    
     function applyBindingsToDescendantsInternal (viewModel, nodeVerified, options) {
         var child;
         for (var i = 0; child = nodeVerified.childNodes[i]; i++) {
@@ -52,7 +48,7 @@
             return parsedBindings;
         }
         
-        var bindingsDataStores = {}, bindingHandlerThatControlsDescendantBindings;
+        var optionsPerBinding = {}, bindingHandlerThatControlsDescendantBindings;
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
@@ -61,11 +57,13 @@
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
-                        bindingsDataStores[bindingKey] = {};
+                        optionsPerBinding[bindingKey] = {
+                            'valueAccessor': makeValueAccessor(bindingKey),
+                            'dataStore': {}
+                        };
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function") {
                             var handlerInitFn = ko.bindingHandlers[bindingKey]["init"];
-                            var dataStore = bindingsDataStores[bindingKey];
-                            var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, dataStore);
+                            var initResult = handlerInitFn(node, optionsPerBinding[bindingKey]['valueAccessor'], parsedBindingsAccessor, viewModel, optionsPerBinding[bindingKey]);
                             
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -81,8 +79,7 @@
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function") {
                         var handlerUpdateFn = ko.bindingHandlers[bindingKey]["update"];
-                        var dataStore = bindingsDataStores[bindingKey];
-                        handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, dataStore);
+                        handlerUpdateFn(node, optionsPerBinding[bindingKey]['valueAccessor'], parsedBindingsAccessor, viewModel, optionsPerBinding[bindingKey]);
                     }
                 }
             },
