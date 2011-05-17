@@ -425,3 +425,22 @@ ko.bindingHandlers['if'] = {
         ko.bindingHandlers['with']['update'](element, valueAccessor, allBindingsAccessor, viewModel, options, viewModel);
     }
 };
+
+ko.bindingHandlers['foreach'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
+        options['dataStore'].foreachHtml = element.innerHTML;
+        ko.utils.emptyDomNode(element);
+        return { 'controlsDescendantBindings': true }
+    },
+    
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var mapping = function(arrayEntry) {
+        	var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
+        	for (var i = 0, j = nodeArray.length; i < j; i++)
+        		ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
+        	return nodeArray;
+        };
+        ko.utils.setDomNodeChildrenFromArrayMapping(element, value, mapping); // Todo: afterAdd, etc
+    }
+};

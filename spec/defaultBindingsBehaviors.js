@@ -845,3 +845,60 @@ describe('Binding: With', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     }	
 });
+
+describe('Binding: Foreach', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is falsey': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        var someItems = [
+        	{ childProp: 'first child' },
+        	{ childProp: 'second child' }
+        ];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    },
+    
+    'Should be able to use $data to reference each array item being bound': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
+    },
+    
+    
+    'Should add and remove nodes to match changes in the bound array': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        var someItems = ko.observableArray([
+        	{ childProp: 'first child' },
+        	{ childProp: 'second child' }
+        ]);
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+
+		// Add items at the beginning...
+		someItems.unshift({ childProp: 'zeroth child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+        		
+        // ... middle
+		someItems.splice(2, 0, { childProp: 'middle child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span>');
+        
+        // ... and end
+        someItems.push({ childProp: 'last child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        throw new Error("Todo: also test removes and marking with _destroy");
+    },
+    
+    'Should be able to supply afterAdd and beforeRemove callbacks': function() {
+    	throw new Error("Not implemented");
+    }    	
+});
