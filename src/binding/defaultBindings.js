@@ -434,13 +434,36 @@ ko.bindingHandlers['foreach'] = {
     },
     
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        var mapping = function(arrayEntry) {
-        	var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
-        	for (var i = 0, j = nodeArray.length; i < j; i++)
-        		ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
-        	return nodeArray;
+        var bindingValue = ko.utils.unwrapObservable(valueAccessor()), unwrappedArray;
+
+        // Support both "foreach: someArray" and "foreach: { data: someArray }" syntaxes, just like the "template" binding
+        if (bindingValue) {
+            if (typeof bindingValue.length == "number") {
+                unwrappedArray = bindingValue;
+            } else {
+                unwrappedArray = ko.utils.unwrapObservable(bindingValue.data);
+            }
+        }
+
+        // Validate the value and bail out early if necessary
+        if ((unwrappedArray === null) || (unwrappedArray === undefined)) {
+            ko.utils.emptyDomNode(element);
+            return;
+        }
+        if (typeof unwrappedArray.length != "number")
+            throw new Error("The 'foreach' binding can only be used with array-like values");
+        
+        // Filter out any entries marked as destroyed (unless we've been asked not to)
+        var filteredArray = bindingValue['includeDestroyed'] ? unwrappedArray : ko.utils.arrayFilter(unwrappedArray, function(item) { 
+                                                                                    return !item['_destroy'];
+                                                                                });
+        
+        var mapping = function(arrayEntry) {        	
+            var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
+            for (var i = 0, j = nodeArray.length; i < j; i++)
+                ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
+            return nodeArray;
         };
-        ko.utils.setDomNodeChildrenFromArrayMapping(element, value, mapping); // Todo: afterAdd, etc
+        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, mapping, { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'] });
     }
 };

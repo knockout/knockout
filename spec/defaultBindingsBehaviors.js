@@ -859,8 +859,8 @@ describe('Binding: Foreach', {
     'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {		
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
         var someItems = [
-        	{ childProp: 'first child' },
-        	{ childProp: 'second child' }
+            { childProp: 'first child' },
+            { childProp: 'second child' }
         ];
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
@@ -877,28 +877,80 @@ describe('Binding: Foreach', {
     'Should add and remove nodes to match changes in the bound array': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
         var someItems = ko.observableArray([
-        	{ childProp: 'first child' },
-        	{ childProp: 'second child' }
+            { childProp: 'first child' },
+            { childProp: 'second child' }
         ]);
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
 
-		// Add items at the beginning...
-		someItems.unshift({ childProp: 'zeroth child' });
+        // Add items at the beginning...
+        someItems.unshift({ childProp: 'zeroth child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
-        		
+                
         // ... middle
-		someItems.splice(2, 0, { childProp: 'middle child' });
+        someItems.splice(2, 0, { childProp: 'middle child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span>');
         
         // ... and end
         someItems.push({ childProp: 'last child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
         
-        throw new Error("Todo: also test removes and marking with _destroy");
+        // Also remove from beginning...
+        someItems.shift();
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        // ... and middle
+        someItems.splice(1, 1);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        // ... and end
+        someItems.pop();
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+        
+        // Also, marking as "destroy" should eliminate the item from display
+        someItems.destroy(someItems()[0]);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">second child</span>');
     },
+
+    'Should be able to supply show "_destroy"ed items via includeDestroyed option': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: true }'><span data-bind='text: childProp'></span></div>";
+        var someItems = ko.observableArray([
+            { childProp: 'first child' },
+            { childProp: 'second child', _destroy: true }
+        ]);
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    },    	
     
     'Should be able to supply afterAdd and beforeRemove callbacks': function() {
-    	throw new Error("Not implemented");
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: childprop'></span></div>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var afterAddCallbackData = [], beforeRemoveCallbackData = [];
+        ko.applyBindings({ 
+            someItems: someItems,
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentHtml: elem.parentNode.innerHTML }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentHtml: elem.parentNode.innerHTML }) }
+        }, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span>');
+        
+        // Try adding
+        someItems.push({ childprop: 'added child'});
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        value_of(afterAddCallbackData.length).should_be(1);
+        value_of(afterAddCallbackData[0].elem).should_be(testNode.childNodes[0].childNodes[1]);
+        value_of(afterAddCallbackData[0].index).should_be(1);
+        value_of(afterAddCallbackData[0].value.childprop).should_be("added child");
+        value_of(afterAddCallbackData[0].currentHtml).should_be('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+
+        // Try removing
+        someItems.shift();
+        value_of(beforeRemoveCallbackData.length).should_be(1);
+        value_of(beforeRemoveCallbackData[0].elem).should_contain_text("first child");
+        value_of(beforeRemoveCallbackData[0].index).should_be(0);
+        value_of(beforeRemoveCallbackData[0].value.childprop).should_be("first child");
+        // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
+        value_of(beforeRemoveCallbackData[0].currentHtml).should_be('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
     }    	
 });
