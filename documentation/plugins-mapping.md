@@ -8,7 +8,7 @@ Knockout is designed to allow you to use arbitrary JavaScript objects as view mo
 Most applications need to fetch data from a backend server. Since the server doesn't have any concept of observables, it will just supply a plain JavaScript object (usually serialized as JSON). The mapping plugin gives you a straightforward way to map that plain JavaScript object into a view model with the appropriate observables. This is an alternative to manually writing your own JavaScript code that constructs a view model based on some data you've fetched from the server.
 
 {% capture plugin_download_link %}
- * __[Version 0.5(beta)](https://github.com/SteveSanderson/knockout.mapping/tree/master/build/output)__ (4.6kb minified)
+ * __[Version 1.0](https://github.com/SteveSanderson/knockout.mapping/tree/master/build/output)__ (6.4kb minified)
 {% endcapture %}
 {% include plugin-download-link.html %}
 
@@ -58,14 +58,24 @@ This automatically creates observable properties for each of the properties on `
 	// Every time data is received from the server:
 	ko.mapping.updateFromJS(viewModel, data);
 
-### Working with JSON strings
-
-If your Ajax call returns a JSON string (and does not deserialize it into a JavaScript object), then you can use the functions `ko.mapping.fromJSON` and `ko.mapping.updateFromJSON` to create and update your view model instead.
-
 ### How things are mapped
 
  * All properties of an object are converted into an observable. If an update would change the value, it will update the observable.
  * Arrays are converted into [observable arrays](observableArrays.html). If an update would change the number of items, it will perform the appropriate add/remove actions. It will also try to keep the order the same as the original JavaScript array.
+ 
+### Unmapping
+
+If you want to convert your mapped object back to a regular JS object, use:
+
+    var unmapped = ko.mapping.toJS(viewModel);
+
+This will create an unmapped object containing only the properties of the mapped object that were part of your original JS object. So in other words, any properties or functions that you manually added to your view model are ignored. By default, the only exception to this rule is the `_destroy` property which will also be mapped back, because it is a property that Knockout may generate when you destroy an item from an `ko.observableArray`. See the "Advanced Usage" section for more details on how to configure this.
+
+### Working with JSON strings
+
+If your Ajax call returns a JSON string (and does not deserialize it into a JavaScript object), then you can use the functions `ko.mapping.fromJSON` and `ko.mapping.updateFromJSON` to create and update your view model instead. To unmap, you can use `ko.mapping.toJSON`.
+
+Apart from the fact that they work with JSON strings instead of JS objects these functions are completely identical to their `*JS` counterparts.
  
 ### Advanced usage
 
@@ -156,6 +166,34 @@ Of course, inside the `create` callback you can do another call to `ko.mapping.f
 		}, this);
 	}
 
+###### Ignoring certain properties using "ignore"
+
+If you want the mapping plugin to ignore some properties of your JS object (i.e. to not map them), you can specify a array of propertynames to ignore:
+
+	var mapping = {
+		'ignore': ["propertyToIgnore", "alsoIgnoreThis"]
+	}
+	var viewModel = ko.mapping.fromJS(data, mapping);
+
+The `ignore` array you specify in the mapping options is combined with the default `ignore` array. You can manipulate this default array like this:
+
+	var oldOptions = ko.mapping.defaultOptions().ignore;
+    ko.mapping.defaultOptions().ignore = ["alwaysIgnoreThis"];
+	
+###### Including certain properties using "include"
+
+When converting your view model back to a JS object, by default the mapping plugin will only include properties that were part of your original view model, except it will also include the Knockout-generated `_destroy` property even if it was not part of your original object. However, you can choose to customize this array:
+
+	var mapping = {
+		'include': ["propertyToInclude", "alsoIncludeThis"]
+	}
+	var viewModel = ko.mapping.fromJS(data, mapping);
+
+The `include` array you specify in the mapping options is combined with the default `include` array, which by default only contains `_destroy`. You can manipulate this default array like this:
+
+	var oldOptions = ko.mapping.defaultOptions().include;
+    ko.mapping.defaultOptions().include = ["alwaysIncludeThis"];
+	
 ###### Specifying the update target
 
 If, like in the example above, you are performing the mapping inside of a class, you would like to have `this` as the target of your mapping operation. The third parameter to `ko.mapping.fromJS` indicates the target. For example,
@@ -165,5 +203,39 @@ If, like in the example above, you are performing the mapping inside of a class,
 So, if you would like to map a JavaScript object to `this`, you can pass `this` as the third argument:
 
 	ko.mapping.fromJS(data, {}, this);
+
+##### Mapping from multiple sources	
+	
+You can combine multiple JS objects in one viewmodel by applying multiple `ko.mapping.fromJS` calls, e.g.:
+
+    var viewModel = ko.mapping.fromJS(alice, aliceMappingOptions);
+	ko.mapping.fromJS(bob, bobMappingOptions, viewModel);
+	
+Mapping options that you specify in each call will be merged.
+
+##### Mapped observable array
+
+Observable arrays that are generated by the mapping plugin are augmented with a few functions that can make use of the `keys` mapping:
+
+* mappedRemove
+* mappedRemoveAll
+* mappedDestroy
+* mappedDestroyAll
+* mappedIndexOf
+
+They are functionally equivalent to the regular `ko.observableArray` functions, but can do things based on the key of the object. For example, this would work:
+
+    var obj = [
+        { id : 1 },
+        { id : 2 }
+    ]
+
+    var result = ko.mapping.fromJS(obj, {
+        key: function(item) {
+            return ko.utils.unwrapObservable(item.id);
+        }
+    });
+	
+    result.mappedRemove({ id : 2 });
 
 {% include plugin-download-link.html %}
