@@ -405,16 +405,11 @@ ko.bindingHandlers['with'] = {
     },
     
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
+        ko.utils.emptyDomNode(element);
         var value = ko.utils.unwrapObservable(valueAccessor());
         if (value) {
-            if (options['dataStore'].withHasEmptied) {
-                ko.utils.setHtml(element, options['dataStore'].withHtml);
-                options['dataStore'].withHasEmptied = false;
-            }
+            ko.utils.setHtml(element, options['dataStore'].withHtml);
             ko.applyBindingsToDescendants(descendantBindingContext || value, element);
-        } else if (!options['dataStore'].withHasEmptied) {
-            ko.utils.emptyDomNode(element);
-            options['dataStore'].withHasEmptied = true;
         }
     }
 };

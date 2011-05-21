@@ -843,7 +843,33 @@ describe('Binding: With', {
         // Then it's gone again
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-    }	
+    },
+    
+    'Should not bind the same elements more than once even if the supplied value notifies a change': function() {
+        var countedClicks = 0;
+        var someItem = ko.observable({
+            childProp: ko.observable('Hello'),
+            handleClick: function() { countedClicks++ }
+        });
+        
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp, click: handleClick'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        
+        // Initial state is one subscriber, one click handler
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Hello");
+        value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(countedClicks).should_be(1);
+        
+        // Force "update" binding handler to fire, then check we still have one subscriber...
+        someItem.valueHasMutated();
+        value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
+        
+        // ... and one click handler
+        countedClicks = 0;
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(countedClicks).should_be(1);		
+    }
 });
 
 describe('Binding: Foreach', {
