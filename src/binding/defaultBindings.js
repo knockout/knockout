@@ -460,8 +460,10 @@ ko.bindingHandlers['foreach'] = {
         
         var mapping = function(arrayEntry) {        	
             var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
-            for (var i = 0, j = nodeArray.length; i < j; i++)
-                ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
+            for (var i = 0, j = nodeArray.length; i < j; i++) {
+                if (nodeArray[i].nodeType == 1)
+                    ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
+            }
             return nodeArray;
         };
         ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, mapping, { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'] });
