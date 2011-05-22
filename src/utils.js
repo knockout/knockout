@@ -3,7 +3,19 @@ ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     var isIe7 = /MSIE 7/i.test(navigator.userAgent);
-    var knownMouseEvents = { "click" : 1, "dblclick" : 1, "mousedown" : 1, "mouseup" : 1, "mousemove" : 1, "mouseover" : 1, "mouseout" : 1, "mouseenter" : 1, "mouseleave" : 1 };
+    
+    // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
+    var knownEvents = {
+        'MouseEvents': ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'],
+        'KeyboardEvent': ['keyup', 'keydown', 'keypress']
+    }, knownEventTypesByEventName = {};
+    for (var eventType in knownEvents) {
+        var knownEventsForType = knownEvents[eventType];
+        if (knownEventsForType.length) {
+            for (var i = 0, j = knownEventsForType.length; i < j; i++)
+                knownEventTypesByEventName[knownEventsForType[i]] = eventType;
+        }
+    }
 
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
@@ -209,7 +221,7 @@ ko.utils = new (function () {
                 jQuery(element)['trigger'](eventType, eventData);
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
-                    var eventCategory = (eventType in knownMouseEvents ? "MouseEvents" : "HTMLEvents");
+                    var eventCategory = knownEventTypesByEventName[eventType] || "HTMLEvents";
                     var event = document.createEvent(eventCategory);
                     event.initEvent(eventType, true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, element);
                     element.dispatchEvent(event);
