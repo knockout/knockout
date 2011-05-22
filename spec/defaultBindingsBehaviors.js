@@ -1,4 +1,3 @@
-
 function prepareTestNode() {
     var existingNode = document.getElementById("testNode");
     if (existingNode != null)
@@ -118,7 +117,37 @@ describe('Binding: HTML', {
         testNode.innerHTML = "<span data-bind='html:undefined' ></span>";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
-    }	    	
+    },
+    
+    'Should be able to write arbitrary HTML, even if it is not semantically correct': function() {
+        // Represents issue #98 (https://github.com/SteveSanderson/knockout/issues/98)
+        // IE 8 and earlier is excessively strict about the use of .innerHTML - it throws
+        // if you try to write a <P> tag inside an existing <P> tag, for example.
+        var model = { textProp: "<p>hello</p><p>this isn't semantically correct</p>" };
+        testNode.innerHTML = "<p data-bind='html:textProp'></p>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html(model.textProp);
+    },
+    
+    'Should be able to write arbitrary HTML, including <tr> elements into tables': function() {
+        // Some HTML elements are awkward, because the browser implicitly adds surrounding
+        // elements, or won't allow those elements to be direct children of others.
+        // The most common examples relate to tables.
+        var model = { textProp: "<tr><td>hello</td></tr>" };
+        testNode.innerHTML = "<table data-bind='html:textProp'></table>";
+        ko.applyBindings(model, testNode);
+        
+        // Accept either of the following outcomes - there may or may not be an implicitly added <tbody>.
+        var tr = testNode.childNodes[0].childNodes[0];
+        if (tr.tagName == 'TBODY')
+            tr = tr.childNodes[0];
+
+        var td = tr.childNodes[0];
+
+        value_of(tr.tagName).should_be("TR");
+        value_of(td.tagName).should_be("TD");
+        value_of('innerText' in td ? td.innerText : td.textContent).should_be("hello");
+    }
 });
 
 describe('Binding: Value', {
@@ -217,6 +246,25 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(notifiedValues.length).should_be(2);
     },
+    
+    'Should be able to catch updates after specific events (e.g., keyup) instead of onchange': function () {
+        var myobservable = new ko.observable(123);
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        testNode.childNodes[0].value = "some user-entered value";
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        value_of(myobservable()).should_be("some user-entered value");
+    },
+    
+    'Should catch updates on change as well as the nominated valueUpdate event': function () {
+        // Represents issue #102 (https://github.com/SteveSanderson/knockout/issues/102)
+        var myobservable = new ko.observable(123);
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        testNode.childNodes[0].value = "some user-entered value";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(myobservable()).should_be("some user-entered value");
+    },           
     
     'For select boxes, should update selectedIndex when the model changes': function() {
         var observable = new ko.observable('B');
@@ -330,12 +378,12 @@ describe('Binding: Options', {
     'Should accept function in optionsText param to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', job: 'manager' }, 
-            { name: 'frank', job: 'coder' }
+            { name: 'frank', job: 'coder & tester' }
         ]);	
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }, optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
-        value_of(displayedText).should_be(["bob (manager)", "frank (coder)"]);
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });	
+        value_of(displayedText).should_be(["bob (manager)", "frank (coder & tester)"]);
     },
 
     'Should update the SELECT node\'s options if the model changes': function () {
@@ -434,13 +482,14 @@ describe('Binding: Event', {
             firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
             secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
         };
-        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler}'>hey</button>";
+        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler, mouseout:null}'>hey</button>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.firstWasCalled).should_be(true);
         value_of(model.secondWasCalled).should_be(false);
         ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
         value_of(model.secondWasCalled).should_be(true);
+        ko.utils.triggerEvent(testNode.childNodes[0], "mouseout"); // Shouldn't do anything (specifically, shouldn't throw)
     },
 
     'Should prevent default action': function () {
