@@ -219,6 +219,18 @@ ko.bindingHandlers['options'] = {
                 typeof option.innerText == "string" ? option.innerText = optionText
                                                     : option.textContent = optionText;
 
+                // Apply disabled attribute to the option element
+                var optionEnabled = allBindings['optionsEnabled'];
+                if (typeof optionEnabled == "function")
+                    optionEnabled = optionEnabled(value[i]); // Given a function; run it against the data value
+                else if (typeof optionEnabled == "string")
+                    optionEnabled = value[i][optionEnabled]; // Given a string; treat it as a property name on the data value
+                else
+                optionEnabled = true; // Given no optionEnabled arg; ensure it is still enabled
+                
+                if (!optionEnabled)
+                option.setAttribute('disabled');
+
                 element.appendChild(option);
             }
 
