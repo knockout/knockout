@@ -75,15 +75,24 @@
     // The "simpleGrid" binding
     ko.bindingHandlers.simpleGrid = {
         // This method is called to initialize the node, and will also be called again if you change what the grid is bound to
-        update: function (element, viewModelAccessor) {
-        	var viewModel = viewModelAccessor();
-            element.innerHTML = "";
+        update: function (element, viewModelAccessor, allBindingsAccessor) {
+            var viewModel = viewModelAccessor(), allBindings = allBindingsAccessor();
+            
+            // Empty the element
+            while(element.firstChild)
+                ko.removeNode(element.firstChild);
 
+            // Allow the default templates to be overridden
+            var gridTemplateName      = allBindings.simpleGridTemplate || "ko_simpleGrid_grid",
+                pageLinksTemplateName = allBindings.simpleGridPagerTemplate || "ko_simpleGrid_pageLinks";
+
+            // Render the main grid
             var gridContainer = element.appendChild(document.createElement("DIV"));
-            ko.renderTemplate("ko_simpleGrid_grid", viewModel, { templateEngine: templateEngine }, gridContainer, "replaceNode");
+            ko.renderTemplate(gridTemplateName, viewModel, { templateEngine: templateEngine }, gridContainer, "replaceNode");
 
+            // Render the page links
             var pageLinksContainer = element.appendChild(document.createElement("DIV"));
-            ko.renderTemplate("ko_simpleGrid_pageLinks", viewModel, { templateEngine: templateEngine }, pageLinksContainer, "replaceNode");
+            ko.renderTemplate(pageLinksTemplateName, viewModel, { templateEngine: templateEngine }, pageLinksContainer, "replaceNode");
         }
     };
 })();
