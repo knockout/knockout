@@ -457,7 +457,7 @@ ko.bindingHandlers['foreach'] = {
             var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
             for (var i = 0, j = nodeArray.length; i < j; i++) {
                 if (nodeArray[i].nodeType == 1)
-                    ko.applyBindings(arrayEntry, nodeArray[i]);
+                    ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
             }
             return nodeArray;
         };

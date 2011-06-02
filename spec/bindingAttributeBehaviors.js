@@ -92,18 +92,6 @@ describe('Binding attribute syntax', {
         value_of(methodsInvoked[0]).should_be("init");
         value_of(methodsInvoked[1]).should_be("update");
     },
-    
-    'Should use supplied viewModel as "this" when evaluating binding attribute': function() {
-        var initValue, updateValue;
-        ko.bindingHandlers.test = {
-            init: function (element, valueAccessor) { initValue = valueAccessor() },
-            update: function (element, valueAccessor) { updateValue = valueAccessor() }
-        };    	
-        testNode.innerHTML = "<div data-bind='test: this.someProp'></div>";
-        ko.applyBindings({ someProp: 123 }, testNode);
-        value_of(initValue).should_be(123);
-        value_of(updateValue).should_be(123);
-    },
 
     'If the binding handler depends on an observable, invokes the init handler once and the update handler whenever a new value is available': function () {
         var observable = new ko.observable();

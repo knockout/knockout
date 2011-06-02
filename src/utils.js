@@ -133,7 +133,7 @@ ko.utils = new (function () {
                 if (scopes[i] && typeof scopes[i] == "object")
                     functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
             }
-            return (new Function("sc", functionBody)).call(scopes[0] || window, scopes);
+            return (new Function("sc", functionBody))(scopes);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {

@@ -892,11 +892,11 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     },
     
-    'Should be able to use "this" to reference each array item being bound': function() {		
-        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: this'></span></div>";
+    'Should be able to use $data to reference each array item being bound': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
         var someItems = ['alpha', 'beta'];
         ko.applyBindings({ someItems: someItems }, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: this">alpha</span><span data-bind="text: this">beta</span>');
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
     },
     
     
