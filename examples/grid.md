@@ -20,6 +20,7 @@ Take a look at the HTML source code - it's pretty easy to use and interact with 
     .ko-grid-pageLinks { margin-bottom: 1em; }
     .ko-grid-pageLinks a { padding: 0.5em; }
     .ko-grid-pageLinks a.selected { background-color: Black; color: White; }
+    .liveExample { height:20em; overflow:auto } /* Mobile Safari reflows pages slowly, so fix the height to avoid the need for reflows */
 </style>        
 
 {% capture live_example_view %} 
