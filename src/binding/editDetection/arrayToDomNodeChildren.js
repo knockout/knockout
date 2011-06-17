@@ -1,4 +1,3 @@
-
 (function () {
     // Objective:
     // * Given an input array, a container DOM node, and a function from array elements to arrays of DOM nodes,
@@ -81,8 +80,15 @@
                           value: editScript[i].value
                         });
                         if (insertAfterNode == null) {
+                            if (options.containerOffset != undefined) {
+                               var realContainerOffset = options.containerOffset >= 0 ? 
+                                                         options.containerOffset :
+                                                         Math.max(0, domNode.childNodes.length - (-options.containerOffset));
+                            
+                            
+                                domNode.insertBefore(node, ((domNode.childNodes.length > realContainerOffset) ? domNode.childNodes[realContainerOffset] : null ));
+                            } else if (domNode.firstChild)
                             // Insert at beginning
-                            if (domNode.firstChild)
                                 domNode.insertBefore(node, domNode.firstChild);
                             else
                                 domNode.appendChild(node);

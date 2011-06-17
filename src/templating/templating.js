@@ -1,4 +1,3 @@
-
 (function () {
     var _templateEngine;
     ko.setTemplateEngine = function (templateEngine) {
@@ -113,7 +112,7 @@
             var templateSubscription;
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point
-                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] , 'containerOffset': bindingValue['containerOffset']}, element);
             }
             else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
