@@ -340,7 +340,15 @@ ko.bindingHandlers['checked'] = {
             if (element.type == "checkbox") {
                 valueToWrite = element.checked;
             } else if ((element.type == "radio") && (element.checked)) {
-                valueToWrite = element.value;
+                // if element value is a boolean (uppercase for .NET compatibility)
+                // then save the value as boolean, not string
+                var elementValue = element.value.toLowerCase();
+                if (elementValue == "true")
+                    valueToWrite = true;
+                else if (elementValue == "false")
+                    valueToWrite = false;
+                else
+                    valueToWrite = element.value;
             } else {
                 return; // "checked" binding only responds to checkboxes and selected radio buttons
             }
@@ -387,10 +395,14 @@ ko.bindingHandlers['checked'] = {
             if (value && ko.utils.isIe6) 
                 element.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
-            element.checked = (element.value == value);
+            // if stored value is boolean, then do the comparison indirectly
+            var checked = typeof (value) == "boolean"
+                ? element.value.toLowerCase() == (value ? "true" : "false")
+                : element.value == value;
+            element.checked = checked;
             
             // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
-            if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
+            if (checked && (ko.utils.isIe6 || ko.utils.isIe7))
                 element.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"), false);
         }
     }
