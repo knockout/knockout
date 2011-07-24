@@ -400,7 +400,7 @@ ko.bindingHandlers['attr'] = {
 
 ko.bindingHandlers['with'] = {
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
-        options['dataStore'].withHtml = element.innerHTML;
+        ko.utils.domData.set(element, 'withHtml', element.innerHTML);
         return { 'controlsDescendantBindings': true }
     },
     
@@ -408,7 +408,8 @@ ko.bindingHandlers['with'] = {
         ko.utils.emptyDomNode(element);
         var value = ko.utils.unwrapObservable(valueAccessor());
         if (value) {
-            ko.utils.setHtml(element, options['dataStore'].withHtml);
+            var withHtml = ko.utils.domData.get(element, 'withHtml');
+            ko.utils.setHtml(element, withHtml);
             ko.applyBindingsToDescendants(descendantBindingContext || value, element);
         }
     }
@@ -423,7 +424,7 @@ ko.bindingHandlers['if'] = {
 
 ko.bindingHandlers['foreach'] = {
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
-        options['dataStore'].foreachHtml = element.innerHTML;
+        ko.utils.domData.set(element, 'foreachHtml', element.innerHTML);
         ko.utils.emptyDomNode(element);
         return { 'controlsDescendantBindings': true }
     },
@@ -454,7 +455,7 @@ ko.bindingHandlers['foreach'] = {
                                                                                 });
         
         var mapping = function(arrayEntry) {        	
-            var nodeArray = ko.utils.parseHtmlFragment(options['dataStore'].foreachHtml);
+            var nodeArray = ko.utils.parseHtmlFragment(ko.utils.domData.get(element, 'foreachHtml'));
             for (var i = 0, j = nodeArray.length; i < j; i++) {
                 if (nodeArray[i].nodeType == 1)
                     ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });

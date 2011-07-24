@@ -54,7 +54,7 @@
             return parsedBindings;
         }
         
-        var optionsPerBinding = {}, bindingHandlerThatControlsDescendantBindings;
+        var bindingHandlerThatControlsDescendantBindings;
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
@@ -63,13 +63,9 @@
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
-                        optionsPerBinding[bindingKey] = {
-                            'valueAccessor': makeValueAccessor(bindingKey),
-                            'dataStore': {}
-                        };
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function") {
                             var handlerInitFn = ko.bindingHandlers[bindingKey]["init"];
-                            var initResult = handlerInitFn(node, optionsPerBinding[bindingKey]['valueAccessor'], parsedBindingsAccessor, viewModel, optionsPerBinding[bindingKey]);
+                            var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
                             
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -85,7 +81,7 @@
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function") {
                         var handlerUpdateFn = ko.bindingHandlers[bindingKey]["update"];
-                        handlerUpdateFn(node, optionsPerBinding[bindingKey]['valueAccessor'], parsedBindingsAccessor, viewModel, optionsPerBinding[bindingKey]);
+                        handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
                     }
                 }
             },
