@@ -169,6 +169,12 @@ describe('Binding attribute syntax', {
         value_of(passedValues[1]).should_be("goodbye");
     },
     
+    'Should be able to refer to the bound object itself (at the root scope, the viewmodel) via $data': function() {
+        testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
+        ko.applyBindings({ someProp: 'My prop value' }, testNode);
+        value_of(testNode).should_contain_text("My prop value");
+    },
+    
     'Bindings can signal that they control descendant bindings by returning a flag from their init function': function() {
         ko.bindingHandlers.test = {  
             init: function() { return { controlsDescendantBindings : true } }
@@ -196,23 +202,9 @@ describe('Binding attribute syntax', {
         value_of(didThrow).should_be(true);
     },
     
-    'Should be able to supply an additional scope variable whose properties are accessible in binding attributes': function() {
-        testNode.innerHTML = "<div data-bind='text: someExtraScopeValue'></div><div data-bind='text: myViewModelProperty'></div>"
-        var additionalScope = { someExtraScopeValue: 'scopePropVal' };
-        ko.applyBindings({ myViewModelProperty: 'viewModelPropVal' }, testNode, { extraScope: additionalScope });
-        
-        value_of(testNode.childNodes[1].innerHTML).should_be('viewModelPropVal');
-        value_of(testNode.childNodes[0].innerHTML).should_be('scopePropVal');
-    },
-    
-    'Should use properties on the view model in preference to properties on the additional scope object': function() {
-        testNode.innerHTML = "<div data-bind='text: viewModelProp'></div><div data-bind='text: sharedProp'></div><div data-bind='text: additionalProp'></div>"
-        var additionalScope = { additionalProp: 'additionalPropVal', sharedProp: 'valueFromAdditionalScope' };
-        var viewModel =       { viewModelProp:  'viewModelPropVal',  sharedProp: 'valueFromViewModel' };
-        ko.applyBindings(viewModel, testNode, { extraScope: additionalScope });
-        
-        value_of(testNode.childNodes[0].innerHTML).should_be('viewModelPropVal');
-        value_of(testNode.childNodes[1].innerHTML).should_be('valueFromViewModel');
-        value_of(testNode.childNodes[2].innerHTML).should_be('additionalPropVal');
+    'Should use properties on the view model in preference to properties on the binding context': function() {
+        testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
+        ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
+        value_of(testNode).should_contain_text("Inner value");
     }    
 })

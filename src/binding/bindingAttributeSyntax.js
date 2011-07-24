@@ -1,7 +1,10 @@
-
 (function () {
     var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
+
+    function bindingContext(dataItem) {
+        this['$data'] = dataItem;
+    }
 
     function parseBindingAttribute(attributeText, viewModel, extraScope) {
         try {
@@ -23,14 +26,17 @@
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, options) {
         var shouldBindDescendants = true;
         if (nodeVerified.getAttribute(defaultBindingAttributeName))
-            shouldBindDescendants = ko.applyBindingsToNode(nodeVerified, null, viewModel, options).shouldBindDescendants;
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, options).shouldBindDescendants;
             
         if (shouldBindDescendants)
             applyBindingsToDescendantsInternal(viewModel, nodeVerified, options);
     }    
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel, options) {
+    function applyBindingsToNodeInternal (node, bindings, viewModel, options) {
+        // Ensure we have a nonnull binding context to work with
         options = options || {};
+        options['_bindingContext'] = options['_bindingContext'] || new bindingContext(viewModel);
+        
         var isFirstEvaluation = true;
         var bindingAttributeName = options['bindingAttributeName'] || defaultBindingAttributeName;
             
@@ -52,7 +58,7 @@
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, options['extraScope']);
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, options['_bindingContext']);
                 
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
@@ -91,6 +97,10 @@
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
+    };
+
+    ko.applyBindingsToNode = function (node, bindings, viewModel, options) {
+        return applyBindingsToNodeInternal(node, bindings, viewModel, options);
     };
     
     ko.applyBindingsToDescendants = function(viewModel, node, options) {
