@@ -869,7 +869,45 @@ describe('Binding: With', {
         countedClicks = 0;
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
         value_of(countedClicks).should_be(1);		
-    }
+    },
+    
+    'Should be able to access parent binding context via $parent': function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: $parent.parentProp'></span></div>";
+        ko.applyBindings({ someItem: { }, parentProp: 'Parent prop value' }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Parent prop value");
+    },
+    
+    'Should be able to access all parent binding contexts via $parents, and root context via $root': function() {
+        testNode.innerHTML = "<div data-bind='with: topItem'>" +
+                                "<div data-bind='with: middleItem'>" +
+                                    "<div data-bind='with: bottomItem'>" +
+                                        "<span data-bind='text: name'></span>" +
+                                        "<span data-bind='text: $parent.name'></span>" +
+                                        "<span data-bind='text: $parents[1].name'></span>" +
+                                        "<span data-bind='text: $parents[2].name'></span>" +
+                                        "<span data-bind='text: $root.name'></span>" +
+                                    "</div>" +
+                                "</div>" +
+                              "</div>";
+        ko.applyBindings({ 
+            name: 'outer',
+            topItem: {
+                name: 'top',
+                middleItem: { 
+                    name: 'middle',
+                    bottomItem: {
+                        name: "bottom"
+                    }
+                }
+            }
+        }, testNode);
+        var finalContainer = testNode.childNodes[0].childNodes[0].childNodes[0];
+        value_of(finalContainer.childNodes[0]).should_contain_text("bottom");
+        value_of(finalContainer.childNodes[1]).should_contain_text("middle");
+        value_of(finalContainer.childNodes[2]).should_contain_text("top");
+        value_of(finalContainer.childNodes[3]).should_contain_text("outer");
+        value_of(finalContainer.childNodes[4]).should_contain_text("outer");
+    }    
 });
 
 describe('Binding: Foreach', {

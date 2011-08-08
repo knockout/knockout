@@ -2,9 +2,23 @@
     var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
-    function bindingContext(dataItem) {
+    function bindingContext(dataItem, parentBindingContext) {
         this['$data'] = dataItem;
+        if (parentBindingContext) {
+            this['$parent'] = parentBindingContext['$data'];
+            this['$parents'] = parentBindingContext['$parents'] || [];
+            this['$parents'].unshift(this['$parent']);
+            this['$root'] = parentBindingContext['$root'];
+        } else {
+            this['$parents'] = [];
+            this['$root'] = dataItem;        	
+        }
     }
+    bindingContext.prototype = {
+        createChildContext: function (dataItem) {
+            return new bindingContext(dataItem, this);
+        }
+    };
 
     function parseBindingAttribute(attributeText, viewModel, extraScope) {
         try {
@@ -15,30 +29,32 @@
         }
     }
 
-    function applyBindingsToDescendantsInternal (viewModel, nodeVerified, options) {
+    function applyBindingsToDescendantsInternal (viewModel, nodeVerified) {
         var child;
         for (var i = 0; child = nodeVerified.childNodes[i]; i++) {
             if (child.nodeType === 1)
-                applyBindingsToNodeAndDescendantsInternal(viewModel, child, options);
+                applyBindingsToNodeAndDescendantsInternal(viewModel, child);
         }       	
     }
     
-    function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, options) {
+    function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified) {
         var shouldBindDescendants = true;
         if (nodeVerified.getAttribute(defaultBindingAttributeName))
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, options).shouldBindDescendants;
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel).shouldBindDescendants;
             
         if (shouldBindDescendants)
-            applyBindingsToDescendantsInternal(viewModel, nodeVerified, options);
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified);
     }    
 
-    function applyBindingsToNodeInternal (node, bindings, viewModel, options) {
+    function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext) {
         // Ensure we have a nonnull binding context to work with
-        options = options || {};
-        options['_bindingContext'] = options['_bindingContext'] || new bindingContext(viewModel);
-        
+        var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof bindingContext)
+            ? viewModelOrBindingContext
+            : new bindingContext(viewModelOrBindingContext);
+        var viewModel = bindingContextInstance['$data'];
+            
         var isFirstEvaluation = true;
-        var bindingAttributeName = options['bindingAttributeName'] || defaultBindingAttributeName;
+        var bindingAttributeName = defaultBindingAttributeName; // Todo: Make this overridable
             
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
@@ -58,14 +74,14 @@
         new ko.dependentObservable(
             function () {
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, options['_bindingContext']);
+                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, bindingContextInstance);
                 
                 // First run all the inits, so bindings can register for notification on changes
                 if (isFirstEvaluation) {
                     for (var bindingKey in parsedBindings) {
                         if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function") {
                             var handlerInitFn = ko.bindingHandlers[bindingKey]["init"];
-                            var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                            var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                             
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -81,7 +97,7 @@
                 for (var bindingKey in parsedBindings) {
                     if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function") {
                         var handlerUpdateFn = ko.bindingHandlers[bindingKey]["update"];
-                        handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                        handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                     }
                 }
             },
@@ -95,21 +111,21 @@
         };
     };
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel, options) {
-        return applyBindingsToNodeInternal(node, bindings, viewModel, options);
+    ko.applyBindingsToNode = function (node, bindings, viewModel) {
+        return applyBindingsToNodeInternal(node, bindings, viewModel);
     };
     
-    ko.applyBindingsToDescendants = function(viewModel, node, options) {
-        if ((!node) || (node.nodeType !== 1))
+    ko.applyBindingsToDescendants = function(viewModel, rootNode) {
+        if ((!rootNode) || (rootNode.nodeType !== 1))
             throw new Error("ko.applyBindingsToDescendants: first parameter should be your view model; second parameter should be a DOM node");
-        applyBindingsToDescendantsInternal(viewModel, node, options);
+        applyBindingsToDescendantsInternal(viewModel, rootNode);
     };
 
-    ko.applyBindings = function (viewModel, rootNode, options) {
+    ko.applyBindings = function (viewModel, rootNode) {
         if (rootNode && (rootNode.nodeType !== 1))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-        applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode, options);
+        applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode);
     };
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);

@@ -399,26 +399,32 @@ ko.bindingHandlers['attr'] = {
 };
 
 ko.bindingHandlers['with'] = {
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
         ko.utils.domData.set(element, 'withHtml', element.innerHTML);
         return { 'controlsDescendantBindings': true }
     },
     
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
-        ko.utils.emptyDomNode(element);
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        if (value) {
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+		var value = ko.utils.unwrapObservable(valueAccessor());
+    	ko.bindingHandlers['with']['applyConditionalBinding'](element, value /* shouldShow */, bindingContext.createChildContext(value));
+    },
+    
+    // Logic shared by both "if" and "with" bindings
+    'applyConditionalBinding': function(element, shouldShow, bindingContext) {
+        ko.utils.emptyDomNode(element);        
+        if (shouldShow) {
             var withHtml = ko.utils.domData.get(element, 'withHtml');
             ko.utils.setHtml(element, withHtml);
-            ko.applyBindingsToDescendants(descendantBindingContext || value, element);
-        }
+            ko.applyBindingsToDescendants(bindingContext, element);
+        }    	
     }
 };
 
 ko.bindingHandlers['if'] = {
     'init': ko.bindingHandlers['with']['init'],
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
-        ko.bindingHandlers['with']['update'](element, valueAccessor, allBindingsAccessor, viewModel, options, viewModel);
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+		var value = ko.utils.unwrapObservable(valueAccessor());
+    	ko.bindingHandlers['with']['applyConditionalBinding'](element, value /* shouldShow */, bindingContext);
     }
 };
 
