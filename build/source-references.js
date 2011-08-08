@@ -22,5 +22,6 @@ knockoutDebugCallback([
     'src/templating/templating.js',
     'src/binding/editDetection/compareArrays.js',
     'src/binding/editDetection/arrayToDomNodeChildren.js',
-    'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'
+    'src/templating/native/nativeTemplateEngine.js',
+    'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'    
 ]);
