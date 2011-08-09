@@ -418,5 +418,15 @@ describe('Templating', {
         
         // ...but, because the old subscription should have been disposed automatically, there should only be one left
         value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
+    },
+    
+    'Should be able to specify a template engine instance using data-bind syntax': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ theTemplate: "Default output" })); // Not going to use this one
+        var alternativeTemplateEngine = new dummyTemplateEngine({ theTemplate: "Alternative output" });
+        
+        testNode.innerHTML = "<div data-bind='template: { name: \"theTemplate\", templateEngine: chosenEngine }'></div>";
+        ko.applyBindings({ chosenEngine: alternativeTemplateEngine }, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_text("Alternative output");
     }
 })
