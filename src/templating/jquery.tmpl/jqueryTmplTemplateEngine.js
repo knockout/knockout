@@ -1,4 +1,4 @@
-(function() {	
+(function() {
     ko.jqueryTmplTemplateEngine = function () {
         // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
         // doesn't expose a version number, so we have to infer it.
@@ -24,57 +24,34 @@
             if (errorMessage)
                 throw new Error(errorMessage);
         }
-    
-        this['getTemplateNode'] = function (template) {
-            var templateNode = document.getElementById(template);
-            if (!templateNode)
-                throw new Error("Cannot find template with ID=" + template);
-            return templateNode;
-        }
         
-        this['renderTemplate'] = function (templateId, data, options) {
+        this['renderTemplateSource'] = function(templateSource, data, options) {
             options = options || {};
             ensureHasReferencedJQueryTemplates();
             
-            if (!(templateId in jQuery['template'])) {
-                // Precache a precompiled version of this template (don't want to reparse on every render)
-                var templateText = this['getTemplateNode'](templateId).text;
-                jQuery['template'](templateId, templateText);
-            }        
+            // Ensure we have stored a precompiled version of this template (don't want to reparse on every render)
+            var precompiled = templateSource['data']('precompiled');
+            if (!precompiled) {
+                precompiled = jQuery['template'](null, templateSource.text());
+                templateSource['data']('precompiled', precompiled);
+            }
+            
             data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
             
-            var resultNodes = jQuery['tmpl'](templateId, data, options['templateOptions']);
+            var resultNodes = jQuery['tmpl'](precompiled, data, options['templateOptions']);
             resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
             jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
-            return resultNodes; 
-        },
-    
-        this['isTemplateRewritten'] = function (templateId) {
-            ensureHasReferencedJQueryTemplates.call(this);
-            
-            // It must already be rewritten if we've already got a cached version of it
-            // (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
-            if (templateId in jQuery['template'])
-                return true;
-            
-            return this['getTemplateNode'](templateId).isRewritten === true;
-        },
-    
-        this['rewriteTemplate'] = function (template, rewriterCallback) {
-            var templateNode = this['getTemplateNode'](template);
-            templateNode.text = rewriterCallback(templateNode.text);
-            templateNode.isRewritten = true;
-        },
-    
-        this['createJavaScriptEvaluatorBlock'] = function (script) {
-            return "{{ko_code ((function() { return " + script + " })()) }}";
-        },
-    
-        this.addTemplate = function (templateName, templateMarkup) {
-            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
-        }
-        ko.exportProperty(this, 'addTemplate', this.addTemplate);
+            return resultNodes;     		
+        };
         
+        this['createJavaScriptEvaluatorBlock'] = function(script) {
+            return "{{ko_code ((function() { return " + script + " })()) }}";
+        };
+        
+        this['addTemplate'] = function(templateName, templateMarkup) {
+            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
+        };
+    
         if (jQueryTmplVersion >= 2) {
             jQuery['tmpl']['tag']['ko_code'] = {
                 open: "__.push($1 || '');"
@@ -82,7 +59,7 @@
         }
     };
     
-    ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
+    ko.jqueryTmplTemplateEngine.prototype = new ko.templateSourceAwareTemplateEngine();
     
     // Use this one by default *only if jquery.tmpl is referenced*
     var jqueryTmplTemplateEngineInstance = new ko.jqueryTmplTemplateEngine();

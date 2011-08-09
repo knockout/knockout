@@ -111,7 +111,7 @@
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             if ((typeof bindingValue != "string") && !bindingValue.name) {
                 // It's an anonymous template - store the element contents, then clear the element
-                ko.anonymousTemplates.write(element, element.innerHTML);
+                new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
                 ko.utils.emptyDomNode(element);
             }
         },
@@ -140,12 +140,12 @@
                 templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element);
             }
             else {
-            	if (shouldDisplay) {
+                if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var templateData = bindingValue['data'];
                     templateSubscription = ko.renderTemplate(templateName || element, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
-            	} else
-            		ko.utils.emptyDomNode(element);
+                } else
+                    ko.utils.emptyDomNode(element);
             }
             
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)

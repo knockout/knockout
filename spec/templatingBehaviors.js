@@ -1,16 +1,14 @@
 
 var dummyTemplateEngine = function (templates) {
     function getTemplateText(template) {
-        if (typeof template != "string") {
-            return ko.anonymousTemplates.read(template);
-        }
-        
+        if (typeof template != "string")
+            return new ko.templateSources.anonymousTemplate(template).text();
         return templates[template];
     }
     function setTemplateText(template, text) {
-        if (typeof template != "string") {
-            ko.anonymousTemplates.write(template, text);
-        } else
+        if (typeof template != "string")
+            new ko.templateSources.anonymousTemplate(template).text(text);
+        else
             templates[template] = text;
     }
     
