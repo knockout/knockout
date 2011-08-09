@@ -106,6 +106,15 @@
     }
     
     ko.bindingHandlers['template'] = {
+        'init': function(element, valueAccessor) {
+            // Support anonymous templates
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            if ((typeof bindingValue != "string") && !bindingValue.name) {
+                // It's an anonymous template - store the element contents, then clear the element
+                ko.anonymousTemplates.write(element, element.innerHTML);
+                ko.utils.emptyDomNode(element);
+            }
+        },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName; 
@@ -128,12 +137,12 @@
             if (shouldDisplay) {
                 if (typeof bindingValue['foreach'] != "undefined") {
                     // Render once for each data point
-                    templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], /* options: */ bindingValue, element);
+                    templateSubscription = ko.renderTemplateForEach(templateName || element, bindingValue['foreach'] || [], /* options: */ bindingValue, element);
                 }
                 else {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var templateData = bindingValue['data'];
-                    templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
+                    templateSubscription = ko.renderTemplate(templateName || element, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
                 }
             } else {
                 ko.utils.emptyDomNode(element);

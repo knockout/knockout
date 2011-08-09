@@ -1,9 +1,23 @@
 
 var dummyTemplateEngine = function (templates) {
+    function getTemplateText(template) {
+        if (typeof template != "string") {
+            return ko.anonymousTemplates.read(template);
+        }
+        
+        return templates[template];
+    }
+    function setTemplateText(template, text) {
+        if (typeof template != "string") {
+            ko.anonymousTemplates.write(template, text);
+        } else
+            templates[template] = text;
+    }
+    
     templates = templates || [];
     this.renderTemplate = function (template, data, options) {
         options = options || {};
-        var result = templates[template];
+        var result = getTemplateText(template);
         if (result && typeof result == "function")
             result = result(data, options);
 
@@ -43,8 +57,8 @@ var dummyTemplateEngine = function (templates) {
         }
     };
 
-    this.isTemplateRewritten = function (template) { return typeof templates[template] == "function" /* Can't rewrite functions, so claim they are already rewritten */; },
-    this.rewriteTemplate = function (template, rewriterCallback) { templates[template] = rewriterCallback(templates[template]); },
+    this.isTemplateRewritten = function (template) { return typeof(getTemplateText(template)) == "function" /* Can't rewrite functions, so claim they are already rewritten */; },
+    this.rewriteTemplate = function (template, rewriterCallback) { setTemplateText(template, rewriterCallback(getTemplateText(template))); },
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; }
 };
 dummyTemplateEngine.prototype = new ko.templateEngine();
@@ -466,5 +480,43 @@ describe('Templating', {
         ko.applyBindings({ chosenEngine: alternativeTemplateEngine }, testNode);
         
         value_of(testNode.childNodes[0]).should_contain_text("Alternative output");
+    },
+    
+    'Data-bind syntax should be able to render anonymous templates by not giving a template name': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine());
+        
+        testNode.innerHTML = "<div data-bind='template: { if: someItem }'>Item: [js:someItem().childProp]</div>";
+        
+        var viewModel = {
+            someItem: ko.observable({ childProp: 'abc' })
+        };
+        ko.applyBindings(viewModel, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_text("Item: abc");
+        
+        // Make the condition false, and see the template re-renders without an error
+        viewModel.someItem(null);
+        value_of(testNode.childNodes[0]).should_contain_text("");
+        
+        // Make the condition true, and see the template re-renders without an error
+        viewModel.someItem({ childProp: 'def' });
+        value_of(testNode.childNodes[0]).should_contain_text("Item: def");
+    },
+    
+    'Data-bind syntax should be able to render anonymous templates by not giving a template name, in conjunction with foreach': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine());
+        
+        testNode.innerHTML = "<div data-bind='template: { foreach: myItems }'>Item: [js:itemProp]</div>";
+        var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
+        ko.applyBindings({ myItems: myItems }, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_text("Item: Alpha\nItem: Beta\nItem: Gamma");
+        
+        // Can cause re-rendering
+        myItems.push({ itemProp: 'Pushed' });
+        value_of(testNode.childNodes[0]).should_contain_text("Item: Alpha\nItem: Beta\nItem: Gamma\nItem: Pushed");
+        
+        myItems.splice(1, 1);
+        value_of(testNode.childNodes[0]).should_contain_text("Item: Alpha\nItem: Gamma\nItem: Pushed");
     }
 })
