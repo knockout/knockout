@@ -108,17 +108,35 @@
     ko.bindingHandlers['template'] = {
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
+            var templateName; 
+            var shouldDisplay = true;
             
-            var templateSubscription;
-            if (typeof bindingValue['foreach'] != "undefined") {
-                // Render once for each data point
-                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], /* options: */ bindingValue, element);
-            }
-            else {
-                // Render once for this single data point (or use the viewModel if no data was provided)
-                var templateData = bindingValue['data'];
-                templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
+            if (typeof bindingValue == "string") {
+                templateName = bindingValue;
+            } else {
+                templateName = bindingValue.name;
+                
+                // Support "if"/"ifnot" conditions
+                if ('if' in bindingValue)
+                    shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
+                if ('ifnot' in bindingValue)
+                    shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
+            }    
+            
+            var templateSubscription = null;
+            
+            if (shouldDisplay) {
+                if (typeof bindingValue['foreach'] != "undefined") {
+                    // Render once for each data point
+                    templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], /* options: */ bindingValue, element);
+                }
+                else {
+                    // Render once for this single data point (or use the viewModel if no data was provided)
+                    var templateData = bindingValue['data'];
+                    templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
+                }
+            } else {
+                ko.utils.emptyDomNode(element);
             }
             
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)

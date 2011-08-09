@@ -354,6 +354,44 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
     },
     
+    'Data binding syntax should support \"if\" condition' : function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));        
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", if: myProp }'></div>";
+        
+        var viewModel = { myProp: ko.observable({ childProp: 'abc' }) };
+        ko.applyBindings(viewModel, testNode);
+        
+        // Initially there is a value
+        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
+        
+        // Causing the condition to become false causes the output to be removed
+        viewModel.myProp(null);
+        value_of(testNode.childNodes[0]).should_contain_text("");
+        
+        // Causing the condition to become true causes the output to reappear
+        viewModel.myProp({ childProp: 'def' });
+        value_of(testNode.childNodes[0]).should_contain_text("Value: def");
+    },
+    
+    'Data binding syntax should support \"ifnot\" condition' : function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Hello" }));        
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", ifnot: shouldHide }'></div>";
+        
+        var viewModel = { shouldHide: ko.observable(true) };
+        ko.applyBindings(viewModel, testNode);
+        
+        // Initially there is no output (shouldHide=true)
+        value_of(testNode.childNodes[0]).should_contain_text("");
+        
+        // Causing the condition to become false causes the output to be displayed
+        viewModel.shouldHide(false);
+        value_of(testNode.childNodes[0]).should_contain_text("Hello");
+        
+        // Causing the condition to become true causes the output to disappear
+        viewModel.shouldHide(true);
+        value_of(testNode.childNodes[0]).should_contain_text("");
+    },    
+    
     'Should be able to populate checkboxes from inside templates, despite IE6 limitations': function () {    	
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input type='checkbox' data-bind='checked:isChecked' />" }));
         ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { isChecked: true } }, testNode);
