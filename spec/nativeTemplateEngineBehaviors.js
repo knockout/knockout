@@ -34,5 +34,19 @@ describe('Native template engine', {
         testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
         ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, templateOutput);
         value_of(templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
-    }      
+    }, 
+    
+    'Anonymous template can display static content': function () {
+        ko.anonymousTemplates.write(templateOutput, "this is some static content");
+        templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate(templateOutput, null, null, templateOutput);
+        value_of(templateOutput).should_contain_html("this is some static content");
+    },
+    
+    'Anonymous template can data-bind on results': function () {
+        ko.anonymousTemplates.write(templateOutput, "name: <div data-bind='text: name'></div>");
+        templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate(templateOutput, { name: 'bert' }, null, templateOutput);
+        value_of(templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+    }    
 });

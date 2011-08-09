@@ -7,6 +7,9 @@ ko.nativeTemplateEngine = function () {
                 throw new Error("Cannot find template with ID " + templateSource);
             return foundElem.innerHTML;
         }
+        
+        // If not, it must be an anonymous template
+        return ko.anonymousTemplates.read(templateSource);
     }
     
     this['renderTemplate'] = function (templateSource, data, options) {

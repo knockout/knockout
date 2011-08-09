@@ -134,18 +134,18 @@
             
             var templateSubscription = null;
             
-            if (shouldDisplay) {
-                if (typeof bindingValue['foreach'] != "undefined") {
-                    // Render once for each data point
-                    templateSubscription = ko.renderTemplateForEach(templateName || element, bindingValue['foreach'] || [], /* options: */ bindingValue, element);
-                }
-                else {
+            if (typeof bindingValue['foreach'] != "undefined") {
+                // Render once for each data point (treating data set as empty if shouldDisplay==false)
+                var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
+                templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element);
+            }
+            else {
+            	if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var templateData = bindingValue['data'];
                     templateSubscription = ko.renderTemplate(templateName || element, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
-                }
-            } else {
-                ko.utils.emptyDomNode(element);
+            	} else
+            		ko.utils.emptyDomNode(element);
             }
             
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
