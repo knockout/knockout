@@ -1,3 +1,19 @@
+// If you want to make a custom template engine that works with anonymous templates, inherit from 
+// this class instead of inheriting from ko.templateEngine directly.
+//
+// This base class already knows how to work with both named and anonymous templates, plus it handles
+// template rewriting automatically. All you have to do is override the "renderTemplateSource" function
+// and possibly also "createJavaScriptEvaluatorBlock"
+//
+//   renderTemplateSource(templateSource, data, options) - renders the supplied templateSource (see templateSource.js)
+//                                                         and returns an array of DOM elements
+//
+//   createJavaScriptEvaluatorBlock(script) - returns whatever markup your template engine uses to represent an executable
+//                                            block of JavaScript code.
+//                                            This is invoked by KO as part of template rewriting. So, if your template engine
+//                                            allows template rewriting (i.e., if its allowTemplateRewriting property
+//                                            is not strictly false), be sure to override this function.
+
 ko.templateSourceAwareTemplateEngine = function() {
     this['makeTemplateSource'] = function(template) {
         // Named template
