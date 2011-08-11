@@ -424,6 +424,19 @@ ko.bindingHandlers['if'] = {
     }
 };
 
+// "ifnot: someExpression" is equivalent to "template: { ifnot: someExpression, data: viewModel }"
+ko.bindingHandlers['ifnot'] = {
+    makeTemplateValueAccessor: function(valueAccessor, viewModel) {
+        return function() { return { ifnot: valueAccessor(), data: viewModel, templateEngine: ko.nativeTemplateEngine.instance } };
+    },	
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor, viewModel));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor, viewModel), allBindingsAccessor, viewModel);
+    }
+};
+
 // "foreach: someExpression" is equivalent to "template: { foreach: someExpression }"
 // "foreach: { data: someExpression, afterAdd: myfn }" is equivalent to "template: { foreach: someExpression, afterAdd: myfn }"
 ko.bindingHandlers['foreach'] = {
