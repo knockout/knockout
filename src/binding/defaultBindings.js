@@ -401,7 +401,7 @@ ko.bindingHandlers['attr'] = {
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
-        return function() { var value = valueAccessor(); return { 'if': value, data: value, templateEngine: ko.nativeTemplateEngine.instance } };
+        return function() { var value = valueAccessor(); return { 'if': value, 'data': value, 'templateEngine': ko.nativeTemplateEngine.instance } };
     },
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
@@ -414,7 +414,7 @@ ko.bindingHandlers['with'] = {
 // "if: someExpression" is equivalent to "template: { if: someExpression, data: viewModel }"
 ko.bindingHandlers['if'] = {
     makeTemplateValueAccessor: function(valueAccessor, viewModel) {
-        return function() { return { 'if': valueAccessor(), data: viewModel, templateEngine: ko.nativeTemplateEngine.instance } };
+        return function() { return { 'if': valueAccessor(), 'data': viewModel, 'templateEngine': ko.nativeTemplateEngine.instance } };
     },	
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor, viewModel));
@@ -427,7 +427,7 @@ ko.bindingHandlers['if'] = {
 // "ifnot: someExpression" is equivalent to "template: { ifnot: someExpression, data: viewModel }"
 ko.bindingHandlers['ifnot'] = {
     makeTemplateValueAccessor: function(valueAccessor, viewModel) {
-        return function() { return { ifnot: valueAccessor(), data: viewModel, templateEngine: ko.nativeTemplateEngine.instance } };
+        return function() { return { 'ifnot': valueAccessor(), 'data': viewModel, 'templateEngine': ko.nativeTemplateEngine.instance } };
     },	
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor, viewModel));
@@ -446,15 +446,15 @@ ko.bindingHandlers['foreach'] = {
             
             // If bindingValue is the array, just pass it on its own
             if ((!bindingValue) || typeof bindingValue.length == "number")
-                return { foreach: bindingValue, templateEngine: ko.nativeTemplateEngine.instance };
+                return { 'foreach': bindingValue, 'templateEngine': ko.nativeTemplateEngine.instance };
             
             // If bindingValue.data is the array, preserve all relevant options
             return { 
-                foreach: bindingValue.data, 
-                includeDestroyed: bindingValue.includeDestroyed,
-                afterAdd: bindingValue.afterAdd,
-                beforeRemove: bindingValue.beforeRemove, 
-                templateEngine: ko.nativeTemplateEngine.instance
+                'foreach': bindingValue['data'], 
+                'includeDestroyed': bindingValue['includeDestroyed'],
+                'afterAdd': bindingValue['afterAdd'],
+                'beforeRemove': bindingValue['beforeRemove'], 
+                'templateEngine': ko.nativeTemplateEngine.instance
             };
         };
     },
