@@ -15,6 +15,7 @@ ko.nativeTemplateEngine = function () {
 }
 
 ko.nativeTemplateEngine.prototype = new ko.templateSourceAwareTemplateEngine();
-ko.setTemplateEngine(new ko.nativeTemplateEngine());
+ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
+ko.setTemplateEngine(ko.nativeTemplateEngine.instance);
 
 ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);

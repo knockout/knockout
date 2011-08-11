@@ -114,6 +114,7 @@
                 new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
                 ko.utils.emptyDomNode(element);
             }
+            return { 'controlsDescendantBindings': true };
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());

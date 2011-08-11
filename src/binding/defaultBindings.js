@@ -398,76 +398,57 @@ ko.bindingHandlers['attr'] = {
     }
 };
 
+// "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { var value = valueAccessor(); return { if: value, data: value, templateEngine: ko.nativeTemplateEngine.instance } };
+    },
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
-        ko.utils.domData.set(element, 'withHtml', element.innerHTML);
-        return { 'controlsDescendantBindings': true }
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
     },
-    
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-		var value = ko.utils.unwrapObservable(valueAccessor());
-    	ko.bindingHandlers['with']['applyConditionalBinding'](element, value /* shouldShow */, bindingContext.createChildContext(value));
-    },
-    
-    // Logic shared by both "if" and "with" bindings
-    'applyConditionalBinding': function(element, shouldShow, bindingContext) {
-        ko.utils.emptyDomNode(element);        
-        if (shouldShow) {
-            var withHtml = ko.utils.domData.get(element, 'withHtml');
-            ko.utils.setHtml(element, withHtml);
-            ko.applyBindingsToDescendants(bindingContext, element);
-        }    	
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel);
     }
 };
 
+// "if: someExpression" is equivalent to "template: { if: someExpression, data: viewModel }"
 ko.bindingHandlers['if'] = {
-    'init': ko.bindingHandlers['with']['init'],
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-		var value = ko.utils.unwrapObservable(valueAccessor());
-    	ko.bindingHandlers['with']['applyConditionalBinding'](element, value /* shouldShow */, bindingContext);
+    makeTemplateValueAccessor: function(valueAccessor, viewModel) {
+        return function() { return { if: valueAccessor(), data: viewModel, templateEngine: ko.nativeTemplateEngine.instance } };
+    },	
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor, viewModel));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor, viewModel), allBindingsAccessor, viewModel);
     }
 };
 
+// "foreach: someExpression" is equivalent to "template: { foreach: someExpression }"
+// "foreach: { data: someExpression, afterAdd: myfn }" is equivalent to "template: { foreach: someExpression, afterAdd: myfn }"
 ko.bindingHandlers['foreach'] = {
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, options) {
-        ko.utils.domData.set(element, 'foreachHtml', element.innerHTML);
-        ko.utils.emptyDomNode(element);
-        return { 'controlsDescendantBindings': true }
-    },
-    
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, options, descendantBindingContext) {
-        var bindingValue = ko.utils.unwrapObservable(valueAccessor()), unwrappedArray;
-
-        // Support both "foreach: someArray" and "foreach: { data: someArray }" syntaxes, just like the "template" binding
-        if (bindingValue) {
-            if (typeof bindingValue.length == "number") {
-                unwrappedArray = bindingValue;
-            } else {
-                unwrappedArray = ko.utils.unwrapObservable(bindingValue.data);
-            }
-        }
-
-        // Validate the value and bail out early if necessary
-        if ((unwrappedArray === null) || (unwrappedArray === undefined)) {
-            ko.utils.emptyDomNode(element);
-            return;
-        }
-        if (typeof unwrappedArray.length != "number")
-            throw new Error("The 'foreach' binding can only be used with array-like values");
-        
-        // Filter out any entries marked as destroyed (unless we've been asked not to)
-        var filteredArray = bindingValue['includeDestroyed'] ? unwrappedArray : ko.utils.arrayFilter(unwrappedArray, function(item) { 
-                                                                                    return !item['_destroy'];
-                                                                                });
-        
-        var mapping = function(arrayEntry) {        	
-            var nodeArray = ko.utils.parseHtmlFragment(ko.utils.domData.get(element, 'foreachHtml'));
-            for (var i = 0, j = nodeArray.length; i < j; i++) {
-                if (nodeArray[i].nodeType == 1)
-                    ko.applyBindings(arrayEntry, nodeArray[i], { 'extraScope': { '$data': arrayEntry } });
-            }
-            return nodeArray;
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { 
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            
+            // If bindingValue is the array, just pass it on its own
+            if ((!bindingValue) || typeof bindingValue.length == "number")
+                return { foreach: bindingValue, templateEngine: ko.nativeTemplateEngine.instance };
+            
+            // If bindingValue.data is the array, preserve all relevant options
+            return { 
+                foreach: bindingValue.data, 
+                includeDestroyed: bindingValue.includeDestroyed,
+                afterAdd: bindingValue.afterAdd,
+                beforeRemove: bindingValue.beforeRemove, 
+                templateEngine: ko.nativeTemplateEngine.instance
+            };
         };
-        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, mapping, { 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'] });
+    },
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {		
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['foreach'].makeTemplateValueAccessor(valueAccessor));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['foreach'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel);
     }
 };
