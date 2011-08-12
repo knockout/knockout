@@ -60,7 +60,7 @@
         }
     };
     
-    ko.jqueryTmplTemplateEngine.prototype = new ko.templateSourceAwareTemplateEngine();
+    ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
     
     // Use this one by default *only if jquery.tmpl is referenced*
     var jqueryTmplTemplateEngineInstance = new ko.jqueryTmplTemplateEngine();

@@ -20,7 +20,6 @@ knockoutDebugCallback([
     'src/templating/templateEngine.js',
     'src/templating/templateRewriting.js',
     'src/templating/templateSources.js',
-    'src/templating/templateSourceAwareTemplateEngine.js',
     'src/templating/templating.js',
     'src/binding/editDetection/compareArrays.js',
     'src/binding/editDetection/arrayToDomNodeChildren.js',
