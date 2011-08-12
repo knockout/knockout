@@ -1,6 +1,6 @@
 
 ko.templateEngine = function () {
-    this['renderTemplate'] = function (templateName, data, options) {
+    this['renderTemplate'] = function (templateName, bindingContext, options) {
         throw "Override renderTemplate in your ko.templateEngine subclass";
     },
     this['isTemplateRewritten'] = function (templateName) {

@@ -807,7 +807,13 @@ describe('Binding: If', {
         // Then it's gone again
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-    }	
+    },
+
+    'Should not interfere with binding context': function() {
+        testNode.innerHTML = "<div data-bind='if: true'>Parents: <span data-bind='text: $parents.length'></span></div>";
+        ko.applyBindings({ }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+    }     
 });
 
 describe('Binding: Ifnot', {
@@ -848,7 +854,13 @@ describe('Binding: Ifnot', {
         condition(true);
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-    }	
+    },
+
+    'Should not interfere with binding context': function() {
+        testNode.innerHTML = "<div data-bind='ifnot: false'>Parents: <span data-bind='text: $parents.length'></span></div>";
+        ko.applyBindings({ }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+    }  
 });
 
 describe('Binding: With', {

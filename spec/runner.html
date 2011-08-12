@@ -26,14 +26,15 @@
                 throw JSSpec._assertionFailure;
             };            
             JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
-                var cleanedHtml = this.target.innerHTML.toLowerCase().replace("\r\n", "");
+                var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
                 // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
                 cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"ko\d+\"/g, "");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
             JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
             	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
-                JSSpec.DSL.Subject.prototype.should_be.call({ target: actualText }, expectedText);
+                var cleanedActualText = actualText.replace(/\r\n/g, "\n");
+                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
             };
             
         </script>

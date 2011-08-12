@@ -1,13 +1,13 @@
 ko.nativeTemplateEngine = function () {
     this['allowTemplateRewriting'] = false;
     
-    this['renderTemplateSource'] = function (templateSource, data, options) {
+    this['renderTemplateSource'] = function (templateSource, bindingContext, options) {
         var templateText = templateSource.text();
         var parsedElems = ko.utils.parseHtmlFragment(templateText);
         
         for (var i = 0, j = parsedElems.length; i < j; i++) {
             if (parsedElems[i].nodeType === 1)
-                ko.applyBindings(data, parsedElems[i]);
+                ko.applyBindings(bindingContext, parsedElems[i]);
         }
         
         return parsedElems;

@@ -29,9 +29,9 @@ ko.templateSourceAwareTemplateEngine = function() {
             throw new Error("Unrecognised template type: " + template);
     }
     
-    this['renderTemplate'] = function (template, data, options) {
+    this['renderTemplate'] = function (template, bindingContext, options) {
         var templateSource = this['makeTemplateSource'](template);
-        return this['renderTemplateSource'](templateSource, data, options);
+        return this['renderTemplateSource'](templateSource, bindingContext, options);
     };
     this['isTemplateRewritten'] = function (template) {
         // Skip rewriting if requested

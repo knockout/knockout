@@ -13,13 +13,11 @@
                                         : null;
     }
 
-    function executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options) {
-        var dataForTemplate = ko.utils.unwrapObservable(data);
-
+    function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options) {
         options = options || {};
         var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
-        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, dataForTemplate, options);
+        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options);
 
         // Loosely check result is an array of DOM nodes
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
@@ -27,7 +25,7 @@
 
         if (renderedNodesArray)
             ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
-                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
+                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [bindingContext]);
             });
 
         switch (renderMode) {
@@ -38,12 +36,12 @@
         }
 
         if (options['afterRender'])
-            options['afterRender'](renderedNodesArray, data);
+            options['afterRender'](renderedNodesArray, bindingContext['$data']);
 
         return renderedNodesArray;
     }
 
-    ko.renderTemplate = function (template, data, options, targetNodeOrNodeArray, renderMode) {
+    ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
         if ((options['templateEngine'] || _templateEngine) == undefined)
             throw "Set a template engine before calling renderTemplate";
@@ -57,10 +55,15 @@
             
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    // Support selecting template as a function of the data being rendered
-                    var templateName = typeof(template) == 'function' ? template(data) : template; 
+                    // Ensure we've got a proper binding context to work with
+                    var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
+                        ? dataOrBindingContext
+                        : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, data, options);
+                    // Support selecting template as a function of the data being rendered
+                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template; 
+
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -72,12 +75,12 @@
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
             return ko.memoization.memoize(function (domNode) {
-                ko.renderTemplate(template, data, options, domNode, "replaceNode");
+                ko.renderTemplate(template, dataOrBindingContext, options, domNode, "replaceNode");
             });
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -92,7 +95,8 @@
                 // Support selecting template as a function of the data being rendered
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 
-                return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
+                var innerBindingContext = parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+                return executeTemplate(null, "ignoreTargetNode", templateName, innerBindingContext, options);
             }, options);
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
@@ -116,7 +120,7 @@
             }
             return { 'controlsDescendantBindings': true };
         },
-        'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName; 
             var shouldDisplay = true;
@@ -138,13 +142,15 @@
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
-                templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element);
+                templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
             }
             else {
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
-                    var templateData = bindingValue['data'];
-                    templateSubscription = ko.renderTemplate(templateName || element, typeof templateData == "undefined" ? viewModel : templateData, /* options: */ bindingValue, element);
+                    var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
+                        ? bindingContext.createChildContext(ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        : bindingContext;                                                                    // Given no explicit 'data' value, we retain the same binding context
+                    templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
                     ko.utils.emptyDomNode(element);
             }

@@ -2,11 +2,11 @@
     var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
-    function bindingContext(dataItem, parentBindingContext) {
+    ko.bindingContext = function(dataItem, parentBindingContext) {
         this['$data'] = dataItem;
         if (parentBindingContext) {
             this['$parent'] = parentBindingContext['$data'];
-            this['$parents'] = parentBindingContext['$parents'] || [];
+            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
             this['$parents'].unshift(this['$parent']);
             this['$root'] = parentBindingContext['$root'];
         } else {
@@ -14,9 +14,9 @@
             this['$root'] = dataItem;        	
         }
     }
-    bindingContext.prototype = {
+    ko.bindingContext.prototype = {
         createChildContext: function (dataItem) {
-            return new bindingContext(dataItem, this);
+            return new ko.bindingContext(dataItem, this);
         }
     };
 
@@ -47,12 +47,6 @@
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext) {
-        // Ensure we have a nonnull binding context to work with
-        var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof bindingContext)
-            ? viewModelOrBindingContext
-            : new bindingContext(viewModelOrBindingContext);
-        var viewModel = bindingContextInstance['$data'];
-            
         var isFirstEvaluation = true;
         var bindingAttributeName = defaultBindingAttributeName; // Todo: Make this overridable
             
@@ -73,6 +67,12 @@
         var bindingHandlerThatControlsDescendantBindings;
         new ko.dependentObservable(
             function () {
+                // Ensure we have a nonnull binding context to work with
+                var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
+                    ? viewModelOrBindingContext
+                    : new ko.bindingContext(ko.utils.unwrapObservable(viewModelOrBindingContext));
+                var viewModel = bindingContextInstance['$data'];
+
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
                 parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel, bindingContextInstance);
                 

@@ -25,7 +25,7 @@
                 throw new Error(errorMessage);
         }
         
-        this['renderTemplateSource'] = function(templateSource, data, options) {
+        this['renderTemplateSource'] = function(templateSource, bindingContext, options) {
             options = options || {};
             ensureHasReferencedJQueryTemplates();
             
@@ -36,7 +36,8 @@
                 templateSource['data']('precompiled', precompiled);
             }
             
-            data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
+            // Todo: Somehow get jQuery.tmpl to put $parent, $parents, $root in scope too
+            var data = [bindingContext['$data']]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
             
             var resultNodes = jQuery['tmpl'](precompiled, data, options['templateOptions']);
             resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
