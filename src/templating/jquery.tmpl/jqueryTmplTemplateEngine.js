@@ -32,14 +32,18 @@
             // Ensure we have stored a precompiled version of this template (don't want to reparse on every render)
             var precompiled = templateSource['data']('precompiled');
             if (!precompiled) {
-                precompiled = jQuery['template'](null, templateSource.text());
+                var templateText = templateSource.text() || "";
+                // Wrap in "with($item.koBindingContext) { ... }"
+                templateText = "{{ko_with $item.koBindingContext}}" + templateText + "{{/ko_with}}";
+
+                precompiled = jQuery['template'](null, templateText);
                 templateSource['data']('precompiled', precompiled);
             }
             
-            // Todo: Somehow get jQuery.tmpl to put $parent, $parents, $root in scope too
             var data = [bindingContext['$data']]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
-            
-            var resultNodes = jQuery['tmpl'](precompiled, data, options['templateOptions']);
+            var jQueryTemplateOptions = jQuery['extend']({ 'koBindingContext': bindingContext }, options['templateOptions']);
+
+            var resultNodes = jQuery['tmpl'](precompiled, data, jQueryTemplateOptions);
             resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
             jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
             return resultNodes;     		
@@ -56,6 +60,10 @@
         if (jQueryTmplVersion >= 2) {
             jQuery['tmpl']['tag']['ko_code'] = {
                 open: "__.push($1 || '');"
+            };
+            jQuery['tmpl']['tag']['ko_with'] = {
+                open: "with($1) {",
+                close: "} "
             };
         }
     };
