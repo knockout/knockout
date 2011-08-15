@@ -21,6 +21,9 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings();
         value_of(didInit).should_be(true);
+
+        // Just to avoid interfering with other specs:
+        ko.utils.domData.clear(document.body);        
     },
 
     'applyBindings should accept one parameter and then act on document.body with parameter as model': function() {
@@ -36,6 +39,9 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings(suppliedViewModel);
         value_of(didInit).should_be(true);
+
+        // Just to avoid interfering with other specs:
+        ko.utils.domData.clear(document.body);
     },
     
     'applyBindings should accept two parameters and then act on second param as DOM node with first param as model': function() {
@@ -191,5 +197,24 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
         ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
         value_of(testNode).should_contain_text("Inner value");
-    }    
+    },
+    
+    'Should be able to retrieve the binding context associated with any node': function() {
+        testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
+        ko.applyBindings({ name: 'Bert' }, testNode.childNodes[0]);
+
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Bert");
+
+        // Can't get binding context for unbound nodes
+        value_of(ko.dataFor(testNode)).should_be(undefined);
+        value_of(ko.contextFor(testNode)).should_be(undefined);
+
+        // Can get binding context for directly bound nodes
+        value_of(ko.dataFor(testNode.childNodes[0]).name).should_be("Bert");
+        value_of(ko.contextFor(testNode.childNodes[0]).$data.name).should_be("Bert");
+
+        // Can get binding context for descendants of directly bound nodes
+        value_of(ko.dataFor(testNode.childNodes[0].childNodes[0]).name).should_be("Bert");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("Bert");
+    } 
 })

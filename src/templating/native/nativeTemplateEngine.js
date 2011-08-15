@@ -8,7 +8,7 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
     var parsedElems = ko.utils.parseHtmlFragment(templateText);
     
     for (var i = 0, j = parsedElems.length; i < j; i++) {
-        if (parsedElems[i].nodeType === 1)
+        if ((parsedElems[i].nodeType === 1) || (parsedElems[i].nodeType === 3))
             ko.applyBindings(bindingContext, parsedElems[i]);
     }
     

@@ -25,6 +25,10 @@
 
         if (renderedNodesArray)
             ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
+                // The following line is a no-op for native template engine (it's already stored the binding context when it ran applyBindings)
+                // but other template engines need it because they don't call applyBindings (they use unmemoization instead)
+                ko.storedBindingContextForNode(renderedNode, bindingContext);
+
                 ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [bindingContext]);
             });
 

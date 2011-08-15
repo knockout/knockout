@@ -813,6 +813,7 @@ describe('Binding: If', {
         testNode.innerHTML = "<div data-bind='if: true'>Parents: <span data-bind='text: $parents.length'></span></div>";
         ko.applyBindings({ }, testNode);
         value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
     }     
 });
 
@@ -860,6 +861,7 @@ describe('Binding: Ifnot', {
         testNode.innerHTML = "<div data-bind='ifnot: false'>Parents: <span data-bind='text: $parents.length'></span></div>";
         ko.applyBindings({ }, testNode);
         value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
     }  
 });
 
@@ -961,6 +963,18 @@ describe('Binding: With', {
         value_of(finalContainer.childNodes[2]).should_contain_text("top");
         value_of(finalContainer.childNodes[3]).should_contain_text("outer");
         value_of(finalContainer.childNodes[4]).should_contain_text("outer");
+
+        // Also check that, when we later retrieve the binding contexts, we get consistent results
+        value_of(ko.contextFor(testNode).$data.name).should_be("outer");
+        value_of(ko.contextFor(testNode.childNodes[0]).$data.name).should_be("outer");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("top");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$data.name).should_be("middle");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0]).$data.name).should_be("bottom");
+        var firstSpan = testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0];
+        value_of(firstSpan.tagName).should_be("SPAN");
+        value_of(ko.contextFor(firstSpan).$data.name).should_be("bottom");
+        value_of(ko.contextFor(firstSpan).$root.name).should_be("outer");
+        value_of(ko.contextFor(firstSpan).$parents[1].name).should_be("top");
     }    
 });
 
@@ -1070,5 +1084,33 @@ describe('Binding: Foreach', {
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
         value_of(beforeRemoveCallbackData[0].currentHtml).should_be('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-    }    	
+    },
+
+    'Should be able to nest foreaches and access binding contexts both during and after binding': function() {
+        testNode.innerHTML = "<div data-bind='foreach: items'>"
+                                + "<div data-bind='foreach: children'>"
+                                    + "(Val: <span data-bind='text: $data'></span>, Parents: <span data-bind='text: $parents.length'></span>, Rootval: <span data-bind='text: $root.rootVal'></span>)"
+                                + "</div>"
+                           + "</div>";  
+        var viewModel = {
+            rootVal: 'ROOTVAL',
+            items: ko.observableArray([
+                { children: ko.observableArray(['A1', 'A2', 'A3']) },
+                { children: ko.observableArray(['B1', 'B2']) },
+            ])
+        };        
+        ko.applyBindings(viewModel, testNode);
+
+        // Verify we can access binding contexts during binding
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Parents: 2, Rootval: ROOTVAL)(Val: A2, Parents: 2, Rootval: ROOTVAL)(Val: A3, Parents: 2, Rootval: ROOTVAL)");
+        value_of(testNode.childNodes[0].childNodes[1]).should_contain_text("(Val: B1, Parents: 2, Rootval: ROOTVAL)(Val: B2, Parents: 2, Rootval: ROOTVAL)");
+
+        // Verify we can access them later
+        var firstInnerTextNode = testNode.childNodes[0].childNodes[0].childNodes[0];
+        value_of(firstInnerTextNode.nodeType).should_be(3); // The text first node containing "Val: ", associated with A1
+        value_of(ko.dataFor(firstInnerTextNode)).should_be("A1");
+        value_of(ko.contextFor(firstInnerTextNode).$parent.children()[2]).should_be("A3");
+        value_of(ko.contextFor(firstInnerTextNode).$parents[1].items()[1].children()[1]).should_be("B2");
+        value_of(ko.contextFor(firstInnerTextNode).$root.rootVal).should_be("ROOTVAL");
+    }            
 });
