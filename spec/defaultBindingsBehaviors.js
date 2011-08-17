@@ -814,7 +814,42 @@ describe('Binding: If', {
         ko.applyBindings({ }, testNode);
         value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
-    }     
+    },
+    
+    'Should be able to define an \"if\" region using a containerless template': function() {
+        var someitem = ko.observable(undefined);
+        testNode.innerHTML = "hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
+        ko.applyBindings({ someitem: someitem }, testNode);
+        
+        // First it's not there
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
+        
+        // Then it's there
+        someitem({ occasionallyexistentchildprop: 'child prop value' });
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
+
+        // Then it's gone again
+        someitem(null);
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
+    },
+    
+    'Should be able to nest \"if\" regions defined by containerless templates': function() {
+        var condition1 = ko.observable(false);
+        var condition2 = ko.observable(false);
+        testNode.innerHTML = "<!-- ko if: condition1 -->First is true<!-- ko if: condition2 -->Both are true<!-- /ko --><!-- /ko -->";
+        ko.applyBindings({ condition1: condition1, condition2: condition2 }, testNode);
+
+        // First neither are there
+        value_of(testNode).should_contain_html("<!-- ko if: condition1 --><!-- /ko -->");
+
+        // Make outer appear
+        condition1(true);
+        value_of(testNode).should_contain_html("<!-- ko if: condition1 -->first is true<!-- ko if: condition2 --><!-- /ko --><!-- /ko -->");
+
+        // Make inner appear
+        condition2(true);
+        value_of(testNode).should_contain_html("<!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
+    }
 });
 
 describe('Binding: Ifnot', {
@@ -975,7 +1010,50 @@ describe('Binding: With', {
         value_of(ko.contextFor(firstSpan).$data.name).should_be("bottom");
         value_of(ko.contextFor(firstSpan).$root.name).should_be("outer");
         value_of(ko.contextFor(firstSpan).$parents[1].name).should_be("top");
-    }    
+    },
+    
+    'Should be able to define an \"with\" region using a containerless template': function() {
+        var someitem = ko.observable(undefined);
+        testNode.innerHTML = "hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
+        ko.applyBindings({ someitem: someitem }, testNode);
+        
+        // First it's not there
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
+        
+        // Then it's there
+        someitem({ occasionallyexistentchildprop: 'child prop value' });
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
+
+        // Then it's gone again
+        someitem(null);
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
+    },
+    
+    'Should be able to nest \"with\" regions defined by containerless templates': function() {
+        testNode.innerHTML = "<!-- ko with: topitem -->" 
+                               + "Got top: <span data-bind=\"text: topprop\"></span>" 
+                               + "<!-- ko with: childitem -->"
+                                   + "Got child: <span data-bind=\"text: childprop\"></span>"
+                               + "<!-- /ko -->"
+                           + "<!-- /ko -->";
+        var viewModel = { topitem: ko.observable(null) };
+        ko.applyBindings(viewModel, testNode);
+
+        // First neither are there
+        value_of(testNode).should_contain_html("<!-- ko with: topitem --><!-- /ko -->");
+
+        // Make top appear
+        viewModel.topitem({ topprop: 'property of top', childitem: ko.observable() });
+        value_of(testNode).should_contain_html("<!-- ko with: topitem -->got top: <span data-bind=\"text: topprop\">property of top</span><!-- ko with: childitem --><!-- /ko --><!-- /ko -->");
+
+        // Make child appear
+        viewModel.topitem().childitem({ childprop: 'property of child' });
+        value_of(testNode).should_contain_html("<!-- ko with: topitem -->got top: <span data-bind=\"text: topprop\">property of top</span><!-- ko with: childitem -->got child: <span data-bind=\"text: childprop\">property of child</span><!-- /ko --><!-- /ko -->");
+
+        // Make top disappear
+        viewModel.topitem(null);
+        value_of(testNode).should_contain_html("<!-- ko with: topitem --><!-- /ko -->");
+    }      
 });
 
 describe('Binding: Foreach', {
@@ -1112,5 +1190,46 @@ describe('Binding: Foreach', {
         value_of(ko.contextFor(firstInnerTextNode).$parent.children()[2]).should_be("A3");
         value_of(ko.contextFor(firstInnerTextNode).$parents[1].items()[1].children()[1]).should_be("B2");
         value_of(ko.contextFor(firstInnerTextNode).$root.rootVal).should_be("ROOTVAL");
-    }            
+    },
+
+    'Should be able to define a \'foreach\' region using a containerless template': function() {       
+        testNode.innerHTML = "<!-- ko foreach: someitems --><span data-bind='text: childprop'></span><!-- /ko -->";
+        var someitems = [
+            { childprop: 'first child' },
+            { childprop: 'second child' }
+        ];
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_html('<!-- ko foreach: someitems --><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span><!-- /ko -->');
+
+        // Check we can recover the binding contexts
+        value_of(ko.dataFor(testNode.childNodes[2].childNodes[0]).childprop).should_be("second child");
+        value_of(ko.contextFor(testNode.childNodes[2].childNodes[0]).$parent.someitems.length).should_be(2);
+    },
+    
+    'Should be able to nest \'foreach\' regions defined using containerless templates' : function() {
+        testNode.innerHTML = "<!-- ko foreach: items -->"
+                                + "<!-- ko foreach: children -->"
+                                    + "(Val: <span data-bind='text: $data'></span>, Parents: <span data-bind='text: $parents.length'></span>, Rootval: <span data-bind='text: $root.rootVal'></span>)"
+                                + "<!-- /ko -->"
+                           + "<!-- /ko -->";  
+        var viewModel = {
+            rootVal: 'ROOTVAL',
+            items: ko.observableArray([
+                { children: ko.observableArray(['A1', 'A2', 'A3']) },
+                { children: ko.observableArray(['B1', 'B2']) },
+            ])
+        };        
+        ko.applyBindings(viewModel, testNode);
+
+        // Verify we can access binding contexts during binding
+        value_of(testNode).should_contain_text("(Val: A1, Parents: 2, Rootval: ROOTVAL)(Val: A2, Parents: 2, Rootval: ROOTVAL)(Val: A3, Parents: 2, Rootval: ROOTVAL)(Val: B1, Parents: 2, Rootval: ROOTVAL)(Val: B2, Parents: 2, Rootval: ROOTVAL)");
+
+        // Verify we can access them later
+        var firstInnerTextNode = testNode.childNodes[2];
+        value_of(firstInnerTextNode).should_contain_text("(Val: "); // It is the first text node bound in the context of A1
+        value_of(ko.dataFor(firstInnerTextNode)).should_be("A1");
+        value_of(ko.contextFor(firstInnerTextNode).$parent.children()[2]).should_be("A3");
+        value_of(ko.contextFor(firstInnerTextNode).$parents[1].items()[1].children()[1]).should_be("B2");
+        value_of(ko.contextFor(firstInnerTextNode).$root.rootVal).should_be("ROOTVAL");        
+    }
 });

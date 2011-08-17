@@ -90,17 +90,11 @@
                           value: editScript[i].value
                         });
                         if (insertAfterNode == null) {
-                            // Insert at beginning
-                            if (domNode.firstChild)
-                                domNode.insertBefore(node, domNode.firstChild);
-                            else
-                                domNode.appendChild(node);
+                            // Insert "node" (the newly-created node) as domNode's first child
+                            ko.virtualElements.prepend(domNode, node);
                         } else {
-                            // Insert after insertion point
-                            if (insertAfterNode.nextSibling)
-                                domNode.insertBefore(node, insertAfterNode.nextSibling);
-                            else
-                                domNode.appendChild(node);
+                            // Insert "node" into "domNode" immediately after "insertAfterNode"
+                            ko.virtualElements.insertAfter(domNode, node, insertAfterNode);
                         }
                         insertAfterNode = node;
                     } 
@@ -126,8 +120,7 @@
         }
         if (!invokedBeforeRemoveCallback)
             ko.utils.arrayForEach(nodesToDelete, function (node) {
-                if (node.element.parentNode)
-                    node.element.parentNode.removeChild(node.element);
+                ko.removeNode(node.element);
             });
 
         // Store a copy of the array items we just considered so we can difference it next time

@@ -234,6 +234,18 @@ ko.utils = new (function () {
             }
         },
 
+        outerHTML: function(node) {
+            // For IE and Chrome
+            var nativeOuterHtml = node.outerHTML;
+            if (typeof nativeOuterHtml == "string")
+                return nativeOuterHtml;
+            
+            // Other browsers
+            var dummyContainer = window.document.createElement("div");
+            dummyContainer.appendChild(node.cloneNode(true));
+            return dummyContainer.innerHTML;
+        },
+
         range: function (min, max) {
             min = ko.utils.unwrapObservable(min);
             max = ko.utils.unwrapObservable(max);

@@ -23,6 +23,7 @@
             switch (node.nodeType) {
                 case 1: // Elements
                 case 3: // Text nodes (can't have bindings, can have a bindingContext associated with them)
+                case 8: // Comment nodes (may be containerless templates)
                     ko.applyBindings(bindingContext, node);
                     ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
                     break;
@@ -48,7 +49,7 @@
 
         switch (renderMode) {
             case "replaceChildren": 
-                ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
+                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
                 ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
                 break;
             case "replaceNode": 
@@ -146,7 +147,7 @@
         'init': function(element, valueAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            if ((typeof bindingValue != "string") && !bindingValue.name) {
+            if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
                 // It's an anonymous template - store the element contents, then clear the element
                 new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
                 ko.utils.emptyDomNode(element);
@@ -185,7 +186,7 @@
                         : bindingContext;                                                                    // Given no explicit 'data' value, we retain the same binding context
                     templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
-                    ko.utils.emptyDomNode(element);
+                    ko.virtualElements.emptyNode(element);
             }
             
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
