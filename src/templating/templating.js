@@ -7,6 +7,29 @@
         _templateEngine = templateEngine;
     }
 
+    ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {
+        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element. 
+        // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g., 
+        // if a binding inserts siblings), and for each:
+        // (1) Does a regular "applyBindings" to associate bindingContext with this node and to activate any non-memoized bindings
+        // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
+
+        var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
+        var node;
+        for (var i = 0; node = nodeArrayClone[i]; i++) {
+            if (!node.parentNode) // Skip anything that has been removed during binding
+                continue;
+            
+            switch (node.nodeType) {
+                case 1: // Elements
+                case 3: // Text nodes (can't have bindings, can have a bindingContext associated with them)
+                    ko.applyBindings(bindingContext, node);
+                    ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
+                    break;
+            }
+        }
+    }
+
     function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
         return nodeOrNodeArray.nodeType ? nodeOrNodeArray
                                         : nodeOrNodeArray.length > 0 ? nodeOrNodeArray[0]
@@ -23,20 +46,18 @@
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
             throw "Template engine must return an array of DOM nodes";
 
-        if (renderedNodesArray)
-            ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
-                // The following line is a no-op for native template engine (it's already stored the binding context when it ran applyBindings)
-                // but other template engines need it because they don't call applyBindings (they use unmemoization instead)
-                ko.storedBindingContextForNode(renderedNode, bindingContext);
-
-                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [bindingContext]);
-            });
-
         switch (renderMode) {
-            case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
-            case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "replaceChildren": 
+                ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
+                ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+                break;
+            case "replaceNode": 
+                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
+                ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+                break;
             case "ignoreTargetNode": break;
-            default: throw new Error("Unknown renderMode: " + renderMode);
+            default: 
+                throw new Error("Unknown renderMode: " + renderMode);
         }
 
         if (options['afterRender'])
@@ -84,7 +105,16 @@
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
+        var createInnerBindingContext = function(arrayValue) {
+            return parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+        };
+
+        // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
+        var activateBindingsCallback = function(arrayValue, addedNodesArray) {
+            ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, createInnerBindingContext(arrayValue));
+        };
+         
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -98,10 +128,9 @@
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 // Support selecting template as a function of the data being rendered
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
-                
-                var innerBindingContext = parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
-                return executeTemplate(null, "ignoreTargetNode", templateName, innerBindingContext, options);
-            }, options);
+                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
+            }, options, activateBindingsCallback);
+            
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 

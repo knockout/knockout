@@ -5,14 +5,7 @@ ko.nativeTemplateEngine = function () {
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
     var templateText = templateSource.text();
-    var parsedElems = ko.utils.parseHtmlFragment(templateText);
-    
-    for (var i = 0, j = parsedElems.length; i < j; i++) {
-        if ((parsedElems[i].nodeType === 1) || (parsedElems[i].nodeType === 3))
-            ko.applyBindings(bindingContext, parsedElems[i]);
-    }
-    
-    return parsedElems;
+    return ko.utils.parseHtmlFragment(templateText);
 };
 
 ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();

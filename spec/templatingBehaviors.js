@@ -184,11 +184,11 @@ describe('Templating', {
     'Should be able to chain templates, rendering one from inside another': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({
             outerTemplate: "outer template output, [renderTemplate:innerTemplate]", // [renderTemplate:...] is special syntax supported by dummy template engine
-            innerTemplate: "inner template output"
+            innerTemplate: "inner template output <span data-bind='text: 123'></span>"
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("<div>outer template output, <div>inner template output</div></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>outer template output, <div>inner template output <span>123</span></div></div>");
     },
 
     'Should rerender chained templates when their dependencies change, without rerendering parent templates': function () {
@@ -280,6 +280,15 @@ describe('Templating', {
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
         value_of(testNode.childNodes[0].childNodes[1]).should_be(originalFrankNode);
     },
+
+    'Data binding \'foreach\' option should apply bindings within the context of each item in the array': function () {
+        var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item is <span data-bind='text: personName'></span>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings({ myCollection: myArray }, testNode);
+        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
+    },    
     
     'Data binding \'foreach\' option should update DOM nodes when a dependency of their mapping function changes': function() {
         var myObservable = new ko.observable("Steve");

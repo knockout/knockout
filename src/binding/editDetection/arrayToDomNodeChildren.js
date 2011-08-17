@@ -7,15 +7,21 @@
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap) {
+    // "callbackAfterAddingNodes" will be invoked after any "mapping"-generated nodes are inserted into the container node
+    // You can use this, for example, to activate bindings on those nodes.
+
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         var dependentObservable = ko.dependentObservable(function() {
             var newMappedNodes = mapping(valueToMap) || [];
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
-            if (mappedNodes.length > 0)
+            if (mappedNodes.length > 0) {
                 ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+                if (callbackAfterAddingNodes)
+                    callbackAfterAddingNodes(valueToMap, newMappedNodes);
+            }
             
             // Replace the contents of the mappedNodes array, thereby updating the record
             // of which nodes would be deleted if valueToMap was itself later removed
@@ -27,7 +33,7 @@
     
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
         // Compare the provided array against the previous one
         array = array || [];
         options = options || {};
@@ -70,7 +76,8 @@
                     break;
 
                 case "added": 
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, editScript[i].value);
+                    var valueToMap = editScript[i].value;
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
                     var mappedNodes = mapData.mappedNodes;
                     
                     // On the first evaluation, insert the nodes at the current insertion point
@@ -96,7 +103,9 @@
                                 domNode.appendChild(node);
                         }
                         insertAfterNode = node;
-                    }    		
+                    } 
+                    if (callbackAfterAddingNodes)
+                        callbackAfterAddingNodes(valueToMap, mappedNodes);
                     break;
             }
         }
