@@ -1,13 +1,18 @@
 
 ko.jsonExpressionRewriting = (function () {
-    var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
+    var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
     var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
-        return string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
-            return tokens[tokenIndex];
-        });
+        var prevValue = null;
+        while (string != prevValue) { // Keep restoring tokens until it no longer makes a difference (they may be nested)
+            prevValue = string;
+            string = string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
+                return tokens[tokenIndex];
+            });
+        }
+        return string;
     }
 
     function isWriteableValue(expression) {
@@ -16,17 +21,33 @@ ko.jsonExpressionRewriting = (function () {
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
-    return {
-        parseJson: function (jsonString) {
-            jsonString = ko.utils.stringTrim(jsonString);
-            if (jsonString.length < 3)
-                return {};
+    function ensureQuoted(key) {
+        var trimmedKey = ko.utils.stringTrim(key);
+        switch (trimmedKey.length && trimmedKey.charAt(0)) {
+            case "'":
+            case '"': 
+                return key;
+            default:
+                return "'" + trimmedKey + "'";
+        }
+    }
 
-            // We're going to split on commas, so first extract any blocks that may contain commas other than those at the top level
+    return {
+        parseObjectLiteral: function(objectLiteralString) {
+            // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
+            // that is sufficient just to split an object literal string into a set of top-level key-value pairs
+
+            var str = ko.utils.stringTrim(objectLiteralString);
+            if (str.length < 3)
+                return [];
+            if (str.charAt(0) === "{")// Ignore any braces surrounding the whole object literal
+                str = str.substring(1, str.length - 1);
+
+            // Pull out any string literals and regex literals
             var tokens = [];
             var tokenStart = null, tokenEndChar;
-            for (var position = jsonString.charAt(0) == "{" ? 1 : 0; position < jsonString.length; position++) {
-                var c = jsonString.charAt(position);
+            for (var position = 0; position < str.length; position++) {
+                var c = str.charAt(position);
                 if (tokenStart === null) {
                     switch (c) {
                         case '"':
@@ -35,68 +56,105 @@ ko.jsonExpressionRewriting = (function () {
                             tokenStart = position;
                             tokenEndChar = c;
                             break;
-                        case "{":
-                            tokenStart = position;
-                            tokenEndChar = "}";
-                            break;
-                        case "[":
-                            tokenStart = position;
-                            tokenEndChar = "]";
-                            break;
                     }
-                } else if (c == tokenEndChar) {
-                    var token = jsonString.substring(tokenStart, position + 1);
+                } else if ((c == tokenEndChar) && (str.charAt(position - 1) !== "\\")) {
+                    var token = str.substring(tokenStart, position + 1);
                     tokens.push(token);
-                    var replacement = "[ko_token_" + (tokens.length - 1) + "]";
-                    jsonString = jsonString.substring(0, tokenStart) + replacement + jsonString.substring(position + 1);
+                    var replacement = "@ko_token_" + (tokens.length - 1) + "@";
+                    str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
                     position -= (token.length - replacement.length);
                     tokenStart = null;
                 }
             }
 
+            // Next pull out balanced paren, brace, and bracket blocks
+            tokenStart = null;
+            tokenEndChar = null;
+            var tokenDepth = 0, tokenStartChar = null;
+            for (var position = 0; position < str.length; position++) {
+                var c = str.charAt(position);
+                if (tokenStart === null) {
+                    switch (c) {
+                        case "{": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = "}";
+                                  break;
+                        case "(": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = ")";
+                                  break;
+                        case "[": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = "]";
+                                  break;
+                    }
+                }
+
+                if (c === tokenStartChar)
+                    tokenDepth++;
+                else if (c === tokenEndChar) {
+                    tokenDepth--;
+                    if (tokenDepth === 0) {
+                        var token = str.substring(tokenStart, position + 1);
+                        tokens.push(token);
+                        var replacement = "@ko_token_" + (tokens.length - 1) + "@";
+                        str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
+                        position -= (token.length - replacement.length);
+                        tokenStart = null;                            
+                    }
+                }
+            }
+
             // Now we can safely split on commas to get the key/value pairs
-            var result = {};
-            var keyValuePairs = jsonString.split(",");
+            var result = [];
+            var keyValuePairs = str.split(",");
             for (var i = 0, j = keyValuePairs.length; i < j; i++) {
                 var pair = keyValuePairs[i];
                 var colonPos = pair.indexOf(":");
                 if ((colonPos > 0) && (colonPos < pair.length - 1)) {
-                    var key = ko.utils.stringTrim(pair.substring(0, colonPos));
-                    var value = ko.utils.stringTrim(pair.substring(colonPos + 1));
-                    if (key.charAt(0) == "{")
-                        key = key.substring(1);
-                    if (value.charAt(value.length - 1) == "}")
-                        value = value.substring(0, value.length - 1);
-                    key = ko.utils.stringTrim(restoreTokens(key, tokens));
-                    value = ko.utils.stringTrim(restoreTokens(value, tokens));
-                    result[key] = value;
+                    var key = pair.substring(0, colonPos);
+                    var value = pair.substring(colonPos + 1);
+                    result.push({ key: restoreTokens(key, tokens), value: restoreTokens(value, tokens) });
+                } else {
+                    result.push({ unknown: restoreTokens(pair, tokens) });
                 }
             }
-            return result;
+            return result;            
         },
 
-        insertPropertyAccessorsIntoJson: function (jsonString) {
-            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
-            var propertyAccessorTokens = [];
-            for (var key in parsed) {
-                var value = parsed[key];
-                if (isWriteableValue(value)) {
-                    if (propertyAccessorTokens.length > 0)
-                        propertyAccessorTokens.push(", ");
-                    propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+        insertPropertyAccessorsIntoJson: function (objectLiteral) {
+            var parsedSections = ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteral);
+            var resultStrings = [], propertyAccessorResultStrings = [];
+
+            var parsedSection;
+            for (var i = 0; parsedSection = parsedSections[i]; i++) {
+                if (resultStrings.length > 0)
+                    resultStrings.push(",");
+
+                if (parsedSection.key) {
+                    var quotedKey = ensureQuoted(parsedSection.key);
+                    resultStrings.push(quotedKey);
+                    resultStrings.push(":");              
+                    resultStrings.push(parsedSection.value);
+
+                    if (isWriteableValue(ko.utils.stringTrim(parsedSection.value))) {
+                        if (propertyAccessorResultStrings.length > 0)
+                            propertyAccessorResultStrings.push(", ");
+                        propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + parsedSection.value + " = __ko_value; }");
+                    }                    
+                } else if (parsedSection.unknown) {
+                    resultStrings.push(parsedSection.unknown);
                 }
             }
 
-            if (propertyAccessorTokens.length > 0) {
-                var allPropertyAccessors = propertyAccessorTokens.join("");
-                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            var combinedResult = resultStrings.join("");
+            if (propertyAccessorResultStrings.length > 0) {
+                var allPropertyAccessors = propertyAccessorResultStrings.join("");
+                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";                
             }
 
-            return jsonString;
+            return combinedResult;
         }
     };
 })();
 
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
-ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.parseObjectLiteral', ko.jsonExpressionRewriting.parseObjectLiteral);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
