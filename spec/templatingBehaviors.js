@@ -150,14 +150,14 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "template output" }));
         testNode.innerHTML = "<div data-bind='template:\"someTemplate\"'></div>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>template output</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>template output</div>");
     },
 
     'Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
         ko.applyBindings({ someProp: { childProp: 123} }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>result = 123</div>");
     },
 
     'Should stop tracking inner observables immediately when the container node is removed from the document': function() {
@@ -178,7 +178,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: templateSelectorFunction, data: someProp }'></div>";
         ko.applyBindings({ someProp: { childProp: 123, myTemplate: "someTemplate" }, templateSelectorFunction: templatePicker }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>result = 123</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>result = 123</div>");
     },
 
     'Should be able to chain templates, rendering one from inside another': function () {
@@ -271,12 +271,12 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is bob</div><div>the item is frank</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is bob</div><div>the item is frank</div>");
         var originalBobNode = testNode.childNodes[0].childNodes[0];
         var originalFrankNode = testNode.childNodes[0].childNodes[1];
 
         myArray.push({ personName: "Steve" });
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is frank</div><div>the item is steve</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is bob</div><div>the item is frank</div><div>the item is steve</div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
         value_of(testNode.childNodes[0].childNodes[1]).should_be(originalFrankNode);
     },
@@ -287,7 +287,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace("\r\n", "")).should_be("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
     },    
     
     'Data binding \'foreach\' option should update DOM nodes when a dependency of their mapping function changes': function() {
@@ -297,17 +297,17 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is steve</div><div>the item is another</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is bob</div><div>the item is steve</div><div>the item is another</div>");
         var originalBobNode = testNode.childNodes[0].childNodes[0];
         
         myObservable("Steve2");
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is steve2</div><div>the item is another</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is bob</div><div>the item is steve2</div><div>the item is another</div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalBobNode);
         
         // Ensure we can still remove the corresponding nodes (even though they've changed), and that doing so causes the subscription to be disposed
         value_of(myObservable.getSubscriptionsCount()).should_be(1);
         myArray.splice(1, 1);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>the item is bob</div><div>the item is another</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is bob</div><div>the item is another</div>");
         myObservable("Something else"); // Re-evaluating the observable causes the orphaned subscriptions to be disposed
         value_of(myObservable.getSubscriptionsCount()).should_be(0);
     },
@@ -360,7 +360,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);    	
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=3</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>someprop=1</div><div>someprop=3</div>");
     },
     
     'Data binding syntax should include any items whose \'_destroy\' flag is set if you use includeDestroyed' : function() {
@@ -369,12 +369,12 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: true }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);    	
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
     },
     
     'Data binding syntax should support \"if\" condition' : function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));        
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", if: myProp }'></div>";
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp }'></div>";
         
         var viewModel = { myProp: ko.observable({ childProp: 'abc' }) };
         ko.applyBindings(viewModel, testNode);
@@ -412,7 +412,7 @@ describe('Templating', {
     
     'Data binding syntax should support \"if\" condition in conjunction with foreach': function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));        
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", if: myProp, foreach: [$data, $data, $data] }'></div>";
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp, foreach: [$data, $data, $data] }'></div>";
         
         var viewModel = { myProp: ko.observable({ childProp: 'abc' }) };
         ko.applyBindings(viewModel, testNode);
@@ -458,7 +458,7 @@ describe('Templating', {
             return dataItem.preferredTemplate == 1 ? 'firstTemplate' : 'secondTemplate';
         };
         ko.applyBindings({ myCollection: myArray, getTemplateModelProperty: getTemplate }, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
     },
     
     'Data binding \'templateOptions\' should be passed to template': function() {
@@ -473,7 +473,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: {name: \"myTemplate\", foreach: people, templateOptions: someAdditionalData }'></div>";
 
         ko.applyBindings(myModel, testNode);
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase().replace(/[\n\r]/g, "")).should_be("<div>person alpha has additional property someadditionalvalue</div><div>person beta has additional property someadditionalvalue</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>person alpha has additional property someadditionalvalue</div><div>person beta has additional property someadditionalvalue</div>");
     },
     
     'If the template binding is updated, should dispose any template subscriptions previously associated with the element': function() {
@@ -486,7 +486,7 @@ describe('Templating', {
         ko.applyBindings(myModel, testNode);
         
         // Right now the template references myObservable, so there should be exactly one subscription on it
-        value_of(testNode.childNodes[0].innerHTML.toLowerCase()).should_be("<div>the value is some value</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the value is some value</div>");
         value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
         
         // By changing unrelatedObservable, we force the data-bind value to be re-evaluated, setting up a new template subscription,

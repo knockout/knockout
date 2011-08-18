@@ -13,78 +13,78 @@ describe('Native template engine', {
             return resultNode;  		
         }
         
-        this.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
-        this.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");        
-        this.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
+        window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
+        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");        
+        window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
     }, 
 
     'Named template can display static content from regular DOM element': function () {
-        testDivTemplate.innerHTML = "this is some static content";
-        ko.renderTemplate("testDivTemplate", null, null, templateOutput);
-        value_of(templateOutput).should_contain_html("this is some static content");
+        window.testDivTemplate.innerHTML = "this is some static content";
+        ko.renderTemplate("testDivTemplate", null, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("this is some static content");
     },
     
     'Named template can fetch template from regular DOM element and data-bind on results': function () {
-        testDivTemplate.innerHTML = "name: <div data-bind='text: name'></div>";
-        ko.renderTemplate("testDivTemplate", { name: 'bert' }, null, templateOutput);
-        value_of(templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+        window.testDivTemplate.innerHTML = "name: <div data-bind='text: name'></div>";
+        ko.renderTemplate("testDivTemplate", { name: 'bert' }, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     },
     
     'Named template can fetch template from <script> elements and data-bind on results': function () {
-        testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
-        ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, templateOutput);
-        value_of(templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+        window.testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
+        ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     }, 
     
     'Anonymous template can display static content': function () {
-        new ko.templateSources.anonymousTemplate(templateOutput).text("this is some static content");
-        templateOutput.innerHTML = "irrelevant initial content";
-        ko.renderTemplate(templateOutput, null, null, templateOutput);
-        value_of(templateOutput).should_contain_html("this is some static content");
+        new ko.templateSources.anonymousTemplate(window.templateOutput).text("this is some static content");
+        window.templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate(window.templateOutput, null, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("this is some static content");
     },
     
     'Anonymous template can data-bind on results': function () {
-        new ko.templateSources.anonymousTemplate(templateOutput).text("name: <div data-bind='text: name'></div>");
-        templateOutput.innerHTML = "irrelevant initial content";
-        ko.renderTemplate(templateOutput, { name: 'bert' }, null, templateOutput);
-        value_of(templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+        new ko.templateSources.anonymousTemplate(window.templateOutput).text("name: <div data-bind='text: name'></div>");
+        window.templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate(window.templateOutput, { name: 'bert' }, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     },
 
     'Anonymous templates can be supplied by not giving a template name': function() {
-        testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>Value: <span data-bind='text: val'></span></div>"
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>Value: <span data-bind='text: val'></span></div>"
         
         var viewModel = {
             someItem: { val: 'abc' }
         };        
-        ko.applyBindings(viewModel, testDivTemplate);
+        ko.applyBindings(viewModel, window.testDivTemplate);
         
-        value_of(testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
+        value_of(window.testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
     },
     
     'Anonymous templates work in conjunction with foreach': function() {
-        testDivTemplate.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
         var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
-        ko.applyBindings({ myItems: myItems }, testDivTemplate);
+        ko.applyBindings({ myItems: myItems }, window.testDivTemplate);
         
-        value_of(testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
-        value_of(testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
-        value_of(testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");
         
         // Can cause re-rendering
         myItems.push({ itemProp: 'Pushed' });
-        value_of(testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
-        value_of(testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
-        value_of(testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");        
-        value_of(testDivTemplate.childNodes[0].childNodes[3]).should_contain_text("Item: Pushed");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");        
+        value_of(window.testDivTemplate.childNodes[0].childNodes[3]).should_contain_text("Item: Pushed");
         
         myItems.splice(1, 1);
-        value_of(testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
-        value_of(testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Gamma");        
-        value_of(testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Pushed");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Gamma");        
+        value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Pushed");
     },
 
     'Anonymous templates may be nested': function() {
-        testDivTemplate.innerHTML = "<div data-bind='template: { foreach: items }'>"
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: items }'>"
                                        + "<div data-bind='template: { foreach: children }'>"
                                            + "(Val: <span data-bind='text: $data'></span>, Invocations: <span data-bind='text: $root.invocationCount()'></span>, Parents: <span data-bind='text: $parents.length'></span>)"
                                        + "</div>"
@@ -97,27 +97,27 @@ describe('Native template engine', {
             ])
         };        
         viewModel.invocationCount = function() { return ++this.invocations }.bind(viewModel);
-        ko.applyBindings(viewModel, testDivTemplate);
+        ko.applyBindings(viewModel, window.testDivTemplate);
 
-        value_of(testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
-        value_of(testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
 
         // Check we can insert without causing anything else to rerender
         viewModel.items()[1].children.unshift('ANew');
-        value_of(testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
-        value_of(testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
     },   
 
     'Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value': function() {
-        testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>"
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>"
                                       + "ValueBound: <span data-bind='text: $parent.parentProp'></span>"
                                   + "</div>";
-        ko.applyBindings({ someItem: {}, parentProp: 'Hello' }, testDivTemplate);
-        value_of(testDivTemplate.childNodes[0]).should_contain_text("ValueBound: Hello");
+        ko.applyBindings({ someItem: {}, parentProp: 'Hello' }, window.testDivTemplate);
+        value_of(window.testDivTemplate.childNodes[0]).should_contain_text("ValueBound: Hello");
     },
 
     'Data-bind syntax should expose all ancestor binding contexts as $parents, with top frame also given as $root': function() {
-        testDivTemplate.innerHTML = "<div data-bind='template: { data: outerItem }'>"
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: outerItem }'>"
                                        + "<div data-bind='template: { data: middleItem }'>"
                                            + "<div data-bind='template: { data: innerItem }'>("
                                                + "data: <span data-bind='text: $data.val'></span>, "
@@ -139,7 +139,7 @@ describe('Native template engine', {
                     innerItem: { val: "INNER" }
                 }
             }
-        }, testDivTemplate);
-        value_of(testDivTemplate.childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
+        }, window.testDivTemplate);
+        value_of(window.testDivTemplate.childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
     }        
 });

@@ -27,8 +27,11 @@
             };            
             JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
                 var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
+                // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
+                cleanedHtml = cleanedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
+                expectedHtml = expectedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
                 // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
-                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"ko\d+\"/g, "");
+                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"(ko\d+|null)\"/g, "");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
             JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
