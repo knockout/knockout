@@ -16,13 +16,13 @@
 
         var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
         var node;
+        var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
         for (var i = 0; node = nodeArrayClone[i]; i++) {
-            if (!node.parentNode) // Skip anything that has been removed during binding
+            if (node.parentNode !== commonParentElement) // Skip anything that has been removed during binding
                 continue;
             
             switch (node.nodeType) {
-                case 1: // Elements
-                case 3: // Text nodes (can't have bindings, can have a bindingContext associated with them)
+                case 1: // Elements (can have bindings)
                 case 8: // Comment nodes (may be containerless templates)
                     ko.applyBindings(bindingContext, node);
                     ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
