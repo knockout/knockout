@@ -1,7 +1,22 @@
 (function () {
+    var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
+
     function simpleHtmlParse(html) {
         // Based on jQuery's "clean" function, but only accounting for table-related elements.
         // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
+
+        // Trim any leading whitespace/comment nodes, otherwise IE < 9 will discard them. We'll need to restore them after.
+        html = html || "";
+        var prefixNodes = [];
+        while (html.match(leadingCommentRegex)) {
+            html = html.replace(leadingCommentRegex, function() {
+                var whitespace = arguments[1], comment = arguments[2];
+                if (whitespace)
+                    prefixNodes.push(new document.createTextNode(whitespace));
+                prefixNodes.push(document.createComment(comment));
+                return "";
+            });
+        }
         
         // Trim whitespace, otherwise indexOf won't work as expected
         var tags = ko.utils.stringTrim(html).toLowerCase(), div = document.createElement("div");
@@ -19,7 +34,7 @@
         while (wrap[0]--)
             div = div.lastChild;
 
-        return ko.utils.makeArray(div.childNodes);
+        return prefixNodes.concat(ko.utils.makeArray(div.childNodes));
     }
     
     ko.utils.parseHtmlFragment = function(html) {
