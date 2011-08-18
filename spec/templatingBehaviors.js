@@ -52,9 +52,9 @@ var dummyTemplateEngine = function (templates) {
         }
     };
 
-    this.isTemplateRewritten = function (template) { return typeof(templates[template]) == "function" /* Can't rewrite functions, so claim they are already rewritten */; },
-    this.rewriteTemplate = function (template, rewriterCallback) { templates[template] = rewriterCallback(templates[template]); },
-    this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; }
+    this.isTemplateRewritten = function (template) { return typeof(templates[template]) == "function" /* Can't rewrite functions, so claim they are already rewritten */; };
+    this.rewriteTemplate = function (template, rewriterCallback) { templates[template] = rewriterCallback(templates[template]); };
+    this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };
 dummyTemplateEngine.prototype = new ko.templateEngine();
 
@@ -532,7 +532,7 @@ describe('Templating', {
                     val: "MIDDLE",
                     innerItem: { val: "INNER" }
                 }
-            }, 
+            }
         }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(Data:INNER, Parent:MIDDLE, Grandparent:OUTER, Root:ROOT, Depth:3)");
     }    

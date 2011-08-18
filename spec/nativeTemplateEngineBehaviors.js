@@ -138,7 +138,7 @@ describe('Native template engine', {
                     val: "MIDDLE",
                     innerItem: { val: "INNER" }
                 }
-            }, 
+            }
         }, testDivTemplate);
         value_of(testDivTemplate.childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
     }        
