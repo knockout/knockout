@@ -41,11 +41,16 @@
         var shouldBindDescendants = true;
 
         // Apply bindings only if:
-        // (1) It's the root for this binding context, as we will need to store the binding context on this node
+        // (1) It's a root element for this binding context, as we will need to store the binding context on this node
+        //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType == 1);
         var isContainerlessTemplate = ko.virtualElements.virtualNodeBindingValue(nodeVerified);
-        if (isRootNodeForBindingContext || isContainerlessTemplate || (isElement && nodeVerified.getAttribute(defaultBindingAttributeName)))
+        var shouldApplyBindings = isContainerlessTemplate                                               // Case (2)
+                               || (isElement && isRootNodeForBindingContext)                            // Case (1)
+                               || (isElement && nodeVerified.getAttribute(defaultBindingAttributeName)) // Case (2)
+        
+        if (shouldApplyBindings)
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
         if (isElement && shouldBindDescendants)
