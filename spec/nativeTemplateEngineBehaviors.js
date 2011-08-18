@@ -93,7 +93,7 @@ describe('Native template engine', {
             invocations: 0, // Verifying # invocations to be sure we're not rendering anything multiple times and discarding the results  
             items: ko.observableArray([
                 { children: ko.observableArray(['A1', 'A2', 'A3']) },
-                { children: ko.observableArray(['B1', 'B2']) },
+                { children: ko.observableArray(['B1', 'B2']) }
             ])
         };        
         viewModel.invocationCount = function() { return ++this.invocations }.bind(viewModel);

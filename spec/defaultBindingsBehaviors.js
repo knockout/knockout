@@ -1174,7 +1174,7 @@ describe('Binding: Foreach', {
             rootVal: 'ROOTVAL',
             items: ko.observableArray([
                 { children: ko.observableArray(['A1', 'A2', 'A3']) },
-                { children: ko.observableArray(['B1', 'B2']) },
+                { children: ko.observableArray(['B1', 'B2']) }
             ])
         };        
         ko.applyBindings(viewModel, testNode);
@@ -1216,7 +1216,7 @@ describe('Binding: Foreach', {
             rootVal: 'ROOTVAL',
             items: ko.observableArray([
                 { children: ko.observableArray(['A1', 'A2', 'A3']) },
-                { children: ko.observableArray(['B1', 'B2']) },
+                { children: ko.observableArray(['B1', 'B2']) }
             ])
         };        
         ko.applyBindings(viewModel, testNode);
