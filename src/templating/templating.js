@@ -47,22 +47,26 @@
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
             throw "Template engine must return an array of DOM nodes";
 
+        var haveAddedNodesToParent = false;
         switch (renderMode) {
             case "replaceChildren": 
                 ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
-                ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+                haveAddedNodesToParent = true;
                 break;
             case "replaceNode": 
                 ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
-                ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+                haveAddedNodesToParent = true;
                 break;
             case "ignoreTargetNode": break;
             default: 
                 throw new Error("Unknown renderMode: " + renderMode);
         }
 
-        if (options['afterRender'])
-            options['afterRender'](renderedNodesArray, bindingContext['$data']);
+        if (haveAddedNodesToParent) {
+            ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+            if (options['afterRender'])
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);            
+        }
 
         return renderedNodesArray;
     }
@@ -113,7 +117,10 @@
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray) {
-            ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, createInnerBindingContext(arrayValue));
+            var bindingContext = createInnerBindingContext(arrayValue);
+            ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
+            if (options['afterRender'])
+                options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
         };
          
         return new ko.dependentObservable(function () {
