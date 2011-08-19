@@ -402,6 +402,34 @@ ko.bindingHandlers['attr'] = {
     }
 };
 
+ko.bindingHandlers['hasfocus'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor) {
+        var writeValue = function(valueToWrite) {
+            var modelValue = valueAccessor();
+            if (valueToWrite == ko.utils.unwrapObservable(modelValue))
+                return;
+
+            if (ko.isWriteableObservable(modelValue))
+                modelValue(valueToWrite);
+            else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['hasfocus']) {
+                    allBindings['_ko_property_writers']['hasfocus'](valueToWrite);
+                }                
+            }
+        };
+        ko.utils.registerEventHandler(element, "focus", function() { writeValue(true) });
+        ko.utils.registerEventHandler(element, "focusin", function() { writeValue(true) }); // For IE
+        ko.utils.registerEventHandler(element, "blur",  function() { writeValue(false) });
+        ko.utils.registerEventHandler(element, "focusout",  function() { writeValue(false) }); // For IE
+    },
+    'update': function(element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        value ? element.focus() : element.blur();
+        ko.utils.triggerEvent(element, value ? "focusin" : "focusout"); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
+    }
+};
+
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
