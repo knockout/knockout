@@ -44,10 +44,13 @@
         return startComment.nextSibling;
     }
 
-    function nodeArrayToText(nodeArray) {
+    function nodeArrayToText(nodeArray, cleanNodes) {
         var texts = [];
-        for (var i = 0, j = nodeArray.length; i < j; i++)
+        for (var i = 0, j = nodeArray.length; i < j; i++) {
+            if (cleanNodes)
+                ko.utils.domNodeDisposal.cleanNode(nodeArray[i]);
             texts.push(ko.utils.outerHTML(nodeArray[i]));
+        }
         return String.prototype.concat.apply("", texts);
     }   
 
@@ -121,7 +124,7 @@
             if (ko.virtualElements.virtualNodeBindingValue(node)) {
                 // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
                 var virtualChildren = ko.virtualElements.childNodes(node);
-                var anonymousTemplateText = nodeArrayToText(virtualChildren);
+                var anonymousTemplateText = nodeArrayToText(virtualChildren, true);
                 ko.virtualElements.emptyNode(node);
                 new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
             }

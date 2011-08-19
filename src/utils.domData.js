@@ -19,7 +19,8 @@ ko.utils.domData = new (function () {
         },
         getAll: function (node, createIfNotFound) {
             var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
-            if (!dataStoreKey) {
+            var hasExistingDataStore = dataStoreKey && (dataStoreKey !== "null");
+            if (!hasExistingDataStore) {
                 if (!createIfNotFound)
                     return undefined;
                 dataStoreKey = node[dataStoreKeyExpandoPropertyName] = "ko" + uniqueId++;
