@@ -46,12 +46,14 @@
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType == 1);
         var isContainerlessTemplate = ko.virtualElements.virtualNodeBindingValue(nodeVerified);
-        var shouldApplyBindings = isContainerlessTemplate                                               // Case (2)
-                               || (isElement && isRootNodeForBindingContext)                            // Case (1)
-                               || (isElement && nodeVerified.getAttribute(defaultBindingAttributeName)) // Case (2)
+        var domDataBindings = ko.utils.domData.get(nodeVerified, "bindings");
+        var shouldApplyBindings = isContainerlessTemplate                                                // Case (2)
+                               || domDataBindings                                                        // Case (2)
+                               || (isElement && isRootNodeForBindingContext)                             // Case (1)
+                               || (isElement && nodeVerified.getAttribute(defaultBindingAttributeName)); // Case (2)
         
         if (shouldApplyBindings)
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, domDataBindings, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
         if (isElement && shouldBindDescendants)
             applyBindingsToDescendantsInternal(viewModel, nodeVerified);
@@ -150,6 +152,11 @@
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
+
+        // An opportunity for bindings to be applied externally
+        if (typeof ko['beforeApplyBindings'] === "function")
+            ko['beforeApplyBindings'](rootNode);
+
         applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode, true);
     };
 
