@@ -41,7 +41,7 @@
         if (arguments.length === 1) {
             return ko.utils.domData.get(this.domElement, "templateSourceData_" + key);
         } else {
-            ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[0]);
+            ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
         }
     };
     
