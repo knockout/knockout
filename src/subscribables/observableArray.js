@@ -5,26 +5,23 @@ ko.observableArray = function (initialValues) {
     }
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
+        
     var result = new ko.observable(initialValues);
+    ko.utils.extend(result, ko.observableArray['fn']);
+    
+    ko.exportProperty(result, "remove", result.remove);
+    ko.exportProperty(result, "removeAll", result.removeAll);
+    ko.exportProperty(result, "destroy", result.destroy);
+    ko.exportProperty(result, "destroyAll", result.destroyAll);
+    ko.exportProperty(result, "indexOf", result.indexOf);
+    ko.exportProperty(result, "replace", result.replace);
+    
+    return result;
+}
 
-    ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
-        result[methodName] = function () {
-            var underlyingArray = result();
-            var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
-            result.valueHasMutated();
-            return methodCallResult;
-        };
-    });
-
-    ko.utils.arrayForEach(["slice"], function (methodName) {
-        result[methodName] = function () {
-            var underlyingArray = result();
-            return underlyingArray[methodName].apply(underlyingArray, arguments);
-        };
-    });
-
-    result.remove = function (valueOrPredicate) {
-        var underlyingArray = result();
+ko.observableArray['fn'] = {
+    remove: function (valueOrPredicate) {
+        var underlyingArray = this();
         var remainingValues = [];
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
@@ -35,70 +32,80 @@ ko.observableArray = function (initialValues) {
             else
                 removedValues.push(value);
         }
-        result(remainingValues);
+        this(remainingValues);
         return removedValues;
-    };
+    },
 
-    result.removeAll = function (arrayOfValues) {
+    removeAll: function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var allValues = result();
-            result([]);
+            var allValues = this();
+            this([]);
             return allValues;
         }
         
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
-        return result.remove(function (value) {
+        return this.remove(function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
-    };
+    },
     
-    result.destroy = function (valueOrPredicate) {
-        var underlyingArray = result();
+    destroy: function (valueOrPredicate) {
+        var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
             var value = underlyingArray[i];
             if (predicate(value))
                 underlyingArray[i]["_destroy"] = true;
         }
-        result.valueHasMutated();
-    };
-    
-    result.destroyAll = function (arrayOfValues) {
+        this.valueHasMutated();
+    },
+        
+    destroyAll: function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
-            return result.destroy(function() { return true });
+            return this.destroy(function() { return true });
                 
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
-        return result.destroy(function (value) {
+        return this.destroy(function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
-        });		    	
-    };
+        });             
+    },
 
-    result.indexOf = function (item) {
-        var underlyingArray = result();
+    indexOf: function (item) {
+        var underlyingArray = this();
         return ko.utils.arrayIndexOf(underlyingArray, item);
-    };
+    },
     
-    result.replace = function(oldItem, newItem) {
-        var index = result.indexOf(oldItem);
+    replace: function(oldItem, newItem) {
+        var index = this.indexOf(oldItem);
         if (index >= 0) {
-            result()[index] = newItem;
-            result.valueHasMutated();
-        }	
-    };
-    
-    ko.exportProperty(result, "remove", result.remove);
-    ko.exportProperty(result, "removeAll", result.removeAll);
-    ko.exportProperty(result, "destroy", result.destroy);
-    ko.exportProperty(result, "destroyAll", result.destroyAll);
-    ko.exportProperty(result, "indexOf", result.indexOf);
-    
-    return result;
+            this()[index] = newItem;
+            this.valueHasMutated();
+        }   
+    }    
 }
+
+// Populate ko.observableArray.fn with read/write functions from native arrays
+ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
+    ko.observableArray['fn'][methodName] = function () { 
+        var underlyingArray = this();
+        var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
+        this.valueHasMutated();
+        return methodCallResult;
+    };
+});
+
+// Populate ko.observableArray.fn with read-only functions from native arrays
+ko.utils.arrayForEach(["slice"], function (methodName) {
+    ko.observableArray['fn'][methodName] = function () {
+        var underlyingArray = this();
+        return underlyingArray[methodName].apply(underlyingArray, arguments);
+    };
+});
 
 ko.exportSymbol('ko.observableArray', ko.observableArray);

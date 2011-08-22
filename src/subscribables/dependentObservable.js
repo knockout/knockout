@@ -1,6 +1,4 @@
-ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
-    var _latestValue, _hasBeenEvaluated = false;
-    
+function prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = evaluatorFunctionOrOptions;
@@ -15,6 +13,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
         
+    return options;    
+}
+
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    var _latestValue, 
+        _hasBeenEvaluated = false, 
+        options = prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, options);
+
     // Build "disposeWhenNodeIsRemoved" and "disposeWhenNodeIsRemovedCallback" option values
     // (Note: "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
     // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
@@ -79,8 +85,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
-    }
-    dependentObservable.__ko_proto__ = ko.dependentObservable;
+    }    
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
@@ -90,6 +95,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     };
     
     ko.subscribable.call(dependentObservable);
+    ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
+
     if (options['deferEvaluation'] !== true)
         evaluate();
     
@@ -98,6 +105,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     return dependentObservable;
 };
+
+ko.dependentObservable['fn'] = {
+    __ko_proto__: ko.dependentObservable
+};
+
 ko.dependentObservable.__ko_proto__ = ko.observable;
 
 ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);

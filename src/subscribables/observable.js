@@ -1,10 +1,5 @@
 var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
 
-function valuesArePrimitiveAndEqual(a, b) {
-    var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
-    return oldValueIsPrimitive ? (a === b) : false;
-}
-
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
@@ -25,16 +20,24 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
-    observable.__ko_proto__ = ko.observable;
-    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
-    observable['equalityComparer'] = valuesArePrimitiveAndEqual;
-    
     ko.subscribable.call(observable);
+    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
+    ko.utils.extend(observable, ko.observable['fn']);    
     
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     
     return observable;
 }
+
+ko.observable['fn'] = {
+    __ko_proto__: ko.observable,
+
+    "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
+        var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+        return oldValueIsPrimitive ? (a === b) : false;
+    }
+};
+
 ko.isObservable = function (instance) {
     if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
     if (instance.__ko_proto__ === ko.observable) return true;
