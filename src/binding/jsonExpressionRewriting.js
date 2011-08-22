@@ -111,9 +111,9 @@ ko.jsonExpressionRewriting = (function () {
                 if ((colonPos > 0) && (colonPos < pair.length - 1)) {
                     var key = pair.substring(0, colonPos);
                     var value = pair.substring(colonPos + 1);
-                    result.push({ key: restoreTokens(key, tokens), value: restoreTokens(value, tokens) });
+                    result.push({ 'key': restoreTokens(key, tokens), 'value': restoreTokens(value, tokens) });
                 } else {
-                    result.push({ unknown: restoreTokens(pair, tokens) });
+                    result.push({ 'unknown': restoreTokens(pair, tokens) });
                 }
             }
             return result;            
@@ -128,19 +128,19 @@ ko.jsonExpressionRewriting = (function () {
                 if (resultStrings.length > 0)
                     resultStrings.push(",");
 
-                if (parsedSection.key) {
-                    var quotedKey = ensureQuoted(parsedSection.key);
+                if (parsedSection['key']) {
+                    var quotedKey = ensureQuoted(parsedSection['key']), val = parsedSection['value'];
                     resultStrings.push(quotedKey);
                     resultStrings.push(":");              
-                    resultStrings.push(parsedSection.value);
+                    resultStrings.push(val);
 
-                    if (isWriteableValue(ko.utils.stringTrim(parsedSection.value))) {
+                    if (isWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)
                             propertyAccessorResultStrings.push(", ");
-                        propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + parsedSection.value + " = __ko_value; }");
+                        propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
                     }                    
-                } else if (parsedSection.unknown) {
-                    resultStrings.push(parsedSection.unknown);
+                } else if (parsedSection['unknown']) {
+                    resultStrings.push(parsedSection['unknown']);
                 }
             }
 

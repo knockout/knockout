@@ -37,3 +37,6 @@ ko.utils.domData = new (function () {
         }
     }
 })();
+
+ko.exportSymbol('ko.utils.domData', ko.utils.domData);
+ko.exportSymbol('ko.utils.domData.clear', ko.utils.domData.clear); // Exporting only so specs can clear up after themselves fully
