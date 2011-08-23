@@ -173,9 +173,15 @@
 
     // Retrieving binding context from arbitrary nodes
     ko.contextFor = function(node) {
-        var context = ko.storedBindingContextForNode(node);
-        if (context) return context;
-        if (node.parentNode) return ko.contextFor(node.parentNode);
+        // We can only do something meaningful for elements and comment nodes (in particular, not text nodes, as IE can't store domdata for them)
+        switch (node.nodeType) {
+            case 1:
+            case 8:
+                var context = ko.storedBindingContextForNode(node);
+                if (context) return context;
+                if (node.parentNode) return ko.contextFor(node.parentNode);
+                break;
+        }
         return undefined;
     };
     ko.dataFor = function(node) {
