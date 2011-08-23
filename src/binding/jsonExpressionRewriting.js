@@ -33,6 +33,8 @@ ko.jsonExpressionRewriting = (function () {
     }
 
     return {
+        bindingRewriteValidators: [],
+        
         parseObjectLiteral: function(objectLiteralString) {
             // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
             // that is sufficient just to split an object literal string into a set of top-level key-value pairs
@@ -119,17 +121,19 @@ ko.jsonExpressionRewriting = (function () {
             return result;            
         },
 
-        insertPropertyAccessorsIntoJson: function (objectLiteral) {
-            var parsedSections = ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteral);
+        insertPropertyAccessorsIntoJson: function (objectLiteralStringOrKeyValueArray) {
+            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string" 
+                ? ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteralStringOrKeyValueArray)
+                : objectLiteralStringOrKeyValueArray;
             var resultStrings = [], propertyAccessorResultStrings = [];
 
-            var parsedSection;
-            for (var i = 0; parsedSection = parsedSections[i]; i++) {
+            var keyValueEntry;
+            for (var i = 0; keyValueEntry = keyValueArray[i]; i++) {
                 if (resultStrings.length > 0)
                     resultStrings.push(",");
 
-                if (parsedSection['key']) {
-                    var quotedKey = ensureQuoted(parsedSection['key']), val = parsedSection['value'];
+                if (keyValueEntry['key']) {
+                    var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
                     resultStrings.push(":");              
                     resultStrings.push(val);
@@ -139,8 +143,8 @@ ko.jsonExpressionRewriting = (function () {
                             propertyAccessorResultStrings.push(", ");
                         propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
                     }                    
-                } else if (parsedSection['unknown']) {
-                    resultStrings.push(parsedSection['unknown']);
+                } else if (keyValueEntry['unknown']) {
+                    resultStrings.push(keyValueEntry['unknown']);
                 }
             }
 
@@ -151,10 +155,18 @@ ko.jsonExpressionRewriting = (function () {
             }
 
             return combinedResult;
+        },
+
+        keyValueArrayContainsKey: function(keyValueArray, key) {
+            for (var i = 0; i < keyValueArray.length; i++)
+                if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
+                    return true;            
+            return false;
         }
     };
 })();
 
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
+ko.exportSymbol('ko.jsonExpressionRewriting.bindingRewriteValidators', ko.jsonExpressionRewriting.bindingRewriteValidators);
 ko.exportSymbol('ko.jsonExpressionRewriting.parseObjectLiteral', ko.jsonExpressionRewriting.parseObjectLiteral);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);

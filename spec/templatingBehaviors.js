@@ -265,6 +265,15 @@ describe('Templating', {
         value_of(viewModel.didCallMyFunction).should_be(true);
     },
 
+    'Data binding syntax should permit nested templates': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ 
+            outerTemplate: "Outer <div data-bind='template: \"innerTemplate\"'></div>", 
+            innerTemplate: "Inner"
+        }));
+        ko.renderTemplate("outerTemplate", null, null, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html("outer <div><div>inner</div></div>");          
+    },
+
     'Data binding syntax should support \'foreach\' option, whereby it renders for each item in an array but doesn\'t rerender everything if you push or splice': function () {
         var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item is [js: personName]" }));
@@ -535,5 +544,49 @@ describe('Templating', {
             }
         }, testNode);
         value_of(testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(Data:INNER, Parent:MIDDLE, Grandparent:OUTER, Root:ROOT, Depth:3)");
-    }    
+    },
+    
+    'Should not be allowed to rewrite templates that embed anonymous templates': function() {
+        // The reason is that your template engine's native control flow and variable evaluation logic is going to run first, independently
+        // of any KO-native control flow, so variables would get evaluated in the wrong context. Example:
+        //
+        // <div data-bind="foreach: someArray">
+        //     ${ somePropertyOfEachArrayItem }   <-- This gets evaluated *before* the foreach binds, so it can't reference array entries
+        // </div>
+        //
+        // It should be perfectly OK to fix this just by preventing anonymous templates within rewritten templates, because
+        // (1) The developer can always use their template engine's native control flow syntax instead of the KO-native ones - that will work
+        // (2) The developer can use KO's native templating instead, if they are keen on KO-native control flow or anonymous templates
+
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "<div data-bind='template: { data: someData }'>Childprop: [js: childProp]</div>"
+        }));        
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\" }'></div>";   
+
+        var didThrow = false;
+        try {
+            ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
+        } catch(ex) {
+            didThrow = true;
+            value_of(ex.message).should_be("This template engine does not support anonymous templates nested within its templates");
+        }
+        value_of(didThrow).should_be(true);
+    },
+
+    'Should not be allowed to rewrite templates that embed control flow bindings': function() {
+        // Same reason as above
+        ko.utils.arrayForEach(['if', 'ifnot', 'with', 'foreach'], function(bindingName) {
+            ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<div data-bind='" + bindingName + ": \"SomeValue\"'>Hello</div>" }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\" }'></div>";   
+
+            var didThrow = false;
+            try { ko.applyBindings({ someData: { childProp: 'abc' } }, testNode) } 
+            catch (ex) {
+                didThrow = true;
+                value_of(ex.message).should_be("This template engine does not support the '" + bindingName + "' binding within its templates");
+            }
+            if (!didThrow)
+                throw new Error("Did not prevent use of " + bindingName);            
+        });
+    },      
 })

@@ -2,6 +2,24 @@
 ko.templateRewriting = (function () {
     var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;
 
+    function validateDataBindValuesForRewriting(keyValueArray) {
+        var allValidators = ko.jsonExpressionRewriting.bindingRewriteValidators;
+        for (var i = 0; i < keyValueArray.length; i++) {
+            var key = keyValueArray[i]['key'];
+            if (allValidators.hasOwnProperty(key)) {
+                var validator = allValidators[key];    
+
+                if (typeof validator === "function") {
+                    var possibleErrorMessage = validator(keyValueArray[i]['value']);
+                    if (possibleErrorMessage)
+                        throw new Error(possibleErrorMessage);
+                } else if (!validator) {
+                    throw new Error("This template engine does not support the '" + key + "' binding within its templates");
+                }                
+            }
+        }
+    }
+
     return {
         ensureTemplateIsRewritten: function (template, templateEngine) {
             if (!templateEngine['isTemplateRewritten'](template))
@@ -15,12 +33,15 @@ ko.templateRewriting = (function () {
                 var tagToRetain = arguments[1];
                 var dataBindAttributeValue = arguments[6];
 
-                dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindAttributeValue);
+                var dataBindKeyValueArray = ko.jsonExpressionRewriting.parseObjectLiteral(dataBindAttributeValue);
+                validateDataBindValuesForRewriting(dataBindKeyValueArray);
+                var rewrittenDataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindKeyValueArray);
 
-                // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
-                // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
+                // For no obvious reason, Opera fails to evaluate rewrittenDataBindAttributeValue unless it's wrapped in an additional 
+                // anonymous function, even though Opera's built-in debugger can evaluate it anyway. No other browser requires this 
+                // extra indirection.
                 var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
-                    return (function() { return { " + dataBindAttributeValue + " } })() \
+                    return (function() { return { " + rewrittenDataBindAttributeValue + " } })() \
                 })";
                 return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
             });
