@@ -212,6 +212,8 @@
             return null; // Named templates can be rewritten, so return "no error"
         return "This template engine does not support anonymous templates nested within its templates";
     };
+
+    ko.virtualElements.allowedBindings['template'] = true;
 })();
 
 ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);

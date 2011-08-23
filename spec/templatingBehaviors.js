@@ -620,5 +620,14 @@ describe('Templating', {
             if (!didThrow)
                 throw new Error("Did not prevent use of " + bindingName);            
         });
-    }   
+    },
+    
+    'Should be able to render anonymous templates using virtual containers': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "Childprop: [js: childProp]"
+        }));    
+        testNode.innerHTML = "Start <!-- ko template: { data: someData } -->Childprop: [js: childProp]<!-- /ko --> End";
+        ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
+        value_of(testNode).should_contain_html("start <!-- ko template: { data: somedata } --><div>childprop: abc</div><!-- /ko -->end");
+    }    
 })
