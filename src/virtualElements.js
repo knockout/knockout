@@ -55,6 +55,8 @@
     }   
 
     ko.virtualElements = {
+        allowedBindings: {},
+
         childNodes: function(node) {
             return isStartComment(node) ? getVirtualChildren(node) : node.childNodes;
         },

@@ -1,4 +1,3 @@
-
 describe('Binding attribute syntax', {
     before_each: function () {
         var existingNode = document.getElementById("testNode");
@@ -216,5 +215,17 @@ describe('Binding attribute syntax', {
         // Can get binding context for descendants of directly bound nodes
         value_of(ko.dataFor(testNode.childNodes[0].childNodes[0]).name).should_be("Bert");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("Bert");
-    } 
-})
+    },
+    
+    'Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones': function() {
+        testNode.innerHTML = "<!-- ko visible: false -->Hello<!-- /ko -->"
+        var didThrow = false;
+        try {
+            ko.applyBindings(null, testNode);
+        } catch(ex) {
+            didThrow = true;
+            value_of(ex.message).should_be("The binding 'visible' cannot be used with virtual elements");
+        }
+        value_of(didThrow).should_be(true);
+    }
+});

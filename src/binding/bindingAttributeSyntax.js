@@ -20,6 +20,12 @@
         }
     };
 
+    function validateThatBindingIsAllowedForVirtualElements(bindingName) {
+        var validator = ko.virtualElements.allowedBindings[bindingName];
+        if (!validator)
+            throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
+    }
+
     function parseBindingAttribute(attributeText, viewModel, extraScope) {
         try {
             var json = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(attributeText) + " } ";
@@ -103,8 +109,12 @@
                     // First run all the inits, so bindings can register for notification on changes
                     if (isFirstEvaluation) {
                         for (var bindingKey in parsedBindings) {
-                            if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function") {
-                                var handlerInitFn = ko.bindingHandlers[bindingKey]["init"];
+                            var binding = ko.bindingHandlers[bindingKey];
+                            if (binding && node.nodeType === 8)
+                                validateThatBindingIsAllowedForVirtualElements(bindingKey);
+
+                            if (binding && typeof binding["init"] == "function") {
+                                var handlerInitFn = binding["init"];
                                 var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                                 
                                 // If this binding handler claims to control descendant bindings, make a note of this
@@ -119,8 +129,9 @@
                     
                     // ... then run all the updates, which might trigger changes even on the first evaluation
                     for (var bindingKey in parsedBindings) {
-                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function") {
-                            var handlerUpdateFn = ko.bindingHandlers[bindingKey]["update"];
+                        var binding = ko.bindingHandlers[bindingKey];
+                        if (binding && typeof binding["update"] == "function") {
+                            var handlerUpdateFn = binding["update"];
                             handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                         }
                     }

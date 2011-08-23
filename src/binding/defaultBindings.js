@@ -443,6 +443,7 @@ ko.bindingHandlers['with'] = {
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['with'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['with'] = true;
 
 // "if: someExpression" is equivalent to "template: { if: someExpression }"
 ko.bindingHandlers['if'] = {
@@ -457,6 +458,7 @@ ko.bindingHandlers['if'] = {
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['if'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['if'] = true;
 
 // "ifnot: someExpression" is equivalent to "template: { ifnot: someExpression }"
 ko.bindingHandlers['ifnot'] = {
@@ -471,6 +473,7 @@ ko.bindingHandlers['ifnot'] = {
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['ifnot'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['ifnot'] = true;
 
 // "foreach: someExpression" is equivalent to "template: { foreach: someExpression }"
 // "foreach: { data: someExpression, afterAdd: myfn }" is equivalent to "template: { foreach: someExpression, afterAdd: myfn }"
@@ -502,3 +505,4 @@ ko.bindingHandlers['foreach'] = {
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['foreach'] = true;
