@@ -1,21 +1,49 @@
 
 var dummyTemplateEngine = function (templates) {   
-    templates = templates || [];
-    this.renderTemplate = function (template, bindingContext, options) {
+    var inMemoryTemplates = templates || {};
+    var inMemoryTemplateData = {};
+
+    function dummyTemplateSource(id) {
+        this.id = id;
+    }
+    dummyTemplateSource.prototype = {
+        text: function(val) {
+            if (arguments.length >= 1)
+                inMemoryTemplates[this.id] = val;
+            return inMemoryTemplates[this.id];            
+        },
+        data: function(key, val) {
+            if (arguments.length >= 2) {
+                inMemoryTemplateData[this.id] = inMemoryTemplateData[this.id] || {};
+                inMemoryTemplateData[this.id][key] = val;
+            }
+            return (inMemoryTemplateData[this.id] || {})[key];
+        }
+    }
+
+    this.makeTemplateSource = function(template) {
+        if (typeof template == "string")
+            return new dummyTemplateSource(template); // Named template comes from the in-memory collection
+        else if ((template.nodeType == 1) || (template.nodeType == 8))
+            return new ko.templateSources.anonymousTemplate(template); // Anonymous template
+    };
+
+    this.renderTemplateSource = function (templateSource, bindingContext, options) {
         var data = bindingContext['$data'];
         options = options || {};
-        var result = templates[template];
-        if (result && typeof result == "function")
-            result = result(data, options);
+        var templateText = templateSource.text();
+        if (typeof templateText == "function")
+            templateText = templateText(data, options);
 
-        result = options.showParams ? result + ", data=" + data + ", options=" + options : result;
+        templateText = options.showParams ? templateText + ", data=" + data + ", options=" + options : templateText;
         var templateOptions = options.templateOptions; // Have templateOptions in scope to support [js:templateOptions.foo] syntax
 
+        var result;
         with (bindingContext) {
             with (data || {}) {
                 with (options.templateRenderingVariablesInScope || {}) {
                     // Dummy [renderTemplate:...] syntax
-                    result = result.replace(/\[renderTemplate\:(.*?)\]/g, function (match, templateName) {
+                    result = templateText.replace(/\[renderTemplate\:(.*?)\]/g, function (match, templateName) {
                         return ko.renderTemplate(templateName, data, options);
                     });
 
@@ -52,8 +80,12 @@ var dummyTemplateEngine = function (templates) {
         }
     };
 
-    this.isTemplateRewritten = function (template) { return typeof(templates[template]) == "function" /* Can't rewrite functions, so claim they are already rewritten */; };
-    this.rewriteTemplate = function (template, rewriterCallback) { templates[template] = rewriterCallback(templates[template]); };
+    this.rewriteTemplate = function (template, rewriterCallback) {
+        // Only rewrite if the template isn't a function (can't rewrite those)
+        var templateSource = this.makeTemplateSource(template);
+        if (typeof templateSource.text() != "function")
+            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
+    };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };
 dummyTemplateEngine.prototype = new ko.templateEngine();
@@ -588,5 +620,5 @@ describe('Templating', {
             if (!didThrow)
                 throw new Error("Did not prevent use of " + bindingName);            
         });
-    },      
+    }   
 })
