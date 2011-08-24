@@ -44,7 +44,17 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         _subscriptionsToDependencies = [];
     }
     
-    function evaluate() {
+    var evaluationTimeoutInstance = null;
+    function evaluatePossiblyAsync() {
+        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
+        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+            clearTimeout(evaluationTimeoutInstance);
+            evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
+        } else
+            evaluateImmediate();
+    }
+
+    function evaluateImmediate() {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
         // going to be in the doc until *after* the first evaluation
@@ -58,7 +68,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         try {
             disposeAllSubscriptionsToDependencies();
             ko.dependencyDetection.begin(function(subscribable) {
-                _subscriptionsToDependencies.push(subscribable.subscribe(evaluate));
+                _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
             });
             _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
@@ -81,7 +91,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         } else {
             // Reading the value
             if (!_hasBeenEvaluated)
-                evaluate();
+                evaluateImmediate();
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
@@ -98,7 +108,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
 
     if (options['deferEvaluation'] !== true)
-        evaluate();
+        evaluateImmediate();
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
