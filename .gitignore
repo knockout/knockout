@@ -8,3 +8,4 @@ _ReSharper*
 *.ReSharper
 desktop.ini
 .eprj
+perf/*
