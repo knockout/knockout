@@ -77,8 +77,7 @@ var dummyTemplateEngine = function (templates) {
             node.removeChild(node.lastChild);
 
             // Convert the nodelist to an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-            var renderedNodesArray=[];
-            for(var i=0, n; n = node.childNodes[i]; i++) renderedNodesArray.push(n);
+            var renderedNodesArray = ko.utils.makeArray(node.childNodes);
 
             return renderedNodesArray;
         }
