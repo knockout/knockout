@@ -218,7 +218,7 @@ describe('Binding attribute syntax', {
     },
     
     'Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones': function() {
-        testNode.innerHTML = "<!-- ko visible: false -->Hello<!-- /ko -->"
+        testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye"
         var didThrow = false;
         try {
             ko.applyBindings(null, testNode);
