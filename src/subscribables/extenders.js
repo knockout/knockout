@@ -10,8 +10,8 @@ ko.extenders = {
         //     so the target cannot change value synchronously or faster than a certain rate
         var writeTimeoutInstance = null;
         return ko.dependentObservable({
-            read: target,
-            write: function(value) {
+            'read': target,
+            'write': function(value) {
                 clearTimeout(writeTimeoutInstance);
                 writeTimeoutInstance = setTimeout(function() {
                     target(value);
