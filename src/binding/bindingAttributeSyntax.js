@@ -1,5 +1,4 @@
 (function () {
-    var defaultBindingAttributeName = "data-bind";
     ko.bindingHandlers = {};
 
     ko.bindingContext = function(dataItem, parentBindingContext) {
@@ -26,15 +25,6 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    function parseBindingAttribute(attributeText, viewModel, extraScope) {
-        try {
-            var json = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(attributeText) + " } ";
-            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel, extraScope);
-        } catch (ex) {
-            throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
-        }
-    }
-
     function applyBindingsToDescendantsInternal (viewModel, elementVerified) {
         var currentChild = elementVerified.childNodes[0];
         while (currentChild) {
@@ -46,20 +36,15 @@
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, isRootNodeForBindingContext) {
         var shouldBindDescendants = true;
 
-        // Apply bindings only if:
+        // Perf optimisation: Apply bindings only if...
         // (1) It's a root element for this binding context, as we will need to store the binding context on this node
         //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType == 1);
-        var isContainerlessTemplate = ko.virtualElements.virtualNodeBindingValue(nodeVerified);
-        var domDataBindings = ko.utils.domData.get(nodeVerified, "bindings");
-        var shouldApplyBindings = isContainerlessTemplate                                                // Case (2)
-                               || domDataBindings                                                        // Case (2)
-                               || (isElement && isRootNodeForBindingContext)                             // Case (1)
-                               || (isElement && nodeVerified.getAttribute(defaultBindingAttributeName)); // Case (2)
-        
+        var shouldApplyBindings = (isElement && isRootNodeForBindingContext)                             // Case (1)
+                               || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings)
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, domDataBindings, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
         if (isElement && shouldBindDescendants)
             applyBindingsToDescendantsInternal(viewModel, nodeVerified);
@@ -67,7 +52,6 @@
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
         var isFirstEvaluation = true;
-        var bindingAttributeName = defaultBindingAttributeName; // Todo: Make this overridable
             
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
@@ -100,12 +84,11 @@
                 if (isRootNodeForBindingContext)
                     ko.storedBindingContextForNode(node, bindingContextInstance);
 
+                // Use evaluatedBindings if given, otherwise fall back on asking the bindings provider to give us some bindings
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                var bindingAttributeValue = ((node.nodeType == 1) && node.getAttribute(bindingAttributeName))
-                                         || ko.virtualElements.virtualNodeBindingValue(node);
-                if (evaluatedBindings || bindingAttributeValue) {
-                    parsedBindings = evaluatedBindings || parseBindingAttribute(bindingAttributeValue, viewModel, bindingContextInstance);
-                    
+                parsedBindings = evaluatedBindings || ko.bindingProvider['instance']['getBindings'](node, bindingContextInstance);
+
+                if (parsedBindings) {
                     // First run all the inits, so bindings can register for notification on changes
                     if (isFirstEvaluation) {
                         for (var bindingKey in parsedBindings) {
@@ -163,10 +146,6 @@
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-
-        // An opportunity for bindings to be applied externally
-        if (typeof ko['beforeApplyBindings'] === "function")
-            ko['beforeApplyBindings'](rootNode);
 
         applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode, true);
     };

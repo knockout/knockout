@@ -71,6 +71,7 @@ ko.utils = new (function () {
                     target[prop] = source[prop];
                 }
             }
+            return target;
         },
 
         emptyDomNode: function (domNode) {
