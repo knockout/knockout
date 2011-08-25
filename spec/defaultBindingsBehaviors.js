@@ -1,3 +1,4 @@
+
 function prepareTestNode() {
     var existingNode = document.getElementById("testNode");
     if (existingNode != null)
@@ -123,7 +124,7 @@ describe('Binding: HTML', {
         // Represents issue #98 (https://github.com/SteveSanderson/knockout/issues/98)
         // IE 8 and earlier is excessively strict about the use of .innerHTML - it throws
         // if you try to write a <P> tag inside an existing <P> tag, for example.
-        var model = { textProp: "<p>hello</p><p>this isn't semantically correct</p>" };
+        var model = { textProp: "<p>hello</p><li>this isn't semantically correct</li>" };
         testNode.innerHTML = "<p data-bind='html:textProp'></p>";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0]).should_contain_html(model.textProp);
@@ -141,12 +142,9 @@ describe('Binding: HTML', {
         var tr = testNode.childNodes[0].childNodes[0];
         if (tr.tagName == 'TBODY')
             tr = tr.childNodes[0];
-
-        var td = tr.childNodes[0];
-
         value_of(tr.tagName).should_be("TR");
-        value_of(td.tagName).should_be("TD");
-        value_of('innerText' in td ? td.innerText : td.textContent).should_be("hello");
+        value_of(tr.childNodes[0].tagName).should_be("TD");
+        value_of(tr.childNodes[0].innerText || tr.childNodes[0].textContent).should_be("hello");
     }
 });
 
@@ -246,25 +244,6 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(notifiedValues.length).should_be(2);
     },
-    
-    'Should be able to catch updates after specific events (e.g., keyup) instead of onchange': function () {
-        var myobservable = new ko.observable(123);
-        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
-        ko.applyBindings({ someProp: myobservable }, testNode);
-        testNode.childNodes[0].value = "some user-entered value";
-        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
-        value_of(myobservable()).should_be("some user-entered value");
-    },
-    
-    'Should catch updates on change as well as the nominated valueUpdate event': function () {
-        // Represents issue #102 (https://github.com/SteveSanderson/knockout/issues/102)
-        var myobservable = new ko.observable(123);
-        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
-        ko.applyBindings({ someProp: myobservable }, testNode);
-        testNode.childNodes[0].value = "some user-entered value";
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(myobservable()).should_be("some user-entered value");
-    },           
     
     'For select boxes, should update selectedIndex when the model changes': function() {
         var observable = new ko.observable('B');
@@ -378,12 +357,12 @@ describe('Binding: Options', {
     'Should accept function in optionsText param to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', job: 'manager' }, 
-            { name: 'frank', job: 'coder & tester' }
+            { name: 'frank', job: 'coder' }
         ]);	
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }, optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });	
-        value_of(displayedText).should_be(["bob (manager)", "frank (coder & tester)"]);
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
+        value_of(displayedText).should_be(["bob (manager)", "frank (coder)"]);
     },
 
     'Should update the SELECT node\'s options if the model changes': function () {
@@ -482,14 +461,13 @@ describe('Binding: Event', {
             firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
             secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
         };
-        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler, mouseout:null}'>hey</button>";
+        testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler}'>hey</button>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.firstWasCalled).should_be(true);
         value_of(model.secondWasCalled).should_be(false);
         ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
         value_of(model.secondWasCalled).should_be(true);
-        ko.utils.triggerEvent(testNode.childNodes[0], "mouseout"); // Shouldn't do anything (specifically, shouldn't throw)
     },
 
     'Should prevent default action': function () {
@@ -792,4 +770,521 @@ describe('Binding: Attr', {
             value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
         });        
     }  
+});
+
+describe('Binding: Hasfocus', {
+    before_each: prepareTestNode,
+
+    'Should respond to changes on an observable value by blurring or focusing the element': function() {
+        var currentState;
+        var model = { myVal: ko.observable() }
+        testNode.innerHTML = "<input data-bind='hasfocus: myVal' /><input />";        
+        ko.applyBindings(model, testNode);
+        ko.utils.registerEventHandler(testNode.childNodes[0], "focusin", function() { currentState = true });
+        ko.utils.registerEventHandler(testNode.childNodes[0], "focusout",  function() { currentState = false });
+
+        // When the value becomes true, we focus
+        model.myVal(true);
+        value_of(currentState).should_be(true);
+
+        // When the value becomes false, we blur
+        model.myVal(false);
+        value_of(currentState).should_be(false);        
+    },    
+
+    'Should set an observable value to be true on focus and false on blur': function() {
+        var model = { myVal: ko.observable() }
+        testNode.innerHTML = "<input data-bind='hasfocus: myVal' /><input />";
+        ko.applyBindings(model, testNode);
+
+        // Need to raise "focusin" and "focusout" manually, because simply calling ".focus()" and ".blur()"
+        // in IE doesn't reliably trigger the "focus" and "blur" events synchronously
+        
+        ko.utils.triggerEvent(testNode.childNodes[0], "focusin");
+        value_of(model.myVal()).should_be(true);
+
+        // Move the focus elsewhere
+        ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
+        value_of(model.myVal()).should_be(false);
+    },
+
+    'Should set a non-observable value to be true on focus and false on blur': function() {
+        var model = { myVal: null }
+        testNode.innerHTML = "<input data-bind='hasfocus: myVal' /><input />";
+        ko.applyBindings(model, testNode);
+
+        ko.utils.triggerEvent(testNode.childNodes[0], "focusin");
+        value_of(model.myVal).should_be(true);
+
+        // Move the focus elsewhere
+        ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
+        value_of(model.myVal).should_be(false);        
+    }
+});
+
+describe('Binding: If', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is falsey': function() {
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should leave descendant nodes in the document (and bind them) if the value is truey, independently of the active template engine': function() {		
+        ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem.existentChildProp'></span></div>";
+        value_of(testNode.childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+    
+    'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value': function() {
+        var someItem = ko.observable(undefined);
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem().occasionallyExistentChildProp'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        
+        // First it's not there
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+        
+        // Then it's there
+        someItem({ occasionallyExistentChildProp: 'Child prop value' });
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+        
+        // Then it's gone again
+        someItem(null);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    },
+
+    'Should not interfere with binding context': function() {
+        testNode.innerHTML = "<div data-bind='if: true'>Parents: <span data-bind='text: $parents.length'></span></div>";
+        ko.applyBindings({ }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
+    },
+    
+    'Should be able to define an \"if\" region using a containerless template': function() {
+        var someitem = ko.observable(undefined);
+        testNode.innerHTML = "hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
+        ko.applyBindings({ someitem: someitem }, testNode);
+        
+        // First it's not there
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
+        
+        // Then it's there
+        someitem({ occasionallyexistentchildprop: 'child prop value' });
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
+
+        // Then it's gone again
+        someitem(null);
+        value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
+    },
+    
+    'Should be able to nest \"if\" regions defined by containerless templates': function() {
+        var condition1 = ko.observable(false);
+        var condition2 = ko.observable(false);
+        testNode.innerHTML = "hello <!-- ko if: condition1 -->First is true<!-- ko if: condition2 -->Both are true<!-- /ko --><!-- /ko -->";
+        ko.applyBindings({ condition1: condition1, condition2: condition2 }, testNode);
+
+        // First neither are there
+        value_of(testNode).should_contain_html("hello <!-- ko if: condition1 --><!-- /ko -->");
+
+        // Make outer appear
+        condition1(true);
+        value_of(testNode).should_contain_html("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 --><!-- /ko --><!-- /ko -->");
+
+        // Make inner appear
+        condition2(true);
+        value_of(testNode).should_contain_html("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
+    }
+});
+
+describe('Binding: Ifnot', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is truey': function() {
+        testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null, condition: true }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should leave descendant nodes in the document (and bind them) if the value is falsey, independently of the active template engine': function() {		
+        ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
+        testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem.existentChildProp'></span></div>";
+        value_of(testNode.childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' }, condition: false }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+    
+    'Should toggle the presence and bindedness of descendant nodes according to the falsiness of the value': function() {
+        var someItem = ko.observable(undefined);
+        var condition = ko.observable(true);
+        testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem().occasionallyExistentChildProp'></span></div>";
+        ko.applyBindings({ someItem: someItem, condition: condition }, testNode);
+        
+        // First it's not there
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+        
+        // Then it's there
+        someItem({ occasionallyExistentChildProp: 'Child prop value' });
+        condition(false);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+        
+        // Then it's gone again
+        condition(true);
+        someItem(null);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    },
+
+    'Should not interfere with binding context': function() {
+        testNode.innerHTML = "<div data-bind='ifnot: false'>Parents: <span data-bind='text: $parents.length'></span></div>";
+        ko.applyBindings({ }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
+    }  
+});
+
+describe('Binding: With', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is falsey': function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truey': function() {		
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: existentChildProp'></span></div>";
+        value_of(testNode.childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+    
+    'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value, performing binding in the context of the value': function() {
+        var someItem = ko.observable(undefined);
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: occasionallyExistentChildProp'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        
+        // First it's not there
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+        
+        // Then it's there
+        someItem({ occasionallyExistentChildProp: 'Child prop value' });
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+        
+        // Then it's gone again
+        someItem(null);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    },
+    
+    'Should not bind the same elements more than once even if the supplied value notifies a change': function() {
+        var countedClicks = 0;
+        var someItem = ko.observable({
+            childProp: ko.observable('Hello'),
+            handleClick: function() { countedClicks++ }
+        });
+        
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp, click: handleClick'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        
+        // Initial state is one subscriber, one click handler
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Hello");
+        value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(countedClicks).should_be(1);
+        
+        // Force "update" binding handler to fire, then check we still have one subscriber...
+        someItem.valueHasMutated();
+        value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
+        
+        // ... and one click handler
+        countedClicks = 0;
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+        value_of(countedClicks).should_be(1);		
+    },
+    
+    'Should be able to access parent binding context via $parent': function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: $parent.parentProp'></span></div>";
+        ko.applyBindings({ someItem: { }, parentProp: 'Parent prop value' }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Parent prop value");
+    },
+    
+    'Should be able to access all parent binding contexts via $parents, and root context via $root': function() {
+        testNode.innerHTML = "<div data-bind='with: topItem'>" +
+                                "<div data-bind='with: middleItem'>" +
+                                    "<div data-bind='with: bottomItem'>" +
+                                        "<span data-bind='text: name'></span>" +
+                                        "<span data-bind='text: $parent.name'></span>" +
+                                        "<span data-bind='text: $parents[1].name'></span>" +
+                                        "<span data-bind='text: $parents[2].name'></span>" +
+                                        "<span data-bind='text: $root.name'></span>" +
+                                    "</div>" +
+                                "</div>" +
+                              "</div>";
+        ko.applyBindings({ 
+            name: 'outer',
+            topItem: {
+                name: 'top',
+                middleItem: { 
+                    name: 'middle',
+                    bottomItem: {
+                        name: "bottom"
+                    }
+                }
+            }
+        }, testNode);
+        var finalContainer = testNode.childNodes[0].childNodes[0].childNodes[0];
+        value_of(finalContainer.childNodes[0]).should_contain_text("bottom");
+        value_of(finalContainer.childNodes[1]).should_contain_text("middle");
+        value_of(finalContainer.childNodes[2]).should_contain_text("top");
+        value_of(finalContainer.childNodes[3]).should_contain_text("outer");
+        value_of(finalContainer.childNodes[4]).should_contain_text("outer");
+
+        // Also check that, when we later retrieve the binding contexts, we get consistent results
+        value_of(ko.contextFor(testNode).$data.name).should_be("outer");
+        value_of(ko.contextFor(testNode.childNodes[0]).$data.name).should_be("outer");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("top");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$data.name).should_be("middle");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0]).$data.name).should_be("bottom");
+        var firstSpan = testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0];
+        value_of(firstSpan.tagName).should_be("SPAN");
+        value_of(ko.contextFor(firstSpan).$data.name).should_be("bottom");
+        value_of(ko.contextFor(firstSpan).$root.name).should_be("outer");
+        value_of(ko.contextFor(firstSpan).$parents[1].name).should_be("top");
+    },
+    
+    'Should be able to define an \"with\" region using a containerless template': function() {
+        var someitem = ko.observable(undefined);
+        testNode.innerHTML = "hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
+        ko.applyBindings({ someitem: someitem }, testNode);
+        
+        // First it's not there
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
+        
+        // Then it's there
+        someitem({ occasionallyexistentchildprop: 'child prop value' });
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
+
+        // Then it's gone again
+        someitem(null);
+        value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
+    },
+    
+    'Should be able to nest \"with\" regions defined by containerless templates': function() {
+        testNode.innerHTML = "hello <!-- ko with: topitem -->" 
+                               + "Got top: <span data-bind=\"text: topprop\"></span>" 
+                               + "<!-- ko with: childitem -->"
+                                   + "Got child: <span data-bind=\"text: childprop\"></span>"
+                               + "<!-- /ko -->"
+                           + "<!-- /ko -->";
+        var viewModel = { topitem: ko.observable(null) };
+        ko.applyBindings(viewModel, testNode);
+
+        // First neither are there
+        value_of(testNode).should_contain_html("hello <!-- ko with: topitem --><!-- /ko -->");
+
+        // Make top appear
+        viewModel.topitem({ topprop: 'property of top', childitem: ko.observable() });
+        value_of(testNode).should_contain_html("hello <!-- ko with: topitem -->got top: <span data-bind=\"text: topprop\">property of top</span><!-- ko with: childitem --><!-- /ko --><!-- /ko -->");
+
+        // Make child appear
+        viewModel.topitem().childitem({ childprop: 'property of child' });
+        value_of(testNode).should_contain_html("hello <!-- ko with: topitem -->got top: <span data-bind=\"text: topprop\">property of top</span><!-- ko with: childitem -->got child: <span data-bind=\"text: childprop\">property of child</span><!-- /ko --><!-- /ko -->");
+
+        // Make top disappear
+        viewModel.topitem(null);
+        value_of(testNode).should_contain_html("hello <!-- ko with: topitem --><!-- /ko -->");
+    }      
+});
+
+describe('Binding: Foreach', {
+    before_each: prepareTestNode,
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is falsey': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: null }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
+    },
+    
+    'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        var someItems = [
+            { childProp: 'first child' },
+            { childProp: 'second child' }
+        ];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    },
+    
+    'Should be able to use $data to reference each array item being bound': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
+    },
+    
+    
+    'Should add and remove nodes to match changes in the bound array': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        var someItems = ko.observableArray([
+            { childProp: 'first child' },
+            { childProp: 'second child' }
+        ]);
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+
+        // Add items at the beginning...
+        someItems.unshift({ childProp: 'zeroth child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+                
+        // ... middle
+        someItems.splice(2, 0, { childProp: 'middle child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span>');
+        
+        // ... and end
+        someItems.push({ childProp: 'last child' });
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        // Also remove from beginning...
+        someItems.shift();
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        // ... and middle
+        someItems.splice(1, 1);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+        
+        // ... and end
+        someItems.pop();
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+        
+        // Also, marking as "destroy" should eliminate the item from display
+        someItems.destroy(someItems()[0]);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">second child</span>');
+    },
+
+    'Should be able to supply show "_destroy"ed items via includeDestroyed option': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: true }'><span data-bind='text: childProp'></span></div>";
+        var someItems = ko.observableArray([
+            { childProp: 'first child' },
+            { childProp: 'second child', _destroy: true }
+        ]);
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    },    	
+    
+    'Should be able to supply afterAdd and beforeRemove callbacks': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: childprop'></span></div>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var afterAddCallbackData = [], beforeRemoveCallbackData = [];
+        ko.applyBindings({ 
+            someItems: someItems,
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
+        }, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span>');
+        
+        // Try adding
+        someItems.push({ childprop: 'added child'});
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        value_of(afterAddCallbackData.length).should_be(1);
+        value_of(afterAddCallbackData[0].elem).should_be(testNode.childNodes[0].childNodes[1]);
+        value_of(afterAddCallbackData[0].index).should_be(1);
+        value_of(afterAddCallbackData[0].value.childprop).should_be("added child");
+        value_of(afterAddCallbackData[0].currentParentClone).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+
+        // Try removing
+        someItems.shift();
+        value_of(beforeRemoveCallbackData.length).should_be(1);
+        value_of(beforeRemoveCallbackData[0].elem).should_contain_text("first child");
+        value_of(beforeRemoveCallbackData[0].index).should_be(0);
+        value_of(beforeRemoveCallbackData[0].value.childprop).should_be("first child");
+        // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
+        value_of(beforeRemoveCallbackData[0].currentParentClone).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+    },
+
+    'Should be able to nest foreaches and access binding contexts both during and after binding': function() {
+        testNode.innerHTML = "<div data-bind='foreach: items'>"
+                                + "<div data-bind='foreach: children'>"
+                                    + "(Val: <span data-bind='text: $data'></span>, Parents: <span data-bind='text: $parents.length'></span>, Rootval: <span data-bind='text: $root.rootVal'></span>)"
+                                + "</div>"
+                           + "</div>";  
+        var viewModel = {
+            rootVal: 'ROOTVAL',
+            items: ko.observableArray([
+                { children: ko.observableArray(['A1', 'A2', 'A3']) },
+                { children: ko.observableArray(['B1', 'B2']) }
+            ])
+        };        
+        ko.applyBindings(viewModel, testNode);
+
+        // Verify we can access binding contexts during binding
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Parents: 2, Rootval: ROOTVAL)(Val: A2, Parents: 2, Rootval: ROOTVAL)(Val: A3, Parents: 2, Rootval: ROOTVAL)");
+        value_of(testNode.childNodes[0].childNodes[1]).should_contain_text("(Val: B1, Parents: 2, Rootval: ROOTVAL)(Val: B2, Parents: 2, Rootval: ROOTVAL)");
+
+        // Verify we can access them later
+        var firstInnerTextNode = testNode.childNodes[0].childNodes[0].childNodes[1];
+        value_of(firstInnerTextNode.nodeType).should_be(1); // The first span associated with A1
+        value_of(ko.dataFor(firstInnerTextNode)).should_be("A1");
+        value_of(ko.contextFor(firstInnerTextNode).$parent.children()[2]).should_be("A3");
+        value_of(ko.contextFor(firstInnerTextNode).$parents[1].items()[1].children()[1]).should_be("B2");
+        value_of(ko.contextFor(firstInnerTextNode).$root.rootVal).should_be("ROOTVAL");
+    },
+
+    'Should be able to define a \'foreach\' region using a containerless template': function() {       
+        testNode.innerHTML = "hi <!-- ko foreach: someitems --><span data-bind='text: childprop'></span><!-- /ko -->";
+        var someitems = [
+            { childprop: 'first child' },
+            { childprop: 'second child' }
+        ];
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_html('hi <!-- ko foreach: someitems --><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span><!-- /ko -->');
+
+        // Check we can recover the binding contexts
+        value_of(ko.dataFor(testNode.childNodes[3]).childprop).should_be("second child");
+        value_of(ko.contextFor(testNode.childNodes[3]).$parent.someitems.length).should_be(2);
+    },
+    
+    'Should be able to nest \'foreach\' regions defined using containerless templates' : function() {
+        var innerContents = document.createElement("DIV");
+        testNode.innerHTML = "";
+        testNode.appendChild(document.createComment("ko foreach: items"));
+        testNode.appendChild(document.createComment(    "ko foreach: children"));
+        innerContents.innerHTML =                           "(Val: <span data-bind='text: $data'></span>, Parents: <span data-bind='text: $parents.length'></span>, Rootval: <span data-bind='text: $root.rootVal'></span>)";
+        while (innerContents.firstChild)
+            testNode.appendChild(innerContents.firstChild);
+        testNode.appendChild(document.createComment(    "/ko"));
+        testNode.appendChild(document.createComment("/ko"));
+
+        var viewModel = {
+            rootVal: 'ROOTVAL',
+            items: ko.observableArray([
+                { children: ko.observableArray(['A1', 'A2', 'A3']) },
+                { children: ko.observableArray(['B1', 'B2']) }
+            ])
+        };        
+        ko.applyBindings(viewModel, testNode);
+
+        // Verify we can access binding contexts during binding
+        value_of(testNode).should_contain_text("(Val: A1, Parents: 2, Rootval: ROOTVAL)(Val: A2, Parents: 2, Rootval: ROOTVAL)(Val: A3, Parents: 2, Rootval: ROOTVAL)(Val: B1, Parents: 2, Rootval: ROOTVAL)(Val: B2, Parents: 2, Rootval: ROOTVAL)");
+
+        // Verify we can access them later
+        var firstInnerSpan = testNode.childNodes[3];
+        value_of(firstInnerSpan).should_contain_text("A1"); // It is the first span bound in the context of A1
+        value_of(ko.dataFor(firstInnerSpan)).should_be("A1");
+        value_of(ko.contextFor(firstInnerSpan).$parent.children()[2]).should_be("A3");
+        value_of(ko.contextFor(firstInnerSpan).$parents[1].items()[1].children()[1]).should_be("B2");
+        value_of(ko.contextFor(firstInnerSpan).$root.rootVal).should_be("ROOTVAL");        
+    }
 });

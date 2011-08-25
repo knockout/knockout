@@ -19,14 +19,29 @@
                 JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
                 throw JSSpec._assertionFailure;
             };
+            JSSpec.DSL.Subject.prototype.should_contain = function (expected) {
+                if (this.target.indexOf(expected) >= 0)
+                    return;
+                JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
+                throw JSSpec._assertionFailure;
+            };            
             JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
-                var cleanedHtml = this.target.innerHTML.toLowerCase().replace("\r\n", "");
+                var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
+                // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
+                cleanedHtml = cleanedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
+                expectedHtml = expectedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
                 // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
-                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"ko\d+\"/g, "");
+                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"(ko\d+|null)\"/g, "");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
+            JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
+            	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
+                var cleanedActualText = actualText.replace(/\r\n/g, "\n");
+                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
+            };
+            
         </script>
-		<script type="text/javascript" src="lib/json2.js"></script>
+        <script type="text/javascript" src="lib/json2.js"></script>
         <script type="text/javascript" src="lib/knockout-latest.js"></script>
         
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
@@ -34,6 +49,7 @@
         <script type="text/javascript" src="observableBehaviors.js"></script>
         <script type="text/javascript" src="observableArrayBehaviors.js"></script>
         <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
+        <script type="text/javascript" src="extenderBehaviors.js"></script>
         <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
         <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
         <script type="text/javascript" src="jsonExpressionRewritingBehaviors.js"></script>
@@ -42,6 +58,7 @@
         <script type="text/javascript" src="templatingBehaviors.js"></script>
         <script type="text/javascript" src="editDetectionBehaviors.js"></script>
         <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
+        <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
     </head>
     <body>
         <div style="display:none;"><p>A</p><p>B</p></div>

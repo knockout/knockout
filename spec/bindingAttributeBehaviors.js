@@ -1,4 +1,3 @@
-
 describe('Binding attribute syntax', {
     before_each: function () {
         var existingNode = document.getElementById("testNode");
@@ -21,6 +20,9 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings();
         value_of(didInit).should_be(true);
+
+        // Just to avoid interfering with other specs:
+        ko.utils.domData.clear(document.body);        
     },
 
     'applyBindings should accept one parameter and then act on document.body with parameter as model': function() {
@@ -36,6 +38,9 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings(suppliedViewModel);
         value_of(didInit).should_be(true);
+
+        // Just to avoid interfering with other specs:
+        ko.utils.domData.clear(document.body);
     },
     
     'applyBindings should accept two parameters and then act on second param as DOM node with first param as model': function() {
@@ -114,7 +119,7 @@ describe('Binding attribute syntax', {
         value_of(updatePassedValues[1]).should_be("A");
     },
 
-	'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
+    'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
         var observable = new ko.observable("A");
         testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
@@ -124,7 +129,7 @@ describe('Binding attribute syntax', {
         ko.removeNode(testNode);
         
         value_of(observable.getSubscriptionsCount()).should_be(0);
-	},
+    },
 
     'If the associated DOM element was removed independently of KO, handler subscriptions are disposed on the next evaluation': function () {
         var observable = new ko.observable("A");
@@ -152,5 +157,75 @@ describe('Binding attribute syntax', {
         observable({ message: "goodbye" });
         value_of(passedValues.length).should_be(2);
         value_of(passedValues[1]).should_be("goodbye");
+    },
+    
+    'Should be able to refer to the bound object itself (at the root scope, the viewmodel) via $data': function() {
+        testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
+        ko.applyBindings({ someProp: 'My prop value' }, testNode);
+        value_of(testNode).should_contain_text("My prop value");
+    },
+    
+    'Bindings can signal that they control descendant bindings by returning a flag from their init function': function() {
+        ko.bindingHandlers.test = {  
+            init: function() { return { controlsDescendantBindings : true } }
+        };
+        testNode.innerHTML = "<div data-bind='test: true'>"
+                           +     "<div data-bind='text: 123'>456</div>"
+                           + "</div>"
+                           + "<div data-bind='text: 123'>456</div>";
+        ko.applyBindings(null, testNode);
+        
+        value_of(testNode.childNodes[0].childNodes[0].innerHTML).should_be("456");
+        value_of(testNode.childNodes[1].innerHTML).should_be("123");
+    },
+    
+    'Should not be allowed to have multiple bindings on the same element that claim to control descendant bindings': function() {
+        ko.bindingHandlers.test1 = {  
+            init: function() { return { controlsDescendantBindings : true } }
+        };
+        ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
+        testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>"
+        var didThrow = false;
+        
+        try { ko.applyBindings(null, testNode) }
+        catch(ex) { didThrow = true; value_of(ex.message).should_contain('Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.') }
+        value_of(didThrow).should_be(true);
+    },
+    
+    'Should use properties on the view model in preference to properties on the binding context': function() {
+        testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
+        ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
+        value_of(testNode).should_contain_text("Inner value");
+    },
+    
+    'Should be able to retrieve the binding context associated with any node': function() {
+        testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
+        ko.applyBindings({ name: 'Bert' }, testNode.childNodes[0]);
+
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Bert");
+
+        // Can't get binding context for unbound nodes
+        value_of(ko.dataFor(testNode)).should_be(undefined);
+        value_of(ko.contextFor(testNode)).should_be(undefined);
+
+        // Can get binding context for directly bound nodes
+        value_of(ko.dataFor(testNode.childNodes[0]).name).should_be("Bert");
+        value_of(ko.contextFor(testNode.childNodes[0]).$data.name).should_be("Bert");
+
+        // Can get binding context for descendants of directly bound nodes
+        value_of(ko.dataFor(testNode.childNodes[0].childNodes[0]).name).should_be("Bert");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("Bert");
+    },
+    
+    'Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones': function() {
+        testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye"
+        var didThrow = false;
+        try {
+            ko.applyBindings(null, testNode);
+        } catch(ex) {
+            didThrow = true;
+            value_of(ex.message).should_be("The binding 'visible' cannot be used with virtual elements");
+        }
+        value_of(didThrow).should_be(true);
     }
-})
+});
