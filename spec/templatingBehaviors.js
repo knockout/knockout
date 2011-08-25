@@ -67,7 +67,7 @@ var dummyTemplateEngine = function (templates) {
         }
 
         if (options.bypassDomNodeWrap)
-            return result;
+            return ko.utils.parseHtmlFragment(result);
         else {
             var node = document.createElement("div");
 
@@ -297,13 +297,33 @@ describe('Templating', {
         value_of(viewModel.didCallMyFunction).should_be(true);
     },
 
-    'Data binding syntax should permit nested templates': function() {
+    'Data binding syntax should permit nested templates, and only bind inner templates once': function() {
+        // Will verify that bindings are applied only once for both inline (rewritten) bindings,
+        // and external (non-rewritten) ones
+        var originalBindingProvider = ko.bindingProvider.instance;
+        ko.bindingProvider.instance = {
+            nodeHasBindings: function(node, bindingContext) {
+                return (node.className == 'applyExternalBinding') || originalBindingProvider.nodeHasBindings(node, bindingContext);
+            },
+            getBindings: function(node, bindingContext) {
+                if (node.className == 'applyExternalBinding')
+                    return { text: ++model.numBindings };
+                return originalBindingProvider.getBindings(node, bindingContext);
+            }
+        };
+
         ko.setTemplateEngine(new dummyTemplateEngine({ 
-            outerTemplate: "Outer <div data-bind='template: \"innerTemplate\"'></div>", 
-            innerTemplate: "Inner"
+            outerTemplate: "Outer <div data-bind='template: { name: \"innerTemplate\", bypassDomNodeWrap: true }'></div>", 
+            innerTemplate: "Inner via inline binding: <span data-bind='text: ++numBindings'></span>"
+                         + "Inner via external binding: <span class='applyExternalBinding'></span>"
         }));
-        ko.renderTemplate("outerTemplate", null, null, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("outer <div><div>inner</div></div>");          
+        var model = { numBindings: 0 };
+        testNode.innerHTML = "<div data-bind='template: { name: \"outerTemplate\", bypassDomNodeWrap: true }'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(model.numBindings).should_be(2);
+        value_of(testNode.childNodes[0]).should_contain_html("outer <div>inner via inline binding: <span>2</span>inner via external binding: <span class=\"applyexternalbinding\">1</span></div>");
+        
+        ko.bindingProvider.instance = originalBindingProvider;      
     },
 
     'Data binding syntax should support \'foreach\' option, whereby it renders for each item in an array but doesn\'t rerender everything if you push or splice': function () {

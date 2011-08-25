@@ -7,6 +7,15 @@
         _templateEngine = templateEngine;
     }
 
+    function invokeForEachNodeOrCommentInParent(nodeArray, parent, action) {
+        for (var i = 0; node = nodeArray[i]; i++) {
+            if (node.parentNode !== parent) // Skip anything that has been removed during binding
+                continue;
+            if ((node.nodeType === 1) || (node.nodeType === 8))
+                action(node);
+        }        
+    }
+
     ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {
         // To be used on any nodes that have been rendered by a template and have been inserted into some parent element. 
         // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g., 
@@ -15,20 +24,17 @@
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
 
         var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
-        var node;
         var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
-        for (var i = 0; node = nodeArrayClone[i]; i++) {
-            if (node.parentNode !== commonParentElement) // Skip anything that has been removed during binding
-                continue;
-            
-            switch (node.nodeType) {
-                case 1: // Elements (can have bindings)
-                case 8: // Comment nodes (may be containerless templates)
-                    ko.applyBindings(bindingContext, node);
-                    ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
-                    break;
-            }
-        }
+        
+        // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
+        // whereas a regular applyBindings won't introduce new memoized nodes
+        
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+            ko.applyBindings(bindingContext, node);
+        });
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+            ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);            
+        });        
     }
 
     function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
