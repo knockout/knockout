@@ -63,3 +63,5 @@
         }    	
     };
 })();
+
+ko.exportSymbol('ko.utils.parseHtmlFragment', ko.utils.parseHtmlFragment);
