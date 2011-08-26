@@ -12,7 +12,7 @@
             html = html.replace(leadingCommentRegex, function() {
                 var whitespace = arguments[1], comment = arguments[2];
                 if (whitespace)
-                    prefixNodes.push(new document.createTextNode(whitespace));
+                    prefixNodes.push(document.createTextNode(whitespace));
                 prefixNodes.push(document.createComment(comment));
                 return "";
             });
