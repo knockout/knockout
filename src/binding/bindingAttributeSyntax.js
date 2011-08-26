@@ -26,11 +26,12 @@
     }
 
     function applyBindingsToDescendantsInternal (viewModel, elementVerified) {
-        var currentChild = elementVerified.childNodes[0];
-        while (currentChild) {
+        var currentChild, nextInQueue = elementVerified.childNodes[0];
+        while (currentChild = nextInQueue) {
+            // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
+            nextInQueue = ko.virtualElements.nextSibling(currentChild);
             applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, false);
-            currentChild = ko.virtualElements.nextSibling(currentChild);
-        }
+        }        
     }
     
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, isRootNodeForBindingContext) {
