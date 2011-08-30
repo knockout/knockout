@@ -1576,12 +1576,12 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    function applyBindingsToDescendantsInternal (viewModel, elementVerified, descendantsHaveOwnBindingContext) {
+    function applyBindingsToDescendantsInternal (viewModel, elementVerified) {
         var currentChild, nextInQueue = elementVerified.childNodes[0];
         while (currentChild = nextInQueue) {
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
-            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, descendantsHaveOwnBindingContext);
+            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, false);
         }        
     }
     
@@ -1599,7 +1599,7 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
         if (isElement && shouldBindDescendants)
-            applyBindingsToDescendantsInternal(viewModel, nodeVerified, /* descendantBindingContextDiffersFromContainer: */ false);
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified);
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
@@ -1692,10 +1692,6 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
-    };
-
-    ko.applyBindingsToDescendants = function(viewModel, rootNode, descendantsHaveOwnBindingContext) {
-        applyBindingsToDescendantsInternal(viewModel, rootNode, descendantsHaveOwnBindingContext);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
@@ -2161,17 +2157,6 @@ ko.bindingHandlers['hasfocus'] = {
     }
 };
 
-function getFirstControlFlowBoundValue(element, valueAccessor, defaultValue) {
-    // The "with", "if", and "ifnot" bindings all special-case their first "update" by applying bindings directly to their child nodes.
-    // They only render their anonymous template on subsequent updates. This means things like event handlers are preserved until a forced refresh.
-    var controlFlowBoundValueDomDataKey = "__ko_controlflow__";
-    if (ko.utils.domData.get(element, controlFlowBoundValueDomDataKey) === undefined) {
-        ko.utils.domData.set(element, controlFlowBoundValueDomDataKey, false);
-        return ko.utils.unwrapObservable(valueAccessor());            
-    }
-    return defaultValue;
-}
-
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
@@ -2181,12 +2166,7 @@ ko.bindingHandlers['with'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
-        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
-        if (initialValue)
-            ko.applyBindingsToDescendants(bindingContext.createChildContext(initialValue), element, /* descendantsHaveOwnBindingContext: */ true);
-        else
-            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['with'] = false; // Can't rewrite control flow bindings
@@ -2201,12 +2181,7 @@ ko.bindingHandlers['if'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
-        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
-        if (initialValue)
-            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
-        else        
-            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['if'] = false; // Can't rewrite control flow bindings
@@ -2221,12 +2196,7 @@ ko.bindingHandlers['ifnot'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is falseish)
-        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor, /* defaultValue: */ true);       
-        if (!initialValue)
-            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
-        else        
-            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['ifnot'] = false; // Can't rewrite control flow bindings
@@ -2636,8 +2606,9 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
-                // It's an anonymous template - store the element contents
+                // It's an anonymous template - store the element contents, then clear the element
                 new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
+                ko.utils.emptyDomNode(element);
             }
             return { 'controlsDescendantBindings': true };
         },
@@ -2820,14 +2791,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
         array = array || [];
         options = options || {};
         var isFirstExecution = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) === undefined;
-        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey);
-
-        // If this is the first invocation, we can't merge with any pre-existent DOM, so empty the target node entirely
-        if (lastMappingResult === undefined) {
-            ko.virtualElements.emptyNode(domNode);
-            lastMappingResult = [];
-        }
-
+        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) || [];
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
         var editScript = ko.utils.compareArrays(lastArray, array);
 
