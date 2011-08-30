@@ -38,14 +38,7 @@
         array = array || [];
         options = options || {};
         var isFirstExecution = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) === undefined;
-        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey);
-
-        // If this is the first invocation, we can't merge with any pre-existent DOM, so empty the target node entirely
-        if (lastMappingResult === undefined) {
-            ko.virtualElements.emptyNode(domNode);
-            lastMappingResult = [];
-        }
-
+        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) || [];
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
         var editScript = ko.utils.compareArrays(lastArray, array);
 

@@ -161,8 +161,9 @@
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
-                // It's an anonymous template - store the element contents
+                // It's an anonymous template - store the element contents, then clear the element
                 new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
+                ko.utils.emptyDomNode(element);
             }
             return { 'controlsDescendantBindings': true };
         },

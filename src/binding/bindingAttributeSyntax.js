@@ -25,12 +25,12 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    function applyBindingsToDescendantsInternal (viewModel, elementVerified, descendantsHaveOwnBindingContext) {
+    function applyBindingsToDescendantsInternal (viewModel, elementVerified) {
         var currentChild, nextInQueue = elementVerified.childNodes[0];
         while (currentChild = nextInQueue) {
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
-            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, descendantsHaveOwnBindingContext);
+            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, false);
         }        
     }
     
@@ -48,7 +48,7 @@
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
         if (isElement && shouldBindDescendants)
-            applyBindingsToDescendantsInternal(viewModel, nodeVerified, /* descendantBindingContextDiffersFromContainer: */ false);
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified);
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
@@ -141,10 +141,6 @@
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
-    };
-
-    ko.applyBindingsToDescendants = function(viewModel, rootNode, descendantsHaveOwnBindingContext) {
-        applyBindingsToDescendantsInternal(viewModel, rootNode, descendantsHaveOwnBindingContext);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
