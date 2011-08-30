@@ -39,14 +39,33 @@ describe('Dependent Observable', {
     },
     
     'Should invoke the "write" callback, where present, if you attempt to write a value to it': function() {
-        var invokedWriteWithValue;
+        var invokedWriteWithValue, invokedWriteWithThis;
         var instance = new ko.dependentObservable({ 
             read: function() {},
-            write: function(value) { invokedWriteWithValue = value }
+            write: function(value) { invokedWriteWithValue = value; invokedWriteWithThis = this; }
         });
 
-        instance("some value");
+        var someContainer = { depObs: instance };
+        someContainer.depObs("some value");
         value_of(invokedWriteWithValue).should_be("some value");
+        value_of(invokedWriteWithThis).should_be(window); // Since no owner was specified
+    },
+
+    'Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters': function() {
+        var invokedWriteWithArgs, invokedWriteWithThis;
+        var someOwner = {};
+        var instance = new ko.dependentObservable({ 
+            read: function() {},
+            write: function() { invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
+            owner: someOwner
+        });
+
+        instance("first", 2, ["third1", "third2"]);
+        value_of(invokedWriteWithArgs.length).should_be(3);
+        value_of(invokedWriteWithArgs[0]).should_be("first");
+        value_of(invokedWriteWithArgs[1]).should_be(2);
+        value_of(invokedWriteWithArgs[2]).should_be(["third1", "third2"]);
+        value_of(invokedWriteWithThis).should_be(someOwner);
     },
     
     'Should be able to pass evaluator function using "options" parameter called "read"': function() {

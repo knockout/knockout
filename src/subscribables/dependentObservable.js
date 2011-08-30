@@ -83,8 +83,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof options["write"] === "function") {
                 // Writing a value
-                var valueToWrite = arguments[0];
-                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+                var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
+                options["write"].apply(valueForThis, arguments);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
             }
