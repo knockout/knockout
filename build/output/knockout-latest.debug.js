@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.2.1pre
+// Knockout JavaScript library v1.3.0beta
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -58,16 +58,6 @@ ko.utils = new (function () {
                 array.splice(index, 1);
         },
 
-        arrayGetDistinctValues: function (array) {
-            array = array || [];
-            var result = [];
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
-                    result.push(array[i]);
-            }
-            return result;
-        },
-
         arrayMap: function (array, mapping) {
             array = array || [];
             var result = [];
@@ -88,6 +78,16 @@ ko.utils = new (function () {
         arrayPushAll: function (array, valuesToPush) {
             for (var i = 0, j = valuesToPush.length; i < j; i++)
                 array.push(valuesToPush[i]);	
+            return array;
+        },
+
+        extend: function (target, source) {
+            for(var prop in source) {
+                if(source.hasOwnProperty(prop)) {
+                    target[prop] = source[prop];
+                }
+            }
+            return target;
         },
 
         emptyDomNode: function (domNode) {
@@ -125,19 +125,7 @@ ko.utils = new (function () {
             else
                 optionNode.selected = isSelected;
         },
-
-        getElementsHavingAttribute: function (rootNode, attributeName) {
-            if ((!rootNode) || (rootNode.nodeType != 1)) return [];
-            var results = [];
-            if (rootNode.getAttribute(attributeName) !== null)
-                results.push(rootNode);
-            var descendants = rootNode.getElementsByTagName("*");
-            for (var i = 0, j = descendants.length; i < j; i++)
-                if (descendants[i].getAttribute(attributeName) !== null)
-                    results.push(descendants[i]);
-            return results;
-        },
-
+        
         stringTrim: function (string) {
             return (string || "").replace(stringTrimRegex, "");
         },
@@ -160,14 +148,17 @@ ko.utils = new (function () {
             return string.substring(0, startsWith.length) === startsWith;
         },
 
-        evalWithinScope: function (expression, scope) {
-            // Always do the evaling within a "new Function" to block access to parent scope
-            if (scope === undefined)
-                return (new Function("return " + expression))();
-                
-            // Ensure "expression" is flattened into a source code string *before* it runs, otherwise
-            // the variable name "expression" itself will clash with a subproperty called "expression"
-            return (new Function("sc", "with(sc) { return (" + expression + ") }"))(scope);
+        evalWithinScope: function (expression /*, scope1, scope2, scope3... */) {
+            // Build the source for a function that evaluates "expression"
+            // For each scope variable, add an extra level of "with" nesting
+            // Example result: with(sc[1]) { with(sc[0]) { return (expression) } }
+            var scopes = Array.prototype.slice.call(arguments, 1);
+            var functionBody = "return (" + expression + ")";
+            for (var i = 0; i < scopes.length; i++) {
+                if (scopes[i] && typeof scopes[i] == "object")
+                    functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
+            }
+            return (new Function("sc", functionBody))(scopes);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
@@ -266,6 +257,18 @@ ko.utils = new (function () {
                         newClassName += currentClassNames[i] + " ";
                 node.className = ko.utils.stringTrim(newClassName);
             }
+        },
+
+        outerHTML: function(node) {
+            // For IE and Chrome
+            var nativeOuterHtml = node.outerHTML;
+            if (typeof nativeOuterHtml == "string")
+                return nativeOuterHtml;
+            
+            // Other browsers
+            var dummyContainer = window.document.createElement("div");
+            dummyContainer.appendChild(node.cloneNode(true));
+            return dummyContainer.innerHTML;
         },
 
         range: function (min, max) {
@@ -369,8 +372,8 @@ ko.exportSymbol('ko.utils.arrayIndexOf', ko.utils.arrayIndexOf);
 ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
+ko.exportSymbol('ko.utils.extend', ko.utils.extend);
 ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
-ko.exportSymbol('ko.utils.getElementsHavingAttribute', ko.utils.getElementsHavingAttribute);
 ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
 ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
 ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
@@ -411,7 +414,8 @@ ko.utils.domData = new (function () {
         },
         getAll: function (node, createIfNotFound) {
             var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
-            if (!dataStoreKey) {
+            var hasExistingDataStore = dataStoreKey && (dataStoreKey !== "null");
+            if (!hasExistingDataStore) {
                 if (!createIfNotFound)
                     return undefined;
                 dataStoreKey = node[dataStoreKeyExpandoPropertyName] = "ko" + uniqueId++;
@@ -428,6 +432,9 @@ ko.utils.domData = new (function () {
         }
     }
 })();
+
+ko.exportSymbol('ko.utils.domData', ko.utils.domData);
+ko.exportSymbol('ko.utils.domData.clear', ko.utils.domData.clear); // Exporting only so specs can clear up after themselves fully
 ko.utils.domNodeDisposal = new (function () {
     var domDataKey = "__ko_domNodeDisposal__" + (new Date).getTime();
     
@@ -504,9 +511,24 @@ ko.exportSymbol('ko.removeNode', ko.removeNode);
 ko.exportSymbol('ko.utils.domNodeDisposal', ko.utils.domNodeDisposal);
 ko.exportSymbol('ko.utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
 ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);(function () {
+    var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
+
     function simpleHtmlParse(html) {
         // Based on jQuery's "clean" function, but only accounting for table-related elements.
         // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
+
+        // Trim any leading whitespace/comment nodes, otherwise IE < 9 will discard them. We'll need to restore them after.
+        html = html || "";
+        var prefixNodes = [];
+        while (html.match(leadingCommentRegex)) {
+            html = html.replace(leadingCommentRegex, function() {
+                var whitespace = arguments[1], comment = arguments[2];
+                if (whitespace)
+                    prefixNodes.push(document.createTextNode(whitespace));
+                prefixNodes.push(document.createComment(comment));
+                return "";
+            });
+        }
         
         // Trim whitespace, otherwise indexOf won't work as expected
         var tags = ko.utils.stringTrim(html).toLowerCase(), div = document.createElement("div");
@@ -524,7 +546,7 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
         while (wrap[0]--)
             div = div.lastChild;
 
-        return ko.utils.makeArray(div.childNodes);
+        return prefixNodes.concat(ko.utils.makeArray(div.childNodes));
     }
     
     ko.utils.parseHtmlFragment = function(html) {
@@ -553,6 +575,8 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
         }    	
     };
 })();
+
+ko.exportSymbol('ko.utils.parseHtmlFragment', ko.utils.parseHtmlFragment);
 ko.memoization = (function () {
     var memos = {};
 
@@ -622,47 +646,90 @@ ko.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
 ko.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
 ko.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
 ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);
+ko.extenders = {
+    'throttle': function(target, timeout) {
+        // Throttling means two things:
 
+        // (1) For dependent observables, we throttle *evaluations* so that, no matter how fast its dependencies
+        //     notify updates, the target doesn't re-evaluate (and hence doesn't notify) faster than a certain rate
+        target['throttleEvaluation'] = timeout;
+
+        // (2) For writable targets (observables, or writable dependent observables), we throttle *writes*
+        //     so the target cannot change value synchronously or faster than a certain rate
+        var writeTimeoutInstance = null;
+        return ko.dependentObservable({
+            'read': target,
+            'write': function(value) {
+                clearTimeout(writeTimeoutInstance);
+                writeTimeoutInstance = setTimeout(function() {
+                    target(value);
+                }, timeout);                
+            }
+        });
+    }
+};
+
+function applyExtenders(requestedExtenders) {
+    var target = this;
+    if (requestedExtenders) {
+        for (var key in requestedExtenders) {
+            var extenderHandler = ko.extenders[key];
+            if (typeof extenderHandler == 'function') {
+                target = extenderHandler(target, requestedExtenders[key]);
+            }
+        }
+    }
+    return target;
+}
+
+ko.exportSymbol('ko.extenders', ko.extenders);
 ko.subscription = function (callback, disposeCallback) {
     this.callback = callback;
-    this.dispose = function () {
-        this.isDisposed = true;
-        disposeCallback();
-    }['bind'](this);
-    
+    this.disposeCallback = disposeCallback;    
     ko.exportProperty(this, 'dispose', this.dispose);
+};
+ko.subscription.prototype.dispose = function () {
+    this.isDisposed = true;
+    this.disposeCallback();
 };
 
 ko.subscribable = function () {
-    var _subscriptions = [];
+    this._subscriptions = [];
 
-    this.subscribe = function (callback, callbackTarget) {
+    ko.utils.extend(this, ko.subscribable['fn']);
+    ko.exportProperty(this, 'subscribe', this.subscribe);
+    ko.exportProperty(this, 'extend', this.extend);
+    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
+    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
+}
+
+ko.subscribable['fn'] = {
+    subscribe: function (callback, callbackTarget) {
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
         var subscription = new ko.subscription(boundCallback, function () {
-            ko.utils.arrayRemoveItem(_subscriptions, subscription);
-        });
-        _subscriptions.push(subscription);
+            ko.utils.arrayRemoveItem(this._subscriptions, subscription);
+        }.bind(this));
+        this._subscriptions.push(subscription);
         return subscription;
-    };
+    },
 
-    this.notifySubscribers = function (valueToNotify) {
-        ko.utils.arrayForEach(_subscriptions.slice(0), function (subscription) {
+    notifySubscribers: function (valueToNotify) {
+        ko.utils.arrayForEach(this._subscriptions.slice(0), function (subscription) {
             // In case a subscription was disposed during the arrayForEach cycle, check
             // for isDisposed on each subscription before invoking its callback
             if (subscription && (subscription.isDisposed !== true))
                 subscription.callback(valueToNotify);
         });
-    };
+    },
 
-    this.getSubscriptionsCount = function () {
-        return _subscriptions.length;
-    };
+    getSubscriptionsCount: function () {
+        return this._subscriptions.length;
+    },
     
-    ko.exportProperty(this, 'subscribe', this.subscribe);
-    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
-    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
-}
+    extend: applyExtenders
+};
+
 
 ko.isSubscribable = function (instance) {
     return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
@@ -672,31 +739,30 @@ ko.exportSymbol('ko.subscribable', ko.subscribable);
 ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);
 
 ko.dependencyDetection = (function () {
-    var _detectedDependencies = [];
-
+    var _frames = [];
+    
     return {
-        begin: function () {
-            _detectedDependencies.push([]);
+        begin: function (callback) {
+            _frames.push({ callback: callback, distinctDependencies:[] });
         },
 
         end: function () {
-            return _detectedDependencies.pop();
+            _frames.pop();
         },
 
         registerDependency: function (subscribable) {
             if (!ko.isSubscribable(subscribable))
                 throw "Only subscribable things can act as dependencies";
-            if (_detectedDependencies.length > 0) {
-                _detectedDependencies[_detectedDependencies.length - 1].push(subscribable);
+            if (_frames.length > 0) {
+                var topFrame = _frames[_frames.length - 1];
+                if (ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
+                    return;
+                topFrame.distinctDependencies.push(subscribable);
+                topFrame.callback(subscribable);
             }
         }
     };
 })();var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
-
-function valuesArePrimitiveAndEqual(a, b) {
-    var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
-    return oldValueIsPrimitive ? (a === b) : false;
-}
 
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
@@ -718,16 +784,24 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
-    observable.__ko_proto__ = ko.observable;
-    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
-    observable['equalityComparer'] = valuesArePrimitiveAndEqual;
-    
     ko.subscribable.call(observable);
+    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
+    ko.utils.extend(observable, ko.observable['fn']);    
     
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     
     return observable;
 }
+
+ko.observable['fn'] = {
+    __ko_proto__: ko.observable,
+
+    "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
+        var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+        return oldValueIsPrimitive ? (a === b) : false;
+    }
+};
+
 ko.isObservable = function (instance) {
     if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
     if (instance.__ko_proto__ === ko.observable) return true;
@@ -755,26 +829,23 @@ ko.observableArray = function (initialValues) {
     }
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
+        
     var result = new ko.observable(initialValues);
+    ko.utils.extend(result, ko.observableArray['fn']);
+    
+    ko.exportProperty(result, "remove", result.remove);
+    ko.exportProperty(result, "removeAll", result.removeAll);
+    ko.exportProperty(result, "destroy", result.destroy);
+    ko.exportProperty(result, "destroyAll", result.destroyAll);
+    ko.exportProperty(result, "indexOf", result.indexOf);
+    ko.exportProperty(result, "replace", result.replace);
+    
+    return result;
+}
 
-    ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
-        result[methodName] = function () {
-            var underlyingArray = result();
-            var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
-            result.valueHasMutated();
-            return methodCallResult;
-        };
-    });
-
-    ko.utils.arrayForEach(["slice"], function (methodName) {
-        result[methodName] = function () {
-            var underlyingArray = result();
-            return underlyingArray[methodName].apply(underlyingArray, arguments);
-        };
-    });
-
-    result.remove = function (valueOrPredicate) {
-        var underlyingArray = result();
+ko.observableArray['fn'] = {
+    remove: function (valueOrPredicate) {
+        var underlyingArray = this();
         var remainingValues = [];
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
@@ -785,76 +856,84 @@ ko.observableArray = function (initialValues) {
             else
                 removedValues.push(value);
         }
-        result(remainingValues);
+        this(remainingValues);
         return removedValues;
-    };
+    },
 
-    result.removeAll = function (arrayOfValues) {
+    removeAll: function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var allValues = result();
-            result([]);
+            var allValues = this();
+            this([]);
             return allValues;
         }
         
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
-        return result.remove(function (value) {
+        return this.remove(function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
-    };
+    },
     
-    result.destroy = function (valueOrPredicate) {
-        var underlyingArray = result();
+    destroy: function (valueOrPredicate) {
+        var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
             var value = underlyingArray[i];
             if (predicate(value))
                 underlyingArray[i]["_destroy"] = true;
         }
-        result.valueHasMutated();
-    };
-    
-    result.destroyAll = function (arrayOfValues) {
+        this.valueHasMutated();
+    },
+        
+    destroyAll: function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
-            return result.destroy(function() { return true });
+            return this.destroy(function() { return true });
                 
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
-        return result.destroy(function (value) {
+        return this.destroy(function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
-        });		    	
-    };
+        });             
+    },
 
-    result.indexOf = function (item) {
-        var underlyingArray = result();
+    indexOf: function (item) {
+        var underlyingArray = this();
         return ko.utils.arrayIndexOf(underlyingArray, item);
-    };
+    },
     
-    result.replace = function(oldItem, newItem) {
-        var index = result.indexOf(oldItem);
+    replace: function(oldItem, newItem) {
+        var index = this.indexOf(oldItem);
         if (index >= 0) {
-            result()[index] = newItem;
-            result.valueHasMutated();
-        }	
-    };
-    
-    ko.exportProperty(result, "remove", result.remove);
-    ko.exportProperty(result, "removeAll", result.removeAll);
-    ko.exportProperty(result, "destroy", result.destroy);
-    ko.exportProperty(result, "destroyAll", result.destroyAll);
-    ko.exportProperty(result, "indexOf", result.indexOf);
-    
-    return result;
+            this()[index] = newItem;
+            this.valueHasMutated();
+        }   
+    }    
 }
 
+// Populate ko.observableArray.fn with read/write functions from native arrays
+ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
+    ko.observableArray['fn'][methodName] = function () { 
+        var underlyingArray = this();
+        var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
+        this.valueHasMutated();
+        return methodCallResult;
+    };
+});
+
+// Populate ko.observableArray.fn with read-only functions from native arrays
+ko.utils.arrayForEach(["slice"], function (methodName) {
+    ko.observableArray['fn'][methodName] = function () {
+        var underlyingArray = this();
+        return underlyingArray[methodName].apply(underlyingArray, arguments);
+    };
+});
+
 ko.exportSymbol('ko.observableArray', ko.observableArray);
-ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
-    var _latestValue, _hasBeenEvaluated = false;
-    
+function prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     if (evaluatorFunctionOrOptions && typeof evaluatorFunctionOrOptions == "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = evaluatorFunctionOrOptions;
@@ -869,6 +948,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
         
+    return options;    
+}
+
+ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+    var _latestValue, 
+        _hasBeenEvaluated = false, 
+        options = prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, options);
+
     // Build "disposeWhenNodeIsRemoved" and "disposeWhenNodeIsRemovedCallback" option values
     // (Note: "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
     // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
@@ -891,15 +978,18 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
         _subscriptionsToDependencies = [];
     }
-
-    function replaceSubscriptionsToDependencies(newDependencies) {
-        disposeAllSubscriptionsToDependencies();
-        ko.utils.arrayForEach(newDependencies, function (dependency) {
-            _subscriptionsToDependencies.push(dependency.subscribe(evaluate));
-        });
-    };
     
-    function evaluate() {
+    var evaluationTimeoutInstance = null;
+    function evaluatePossiblyAsync() {
+        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
+        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+            clearTimeout(evaluationTimeoutInstance);
+            evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
+        } else
+            evaluateImmediate();
+    }
+
+    function evaluateImmediate() {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
         // going to be in the doc until *after* the first evaluation
@@ -911,11 +1001,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         try {
-            ko.dependencyDetection.begin();
+            disposeAllSubscriptionsToDependencies();
+            ko.dependencyDetection.begin(function(subscribable) {
+                _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
+            });
             _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
         } finally {
-            var distinctDependencies = ko.utils.arrayGetDistinctValues(ko.dependencyDetection.end());
-            replaceSubscriptionsToDependencies(distinctDependencies);
+            ko.dependencyDetection.end();
         }
 
         dependentObservable.notifySubscribers(_latestValue);
@@ -926,20 +1018,19 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof options["write"] === "function") {
                 // Writing a value
-                var valueToWrite = arguments[0];
-                options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
+                var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
+                options["write"].apply(valueForThis, arguments);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
             }
         } else {
             // Reading the value
             if (!_hasBeenEvaluated)
-                evaluate();
+                evaluateImmediate();
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
-    }
-    dependentObservable.__ko_proto__ = ko.dependentObservable;
+    }    
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
@@ -949,18 +1040,25 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     };
     
     ko.subscribable.call(dependentObservable);
+    ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
+
     if (options['deferEvaluation'] !== true)
-        evaluate();
+        evaluateImmediate();
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
     
     return dependentObservable;
 };
+
+ko.dependentObservable['fn'] = {
+    __ko_proto__: ko.dependentObservable
+};
+
 ko.dependentObservable.__ko_proto__ = ko.observable;
 
 ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
-
+ko.exportSymbol('ko.computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
 (function() {    
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
     
@@ -1101,14 +1199,19 @@ ko.exportSymbol('ko.selectExtensions.readValue', ko.selectExtensions.readValue);
 ko.exportSymbol('ko.selectExtensions.writeValue', ko.selectExtensions.writeValue);
 
 ko.jsonExpressionRewriting = (function () {
-    var restoreCapturedTokensRegex = /\[ko_token_(\d+)\]/g;
+    var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
     var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
-        return string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
-            return tokens[tokenIndex];
-        });
+        var prevValue = null;
+        while (string != prevValue) { // Keep restoring tokens until it no longer makes a difference (they may be nested)
+            prevValue = string;
+            string = string.replace(restoreCapturedTokensRegex, function (match, tokenIndex) {
+                return tokens[tokenIndex];
+            });
+        }
+        return string;
     }
 
     function isWriteableValue(expression) {
@@ -1117,17 +1220,35 @@ ko.jsonExpressionRewriting = (function () {
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
-    return {
-        parseJson: function (jsonString) {
-            jsonString = ko.utils.stringTrim(jsonString);
-            if (jsonString.length < 3)
-                return {};
+    function ensureQuoted(key) {
+        var trimmedKey = ko.utils.stringTrim(key);
+        switch (trimmedKey.length && trimmedKey.charAt(0)) {
+            case "'":
+            case '"': 
+                return key;
+            default:
+                return "'" + trimmedKey + "'";
+        }
+    }
 
-            // We're going to split on commas, so first extract any blocks that may contain commas other than those at the top level
+    return {
+        bindingRewriteValidators: [],
+        
+        parseObjectLiteral: function(objectLiteralString) {
+            // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
+            // that is sufficient just to split an object literal string into a set of top-level key-value pairs
+
+            var str = ko.utils.stringTrim(objectLiteralString);
+            if (str.length < 3)
+                return [];
+            if (str.charAt(0) === "{")// Ignore any braces surrounding the whole object literal
+                str = str.substring(1, str.length - 1);
+
+            // Pull out any string literals and regex literals
             var tokens = [];
             var tokenStart = null, tokenEndChar;
-            for (var position = jsonString.charAt(0) == "{" ? 1 : 0; position < jsonString.length; position++) {
-                var c = jsonString.charAt(position);
+            for (var position = 0; position < str.length; position++) {
+                var c = str.charAt(position);
                 if (tokenStart === null) {
                     switch (c) {
                         case '"':
@@ -1136,92 +1257,356 @@ ko.jsonExpressionRewriting = (function () {
                             tokenStart = position;
                             tokenEndChar = c;
                             break;
-                        case "{":
-                            tokenStart = position;
-                            tokenEndChar = "}";
-                            break;
-                        case "[":
-                            tokenStart = position;
-                            tokenEndChar = "]";
-                            break;
                     }
-                } else if (c == tokenEndChar) {
-                    var token = jsonString.substring(tokenStart, position + 1);
+                } else if ((c == tokenEndChar) && (str.charAt(position - 1) !== "\\")) {
+                    var token = str.substring(tokenStart, position + 1);
                     tokens.push(token);
-                    var replacement = "[ko_token_" + (tokens.length - 1) + "]";
-                    jsonString = jsonString.substring(0, tokenStart) + replacement + jsonString.substring(position + 1);
+                    var replacement = "@ko_token_" + (tokens.length - 1) + "@";
+                    str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
                     position -= (token.length - replacement.length);
                     tokenStart = null;
                 }
             }
 
+            // Next pull out balanced paren, brace, and bracket blocks
+            tokenStart = null;
+            tokenEndChar = null;
+            var tokenDepth = 0, tokenStartChar = null;
+            for (var position = 0; position < str.length; position++) {
+                var c = str.charAt(position);
+                if (tokenStart === null) {
+                    switch (c) {
+                        case "{": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = "}";
+                                  break;
+                        case "(": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = ")";
+                                  break;
+                        case "[": tokenStart = position; tokenStartChar = c;
+                                  tokenEndChar = "]";
+                                  break;
+                    }
+                }
+
+                if (c === tokenStartChar)
+                    tokenDepth++;
+                else if (c === tokenEndChar) {
+                    tokenDepth--;
+                    if (tokenDepth === 0) {
+                        var token = str.substring(tokenStart, position + 1);
+                        tokens.push(token);
+                        var replacement = "@ko_token_" + (tokens.length - 1) + "@";
+                        str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
+                        position -= (token.length - replacement.length);
+                        tokenStart = null;                            
+                    }
+                }
+            }
+
             // Now we can safely split on commas to get the key/value pairs
-            var result = {};
-            var keyValuePairs = jsonString.split(",");
+            var result = [];
+            var keyValuePairs = str.split(",");
             for (var i = 0, j = keyValuePairs.length; i < j; i++) {
                 var pair = keyValuePairs[i];
                 var colonPos = pair.indexOf(":");
                 if ((colonPos > 0) && (colonPos < pair.length - 1)) {
-                    var key = ko.utils.stringTrim(pair.substring(0, colonPos));
-                    var value = ko.utils.stringTrim(pair.substring(colonPos + 1));
-                    if (key.charAt(0) == "{")
-                        key = key.substring(1);
-                    if (value.charAt(value.length - 1) == "}")
-                        value = value.substring(0, value.length - 1);
-                    key = ko.utils.stringTrim(restoreTokens(key, tokens));
-                    value = ko.utils.stringTrim(restoreTokens(value, tokens));
-                    result[key] = value;
+                    var key = pair.substring(0, colonPos);
+                    var value = pair.substring(colonPos + 1);
+                    result.push({ 'key': restoreTokens(key, tokens), 'value': restoreTokens(value, tokens) });
+                } else {
+                    result.push({ 'unknown': restoreTokens(pair, tokens) });
                 }
             }
-            return result;
+            return result;            
         },
 
-        insertPropertyAccessorsIntoJson: function (jsonString) {
-            var parsed = ko.jsonExpressionRewriting.parseJson(jsonString);
-            var propertyAccessorTokens = [];
-            for (var key in parsed) {
-                var value = parsed[key];
-                if (isWriteableValue(value)) {
-                    if (propertyAccessorTokens.length > 0)
-                        propertyAccessorTokens.push(", ");
-                    propertyAccessorTokens.push(key + " : function(__ko_value) { " + value + " = __ko_value; }");
+        insertPropertyAccessorsIntoJson: function (objectLiteralStringOrKeyValueArray) {
+            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string" 
+                ? ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteralStringOrKeyValueArray)
+                : objectLiteralStringOrKeyValueArray;
+            var resultStrings = [], propertyAccessorResultStrings = [];
+
+            var keyValueEntry;
+            for (var i = 0; keyValueEntry = keyValueArray[i]; i++) {
+                if (resultStrings.length > 0)
+                    resultStrings.push(",");
+
+                if (keyValueEntry['key']) {
+                    var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
+                    resultStrings.push(quotedKey);
+                    resultStrings.push(":");              
+                    resultStrings.push(val);
+
+                    if (isWriteableValue(ko.utils.stringTrim(val))) {
+                        if (propertyAccessorResultStrings.length > 0)
+                            propertyAccessorResultStrings.push(", ");
+                        propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
+                    }                    
+                } else if (keyValueEntry['unknown']) {
+                    resultStrings.push(keyValueEntry['unknown']);
                 }
             }
 
-            if (propertyAccessorTokens.length > 0) {
-                var allPropertyAccessors = propertyAccessorTokens.join("");
-                jsonString = jsonString + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
+            var combinedResult = resultStrings.join("");
+            if (propertyAccessorResultStrings.length > 0) {
+                var allPropertyAccessors = propertyAccessorResultStrings.join("");
+                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";                
             }
 
-            return jsonString;
+            return combinedResult;
+        },
+
+        keyValueArrayContainsKey: function(keyValueArray, key) {
+            for (var i = 0; i < keyValueArray.length; i++)
+                if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
+                    return true;            
+            return false;
         }
     };
 })();
 
 ko.exportSymbol('ko.jsonExpressionRewriting', ko.jsonExpressionRewriting);
-ko.exportSymbol('ko.jsonExpressionRewriting.parseJson', ko.jsonExpressionRewriting.parseJson);
+ko.exportSymbol('ko.jsonExpressionRewriting.bindingRewriteValidators', ko.jsonExpressionRewriting.bindingRewriteValidators);
+ko.exportSymbol('ko.jsonExpressionRewriting.parseObjectLiteral', ko.jsonExpressionRewriting.parseObjectLiteral);
 ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson);
+(function() {
+    // "Virtual elements" is an abstraction on top of the usual DOM API which understands the notion that comment nodes
+    // may be used to represent hierarchy (in addition to the DOM's natural hierarchy). 
+    // If you call the DOM-manipulating functions on ko.virtualElements, you will be able to read and write the state 
+    // of that virtual hierarchy
+    // 
+    // The point of all this is to support containerless templates (e.g., <!-- ko foreach:someCollection -->blah<!-- /ko -->)
+    // without having to scatter special cases all over the binding and templating code.
 
-(function () {
+    var startCommentRegex = /^\s*ko\s+(.*\:.*)\s*$/;
+    var endCommentRegex =   /^\s*\/ko\s*$/;
+
+    function isStartComment(node) {
+        return (node.nodeType == 8) && node.nodeValue.match(startCommentRegex);
+    }
+
+    function isEndComment(node) {
+        return (node.nodeType == 8) && node.nodeValue.match(endCommentRegex);
+    }
+
+    function getVirtualChildren(startComment) {
+        var currentNode = startComment;
+        var depth = 1;
+        var children = [];
+        while (currentNode = currentNode.nextSibling) {
+            if (isEndComment(currentNode)) {
+                depth--;
+                if (depth === 0)
+                    return children;
+            }
+
+            children.push(currentNode);
+
+            if (isStartComment(currentNode))
+                depth++;
+        }
+        throw new Error("Cannot find closing comment tag to match: " + startComment.nodeValue);
+    }
+
+    function getMatchingEndComment(startComment) {
+        var allVirtualChildren = getVirtualChildren(startComment);
+        if (allVirtualChildren.length > 0)
+            return allVirtualChildren[allVirtualChildren.length - 1].nextSibling;
+        return startComment.nextSibling;
+    }
+
+    function nodeArrayToText(nodeArray, cleanNodes) {
+        var texts = [];
+        for (var i = 0, j = nodeArray.length; i < j; i++) {
+            if (cleanNodes)
+                ko.utils.domNodeDisposal.cleanNode(nodeArray[i]);
+            texts.push(ko.utils.outerHTML(nodeArray[i]));
+        }
+        return String.prototype.concat.apply("", texts);
+    }   
+
+    ko.virtualElements = {
+        allowedBindings: {},
+
+        childNodes: function(node) {
+            return isStartComment(node) ? getVirtualChildren(node) : node.childNodes;
+        },
+
+        emptyNode: function(node) {
+            if (!isStartComment(node))
+                ko.utils.emptyDomNode(node);
+            else {
+                var virtualChildren = ko.virtualElements.childNodes(node);
+                for (var i = 0, j = virtualChildren.length; i < j; i++)
+                    ko.removeNode(virtualChildren[i]);
+            }
+        },
+
+        setDomNodeChildren: function(node, childNodes) {
+            if (!isStartComment(node))
+                ko.utils.setDomNodeChildren(node, childNodes);
+            else {
+                ko.virtualElements.emptyNode(node);
+                var endCommentNode = node.nextSibling; // Must be the next sibling, as we just emptied the children
+                for (var i = 0, j = childNodes.length; i < j; i++)
+                    endCommentNode.parentNode.insertBefore(childNodes[i], endCommentNode);
+            }
+        },
+
+        prepend: function(containerNode, nodeToPrepend) {
+            if (!isStartComment(containerNode)) {
+                if (containerNode.firstChild)
+                    containerNode.insertBefore(nodeToPrepend, containerNode.firstChild);
+                else
+                    containerNode.appendChild(nodeToPrepend);                           
+            } else {
+                // Start comments must always have a parent and at least one following sibling (the end comment)
+                containerNode.parentNode.insertBefore(nodeToPrepend, containerNode.nextSibling);
+            }
+        },
+
+        insertAfter: function(containerNode, nodeToInsert, insertAfterNode) {
+            if (!isStartComment(containerNode)) {
+                // Insert after insertion point
+                if (insertAfterNode.nextSibling)
+                    containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
+                else
+                    containerNode.appendChild(nodeToInsert);    
+            } else {
+                // Children of start comments must always have a parent and at least one following sibling (the end comment)
+                containerNode.parentNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
+            }                           
+        },
+
+        nextSibling: function(node) {
+            if (!isStartComment(node)) {
+                if (node.nextSibling && isEndComment(node.nextSibling))
+                    return undefined;
+                return node.nextSibling;
+            } else {
+                return getMatchingEndComment(node).nextSibling;
+            }
+        },
+
+        virtualNodeBindingValue: function(node) {
+            var regexMatch = isStartComment(node);
+            return regexMatch ? regexMatch[1] : null;               
+        },
+
+        extractAnonymousTemplateIfVirtualElement: function(node) {
+            if (ko.virtualElements.virtualNodeBindingValue(node)) {
+                // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
+                var virtualChildren = ko.virtualElements.childNodes(node);
+                var anonymousTemplateText = nodeArrayToText(virtualChildren, true);
+                ko.virtualElements.emptyNode(node);
+                new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
+            }
+        }       
+    };  
+})();
+(function() {
     var defaultBindingAttributeName = "data-bind";
+
+    ko.bindingProvider = function() { };
+
+    ko.utils.extend(ko.bindingProvider.prototype, {
+        'nodeHasBindings': function(node) {
+            switch (node.nodeType) {
+                case 1: return node.getAttribute(defaultBindingAttributeName) != null;   // Element
+                case 8: return ko.virtualElements.virtualNodeBindingValue(node) != null; // Comment node
+                default: return false;
+            }
+        },
+
+        'getBindings': function(node, bindingContext) {
+            var bindingsString = this['getBindingsString'](node, bindingContext);
+            return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext) : null;
+        },
+
+        // The following function is only used internally by this default provider.
+        // It's not part of the interface definition for a general binding provider.
+        'getBindingsString': function(node, bindingContext) {
+            switch (node.nodeType) {
+                case 1: return node.getAttribute(defaultBindingAttributeName);   // Element
+                case 8: return ko.virtualElements.virtualNodeBindingValue(node); // Comment node
+                default: return null;
+            }
+        },
+
+        // The following function is only used internally by this default provider.
+        // It's not part of the interface definition for a general binding provider.
+        'parseBindingsString': function(bindingsString, bindingContext) {
+            try {
+                var viewModel = bindingContext['$data'];
+                var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
+                return ko.utils.evalWithinScope(rewrittenBindings, viewModel === null ? window : viewModel, bindingContext);
+            } catch (ex) {
+                throw new Error("Unable to parse bindings.\nMessage: " + ex + ";\nBindings value: " + bindingsString);
+            }           
+        }
+    });
+
+    ko.bindingProvider['instance'] = new ko.bindingProvider();
+})();
+
+ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
     ko.bindingHandlers = {};
 
-    function parseBindingAttribute(attributeText, viewModel) {
-        try {
-            var json = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(attributeText) + " } ";
-            return ko.utils.evalWithinScope(json, viewModel === null ? window : viewModel);
-        } catch (ex) {
-            throw new Error("Unable to parse binding attribute.\nMessage: " + ex + ";\nAttribute value: " + attributeText);
+    ko.bindingContext = function(dataItem, parentBindingContext) {
+        this['$data'] = dataItem;
+        if (parentBindingContext) {
+            this['$parent'] = parentBindingContext['$data'];
+            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
+            this['$parents'].unshift(this['$parent']);
+            this['$root'] = parentBindingContext['$root'];
+        } else {
+            this['$parents'] = [];
+            this['$root'] = dataItem;        	
         }
     }
+    ko.bindingContext.prototype = {
+        createChildContext: function (dataItem) {
+            return new ko.bindingContext(dataItem, this);
+        }
+    };
 
-    function invokeBindingHandler(handler, element, dataValue, allBindings, viewModel) {
-        handler(element, dataValue, allBindings, viewModel);
+    function validateThatBindingIsAllowedForVirtualElements(bindingName) {
+        var validator = ko.virtualElements.allowedBindings[bindingName];
+        if (!validator)
+            throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    ko.applyBindingsToNode = function (node, bindings, viewModel, bindingAttributeName) {
+    function applyBindingsToDescendantsInternal (viewModel, elementVerified, descendantsHaveOwnBindingContext) {
+        var currentChild, nextInQueue = elementVerified.childNodes[0];
+        while (currentChild = nextInQueue) {
+            // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
+            nextInQueue = ko.virtualElements.nextSibling(currentChild);
+            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, descendantsHaveOwnBindingContext);
+        }        
+    }
+    
+    function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, isRootNodeForBindingContext) {
+        var shouldBindDescendants = true;
+
+        // Perf optimisation: Apply bindings only if...
+        // (1) It's a root element for this binding context, as we will need to store the binding context on this node
+        //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
+        // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
+        var isElement = (nodeVerified.nodeType == 1);
+        var shouldApplyBindings = (isElement && isRootNodeForBindingContext)                             // Case (1)
+                               || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
+        if (shouldApplyBindings)
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
+            
+        if (isElement && shouldBindDescendants)
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified, /* descendantBindingContextDiffersFromContainer: */ false);
+    }    
+
+    function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
         var isFirstEvaluation = true;
-        bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
+            
+        // Pre-process any anonymous template bounded by comment nodes
+        ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
 
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
@@ -1237,45 +1622,113 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
             return parsedBindings;
         }
         
+        var bindingHandlerThatControlsDescendantBindings;
         new ko.dependentObservable(
             function () {
+                // Ensure we have a nonnull binding context to work with
+                var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
+                    ? viewModelOrBindingContext
+                    : new ko.bindingContext(ko.utils.unwrapObservable(viewModelOrBindingContext));
+                var viewModel = bindingContextInstance['$data'];
+
+                // We only need to store the bindingContext at the root of the subtree where it applies
+                // as all descendants will be able to find it by scanning up their ancestry
+                if (isRootNodeForBindingContext)
+                    ko.storedBindingContextForNode(node, bindingContextInstance);
+
+                // Use evaluatedBindings if given, otherwise fall back on asking the bindings provider to give us some bindings
                 var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || parseBindingAttribute(node.getAttribute(bindingAttributeName), viewModel);
-                
-                // First run all the inits, so bindings can register for notification on changes
-                if (isFirstEvaluation) {
+                parsedBindings = evaluatedBindings || ko.bindingProvider['instance']['getBindings'](node, bindingContextInstance);
+
+                if (parsedBindings) {
+                    // First run all the inits, so bindings can register for notification on changes
+                    if (isFirstEvaluation) {
+                        for (var bindingKey in parsedBindings) {
+                            var binding = ko.bindingHandlers[bindingKey];
+                            if (binding && node.nodeType === 8)
+                                validateThatBindingIsAllowedForVirtualElements(bindingKey);
+
+                            if (binding && typeof binding["init"] == "function") {
+                                var handlerInitFn = binding["init"];
+                                var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                                
+                                // If this binding handler claims to control descendant bindings, make a note of this
+                                if (initResult && initResult['controlsDescendantBindings']) {
+                                    if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                                        throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                                    bindingHandlerThatControlsDescendantBindings = bindingKey;
+                                }
+                            }
+                        }                	
+                    }
+                    
+                    // ... then run all the updates, which might trigger changes even on the first evaluation
                     for (var bindingKey in parsedBindings) {
-                        if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["init"] == "function")
-                            invokeBindingHandler(ko.bindingHandlers[bindingKey]["init"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);	
-                    }                	
-                }
-                
-                // ... then run all the updates, which might trigger changes even on the first evaluation
-                for (var bindingKey in parsedBindings) {
-                    if (ko.bindingHandlers[bindingKey] && typeof ko.bindingHandlers[bindingKey]["update"] == "function")
-                        invokeBindingHandler(ko.bindingHandlers[bindingKey]["update"], node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel);
+                        var binding = ko.bindingHandlers[bindingKey];
+                        if (binding && typeof binding["update"] == "function") {
+                            var handlerUpdateFn = binding["update"];
+                            handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                        }
+                    }
                 }
             },
             null,
             { 'disposeWhenNodeIsRemoved' : node }
         );
+        
         isFirstEvaluation = false;
+        return { 
+            shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
+        };
+    };
+
+    var storedBindingContextDomDataKey = "__ko_bindingContext__";
+    ko.storedBindingContextForNode = function (node, bindingContext) {
+        if (arguments.length == 2)
+            ko.utils.domData.set(node, storedBindingContextDomDataKey, bindingContext);
+        else
+            return ko.utils.domData.get(node, storedBindingContextDomDataKey);
+    }
+
+    ko.applyBindingsToNode = function (node, bindings, viewModel) {
+        return applyBindingsToNodeInternal(node, bindings, viewModel, true);
+    };
+
+    ko.applyBindingsToDescendants = function(viewModel, rootNode, descendantsHaveOwnBindingContext) {
+        applyBindingsToDescendantsInternal(viewModel, rootNode, descendantsHaveOwnBindingContext);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
-        if (rootNode && (rootNode.nodeType == undefined))
-            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node (note: this is a breaking change since KO version 1.05)");
+        if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
+            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
-                
-        var elemsWithBindingAttribute = ko.utils.getElementsHavingAttribute(rootNode, defaultBindingAttributeName);
-        ko.utils.arrayForEach(elemsWithBindingAttribute, function (element) {
-            ko.applyBindingsToNode(element, null, viewModel);
-        });
+
+        applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode, true);
     };
+
+    // Retrieving binding context from arbitrary nodes
+    ko.contextFor = function(node) {
+        // We can only do something meaningful for elements and comment nodes (in particular, not text nodes, as IE can't store domdata for them)
+        switch (node.nodeType) {
+            case 1:
+            case 8:
+                var context = ko.storedBindingContextForNode(node);
+                if (context) return context;
+                if (node.parentNode) return ko.contextFor(node.parentNode);
+                break;
+        }
+        return undefined;
+    };
+    ko.dataFor = function(node) {
+        var context = ko.contextFor(node);
+        return context ? context['$data'] : undefined;
+    };    
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
+    ko.exportSymbol('ko.contextFor', ko.contextFor);
+    ko.exportSymbol('ko.dataFor', ko.dataFor);
 })();// For certain common events (currently just 'click'), allow a simplified data-binding syntax
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 var eventHandlersWithShortcuts = ['click'];
@@ -1551,6 +2004,10 @@ ko.bindingHandlers['text'] = {
 };
 
 ko.bindingHandlers['html'] = {
+    'init': function() {
+        // Prevent binding on the dynamically-injected HTML (as developers are unlikely to expect that, and it has security implications)
+        return { 'controlsDescendantBindings': true };
+    },
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
         ko.utils.setHtml(element, value);
@@ -1658,7 +2115,7 @@ ko.bindingHandlers['checked'] = {
 };
 
 ko.bindingHandlers['attr'] = {
-    update: function(element, valueAccessor, allBindingsAccessor) {
+    'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
@@ -1675,25 +2132,253 @@ ko.bindingHandlers['attr'] = {
         }
     }
 };
-ko.templateEngine = function () {
-    this['renderTemplate'] = function (templateName, data, options) {
-        throw "Override renderTemplate in your ko.templateEngine subclass";
+
+ko.bindingHandlers['hasfocus'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor) {
+        var writeValue = function(valueToWrite) {
+            var modelValue = valueAccessor();
+            if (valueToWrite == ko.utils.unwrapObservable(modelValue))
+                return;
+
+            if (ko.isWriteableObservable(modelValue))
+                modelValue(valueToWrite);
+            else {
+                var allBindings = allBindingsAccessor();
+                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['hasfocus']) {
+                    allBindings['_ko_property_writers']['hasfocus'](valueToWrite);
+                }                
+            }
+        };
+        ko.utils.registerEventHandler(element, "focus", function() { writeValue(true) });
+        ko.utils.registerEventHandler(element, "focusin", function() { writeValue(true) }); // For IE
+        ko.utils.registerEventHandler(element, "blur",  function() { writeValue(false) });
+        ko.utils.registerEventHandler(element, "focusout",  function() { writeValue(false) }); // For IE
     },
-    this['isTemplateRewritten'] = function (templateName) {
-        throw "Override isTemplateRewritten in your ko.templateEngine subclass";
+    'update': function(element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        value ? element.focus() : element.blur();
+        ko.utils.triggerEvent(element, value ? "focusin" : "focusout"); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
+    }
+};
+
+function getFirstControlFlowBoundValue(element, valueAccessor, defaultValue) {
+    // The "with", "if", and "ifnot" bindings all special-case their first "update" by applying bindings directly to their child nodes.
+    // They only render their anonymous template on subsequent updates. This means things like event handlers are preserved until a forced refresh.
+    var controlFlowBoundValueDomDataKey = "__ko_controlflow__";
+    if (ko.utils.domData.get(element, controlFlowBoundValueDomDataKey) === undefined) {
+        ko.utils.domData.set(element, controlFlowBoundValueDomDataKey, false);
+        return ko.utils.unwrapObservable(valueAccessor());            
+    }
+    return defaultValue;
+}
+
+// "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
+ko.bindingHandlers['with'] = {
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { var value = valueAccessor(); return { 'if': value, 'data': value, 'templateEngine': ko.nativeTemplateEngine.instance } };
     },
-    this['rewriteTemplate'] = function (templateName, rewriterCallback) {
-        throw "Override rewriteTemplate in your ko.templateEngine subclass";
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
     },
-    this['createJavaScriptEvaluatorBlock'] = function (script) {
-        throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
+        if (initialValue)
+            ko.applyBindingsToDescendants(bindingContext.createChildContext(initialValue), element, /* descendantsHaveOwnBindingContext: */ true);
+        else
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+    }
+};
+ko.jsonExpressionRewriting.bindingRewriteValidators['with'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['with'] = true;
+
+// "if: someExpression" is equivalent to "template: { if: someExpression }"
+ko.bindingHandlers['if'] = {
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { return { 'if': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
+    },	
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
+        if (initialValue)
+            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
+        else        
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+    }
+};
+ko.jsonExpressionRewriting.bindingRewriteValidators['if'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['if'] = true;
+
+// "ifnot: someExpression" is equivalent to "template: { ifnot: someExpression }"
+ko.bindingHandlers['ifnot'] = {
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { return { 'ifnot': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
+    },	
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is falseish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor, /* defaultValue: */ true);       
+        if (!initialValue)
+            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
+        else        
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+    }
+};
+ko.jsonExpressionRewriting.bindingRewriteValidators['ifnot'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['ifnot'] = true;
+
+// "foreach: someExpression" is equivalent to "template: { foreach: someExpression }"
+// "foreach: { data: someExpression, afterAdd: myfn }" is equivalent to "template: { foreach: someExpression, afterAdd: myfn }"
+ko.bindingHandlers['foreach'] = {
+    makeTemplateValueAccessor: function(valueAccessor) {
+        return function() { 
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            
+            // If bindingValue is the array, just pass it on its own
+            if ((!bindingValue) || typeof bindingValue.length == "number")
+                return { 'foreach': bindingValue, 'templateEngine': ko.nativeTemplateEngine.instance };
+            
+            // If bindingValue.data is the array, preserve all relevant options
+            return { 
+                'foreach': bindingValue['data'], 
+                'includeDestroyed': bindingValue['includeDestroyed'],
+                'afterAdd': bindingValue['afterAdd'],
+                'beforeRemove': bindingValue['beforeRemove'], 
+                'afterRender': bindingValue['afterRender'],
+                'templateEngine': ko.nativeTemplateEngine.instance
+            };
+        };
+    },
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {		
+        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['foreach'].makeTemplateValueAccessor(valueAccessor));
+    },
+    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['foreach'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+    }
+};
+ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
+ko.virtualElements.allowedBindings['foreach'] = true;// If you want to make a custom template engine,
+// 
+// [1] Inherit from this class (like ko.nativeTemplateEngine does)
+// [2] Override 'renderTemplateSource', supplying a function with this signature:
+//
+//        function (templateSource, bindingContext, options) {
+//            // - templateSource.text() is the text of the template you should render
+//            // - bindingContext.$data is the data you should pass into the template
+//            //   - you might also want to make bindingContext.$parent, bindingContext.$parents, 
+//            //     and bindingContext.$root available in the template too
+//            // - options gives you access to any other properties set on "data-bind: { template: options }"
+//            //
+//            // Return value: an array of DOM nodes
+//        }
+//
+// [3] Override 'createJavaScriptEvaluatorBlock', supplying a function with this signature:
+//
+//        function (script) {
+//            // Return value: Whatever syntax means "Evaluate the JavaScript statement 'script' and output the result"
+//            //               For example, the jquery.tmpl template engine converts 'someScript' to '${ someScript }' 
+//        }
+//
+//     This is only necessary if you want to allow data-bind attributes to reference arbitrary template variables.
+//     If you don't want to allow that, you can set the property 'allowTemplateRewriting' to false (like ko.nativeTemplateEngine does)
+//     and then you don't need to override 'createJavaScriptEvaluatorBlock'.
+
+ko.templateEngine = function () { };
+
+ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
+    throw "Override renderTemplateSource in your ko.templateEngine subclass";
+};
+
+ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script) {
+    throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";    
+};
+
+ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
+    // Named template
+    if (typeof template == "string") {
+        var elem = document.getElementById(template);
+        if (!elem)
+            throw new Error("Cannot find template with ID " + template);
+        return new ko.templateSources.domElement(elem);
+    } else if ((template.nodeType == 1) || (template.nodeType == 8)) {
+        // Anonymous template
+        return new ko.templateSources.anonymousTemplate(template);
+    } else
+        throw new Error("Unrecognised template type: " + template);
+};
+
+ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options) {
+    var templateSource = this['makeTemplateSource'](template);
+    return this['renderTemplateSource'](templateSource, bindingContext, options);
+};
+
+ko.templateEngine.prototype['isTemplateRewritten'] = function (template) {
+    // Skip rewriting if requested
+    if (this['allowTemplateRewriting'] === false)
+        return true;
+    
+    // Perf optimisation - see below
+    if (this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
+        return true;
+    
+    return this['makeTemplateSource'](template)['data']("isRewritten");
+};
+
+ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback) {
+    var templateSource = this['makeTemplateSource'](template);          
+    var rewritten = rewriterCallback(templateSource['text']());
+    templateSource['text'](rewritten);
+    templateSource['data']("isRewritten", true);
+    
+    // Perf optimisation - for named templates, track which ones have been rewritten so we can
+    // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
+    if (typeof template == "string") {
+        this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
+        this.knownRewrittenTemplates[template] = true;            
     }
 };
 
 ko.exportSymbol('ko.templateEngine', ko.templateEngine);
-
 ko.templateRewriting = (function () {
-    var memoizeBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;
+    var memoizeDataBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;
+    var memoizeVirtualContainerBindingSyntaxRegex = /<!--\s*ko\b\s*([\s\S]*?)\s*-->/g;
+
+    function validateDataBindValuesForRewriting(keyValueArray) {
+        var allValidators = ko.jsonExpressionRewriting.bindingRewriteValidators;
+        for (var i = 0; i < keyValueArray.length; i++) {
+            var key = keyValueArray[i]['key'];
+            if (allValidators.hasOwnProperty(key)) {
+                var validator = allValidators[key];    
+
+                if (typeof validator === "function") {
+                    var possibleErrorMessage = validator(keyValueArray[i]['value']);
+                    if (possibleErrorMessage)
+                        throw new Error(possibleErrorMessage);
+                } else if (!validator) {
+                    throw new Error("This template engine does not support the '" + key + "' binding within its templates");
+                }                
+            }
+        }
+    }
+
+    function constructMemoizedTagReplacement(dataBindAttributeValue, tagToRetain, templateEngine) {
+        var dataBindKeyValueArray = ko.jsonExpressionRewriting.parseObjectLiteral(dataBindAttributeValue);
+        validateDataBindValuesForRewriting(dataBindKeyValueArray);
+        var rewrittenDataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindKeyValueArray);
+
+        // For no obvious reason, Opera fails to evaluate rewrittenDataBindAttributeValue unless it's wrapped in an additional 
+        // anonymous function, even though Opera's built-in debugger can evaluate it anyway. No other browser requires this 
+        // extra indirection.
+        var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
+            return (function() { return { " + rewrittenDataBindAttributeValue + " } })() \
+        })";
+        return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;        
+    }
 
     return {
         ensureTemplateIsRewritten: function (template, templateEngine) {
@@ -1704,25 +2389,17 @@ ko.templateRewriting = (function () {
         },
 
         memoizeBindingAttributeSyntax: function (htmlString, templateEngine) {
-            return htmlString.replace(memoizeBindingAttributeSyntaxRegex, function () {
-                var tagToRetain = arguments[1];
-                var dataBindAttributeValue = arguments[6];
-
-                dataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindAttributeValue);
-
-                // For no obvious reason, Opera fails to evaluate dataBindAttributeValue unless it's wrapped in an additional anonymous function,
-                // even though Opera's built-in debugger can evaluate it anyway. No other browser requires this extra indirection.
-                var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
-                    return (function() { return { " + dataBindAttributeValue + " } })() \
-                })";
-                return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
+            return htmlString.replace(memoizeDataBindingAttributeSyntaxRegex, function () {
+                return constructMemoizedTagReplacement(/* dataBindAttributeValue: */ arguments[6], /* tagToRetain: */ arguments[1], templateEngine);
+            }).replace(memoizeVirtualContainerBindingSyntaxRegex, function() {
+                return constructMemoizedTagReplacement(/* dataBindAttributeValue: */ arguments[1], /* tagToRetain: */ "<!-- ko -->", templateEngine);              
             });
         },
 
         applyMemoizedBindingsToNextSibling: function (bindings) {
-            return ko.memoization.memoize(function (domNode, viewModel) {
+            return ko.memoization.memoize(function (domNode, bindingContext) {
                 if (domNode.nextSibling)
-                    ko.applyBindingsToNode(domNode.nextSibling, bindings, viewModel);
+                    ko.applyBindingsToNode(domNode.nextSibling, bindings, bindingContext);
             });
         }
     }
@@ -1730,7 +2407,73 @@ ko.templateRewriting = (function () {
 
 ko.exportSymbol('ko.templateRewriting', ko.templateRewriting);
 ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
-
+(function() { 
+    // A template source represents a read/write way of accessing a template. This is to eliminate the need for template loading/saving
+    // logic to be duplicated in every template engine (and means they can all work with anonymous templates, etc.)
+    //
+    // Two are provided by default:
+    //  1. ko.templateSources.domElement       - reads/writes the text content of an arbitrary DOM element
+    //  2. ko.templateSources.anonymousElement - uses ko.utils.domData to read/write text *associated* with the DOM element, but 
+    //                                           without reading/writing the actual element text content, since it will be overwritten
+    //                                           with the rendered template output.
+    // You can implement your own template source if you want to fetch/store templates somewhere other than in DOM elements.
+    // Template sources need to have the following functions:
+    //   text() 			- returns the template text from your storage location
+    //   text(value)		- writes the supplied template text to your storage location
+    //   data(key)			- reads values stored using data(key, value) - see below
+    //   data(key, value)	- associates "value" with this template and the key "key". Is used to store information like "isRewritten".
+    //
+    // Once you've implemented a templateSource, make your template engine use it by subclassing whatever template engine you were
+    // using and overriding "makeTemplateSource" to return an instance of your custom template source.
+    
+    ko.templateSources = {};
+    
+    // ---- ko.templateSources.domElement -----
+    
+    ko.templateSources.domElement = function(element) {
+        this.domElement = element;
+    }
+    
+    ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
+        if (arguments.length == 0) {
+            return this.domElement.tagName.toLowerCase() == "script" ? this.domElement.text : this.domElement.innerHTML;
+        } else {
+            var valueToWrite = arguments[0];
+            if (this.domElement.tagName.toLowerCase() == "script")
+                this.domElement.text = valueToWrite;
+            else
+                this.domElement.innerHTML = valueToWrite;
+        }
+    };
+    
+    ko.templateSources.domElement.prototype['data'] = function(key /*, valueToWrite */) {
+        if (arguments.length === 1) {
+            return ko.utils.domData.get(this.domElement, "templateSourceData_" + key);
+        } else {
+            ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
+        }
+    };
+    
+    // ---- ko.templateSources.anonymousTemplate -----
+    
+    var anonymousTemplatesDomDataKey = "__ko_anon_template__";
+    ko.templateSources.anonymousTemplate = function(element) {		
+        this.domElement = element;
+    }
+    ko.templateSources.anonymousTemplate.prototype = new ko.templateSources.domElement();
+    ko.templateSources.anonymousTemplate.prototype['text'] = function(/* valueToWrite */) {
+        if (arguments.length == 0) {
+            return ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey);
+        } else {
+            var valueToWrite = arguments[0];
+            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, valueToWrite);
+        }
+    };
+    
+    ko.exportSymbol('ko.templateSources', ko.templateSources);
+    ko.exportSymbol('ko.templateSources.domElement', ko.templateSources.domElement);
+    ko.exportSymbol('ko.templateSources.anonymousTemplate', ko.templateSources.anonymousTemplate);
+})();
 (function () {
     var _templateEngine;
     ko.setTemplateEngine = function (templateEngine) {
@@ -1739,43 +2482,77 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
         _templateEngine = templateEngine;
     }
 
+    function invokeForEachNodeOrCommentInParent(nodeArray, parent, action) {
+        for (var i = 0; node = nodeArray[i]; i++) {
+            if (node.parentNode !== parent) // Skip anything that has been removed during binding
+                continue;
+            if ((node.nodeType === 1) || (node.nodeType === 8))
+                action(node);
+        }        
+    }
+
+    ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {
+        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element. 
+        // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g., 
+        // if a binding inserts siblings), and for each:
+        // (1) Does a regular "applyBindings" to associate bindingContext with this node and to activate any non-memoized bindings
+        // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
+
+        var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
+        var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
+        
+        // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
+        // whereas a regular applyBindings won't introduce new memoized nodes
+        
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+            ko.applyBindings(bindingContext, node);
+        });
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+            ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);            
+        });        
+    }
+
     function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
         return nodeOrNodeArray.nodeType ? nodeOrNodeArray
                                         : nodeOrNodeArray.length > 0 ? nodeOrNodeArray[0]
                                         : null;
     }
 
-    function executeTemplate(targetNodeOrNodeArray, renderMode, template, data, options) {
-        var dataForTemplate = ko.utils.unwrapObservable(data);
-
+    function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options) {
         options = options || {};
         var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
-        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, dataForTemplate, options);
+        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options);
 
         // Loosely check result is an array of DOM nodes
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
             throw "Template engine must return an array of DOM nodes";
 
-        if (renderedNodesArray)
-            ko.utils.arrayForEach(renderedNodesArray, function (renderedNode) {
-                ko.memoization.unmemoizeDomNodeAndDescendants(renderedNode, [data]);
-            });
-
+        var haveAddedNodesToParent = false;
         switch (renderMode) {
-            case "replaceChildren": ko.utils.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); break;
-            case "replaceNode": ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); break;
+            case "replaceChildren": 
+                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
+                haveAddedNodesToParent = true;
+                break;
+            case "replaceNode": 
+                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
+                haveAddedNodesToParent = true;
+                break;
             case "ignoreTargetNode": break;
-            default: throw new Error("Unknown renderMode: " + renderMode);
+            default: 
+                throw new Error("Unknown renderMode: " + renderMode);
         }
 
-        if (options['afterRender'])
-            options['afterRender'](renderedNodesArray, data);
+        if (haveAddedNodesToParent) {
+            ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+            if (options['afterRender'])
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);            
+        }
 
         return renderedNodesArray;
     }
 
-    ko.renderTemplate = function (template, data, options, targetNodeOrNodeArray, renderMode) {
+    ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
         if ((options['templateEngine'] || _templateEngine) == undefined)
             throw "Set a template engine before calling renderTemplate";
@@ -1789,10 +2566,15 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             
             return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
                 function () {
-                    // Support selecting template as a function of the data being rendered
-                    var templateName = typeof(template) == 'function' ? template(data) : template; 
+                    // Ensure we've got a proper binding context to work with
+                    var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
+                        ? dataOrBindingContext
+                        : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
-                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, data, options);
+                    // Support selecting template as a function of the data being rendered
+                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template; 
+
+                    var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
                     if (renderMode == "replaceNode") {
                         targetNodeOrNodeArray = renderedNodesArray;
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
@@ -1804,12 +2586,24 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
             return ko.memoization.memoize(function (domNode) {
-                ko.renderTemplate(template, data, options, domNode, "replaceNode");
+                ko.renderTemplate(template, dataOrBindingContext, options, domNode, "replaceNode");
             });
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode) {
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
+        var createInnerBindingContext = function(arrayValue) {
+            return parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+        };
+
+        // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
+        var activateBindingsCallback = function(arrayValue, addedNodesArray) {
+            var bindingContext = createInnerBindingContext(arrayValue);
+            ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
+            if (options['afterRender'])
+                options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
+        };
+         
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -1823,9 +2617,9 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
                 // Support selecting template as a function of the data being rendered
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
-                
-                return executeTemplate(null, "ignoreTargetNode", templateName, arrayValue, options);
-            }, options);
+                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
+            }, options, activateBindingsCallback);
+            
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
@@ -1838,30 +2632,72 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
     }
     
     ko.bindingHandlers['template'] = {
-        'update': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        'init': function(element, valueAccessor) {
+            // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            var templateName = typeof bindingValue == "string" ? bindingValue : bindingValue.name;
+            if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
+                // It's an anonymous template - store the element contents
+                new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
+            }
+            return { 'controlsDescendantBindings': true };
+        },
+        'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            var templateName; 
+            var shouldDisplay = true;
             
-            var templateSubscription;
+            if (typeof bindingValue == "string") {
+                templateName = bindingValue;
+            } else {
+                templateName = bindingValue.name;
+                
+                // Support "if"/"ifnot" conditions
+                if ('if' in bindingValue)
+                    shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
+                if ('ifnot' in bindingValue)
+                    shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
+            }    
+            
+            var templateSubscription = null;
+            
             if (typeof bindingValue['foreach'] != "undefined") {
-                // Render once for each data point
-                templateSubscription = ko.renderTemplateForEach(templateName, bindingValue['foreach'] || [], { 'templateOptions': bindingValue['templateOptions'], 'afterAdd': bindingValue['afterAdd'], 'beforeRemove': bindingValue['beforeRemove'], 'includeDestroyed': bindingValue['includeDestroyed'], 'afterRender': bindingValue['afterRender'] }, element);
+                // Render once for each data point (treating data set as empty if shouldDisplay==false)
+                var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
+                templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
             }
             else {
-                // Render once for this single data point (or use the viewModel if no data was provided)
-                var templateData = bindingValue['data'];
-                templateSubscription = ko.renderTemplate(templateName, typeof templateData == "undefined" ? viewModel : templateData, { 'templateOptions': bindingValue['templateOptions'], 'afterRender': bindingValue['afterRender'] }, element);
+                if (shouldDisplay) {
+                    // Render once for this single data point (or use the viewModel if no data was provided)
+                    var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
+                        ? bindingContext.createChildContext(ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        : bindingContext;                                                                    // Given no explicit 'data' value, we retain the same binding context
+                    templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
+                } else
+                    ko.virtualElements.emptyNode(element);
             }
             
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
             disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
         }
     };
+
+    // Anonymous templates can't be rewritten. Give a nice error message if you try to do it.
+    ko.jsonExpressionRewriting.bindingRewriteValidators['template'] = function(bindingValue) {
+        var parsedBindingValue = ko.jsonExpressionRewriting.parseObjectLiteral(bindingValue);
+
+        if ((parsedBindingValue.length == 1) && parsedBindingValue[0]['unknown'])
+            return null; // It looks like a string literal, not an object literal, so treat it as a named template (which is allowed for rewriting)
+
+        if (ko.jsonExpressionRewriting.keyValueArrayContainsKey(parsedBindingValue, "name"))
+            return null; // Named templates can be rewritten, so return "no error"
+        return "This template engine does not support anonymous templates nested within its templates";
+    };
+
+    ko.virtualElements.allowedBindings['template'] = true;
 })();
 
 ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
 ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
-
 (function () {
     // Simple calculation based on Levenshtein distance.
     function calculateEditDistanceMatrix(oldArray, newArray, maxAllowedDistance) {
@@ -1953,15 +2789,21 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
     //   so that its children is again the concatenation of the mappings of the array elements, but don't re-map any array elements that we
     //   previously mapped - retain those nodes, and just insert/delete other ones
 
-    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap) {
+    // "callbackAfterAddingNodes" will be invoked after any "mapping"-generated nodes are inserted into the container node
+    // You can use this, for example, to activate bindings on those nodes.
+
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         var dependentObservable = ko.dependentObservable(function() {
             var newMappedNodes = mapping(valueToMap) || [];
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
-            if (mappedNodes.length > 0)
+            if (mappedNodes.length > 0) {
                 ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+                if (callbackAfterAddingNodes)
+                    callbackAfterAddingNodes(valueToMap, newMappedNodes);
+            }
             
             // Replace the contents of the mappedNodes array, thereby updating the record
             // of which nodes would be deleted if valueToMap was itself later removed
@@ -1970,13 +2812,22 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
         }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
         return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
     }
+    
+    var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
         // Compare the provided array against the previous one
         array = array || [];
         options = options || {};
-        var isFirstExecution = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") === undefined;
-        var lastMappingResult = ko.utils.domData.get(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult") || [];
+        var isFirstExecution = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) === undefined;
+        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey);
+
+        // If this is the first invocation, we can't merge with any pre-existent DOM, so empty the target node entirely
+        if (lastMappingResult === undefined) {
+            ko.virtualElements.emptyNode(domNode);
+            lastMappingResult = [];
+        }
+
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
         var editScript = ko.utils.compareArrays(lastArray, array);
 
@@ -2014,7 +2865,8 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                     break;
 
                 case "added": 
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, editScript[i].value);
+                    var valueToMap = editScript[i].value;
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
                     var mappedNodes = mapData.mappedNodes;
                     
                     // On the first evaluation, insert the nodes at the current insertion point
@@ -2027,20 +2879,16 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                           value: editScript[i].value
                         });
                         if (insertAfterNode == null) {
-                            // Insert at beginning
-                            if (domNode.firstChild)
-                                domNode.insertBefore(node, domNode.firstChild);
-                            else
-                                domNode.appendChild(node);
+                            // Insert "node" (the newly-created node) as domNode's first child
+                            ko.virtualElements.prepend(domNode, node);
                         } else {
-                            // Insert after insertion point
-                            if (insertAfterNode.nextSibling)
-                                domNode.insertBefore(node, insertAfterNode.nextSibling);
-                            else
-                                domNode.appendChild(node);
+                            // Insert "node" into "domNode" immediately after "insertAfterNode"
+                            ko.virtualElements.insertAfter(domNode, node, insertAfterNode);
                         }
                         insertAfterNode = node;
-                    }    		
+                    } 
+                    if (callbackAfterAddingNodes)
+                        callbackAfterAddingNodes(valueToMap, mappedNodes);
                     break;
             }
         }
@@ -2061,130 +2909,115 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
         }
         if (!invokedBeforeRemoveCallback)
             ko.utils.arrayForEach(nodesToDelete, function (node) {
-                if (node.element.parentNode)
-                    node.element.parentNode.removeChild(node.element);
+                ko.removeNode(node.element);
             });
 
         // Store a copy of the array items we just considered so we can difference it next time
-        ko.utils.domData.set(domNode, "setDomNodeChildrenFromArrayMapping_lastMappingResult", newMappingResult);
+        ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
     }
 })();
 
 ko.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
+ko.nativeTemplateEngine = function () {
+    this['allowTemplateRewriting'] = false;
+}
 
-ko.jqueryTmplTemplateEngine = function () {
-    // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
-    // doesn't expose a version number, so we have to infer it.
-    this.jQueryTmplVersion = (function() {        
-        if ((typeof(jQuery) == "undefined") || !jQuery['tmpl'])
-            return 0;
-        // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
-        if (jQuery['tmpl']['tag']) {
-            if (jQuery['tmpl']['tag']['tmpl'] && jQuery['tmpl']['tag']['tmpl']['open']) {
-                if (jQuery['tmpl']['tag']['tmpl']['open'].toString().indexOf('__') >= 0) {
-                    return 3; // Since 1.0.0pre, custom tags should append markup to an array called "__"
-                }
-            }
-            return 2; // Prior to 1.0.0pre, custom tags should append markup to an array called "_"
-        }
-        return 1; // Very old version doesn't have an extensible tag system
-    })();
-
-    this['getTemplateNode'] = function (template) {
-        var templateNode = document.getElementById(template);
-        if (templateNode == null)
-            throw new Error("Cannot find template with ID=" + template);
-        return templateNode;
-    }
-
-    // These two only needed for jquery-tmpl v1
-    var aposMarker = "__ko_apos__";
-    var aposRegex = new RegExp(aposMarker, "g");
-    
-    this['renderTemplate'] = function (templateId, data, options) {
-        options = options || {};
-        if (this.jQueryTmplVersion == 0)
-            throw new Error("jquery.tmpl not detected.\nTo use KO's default template engine, reference jQuery and jquery.tmpl. See Knockout installation documentation for more details.");
-        
-        if (this.jQueryTmplVersion == 1) {    	
-            // jquery.tmpl v1 doesn't like it if the template returns just text content or nothing - it only likes you to return DOM nodes.
-            // To make things more flexible, we can wrap the whole template in a <script> node so that jquery.tmpl just processes it as
-            // text and doesn't try to parse the output. Then, since jquery.tmpl has jQuery as a dependency anyway, we can use jQuery to
-            // parse that text into a document fragment using jQuery.clean().        
-            var templateTextInWrapper = "<script type=\"text/html\">" + this['getTemplateNode'](templateId).text + "</script>";
-            var renderedMarkupInWrapper = jQuery['tmpl'](templateTextInWrapper, data);
-            var renderedMarkup = renderedMarkupInWrapper[0].text.replace(aposRegex, "'");;
-            return jQuery['clean']([renderedMarkup], document);
-        }
-        
-        // It's easier with jquery.tmpl v2 and later - it handles any DOM structure
-        if (!(templateId in jQuery['template'])) {
-            // Precache a precompiled version of this template (don't want to reparse on every render)
-            var templateText = this['getTemplateNode'](templateId).text;
-            jQuery['template'](templateId, templateText);
-        }        
-        data = [data]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
-        
-        var resultNodes = jQuery['tmpl'](templateId, data, options['templateOptions']);
-        resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
-        jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
-        return resultNodes; 
-    },
-
-    this['isTemplateRewritten'] = function (templateId) {
-        // It must already be rewritten if we've already got a cached version of it
-        // (this optimisation helps on IE < 9, because it greatly reduces the number of getElementById calls)
-        if (templateId in jQuery['template'])
-            return true;
-        
-        return this['getTemplateNode'](templateId).isRewritten === true;
-    },
-
-    this['rewriteTemplate'] = function (template, rewriterCallback) {
-        var templateNode = this['getTemplateNode'](template);
-        var rewritten = rewriterCallback(templateNode.text);     
-        
-        if (this.jQueryTmplVersion == 1) {
-            // jquery.tmpl v1 falls over if you use single-quotes, so replace these with a temporary marker for template rendering, 
-            // and then replace back after the template was rendered. This is slightly complicated by the fact that we must not interfere
-            // with any code blocks - only replace apos characters outside code blocks.
-            rewritten = ko.utils.stringTrim(rewritten);
-            rewritten = rewritten.replace(/([\s\S]*?)(\${[\s\S]*?}|{{[\=a-z][\s\S]*?}}|$)/g, function(match) {
-                // Called for each non-code-block followed by a code block (or end of template)
-                var nonCodeSnippet = arguments[1];
-                var codeSnippet = arguments[2];
-                return nonCodeSnippet.replace(/\'/g, aposMarker) + codeSnippet;
-            });         	
-        }
-        
-        templateNode.text = rewritten;
-        templateNode.isRewritten = true;
-    },
-
-    this['createJavaScriptEvaluatorBlock'] = function (script) {
-        if (this.jQueryTmplVersion == 1)
-            return "{{= " + script + "}}";
-            
-        // From v2, jquery-tmpl does some parameter parsing that fails on nontrivial expressions.
-        // Prevent it from messing with the code by wrapping it in a further function.
-        return "{{ko_code ((function() { return " + script + " })()) }}";
-    },
-
-    this.addTemplate = function (templateName, templateMarkup) {
-        document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
-    }
-    ko.exportProperty(this, 'addTemplate', this.addTemplate);
-    
-    if (this.jQueryTmplVersion > 1) {
-        jQuery['tmpl']['tag']['ko_code'] = {
-            open: (this.jQueryTmplVersion < 3 ? "_" : "__") + ".push($1 || '');"
-        };
-    }    
+ko.nativeTemplateEngine.prototype = new ko.templateEngine();
+ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
+    var templateText = templateSource.text();
+    return ko.utils.parseHtmlFragment(templateText);
 };
 
-ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
+ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
+ko.setTemplateEngine(ko.nativeTemplateEngine.instance);
 
-// Use this one by default
-ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
+ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() {
+    ko.jqueryTmplTemplateEngine = function () {
+        // Detect which version of jquery-tmpl you're using. Unfortunately jquery-tmpl 
+        // doesn't expose a version number, so we have to infer it.
+        // Note that as of Knockout 1.3, we only support jQuery.tmpl 1.0.0pre and later,
+        // which KO internally refers to as version "2", so older versions are no longer detected.
+        var jQueryTmplVersion = this.jQueryTmplVersion = (function() {      
+            if ((typeof(jQuery) == "undefined") || !(jQuery['tmpl']|| jQuery['render']))
+                return 0;
+            // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
+            try {
+                if (jQuery['render'])
+                    return 3; // Current preview of jsRender
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+                if (jQuery['tmpl']['tag']['tmpl']['open'].toString().indexOf('__') >= 0) {
+                    // Since 1.0.0pre, custom tags should append markup to an array called "__"
+                    return 2; // Final version of jquery.tmpl
+                }        	
+            } catch(ex) { /* Apparently not the version we were looking for */ }
+            
+            return 1; // Any older version that we don't support
+        })();
+        
+        function ensureHasReferencedJQueryTemplates() {
+            if (jQueryTmplVersion < 2)
+                throw new Error("Your version of jQuery.tmpl is too old. Please upgrade to jQuery.tmpl 1.0.0pre or later.");
+        }
+
+        function executeTemplate(compiledTemplate, data, jQueryTemplateOptions) {
+            if (jQueryTmplVersion < 3)
+                return jQuery['tmpl'](compiledTemplate, data, jQueryTemplateOptions);
+
+            var renderedHtml = jQuery['render'](compiledTemplate, data, jQueryTemplateOptions);
+            return jQuery(ko.utils.parseHtmlFragment(renderedHtml));
+        }
+        
+        this['renderTemplateSource'] = function(templateSource, bindingContext, options) {
+            options = options || {};
+            ensureHasReferencedJQueryTemplates();
+            
+            // Ensure we have stored a precompiled version of this template (don't want to reparse on every render)
+            var precompiled = templateSource['data']('precompiled');
+            if (!precompiled) {
+                var templateText = templateSource.text() || "";
+                // Wrap in "with($whatever.koBindingContext) { ... }"
+                var contextContainer = jQueryTmplVersion == 2 ? "$item" : "$ctx";
+                templateText = "{{ko_with " + contextContainer + ".koBindingContext}}" + templateText + "{{/ko_with}}";
+
+                precompiled = jQuery['template'](null, templateText);
+                templateSource['data']('precompiled', precompiled);
+            }
+            
+            var data = [bindingContext['$data']]; // Prewrap the data in an array to stop jquery.tmpl from trying to unwrap any arrays
+            var jQueryTemplateOptions = jQuery['extend']({ 'koBindingContext': bindingContext }, options['templateOptions']);
+
+            var resultNodes = executeTemplate(precompiled, data, jQueryTemplateOptions);
+            resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
+            jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
+            return resultNodes;     		
+        };
+        
+        this['createJavaScriptEvaluatorBlock'] = function(script) {
+            return "{{ko_code ((function() { return " + script + " })()) }}";
+        };
+        
+        this['addTemplate'] = function(templateName, templateMarkup) {
+            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
+        };
+    
+        if (jQueryTmplVersion >= 2) {
+            var tagContainer = jQueryTmplVersion == 2 ? "tmpl" : "tmplSettings";
+            jQuery[tagContainer]['tag']['ko_code'] = {
+                open: "__.push($1 || '');"
+            };
+            jQuery[tagContainer]['tag']['ko_with'] = {
+                open: "with($1) {",
+                close: "} "
+            };
+        }
+    };
+    
+    ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
+    
+    // Use this one by default *only if jquery.tmpl is referenced*
+    var jqueryTmplTemplateEngineInstance = new ko.jqueryTmplTemplateEngine();
+    if (jqueryTmplTemplateEngineInstance.jQueryTmplVersion > 0)
+        ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
+    
+    ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
+})();})(window);                  
