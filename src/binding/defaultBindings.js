@@ -430,6 +430,17 @@ ko.bindingHandlers['hasfocus'] = {
     }
 };
 
+function getFirstControlFlowBoundValue(element, valueAccessor, defaultValue) {
+    // The "with", "if", and "ifnot" bindings all special-case their first "update" by applying bindings directly to their child nodes.
+    // They only render their anonymous template on subsequent updates. This means things like event handlers are preserved until a forced refresh.
+    var controlFlowBoundValueDomDataKey = "__ko_controlflow__";
+    if (ko.utils.domData.get(element, controlFlowBoundValueDomDataKey) === undefined) {
+        ko.utils.domData.set(element, controlFlowBoundValueDomDataKey, false);
+        return ko.utils.unwrapObservable(valueAccessor());            
+    }
+    return defaultValue;
+}
+
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
@@ -439,7 +450,12 @@ ko.bindingHandlers['with'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
+        if (initialValue)
+            ko.applyBindingsToDescendants(bindingContext.createChildContext(initialValue), element, /* descendantsHaveOwnBindingContext: */ true);
+        else
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['with'] = false; // Can't rewrite control flow bindings
@@ -454,7 +470,12 @@ ko.bindingHandlers['if'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is trueish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor);       
+        if (initialValue)
+            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
+        else        
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['if'] = false; // Can't rewrite control flow bindings
@@ -469,7 +490,12 @@ ko.bindingHandlers['ifnot'] = {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor));
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        // The very first time "update" runs, apply bindings directly to descendants without rendering the template (if the value is falseish)
+        var initialValue = getFirstControlFlowBoundValue(element, valueAccessor, /* defaultValue: */ true);       
+        if (!initialValue)
+            ko.applyBindingsToDescendants(bindingContext, element, /* descendantsHaveOwnBindingContext: */ false);
+        else        
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['ifnot'] = false; // Can't rewrite control flow bindings
