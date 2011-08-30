@@ -1347,5 +1347,43 @@ describe('Binding: Foreach', {
         value_of(ko.contextFor(firstInnerSpan).$parent.children()[2]).should_be("A3");
         value_of(ko.contextFor(firstInnerSpan).$parents[1].items()[1].children()[1]).should_be("B2");
         value_of(ko.contextFor(firstInnerSpan).$root.rootVal).should_be("ROOTVAL");        
+    },
+
+    'Should be able to nest \'if\' inside \'foreach\' defined using containerless templates' : function() {
+        testNode.innerHTML = "<ul></ul>";
+        testNode.childNodes[0].appendChild(document.createComment("ko foreach: items"));
+        testNode.childNodes[0].appendChild(document.createElement("li"));        
+        testNode.childNodes[0].childNodes[1].innerHTML = "<span data-bind='text: childval.childprop'></span>";
+        testNode.childNodes[0].childNodes[1].insertBefore(document.createComment("ko if: childval"), testNode.childNodes[0].childNodes[1].firstChild);
+        testNode.childNodes[0].childNodes[1].appendChild(document.createComment("/ko"));
+        testNode.childNodes[0].appendChild(document.createComment("/ko"));
+
+        var viewModel = {
+            items: [
+                { childval: {childprop: 123 } },
+                { childval: null },
+                { childval: {childprop: 456 } }
+            ]
+        };        
+        ko.applyBindings(viewModel, testNode);        
+
+        value_of(testNode).should_contain_html('<ul>'
+                                                + '<!--ko foreach: items-->'
+                                                   + '<li>'
+                                                      + '<!--ko if: childval-->'
+                                                         + '<span data-bind="text: childval.childprop">123</span>'
+                                                      + '<!--/ko-->'
+                                                   + '</li>'
+                                                   + '<li>'
+                                                      + '<!--ko if: childval-->'
+                                                      + '<!--/ko-->'
+                                                   + '</li>'                                                   
+                                                   + '<li>'
+                                                      + '<!--ko if: childval-->'
+                                                         + '<span data-bind="text: childval.childprop">456</span>'
+                                                      + '<!--/ko-->'
+                                                   + '</li>'
+                                                + '<!--/ko-->'
+                                             + '</ul>');
     }
 });
