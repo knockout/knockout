@@ -906,18 +906,18 @@ describe('Binding: If', {
         // to avoid wiping out any event handlers you might have associated with those original DOM nodes
 
         var someItem = ko.observable({ a: 1 });
-        testNode.innerHTML = "<div data-bind='if: someItem'><span class=\"boundItem\" data-bind='text: someItem().a'></span></div>";
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem().a'></span></div>";
         var firstWithChildNode = testNode.childNodes[0].childNodes[0];
-        value_of(firstWithChildNode.className).should_be("boundItem");
+        value_of(firstWithChildNode.tagName).should_be("SPAN");
 
         // Apply bindings, and check the original node instance still exists
         ko.applyBindings({ someItem: someItem }, testNode);        
-        value_of(testNode).should_contain_html("<div data-bind=\"if: someitem\"><span class=\"bounditem\" data-bind=\"text: someitem().a\">1</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"if: someitem\"><span data-bind=\"text: someitem().a\">1</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(firstWithChildNode);
 
         // ... but if the bound value changes, we'd have a different node
         someItem({ a: 2 });
-        value_of(testNode).should_contain_html("<div data-bind=\"if: someitem\"><span class=\"bounditem\" data-bind=\"text: someitem().a\">2</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"if: someitem\"><span data-bind=\"text: someitem().a\">2</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_not_be(firstWithChildNode);        
     }    
 });
@@ -974,19 +974,19 @@ describe('Binding: Ifnot', {
         // to avoid wiping out any event handlers you might have associated with those original DOM nodes
 
         var someItem = ko.observable({ a: 1 }), condition = ko.observable(false);
-        testNode.innerHTML = "<div data-bind='ifnot: condition'><span class=\"boundItem\" data-bind='text: someItem().a'></span></div>";
+        testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem().a'></span></div>";
         var firstWithChildNode = testNode.childNodes[0].childNodes[0];
-        value_of(firstWithChildNode.className).should_be("boundItem");
+        value_of(firstWithChildNode.tagName).should_be("SPAN");
 
         // Apply bindings, and check the original node instance still exists
         ko.applyBindings({ someItem: someItem, condition: condition }, testNode);        
-        value_of(testNode).should_contain_html("<div data-bind=\"ifnot: condition\"><span class=\"bounditem\" data-bind=\"text: someitem().a\">1</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"ifnot: condition\"><span data-bind=\"text: someitem().a\">1</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(firstWithChildNode);
 
         // ... but if the bound value changes, we'd have a different node
         condition(true);
         condition(false);
-        value_of(testNode).should_contain_html("<div data-bind=\"ifnot: condition\"><span class=\"bounditem\" data-bind=\"text: someitem().a\">1</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"ifnot: condition\"><span data-bind=\"text: someitem().a\">1</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_not_be(firstWithChildNode);        
     }
 });
@@ -1058,18 +1058,18 @@ describe('Binding: With', {
         // to avoid wiping out any event handlers you might have associated with those original DOM nodes
 
         var someItem = ko.observable({ a: 1 });
-        testNode.innerHTML = "<div data-bind='with: someItem'><span class=\"boundItem\" data-bind='text: a'></span></div>";
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: a'></span></div>";
         var firstWithChildNode = testNode.childNodes[0].childNodes[0];
-        value_of(firstWithChildNode.className).should_be("boundItem");
+        value_of(firstWithChildNode.tagName).should_be("SPAN");
 
         // Apply bindings, and check the original node instance still exists
         ko.applyBindings({ someItem: someItem }, testNode);        
-        value_of(testNode).should_contain_html("<div data-bind=\"with: someitem\"><span class=\"bounditem\" data-bind=\"text: a\">1</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"with: someitem\"><span data-bind=\"text: a\">1</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(firstWithChildNode);
 
         // ... but if the "with" value changes, we'd have a different node
         someItem({ a: 2 });
-        value_of(testNode).should_contain_html("<div data-bind=\"with: someitem\"><span class=\"bounditem\" data-bind=\"text: a\">2</span></div>");
+        value_of(testNode).should_contain_html("<div data-bind=\"with: someitem\"><span data-bind=\"text: a\">2</span></div>");
         value_of(testNode.childNodes[0].childNodes[0]).should_not_be(firstWithChildNode);        
     },
     
