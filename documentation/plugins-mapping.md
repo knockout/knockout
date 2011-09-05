@@ -8,7 +8,7 @@ Knockout is designed to allow you to use arbitrary JavaScript objects as view mo
 Most applications need to fetch data from a backend server. Since the server doesn't have any concept of observables, it will just supply a plain JavaScript object (usually serialized as JSON). The mapping plugin gives you a straightforward way to map that plain JavaScript object into a view model with the appropriate observables. This is an alternative to manually writing your own JavaScript code that constructs a view model based on some data you've fetched from the server.
 
 {% capture plugin_download_link %}
- * __[Version 1.0](https://github.com/SteveSanderson/knockout.mapping/tree/master/build/output)__ (6.4kb minified)
+ * __[Version 2.0](https://github.com/SteveSanderson/knockout.mapping/tree/master/build/output)__ (8.6kb minified)
 {% endcapture %}
 {% include plugin-download-link.html %}
 
@@ -53,10 +53,10 @@ To create a view model via the mapping plugin, replace the creation of `viewMode
 
 	var viewModel = ko.mapping.fromJS(data);
 	
-This automatically creates observable properties for each of the properties on `data`. Then, every time you receive new data from the server, you can update all the properties on `viewModel` in one step by using the `ko.mapping.updateFromJS` function:
+This automatically creates observable properties for each of the properties on `data`. Then, every time you receive new data from the server, you can update all the properties on `viewModel` in one step by calling the `ko.mapping.fromJS` function again:
 
 	// Every time data is received from the server:
-	ko.mapping.updateFromJS(viewModel, data);
+	ko.mapping.fromJS(data, viewModel);
 
 ### How things are mapped
 
@@ -73,13 +73,13 @@ This will create an unmapped object containing only the properties of the mapped
 
 ### Working with JSON strings
 
-If your Ajax call returns a JSON string (and does not deserialize it into a JavaScript object), then you can use the functions `ko.mapping.fromJSON` and `ko.mapping.updateFromJSON` to create and update your view model instead. To unmap, you can use `ko.mapping.toJSON`.
+If your Ajax call returns a JSON string (and does not deserialize it into a JavaScript object), then you can use the function `ko.mapping.fromJSON` to create and update your view model instead. To unmap, you can use `ko.mapping.toJSON`.
 
 Apart from the fact that they work with JSON strings instead of JS objects these functions are completely identical to their `*JS` counterparts.
  
 ### Advanced usage
 
-Sometimes it may be necessary to have more control over how the mapping is performed. This is accomplished using *mapping options*. They can be specified during the `ko.mapping.fromJS` call. In subsequent `ko.mapping.updateFromJS` you don't need to specify them again.
+Sometimes it may be necessary to have more control over how the mapping is performed. This is accomplished using *mapping options*. They can be specified during the `ko.mapping.fromJS` call. In subsequent calls you don't need to specify them again.
 
 Here a few situations in which you might want to use these mapping options.
 
@@ -109,7 +109,7 @@ Now, let's say the data is updated to be without any typos:
 	
 Two things have happened here: `name` was changed from `Scot` to `Scott` and `children[0].name` was changed from `Alicw` to the typo-free `Alice`. You can update `viewModel` based on this new data:
 
-	ko.mapping.updateFromJS(viewModel, data);
+	ko.mapping.fromJS(data, viewModel);
 
 And `name` would have changed as expected. However, in the `children` array, the child (Alicw) would have been completely removed and a new one (Alice) added. This is not completely what you would have expected. Instead, you would have expected that only the `name` property of the child was updated from `Alicw` to `Alice`, not that the entire child was replaced!
 
@@ -166,6 +166,28 @@ Of course, inside the `create` callback you can do another call to `ko.mapping.f
 		}, this);
 	}
 
+###### Customizing object updating using "update"
+
+You can also customize how an object is updated by specifying an `update` callback. It will receive the object it is trying to update and an `options` object which is identical to the one used by the `create` callback. You should `return` the updated value.
+
+Here is an example of a configuration that will add some text to the incoming data before updating:
+
+	var data = {
+		name: 'Graham',
+	}
+
+	var mapping = {
+		'name': {
+			update: function(obj, options) {
+				return options.data + 'foo!';
+			}
+		}
+	}
+	var viewModel = ko.mapping.fromJS(data, mapping);
+	alert(viewModel.name());
+	
+This will alert `Grahamfoo!`.
+	
 ###### Ignoring certain properties using "ignore"
 
 If you want the mapping plugin to ignore some properties of your JS object (i.e. to not map them), you can specify a array of propertynames to ignore:
@@ -193,6 +215,20 @@ The `include` array you specify in the mapping options is combined with the defa
 
 	var oldOptions = ko.mapping.defaultOptions().include;
     ko.mapping.defaultOptions().include = ["alwaysIncludeThis"];
+	
+###### Copying certain properties using "copy"
+
+When converting your view model back to a JS object, by default the mapping plugin will create observables based on the rules explained [above](#how_things_are_mapped). If you want to force the mapping plugin to simply copy the property instead of making it observable, add its name to the "copy" array:
+
+	var mapping = {
+		'array': ["propertyToCopy"]
+	}
+	var viewModel = ko.mapping.fromJS(data, mapping);
+
+The `copy` array you specify in the mapping options is combined with the default `copy` array, which by default is empty. You can manipulate this default array like this:
+
+	var oldOptions = ko.mapping.defaultOptions().copy;
+    ko.mapping.defaultOptions().copy = ["alwaysCopyThis"];
 	
 ###### Specifying the update target
 
@@ -238,4 +274,10 @@ They are functionally equivalent to the regular `ko.observableArray` functions, 
 	
     result.mappedRemove({ id : 2 });
 
+The mapped observable array also exposes a `mappedCreate` function:
+
+	var newItem = result.mappedCreate({ id : 3 });
+
+It will first check if the key is already present and will throw an exception if it is. Next, it will invoke the create and update callbacks, if any, to create the new object. Finally, it will add this object to the array and return it.
+	
 {% include plugin-download-link.html %}
