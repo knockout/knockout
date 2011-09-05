@@ -170,6 +170,11 @@ Of course, inside the `create` callback you can do another call to `ko.mapping.f
 
 You can also customize how an object is updated by specifying an `update` callback. It will receive the object it is trying to update and an `options` object which is identical to the one used by the `create` callback. You should `return` the updated value.
 
+The `options` argument supplied to your `update` callback is a JavaScript object containing:
+ * `data`: The JavaScript object containing the data for this child
+ * `parent`: The parent object or array to which this child belongs
+ * `observable`: If the property is an observable, this will be set to the actual observable
+ 
 Here is an example of a configuration that will add some text to the incoming data before updating:
 
 	var data = {
@@ -178,7 +183,7 @@ Here is an example of a configuration that will add some text to the incoming da
 
 	var mapping = {
 		'name': {
-			update: function(obj, options) {
+			update: function(options) {
 				return options.data + 'foo!';
 			}
 		}
