@@ -1,10 +1,33 @@
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
-    var isIe7 = /MSIE 7/i.test(navigator.userAgent);
     var knownMouseEvents = { "click" : 1, "dblclick" : 1, "mousedown" : 1, "mouseup" : 1, "mousemove" : 1, "mouseover" : 1, "mouseout" : 1, "mouseenter" : 1, "mouseleave" : 1 };
 
+    //use IE conditionals rather than the user agent to detect the version
+    //using code from here: https://gist.github.com/527683
+    var isIe6 = false;
+    var isIe7 = false;
+    var ie = (function(){
+
+        var undef,
+            v = 3,
+            div = document.createElement('div'),
+            all = div.getElementsByTagName('i');
+        
+        while (
+            div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
+            all[0]
+        );
+        
+        return v > 4 ? v : undef;
+        
+    }());
+    
+    if(ie) {
+      isIe6 = ie === 6;
+      isIe7 = ie === 7;
+    }
+    
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
