@@ -8,7 +8,7 @@ The `enable` binding causes the associated DOM element to be enabled only when t
 
 ### Example
     <p>
-        <input type='checkbox' data-bind="value: hasCellphone" />
+        <input type='checkbox' data-bind="checked: hasCellphone" />
         I have a cellphone
     </p>
     <p>

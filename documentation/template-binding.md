@@ -146,7 +146,7 @@ For example,
     <ul data-bind='template: { name: "personTemplate",
                                foreach: employees,
                                templateOptions: { label: "Employee:",
-                                                  selectedPerson: selectedEmployee }'> </ul>
+                                                  selectedPerson: selectedEmployee } }'> </ul>
 
     <script id='personTemplate' type='text/html'>
 		<div data-bind="css: { selected: $data === $item.selectedPerson()" }">
