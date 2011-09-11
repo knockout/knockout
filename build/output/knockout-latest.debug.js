@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.3.0beta
+// Knockout JavaScript library v1.3.0ctp
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -789,7 +789,10 @@ ko.observable = function (initialValue) {
     ko.utils.extend(observable, ko.observable['fn']);    
     
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
-    
+
+	observable.isKnockoutObservable = true;
+    observable.isKnockoutWritableObservable = true;
+
     return observable;
 }
 
@@ -803,19 +806,10 @@ ko.observable['fn'] = {
 };
 
 ko.isObservable = function (instance) {
-    if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
-    if (instance.__ko_proto__ === ko.observable) return true;
-    return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
+	return (typeof instance == "function") && instance.isKnockoutObservable;
 }
 ko.isWriteableObservable = function (instance) {
-    // Observable
-    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
-        return true;
-    // Writeable dependent observable
-    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
-        return true;
-    // Anything else
-    return false;
+    return (typeof instance == "function") && instance.isKnockoutWritableObservable;
 }
 
 
@@ -1032,7 +1026,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
     }    
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
-    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
+	dependentObservable.isKnockoutObservable = true;
+    dependentObservable.isKnockoutWritableObservable = dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
         if (disposeWhenNodeIsRemoved)
             ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
