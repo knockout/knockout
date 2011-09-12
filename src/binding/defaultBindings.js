@@ -228,7 +228,20 @@ ko.bindingHandlers['options'] = {
                 var option = document.createElement("option");
 
                 // Apply a value to the option element
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                //var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                
+                var optionsValueValue = allBindings['optionsValue'];
+                if ( typeof optionsValueValue == "function" ) {
+                	optionValue = optionsValueValue(value[i]);
+                } else if ( typeof optionsValueValue == "string" ) {
+                	optionValue = value[i][optionsValueValue];
+                } else {
+                	optionValue = value[i];
+                }
+                
+                
+                
+                // Pick some text to appear in the drop-down list for this data value
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 ko.selectExtensions.writeValue(option, optionValue);
 
