@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.3.0beta
+// Knockout JavaScript library v1.3.0ctp
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -529,6 +529,11 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
                 return "";
             });
         }
+
+        // Note that there's still an issue in IE < 9 whereby it will discard comment nodes that are the first child of
+        // a descendant node. For example: "<div><!-- mycomment -->abc</div>" will get parsed as "<div>abc</div>"
+        // This won't affect anyone who has referenced jQuery, and there's always the workaround of inserting a dummy node
+        // (possibly a text node) in front of the comment. So, KO does not attempt to workaround this IE issue automatically at present.
         
         // Trim whitespace, otherwise indexOf won't work as expected
         var tags = ko.utils.stringTrim(html).toLowerCase(), div = document.createElement("div");
@@ -1380,6 +1385,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
 
     var startCommentRegex = /^\s*ko\s+(.*\:.*)\s*$/;
     var endCommentRegex =   /^\s*\/ko\s*$/;
+    var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 
     function isStartComment(node) {
         return (node.nodeType == 8) && node.nodeValue.match(startCommentRegex);
@@ -1389,7 +1395,7 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         return (node.nodeType == 8) && node.nodeValue.match(endCommentRegex);
     }
 
-    function getVirtualChildren(startComment) {
+    function getVirtualChildren(startComment, allowUnbalanced) {
         var currentNode = startComment;
         var depth = 1;
         var children = [];
@@ -1405,14 +1411,19 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
             if (isStartComment(currentNode))
                 depth++;
         }
-        throw new Error("Cannot find closing comment tag to match: " + startComment.nodeValue);
+        if (!allowUnbalanced)
+            throw new Error("Cannot find closing comment tag to match: " + startComment.nodeValue);
+        return null;
     }
 
-    function getMatchingEndComment(startComment) {
-        var allVirtualChildren = getVirtualChildren(startComment);
-        if (allVirtualChildren.length > 0)
-            return allVirtualChildren[allVirtualChildren.length - 1].nextSibling;
-        return startComment.nextSibling;
+    function getMatchingEndComment(startComment, allowUnbalanced) {
+        var allVirtualChildren = getVirtualChildren(startComment, allowUnbalanced);
+        if (allVirtualChildren) {
+            if (allVirtualChildren.length > 0)
+                return allVirtualChildren[allVirtualChildren.length - 1].nextSibling;
+            return startComment.nextSibling;
+        } else
+            return null; // Must have no matching end comment, and allowUnbalanced is true
     }
 
     function nodeArrayToText(nodeArray, cleanNodes) {
@@ -1424,6 +1435,27 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         }
         return String.prototype.concat.apply("", texts);
     }   
+
+    function getUnbalancedChildTags(node) {
+        // e.g., from <div>OK</div><!-- ko blah --><span>Another</span>, returns: <!-- ko blah --><span>Another</span>
+        //       from <div>OK</div><!-- /ko --><!-- /ko -->,             returns: <!-- /ko --><!-- /ko -->
+        var childNode = node.firstChild, captureRemaining = null;
+        do {
+            if (captureRemaining)                   // We already hit an unbalanced node and are now just scooping up all subsequent nodes
+                captureRemaining.push(childNode);
+            else if (isStartComment(childNode)) {
+                var matchingEndComment = getMatchingEndComment(childNode, /* allowUnbalanced: */ true);
+                if (matchingEndComment)             // It's a balanced tag, so skip immediately to the end of this virtual set
+                    childNode = matchingEndComment;
+                else
+                    captureRemaining = [childNode]; // It's unbalanced, so start capturing from this point
+            } else if (isEndComment(childNode)) {
+                captureRemaining = [childNode];     // It's unbalanced (if it wasn't, we'd have skipped over it already), so start capturing
+            }
+        } while (childNode = childNode.nextSibling);
+
+        return captureRemaining;
+    }
 
     ko.virtualElements = {
         allowedBindings: {},
@@ -1501,7 +1533,34 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
                 ko.virtualElements.emptyNode(node);
                 new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
             }
-        }       
+        },
+        
+        normaliseVirtualElementDomStructure: function(elementVerified) {
+            // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
+            // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
+            // that are direct descendants of <ul> into the preceding <li>)
+            if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
+                return;
+            
+            // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags
+            // must be intended to appear *after* that child, so move them there.
+            var childNode = elementVerified.firstChild;
+            do {
+                if (childNode.nodeType === 1) {
+                    var unbalancedTags = getUnbalancedChildTags(childNode);
+                    if (unbalancedTags) {
+                        // Fix up the DOM by moving the unbalanced tags to where they most likely were intended to be placed - *after* the child
+                        var nodeToInsertBefore = childNode.nextSibling;
+                        for (var i = 0; i < unbalancedTags.length; i++) {
+                            if (nodeToInsertBefore)
+                                elementVerified.insertBefore(unbalancedTags[i], nodeToInsertBefore);
+                            else
+                                elementVerified.appendChild(unbalancedTags[i]);
+                        }
+                    }
+                }
+            } while (childNode = childNode.nextSibling)
+        }  
     };  
 })();
 (function() {
@@ -1593,6 +1652,9 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
         //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType == 1);
+        if (isElement) // Workaround IE <= 8 HTML parsing weirdness
+            ko.virtualElements.normaliseVirtualElementDomStructure(nodeVerified);
+
         var shouldApplyBindings = (isElement && isRootNodeForBindingContext)                             // Case (1)
                                || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings)
@@ -1604,7 +1666,7 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
         var isFirstEvaluation = true;
-            
+
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
 
@@ -1691,6 +1753,8 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
     }
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
+        if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
+            ko.virtualElements.normaliseVirtualElementDomStructure(node);        
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
     };
 
