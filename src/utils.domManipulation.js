@@ -17,6 +17,11 @@
                 return "";
             });
         }
+
+        // Note that there's still an issue in IE < 9 whereby it will discard comment nodes that are the first child of
+        // a descendant node. For example: "<div><!-- mycomment -->abc</div>" will get parsed as "<div>abc</div>"
+        // This won't affect anyone who has referenced jQuery, and there's always the workaround of inserting a dummy node
+        // (possibly a text node) in front of the comment. So, KO does not attempt to workaround this IE issue automatically at present.
         
         // Trim whitespace, otherwise indexOf won't work as expected
         var tags = ko.utils.stringTrim(html).toLowerCase(), div = document.createElement("div");

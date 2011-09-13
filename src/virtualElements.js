@@ -9,6 +9,7 @@
 
     var startCommentRegex = /^\s*ko\s+(.*\:.*)\s*$/;
     var endCommentRegex =   /^\s*\/ko\s*$/;
+    var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 
     function isStartComment(node) {
         return (node.nodeType == 8) && node.nodeValue.match(startCommentRegex);
@@ -18,7 +19,7 @@
         return (node.nodeType == 8) && node.nodeValue.match(endCommentRegex);
     }
 
-    function getVirtualChildren(startComment) {
+    function getVirtualChildren(startComment, allowUnbalanced) {
         var currentNode = startComment;
         var depth = 1;
         var children = [];
@@ -34,14 +35,19 @@
             if (isStartComment(currentNode))
                 depth++;
         }
-        throw new Error("Cannot find closing comment tag to match: " + startComment.nodeValue);
+        if (!allowUnbalanced)
+            throw new Error("Cannot find closing comment tag to match: " + startComment.nodeValue);
+        return null;
     }
 
-    function getMatchingEndComment(startComment) {
-        var allVirtualChildren = getVirtualChildren(startComment);
-        if (allVirtualChildren.length > 0)
-            return allVirtualChildren[allVirtualChildren.length - 1].nextSibling;
-        return startComment.nextSibling;
+    function getMatchingEndComment(startComment, allowUnbalanced) {
+        var allVirtualChildren = getVirtualChildren(startComment, allowUnbalanced);
+        if (allVirtualChildren) {
+            if (allVirtualChildren.length > 0)
+                return allVirtualChildren[allVirtualChildren.length - 1].nextSibling;
+            return startComment.nextSibling;
+        } else
+            return null; // Must have no matching end comment, and allowUnbalanced is true
     }
 
     function nodeArrayToText(nodeArray, cleanNodes) {
@@ -53,6 +59,27 @@
         }
         return String.prototype.concat.apply("", texts);
     }   
+
+    function getUnbalancedChildTags(node) {
+        // e.g., from <div>OK</div><!-- ko blah --><span>Another</span>, returns: <!-- ko blah --><span>Another</span>
+        //       from <div>OK</div><!-- /ko --><!-- /ko -->,             returns: <!-- /ko --><!-- /ko -->
+        var childNode = node.firstChild, captureRemaining = null;
+        do {
+            if (captureRemaining)                   // We already hit an unbalanced node and are now just scooping up all subsequent nodes
+                captureRemaining.push(childNode);
+            else if (isStartComment(childNode)) {
+                var matchingEndComment = getMatchingEndComment(childNode, /* allowUnbalanced: */ true);
+                if (matchingEndComment)             // It's a balanced tag, so skip immediately to the end of this virtual set
+                    childNode = matchingEndComment;
+                else
+                    captureRemaining = [childNode]; // It's unbalanced, so start capturing from this point
+            } else if (isEndComment(childNode)) {
+                captureRemaining = [childNode];     // It's unbalanced (if it wasn't, we'd have skipped over it already), so start capturing
+            }
+        } while (childNode = childNode.nextSibling);
+
+        return captureRemaining;
+    }
 
     ko.virtualElements = {
         allowedBindings: {},
@@ -130,6 +157,33 @@
                 ko.virtualElements.emptyNode(node);
                 new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
             }
-        }       
+        },
+        
+        normaliseVirtualElementDomStructure: function(elementVerified) {
+            // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
+            // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
+            // that are direct descendants of <ul> into the preceding <li>)
+            if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
+                return;
+            
+            // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags
+            // must be intended to appear *after* that child, so move them there.
+            var childNode = elementVerified.firstChild;
+            do {
+                if (childNode.nodeType === 1) {
+                    var unbalancedTags = getUnbalancedChildTags(childNode);
+                    if (unbalancedTags) {
+                        // Fix up the DOM by moving the unbalanced tags to where they most likely were intended to be placed - *after* the child
+                        var nodeToInsertBefore = childNode.nextSibling;
+                        for (var i = 0; i < unbalancedTags.length; i++) {
+                            if (nodeToInsertBefore)
+                                elementVerified.insertBefore(unbalancedTags[i], nodeToInsertBefore);
+                            else
+                                elementVerified.appendChild(unbalancedTags[i]);
+                        }
+                    }
+                }
+            } while (childNode = childNode.nextSibling)
+        }  
     };  
 })();

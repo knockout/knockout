@@ -42,6 +42,9 @@
         //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType == 1);
+        if (isElement) // Workaround IE <= 8 HTML parsing weirdness
+            ko.virtualElements.normaliseVirtualElementDomStructure(nodeVerified);
+
         var shouldApplyBindings = (isElement && isRootNodeForBindingContext)                             // Case (1)
                                || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings)
@@ -53,7 +56,7 @@
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
         var isFirstEvaluation = true;
-            
+
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
 
@@ -140,6 +143,8 @@
     }
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
+        if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
+            ko.virtualElements.normaliseVirtualElementDomStructure(node);        
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
     };
 

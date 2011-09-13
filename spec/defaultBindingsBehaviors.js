@@ -1324,5 +1324,29 @@ describe('Binding: Foreach', {
                                                    + '</li>'
                                                 + '<!--/ko-->'
                                              + '</ul>');
+    },
+
+    'Should be able to use containerless templates directly inside UL elements even when closing LI tags are omitted' : function() {
+        // Represents issue https://github.com/SteveSanderson/knockout/issues/155
+        // Certain closing tags, including </li> are optional (http://www.w3.org/TR/html5/syntax.html#syntax-tag-omission)
+        // Most browsers respect your positioning of closing </li> tags, but IE <= 7 doesn't, and treats your markup
+        // as if it was written as below:
+
+        // Your actual markup: "<ul><li>Header item</li><!-- ko foreach: someitems --><li data-bind='text: $data'></li><!-- /ko --></ul>";
+        // How IE <= 8 treats it:
+        testNode.innerHTML =   "<ul><li>Header item<!-- ko foreach: someitems --><li data-bind='text: $data'><!-- /ko --></ul>";
+        var viewModel = {
+            someitems: [ 'Alpha', 'Beta' ]
+        };
+        ko.applyBindings(viewModel, testNode);
+
+        // Either of the following two results are acceptable.
+        try {
+            // Modern browsers implicitly re-add the closing </li> tags
+            value_of(testNode).should_contain_html('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha</li><li data-bind="text: $data">beta</li><!-- /ko --></ul>');
+        } catch(ex) {
+            // ... but IE < 8 doesn't add ones that immediately precede a <li>
+            value_of(testNode).should_contain_html('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha<li data-bind="text: $data">beta</li><!-- /ko --></ul>');
+        }
     }
 });
