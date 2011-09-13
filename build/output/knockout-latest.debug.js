@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -851,28 +851,31 @@ ko.observableArray = function (initialValues) {
 ko.observableArray['fn'] = {
     remove: function (valueOrPredicate) {
         var underlyingArray = this();
-        var remainingValues = [];
         var removedValues = [];
-        var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
-        for (var i = 0, j = underlyingArray.length; i < j; i++) {
-            var value = underlyingArray[i];
-            if (!predicate(value))
-                remainingValues.push(value);
-            else
-                removedValues.push(value);
-        }
-        this(remainingValues);
+		var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+		for (var i = 0; i < underlyingArray.length; i++) {
+		   var value = underlyingArray[i];
+		   if (predicate(value)) {
+			 removedValues.push(value);
+			 underlyingArray.splice(i, 1);
+			 i--;
+		   }
+		}
+		if (removedValues.length) {
+			this.valueHasMutated();
+		}
         return removedValues;
     },
 
     removeAll: function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var allValues = this();
-            this([]);
+			var underlyingArray = this();
+			var allValues = underlyingArray.slice(0);
+			underlyingArray.splice(0, underlyingArray.length);
+			this.valueHasMutated();
             return allValues;
         }
-        
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
@@ -3051,4 +3054,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
-})();})(window);                  
+})();})(window);
