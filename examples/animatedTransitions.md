@@ -33,7 +33,7 @@ This example shows two ways to animate transitions:
 
 <div data-bind='template: { name: "planetsTemplate", 
                             foreach: planetsToShow, 
-                            beforeRemove: function(elem) { $(elem).slideUp() },
+                            beforeRemove: function(elem) { $(elem).slideUp(function() { $(elem).remove(); }) },
                             afterAdd: function(elem) { $(elem).hide().slideDown() } }'> </div>
 
 <script type="text/html" id="planetsTemplate">

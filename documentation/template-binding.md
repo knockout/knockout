@@ -89,7 +89,7 @@ Example:
 The benefits of the `foreach` template mode are:
  * when you add items to your collection, KO will only render the template for the new item and will insert it into the existing DOM
  * when you remove items from your collection, KO will simply delete the associated elements from your DOM without re-rendering any template
- * KO allows you to give `afterAdd` and/or `beforeRemove` callbacks to manipulate the added/removed DOM elements in a custom way. This makes animated transitions easy, as in [this example](../examples/animatedTransitions.html).
+ * KO allows you to give `afterAdd` and/or `beforeRemove` callbacks to manipulate the added/removed DOM elements in a custom way. This makes animated transitions easy, as in [this example](../examples/animatedTransitions.html). Note that if a `beforeRemove` callback is used, then the callback is responsible for removing the element(s) from the DOM upon completion of any animation or manipulation.
  
 This differs from the template engine's native 'each' support: after any change, the template engine is forced to re-render everything because it isn't aware of KO's dependency tracking mechanism.
 
