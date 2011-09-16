@@ -16,7 +16,7 @@
 
         'getBindings': function(node, bindingContext) {
             var bindingsString = this['getBindingsString'](node, bindingContext);
-            return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext) : null;
+            return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext, node) : null;
         },
 
         // The following function is only used internally by this default provider.
@@ -31,10 +31,11 @@
 
         // The following function is only used internally by this default provider.
         // It's not part of the interface definition for a general binding provider.
-        'parseBindingsString': function(bindingsString, bindingContext) {
+        'parseBindingsString': function(bindingsString, bindingContext, node) {
             try {
                 var viewModel = bindingContext['$data'],
-                    scopes = (typeof viewModel == 'object' && viewModel != null) ? [viewModel, bindingContext] : [bindingContext],
+                    elementContext = { "$element" : node },
+                    scopes = (typeof viewModel == 'object' && viewModel != null) ? [viewModel, bindingContext, elementContext] : [bindingContext, elementContext],
                     bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, scopes.length, this.bindingCache);
                 return bindingFunction(scopes);
             } catch (ex) {
