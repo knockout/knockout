@@ -156,9 +156,20 @@ ko.utils = new (function () {
             return false;
         },
 
-        domNodeIsAttachedToDocument: function (node) {
-            return ko.utils.domNodeIsContainedBy(node, document);
-        },
+		domNodeIsAttachedToDocument: function(node) {
+			var curr = node;
+			while (true) {
+				curr = curr.parentNode;
+				// If parent is null or DOCUMENT_FRAGMENT_NODE return false
+				if (null == curr || 11 == curr.nodeType ) {
+					return false;
+				}
+				// If parent is DOCUMENT_NODE return true
+				if (9 == curr.nodeType) { // DOCUMENT_NODE
+					return true;
+				}
+			}
+		},
 
         registerEventHandler: function (element, eventType, handler) {
             if (typeof jQuery != "undefined") {
