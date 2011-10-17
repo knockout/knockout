@@ -247,6 +247,25 @@ describe('Binding: Value', {
         value_of(notifiedValues.length).should_be(2);
     },
     
+    'Should be able to catch updates after specific events (e.g., keyup) instead of onchange': function () {
+        var myobservable = new ko.observable(123);
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        testNode.childNodes[0].value = "some user-entered value";
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        value_of(myobservable()).should_be("some user-entered value");
+    },
+    
+    'Should catch updates on change as well as the nominated valueUpdate event': function () {
+        // Represents issue #102 (https://github.com/SteveSanderson/knockout/issues/102)
+        var myobservable = new ko.observable(123);
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        testNode.childNodes[0].value = "some user-entered value";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(myobservable()).should_be("some user-entered value");
+    },           
+    
     'For select boxes, should update selectedIndex when the model changes': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
