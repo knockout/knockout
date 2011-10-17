@@ -19,7 +19,19 @@ ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     var isIe6 = /MSIE 6/i.test(navigator.userAgent);
     var isIe7 = /MSIE 7/i.test(navigator.userAgent);
-    var knownMouseEvents = { "click" : 1, "dblclick" : 1, "mousedown" : 1, "mouseup" : 1, "mousemove" : 1, "mouseover" : 1, "mouseout" : 1, "mouseenter" : 1, "mouseleave" : 1 };
+    
+    // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
+    var knownEvents = {}, knownEventTypesByEventName = {};
+    var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
+    knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
+    knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];        
+    for (var eventType in knownEvents) {
+        var knownEventsForType = knownEvents[eventType];
+        if (knownEventsForType.length) {
+            for (var i = 0, j = knownEventsForType.length; i < j; i++)
+                knownEventTypesByEventName[knownEventsForType[i]] = eventType;
+        }
+    }
 
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
@@ -57,6 +69,16 @@ ko.utils = new (function () {
             if (index >= 0)
                 array.splice(index, 1);
         },
+
+        arrayGetDistinctValues: function (array) {
+            array = array || [];
+            var result = [];
+            for (var i = 0, j = array.length; i < j; i++) {
+                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
+                    result.push(array[i]);
+            }
+            return result;
+        },        
 
         arrayMap: function (array, mapping) {
             array = array || [];
@@ -216,7 +238,7 @@ ko.utils = new (function () {
                 jQuery(element)['trigger'](eventType, eventData);
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
-                    var eventCategory = (eventType in knownMouseEvents ? "MouseEvents" : "HTMLEvents");
+                    var eventCategory = knownEventTypesByEventName[eventType] || "HTMLEvents";
                     var event = document.createEvent(eventCategory);
                     event.initEvent(eventType, true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, element);
                     element.dispatchEvent(event);
@@ -1819,6 +1841,8 @@ ko.bindingHandlers['event'] = {
                     ko.utils.registerEventHandler(element, eventName, function (event) {
                         var handlerReturnValue;
                         var handlerFunction = valueAccessor()[eventName];
+                        if (!handlerFunction)
+                            return;
                         var allBindings = allBindingsAccessor();
                         
                         try { 
@@ -1893,32 +1917,42 @@ ko.bindingHandlers['disable'] = {
 };
 
 ko.bindingHandlers['value'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {    	
-        var eventName = allBindingsAccessor()["valueUpdate"] || "change";
-        
-        // The syntax "after<eventname>" means "run the handler asynchronously after the event"
-        // This is useful, for example, to catch "keydown" events after the browser has updated the control
-        // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
-        var handleEventAsynchronously = false;
-        if (ko.utils.stringStartsWith(eventName, "after")) {
-            handleEventAsynchronously = true;
-            eventName = eventName.substring("after".length);
+    'init': function (element, valueAccessor, allBindingsAccessor) { 
+        // Always catch "change" event; possibly other events too if asked
+        var eventsToCatch = ["change"];
+        var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        if (requestedEventsToCatch) {
+            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
+                requestedEventsToCatch = [requestedEventsToCatch];
+            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
+            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
         }
-        var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
-                                                        : function(handler) { handler() };
         
-        ko.utils.registerEventHandler(element, eventName, function () {
-            runEventHandler(function() {
-                var modelValue = valueAccessor();
-                var elementValue = ko.selectExtensions.readValue(element);
-                if (ko.isWriteableObservable(modelValue))
-                    modelValue(elementValue);
-                else {
-                    var allBindings = allBindingsAccessor();
-                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                        allBindings['_ko_property_writers']['value'](elementValue); 
-                }
-            });
+        ko.utils.arrayForEach(eventsToCatch, function(eventName) {
+            // The syntax "after<eventname>" means "run the handler asynchronously after the event"
+            // This is useful, for example, to catch "keydown" events after the browser has updated the control
+            // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
+            var handleEventAsynchronously = false;
+            if (ko.utils.stringStartsWith(eventName, "after")) {
+                handleEventAsynchronously = true;
+                eventName = eventName.substring("after".length);
+            }
+            var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
+                                                            : function(handler) { handler() };
+            
+            ko.utils.registerEventHandler(element, eventName, function () {
+                runEventHandler(function() {
+                    var modelValue = valueAccessor();
+                    var elementValue = ko.selectExtensions.readValue(element);
+                    if (ko.isWriteableObservable(modelValue))
+                        modelValue(elementValue);
+                    else {
+                        var allBindings = allBindingsAccessor();
+                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
+                            allBindings['_ko_property_writers']['value'](elementValue); 
+                    }
+                });
+            });	    	
         });
     },
     'update': function (element, valueAccessor) {
@@ -1981,9 +2015,13 @@ ko.bindingHandlers['options'] = {
             }
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
                 
-                // Pick some text to appear in the drop-down list for this data value
+                // Apply a value to the option element
+                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                optionValue = ko.utils.unwrapObservable(optionValue);
+                ko.selectExtensions.writeValue(option, optionValue);
+                
+                // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
@@ -1991,11 +2029,12 @@ ko.bindingHandlers['options'] = {
                     optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
                 else
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
-                    
-                optionValue = ko.utils.unwrapObservable(optionValue);
-                optionText = ko.utils.unwrapObservable(optionText);
-                ko.selectExtensions.writeValue(option, optionValue);
-                option.innerHTML = optionText.toString();
+                if ((optionText === null) || (optionText === undefined))
+                    optionText = "";                                    
+                optionText = ko.utils.unwrapObservable(optionText).toString();
+                typeof option.innerText == "string" ? option.innerText = optionText
+                                                    : option.textContent = optionText;
+
                 element.appendChild(option);
             }
 
@@ -2299,7 +2338,8 @@ ko.bindingHandlers['foreach'] = {
     }
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
-ko.virtualElements.allowedBindings['foreach'] = true;// If you want to make a custom template engine,
+ko.virtualElements.allowedBindings['foreach'] = true;
+// If you want to make a custom template engine,
 // 
 // [1] Inherit from this class (like ko.nativeTemplateEngine does)
 // [2] Override 'renderTemplateSource', supplying a function with this signature:
@@ -2648,7 +2688,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
             // Filter out any entries marked as destroyed
             var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
-                return options['includeDestroyed'] || !item['_destroy'];
+                return options['includeDestroyed'] || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
