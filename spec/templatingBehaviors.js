@@ -415,13 +415,13 @@ describe('Templating', {
         value_of(innerObservable.getSubscriptionsCount()).should_be(0);    	
     },    
     
-    'Data binding syntax should omit any items whose \'_destroy\' flag is set' : function() {
-        var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }]);
+    'Data binding syntax should omit any items whose \'_destroy\' flag is set (unwrapping the flag if it is observable)' : function() {
+        var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }, { someProp: 4, _destroy: ko.observable(false) }]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "someProp=[js: someProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);    	
-        value_of(testNode.childNodes[0]).should_contain_html("<div>someprop=1</div><div>someprop=3</div>");
+        value_of(testNode.childNodes[0]).should_contain_html("<div>someprop=1</div><div>someprop=3</div><div>someprop=4</div>");
     },
     
     'Data binding syntax should include any items whose \'_destroy\' flag is set if you use includeDestroyed' : function() {
