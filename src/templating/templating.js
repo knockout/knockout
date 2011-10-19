@@ -135,8 +135,8 @@
                 unwrappedArray = [unwrappedArray];
 
             // Filter out any entries marked as destroyed
-            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
-                return options['includeDestroyed'] || (item === undefined || item === null) ? true : !ko.utils.unwrapObservable(item['_destroy']);
+            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
+                return options['includeDestroyed'] || !ko.utils.unwrapObservable((item === undefined || item === null) ? item : item['_destroy']);
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
