@@ -124,8 +124,8 @@
         };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
-        var activateBindingsCallback = function(arrayValue, addedNodesArray) {
-            var bindingContext = createInnerBindingContext(arrayValue);
+        var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
+            var bindingContext = createInnerBindingContext(arrayValue, index);
             ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
