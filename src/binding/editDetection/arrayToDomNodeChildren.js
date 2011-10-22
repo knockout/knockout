@@ -46,6 +46,7 @@
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
+        var nodesToUpdateIndex = [];
         var nodesAdded = [];
         var insertAfterNode = null;
         for (var i = 0, j = editScript.length; i < j; i++) {
@@ -57,6 +58,13 @@
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
                     lastMappingResultIndex++;
+                    for (var nodeI = 0; nodeI < dataToRetain.domNodes.length; nodeI++) {
+                        var node = dataToRetain.domNodes[nodeI];
+                        var context = ko.storedBindingContextForNode(node);
+                        if (context && context['$index']) {
+                            nodesToUpdateIndex.push({ index: context['$index'], newIndex: i});
+                        }
+                    }
                     break;
 
                 case "deleted":
@@ -125,6 +133,10 @@
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
+
+        ko.utils.arrayForEach(nodesToUpdateIndex, function(obj) {
+            obj.index(obj.newIndex);
+        });
     }
 })();
 

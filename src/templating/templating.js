@@ -119,7 +119,7 @@
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
         var createInnerBindingContext = function(arrayValue, index) {
             var result = parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
-            result['$index'] = index;
+            result['$index'] = ko.observable(index);
             return result;
         };
 
