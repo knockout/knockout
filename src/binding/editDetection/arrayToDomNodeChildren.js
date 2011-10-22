@@ -62,6 +62,8 @@
                         var node = dataToRetain.domNodes[nodeI];
                         var context = ko.storedBindingContextForNode(node);
                         if (context && context['$index']) {
+
+                            // Queue these observables for later update (delayed update will reduce duplicate work)
                             nodesToUpdateIndex.push({ index: context['$index'], newIndex: i});
                         }
                     }
@@ -134,6 +136,7 @@
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
+        // Once the state is stored, update the index observables for nodes that were retained and possibly moved
         ko.utils.arrayForEach(nodesToUpdateIndex, function(obj) {
             obj.index(obj.newIndex);
         });
