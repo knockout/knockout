@@ -350,6 +350,15 @@ describe('Templating', {
         ko.applyBindings({ myCollection: myArray }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
     },    
+
+    'Data binding \'foreach\' option should apply bindings with an $index in the context': function () {
+        var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item # is <span data-bind='text: $index'></span>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings({ myCollection: myArray }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html("<div>the item # is <span>0</span></div><div>the item # is <span>1</span></div>");
+    },
     
     'Data binding \'foreach\' option should update DOM nodes when a dependency of their mapping function changes': function() {
         var myObservable = new ko.observable("Steve");

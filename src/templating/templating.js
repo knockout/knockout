@@ -117,8 +117,10 @@
     };
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
-        var createInnerBindingContext = function(arrayValue) {
-            return parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+        var createInnerBindingContext = function(arrayValue, index) {
+            var result = parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+            result['$index'] = index;
+            return result;
         };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
@@ -139,10 +141,10 @@
                 return options['includeDestroyed'] || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
-            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue, index) {
                 // Support selecting template as a function of the data being rendered
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
-                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
+                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue, index), options);
             }, options, activateBindingsCallback);
             
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
