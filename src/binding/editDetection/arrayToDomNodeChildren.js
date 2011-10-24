@@ -46,7 +46,8 @@
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
-        var nodesToUpdateIndex = [];
+        var nodesToUpdate = [];
+        var nodesAddedOrRetainedIndex = 0;
         var nodesAdded = [];
         var insertAfterNode = null;
         for (var i = 0, j = editScript.length; i < j; i++) {
@@ -64,9 +65,10 @@
                         if (context && context['$index']) {
 
                             // Queue these observables for later update (delayed update will reduce duplicate work)
-                            nodesToUpdateIndex.push({ index: context['$index'], newIndex: i});
+                            nodesToUpdate.push({ index: context['$index'], newIndex: nodesAddedOrRetainedIndex});
                         }
                     }
+                    nodesAddedOrRetainedIndex++;
                     break;
 
                 case "deleted":
@@ -87,7 +89,7 @@
 
                 case "added": 
                     var valueToMap = editScript[i].value;
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, i);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, nodesAddedOrRetainedIndex);
                     var mappedNodes = mapData.mappedNodes;
 
                     // On the first evaluation, insert the nodes at the current insertion point
@@ -109,7 +111,9 @@
                         insertAfterNode = node;
                     } 
                     if (callbackAfterAddingNodes)
-                        callbackAfterAddingNodes(valueToMap, mappedNodes, i);
+                        callbackAfterAddingNodes(valueToMap, mappedNodes, nodesAddedOrRetainedIndex);
+
+                    nodesAddedOrRetainedIndex++;
                     break;
             }
         }
@@ -137,7 +141,7 @@
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
         // Once the state is stored, update the index observables for nodes that were retained and possibly moved
-        ko.utils.arrayForEach(nodesToUpdateIndex, function(obj) {
+        ko.utils.arrayForEach(nodesToUpdate, function(obj) {
             obj.index(obj.newIndex);
         });
     }
