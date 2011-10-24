@@ -207,6 +207,7 @@ ko.bindingHandlers['options'] = {
                 
                 // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
+                var optionText;
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
                 else if (typeof optionsTextValue == "string")
