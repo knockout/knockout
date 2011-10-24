@@ -116,6 +116,30 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([[]]);
     },
     
+	'Should not notify subscribers on remove by value with no match': function () {
+		testObservableArray(["Alpha", "Beta", "Gamma"]);
+		notifiedValues = [];
+		var removed = testObservableArray.remove("Delta");
+		value_of(removed).should_be([]);
+		value_of(notifiedValues).should_be([]);
+	},
+
+	'Should modify original array on remove': function () {
+		var originalArray = ["Alpha", "Beta", "Gamma"];
+		testObservableArray(originalArray);
+		notifiedValues = [];
+		var removed = testObservableArray.remove("Beta");
+		value_of(originalArray).should_be(["Alpha", "Gamma"]);
+	},
+
+	'Should modify original array on removeAll': function () {
+		var originalArray = ["Alpha", "Beta", "Gamma"];
+		testObservableArray(originalArray);
+		notifiedValues = [];
+		var removed = testObservableArray.removeAll();
+		value_of(originalArray).should_be([]);
+	},
+
     'Should notify subscribers on replace': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         notifiedValues = [];
