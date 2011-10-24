@@ -33,7 +33,7 @@
     
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes, indexMoveCallback) {
         // Compare the provided array against the previous one
         array = array || [];
         options = options || {};
@@ -46,8 +46,8 @@
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
-        var nodesToUpdate = [];
-        var nodesAddedOrRetainedIndex = 0;
+        var indicesToMove = [];
+        var newMappingResultIndex = 0;
         var nodesAdded = [];
         var insertAfterNode = null;
         for (var i = 0, j = editScript.length; i < j; i++) {
@@ -58,17 +58,9 @@
                     newMappingResult.push(dataToRetain);
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
+                    indicesToMove.push({from: lastMappingResultIndex, to: newMappingResultIndex});
                     lastMappingResultIndex++;
-                    for (var nodeI = 0; nodeI < dataToRetain.domNodes.length; nodeI++) {
-                        var node = dataToRetain.domNodes[nodeI];
-                        var context = ko.storedBindingContextForNode(node);
-                        if (context && context['$index']) {
-
-                            // Queue these observables for later update (delayed update will reduce duplicate work)
-                            nodesToUpdate.push({ index: context['$index'], newIndex: nodesAddedOrRetainedIndex});
-                        }
-                    }
-                    nodesAddedOrRetainedIndex++;
+                    newMappingResultIndex++;
                     break;
 
                 case "deleted":
@@ -89,7 +81,7 @@
 
                 case "added": 
                     var valueToMap = editScript[i].value;
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, nodesAddedOrRetainedIndex);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, newMappingResultIndex);
                     var mappedNodes = mapData.mappedNodes;
 
                     // On the first evaluation, insert the nodes at the current insertion point
@@ -111,9 +103,9 @@
                         insertAfterNode = node;
                     } 
                     if (callbackAfterAddingNodes)
-                        callbackAfterAddingNodes(valueToMap, mappedNodes, nodesAddedOrRetainedIndex);
+                        callbackAfterAddingNodes(valueToMap, mappedNodes, newMappingResultIndex);
 
-                    nodesAddedOrRetainedIndex++;
+                    newMappingResultIndex++;
                     break;
             }
         }
@@ -140,10 +132,12 @@
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
-        // Once the state is stored, update the index observables for nodes that were retained and possibly moved
-        ko.utils.arrayForEach(nodesToUpdate, function(obj) {
-            obj.index(obj.newIndex);
-        });
+        // Once the state is stored, update the indices for
+        // nodes that were retained and possibly moved
+        if (indexMoveCallback)
+            ko.utils.arrayForEach(indicesToMove, function(change) {
+                indexMoveCallback(change.from, change.to);
+            });
     }
 })();
 
