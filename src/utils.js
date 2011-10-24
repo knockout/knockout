@@ -15,31 +15,20 @@ ko.utils = new (function () {
         }
     }
 
-    //use IE conditionals rather than the user agent to detect the version
-    //using code from here: https://gist.github.com/527683
-    var isIe6 = false;
-    var isIe7 = false;
-    var ie = (function(){
-
-        var undef,
-            v = 3,
-            div = document.createElement('div'),
-            all = div.getElementsByTagName('i');
+    // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
+    var ieVersion = (function() {
+        var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
         
+        // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
         while (
-            div.innerHTML = '<!--[if gt IE ' + (++v) + ']><i></i><![endif]-->',
-            all[0]
-        );
-        
-        return v > 4 ? v : undef;
-        
+            div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
+            iElems[0]
+        );        
+        return version > 4 ? version : undefined;        
     }());
-    
-    if(ie) {
-      isIe6 = ie === 6;
-      isIe7 = ie === 7;
-    }
-    
+    var isIe6 = ieVersion === 6,
+        isIe7 = ieVersion === 7;
+
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
