@@ -16,13 +16,13 @@ curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADV
 
 # Finalise each file by prefixing with version header and surrounding in function closure
 cp version-header.js $OutDebugFile
-echo "(function(window,undefined){" >> $OutDebugFile
+echo "(function(window,document,undefined){" >> $OutDebugFile
 cat $OutDebugFile.temp				>> $OutDebugFile
-echo "})(window);"                  >> $OutDebugFile
+echo "})(window,document);"                  >> $OutDebugFile
 rm $OutDebugFile.temp
 
 cp version-header.js $OutMinFile
-echo "(function(window,undefined){" >> $OutMinFile
+echo "(function(window,document,undefined){" >> $OutMinFile
 cat $OutMinFile.temp				>> $OutMinFile
-echo "})(window);"                  >> $OutMinFile
+echo "})(window,document);"                  >> $OutMinFile
 rm $OutMinFile.temp
