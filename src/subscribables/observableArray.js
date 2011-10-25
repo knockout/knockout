@@ -23,28 +23,28 @@ ko.observableArray['fn'] = {
     remove: function (valueOrPredicate) {
         var underlyingArray = this();
         var removedValues = [];
-		var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
-		for (var i = 0; i < underlyingArray.length; i++) {
-		   var value = underlyingArray[i];
-		   if (predicate(value)) {
-			 removedValues.push(value);
-			 underlyingArray.splice(i, 1);
-			 i--;
-		   }
-		}
-		if (removedValues.length) {
-			this.valueHasMutated();
-		}
+        var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+        for (var i = 0; i < underlyingArray.length; i++) {
+            var value = underlyingArray[i];
+            if (predicate(value)) {
+                removedValues.push(value);
+                underlyingArray.splice(i, 1);
+                i--;
+            }
+        }
+        if (removedValues.length) {
+            this.valueHasMutated();
+        }
         return removedValues;
     },
 
     removeAll: function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-			var underlyingArray = this();
-			var allValues = underlyingArray.slice(0);
-			underlyingArray.splice(0, underlyingArray.length);
-			this.valueHasMutated();
+            var underlyingArray = this();
+            var allValues = underlyingArray.slice(0);
+            underlyingArray.splice(0, underlyingArray.length);
+            this.valueHasMutated();
             return allValues;
         }
         // If you passed an arg, we interpret it as an array of entries to remove
