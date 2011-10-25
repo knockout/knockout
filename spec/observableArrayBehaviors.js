@@ -14,7 +14,7 @@ describe('Observable Array', {
     
     'Should initialize to empty array if you pass no args to constructor' : function() {
         var instance = new ko.observableArray();
-        value_of(instance().length).should_be(0);    	
+        value_of(instance().length).should_be(0);       
     },
 
     'Should require constructor arg, if given, to be array-like or null or undefined' : function() {
@@ -53,7 +53,7 @@ describe('Observable Array', {
         testObservableArray.destroyAll([x, z]);
         value_of(testObservableArray().length).should_be(3);
         value_of(x._destroy).should_be(true);
-        value_of(y._destroy).should_be(undefined);    	
+        value_of(y._destroy).should_be(undefined);      
         value_of(z._destroy).should_be(true);
     },
 
@@ -63,7 +63,7 @@ describe('Observable Array', {
         testObservableArray.destroyAll();
         value_of(testObservableArray().length).should_be(3);
         value_of(x._destroy).should_be(true);
-        value_of(y._destroy).should_be(true);    	
+        value_of(y._destroy).should_be(true);       
         value_of(z._destroy).should_be(true);
     },
 
@@ -116,29 +116,29 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([[]]);
     },
     
-	'Should not notify subscribers on remove by value with no match': function () {
-		testObservableArray(["Alpha", "Beta", "Gamma"]);
-		notifiedValues = [];
-		var removed = testObservableArray.remove("Delta");
-		value_of(removed).should_be([]);
-		value_of(notifiedValues).should_be([]);
-	},
+    'Should not notify subscribers on remove by value with no match': function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        notifiedValues = [];
+        var removed = testObservableArray.remove("Delta");
+        value_of(removed).should_be([]);
+        value_of(notifiedValues).should_be([]);
+    },
 
-	'Should modify original array on remove': function () {
-		var originalArray = ["Alpha", "Beta", "Gamma"];
-		testObservableArray(originalArray);
-		notifiedValues = [];
-		var removed = testObservableArray.remove("Beta");
-		value_of(originalArray).should_be(["Alpha", "Gamma"]);
-	},
+    'Should modify original array on remove': function () {
+        var originalArray = ["Alpha", "Beta", "Gamma"];
+        testObservableArray(originalArray);
+        notifiedValues = [];
+        var removed = testObservableArray.remove("Beta");
+        value_of(originalArray).should_be(["Alpha", "Gamma"]);
+    },
 
-	'Should modify original array on removeAll': function () {
-		var originalArray = ["Alpha", "Beta", "Gamma"];
-		testObservableArray(originalArray);
-		notifiedValues = [];
-		var removed = testObservableArray.removeAll();
-		value_of(originalArray).should_be([]);
-	},
+    'Should modify original array on removeAll': function () {
+        var originalArray = ["Alpha", "Beta", "Gamma"];
+        testObservableArray(originalArray);
+        notifiedValues = [];
+        var removed = testObservableArray.removeAll();
+        value_of(originalArray).should_be([]);
+    },
 
     'Should notify subscribers on replace': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
