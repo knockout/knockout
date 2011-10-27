@@ -207,6 +207,7 @@ ko.bindingHandlers['options'] = {
                 
                 // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
+                var optionText;
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
                 else if (typeof optionsTextValue == "string")
@@ -386,16 +387,8 @@ ko.bindingHandlers['checked'] = {
                 // When bound to anything other value (not an array), the checkbox being checked represents the value being trueish
                 element.checked = value;	
             }            
-            
-            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
-            if (value && ko.utils.isIe6) 
-                element.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
-            
-            // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
-            if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
-                element.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"), false);
         }
     }
 };

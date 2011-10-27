@@ -1,8 +1,6 @@
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
-    var isIe7 = /MSIE 7/i.test(navigator.userAgent);
     
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
@@ -16,6 +14,20 @@ ko.utils = new (function () {
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
     }
+
+    // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
+    var ieVersion = (function() {
+        var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
+        
+        // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
+        while (
+            div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
+            iElems[0]
+        );        
+        return version > 4 ? version : undefined;        
+    }());
+    var isIe6 = ieVersion === 6,
+        isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;

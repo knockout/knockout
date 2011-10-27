@@ -17,8 +17,6 @@ ko.exportProperty = function(owner, publicName, object) {
 };
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-    var isIe6 = /MSIE 6/i.test(navigator.userAgent);
-    var isIe7 = /MSIE 7/i.test(navigator.userAgent);
     
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
@@ -32,6 +30,20 @@ ko.utils = new (function () {
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
     }
+
+    // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
+    var ieVersion = (function() {
+        var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
+        
+        // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
+        while (
+            div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
+            iElems[0]
+        );        
+        return version > 4 ? version : undefined;        
+    }());
+    var isIe6 = ieVersion === 6,
+        isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
@@ -873,28 +885,31 @@ ko.observableArray = function (initialValues) {
 ko.observableArray['fn'] = {
     remove: function (valueOrPredicate) {
         var underlyingArray = this();
-        var remainingValues = [];
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
-        for (var i = 0, j = underlyingArray.length; i < j; i++) {
+        for (var i = 0; i < underlyingArray.length; i++) {
             var value = underlyingArray[i];
-            if (!predicate(value))
-                remainingValues.push(value);
-            else
+            if (predicate(value)) {
                 removedValues.push(value);
+                underlyingArray.splice(i, 1);
+                i--;
+            }
         }
-        this(remainingValues);
+        if (removedValues.length) {
+            this.valueHasMutated();
+        }
         return removedValues;
     },
 
     removeAll: function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var allValues = this();
-            this([]);
+            var underlyingArray = this();
+            var allValues = underlyingArray.slice(0);
+            underlyingArray.splice(0, underlyingArray.length);
+            this.valueHasMutated();
             return allValues;
         }
-        
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
@@ -2023,6 +2038,7 @@ ko.bindingHandlers['options'] = {
                 
                 // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
+                var optionText;
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
                 else if (typeof optionsTextValue == "string")
@@ -2202,16 +2218,8 @@ ko.bindingHandlers['checked'] = {
                 // When bound to anything other value (not an array), the checkbox being checked represents the value being trueish
                 element.checked = value;	
             }            
-            
-            // Workaround for IE 6 bug - it fails to apply checked state to dynamically-created checkboxes if you merely say "element.checked = true"
-            if (value && ko.utils.isIe6) 
-                element.mergeAttributes(document.createElement("<input type='checkbox' checked='checked' />"), false);
         } else if (element.type == "radio") {
             element.checked = (element.value == value);
-            
-            // Workaround for IE 6/7 bug - it fails to apply checked state to dynamically-created radio buttons if you merely say "element.checked = true"
-            if ((element.value == value) && (ko.utils.isIe6 || ko.utils.isIe7))
-                element.mergeAttributes(document.createElement("<input type='radio' checked='checked' />"), false);
         }
     }
 };
@@ -2687,8 +2695,8 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
                 unwrappedArray = [unwrappedArray];
 
             // Filter out any entries marked as destroyed
-            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) { 
-                return options['includeDestroyed'] || !ko.utils.unwrapObservable(item['_destroy']);
+            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
+                return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
