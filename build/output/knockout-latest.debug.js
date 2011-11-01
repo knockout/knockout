@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -658,11 +658,11 @@ ko.subscribable = function () {
         return subscription;
     };
 
-    this.notifySubscribers = function (valueToNotify) {
+    this.notifySubscribers = function (valueToNotify, force) {
         ko.utils.arrayForEach(_subscriptions.slice(0), function (subscription) {
             // In case a subscription was disposed during the arrayForEach cycle, check
             // for isDisposed on each subscription before invoking its callback
-            if (subscription && (subscription.isDisposed !== true))
+            if (subscription && (force || (subscription.isDisposed !== true)))
                 subscription.callback(valueToNotify);
         });
     };
@@ -911,11 +911,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
     };
     
-    function evaluate() {
+    function evaluate(force) {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
         // going to be in the doc until *after* the first evaluation
-        if ((_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
+        if (!force && (_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -930,7 +930,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             replaceSubscriptionsToDependencies(distinctDependencies);
         }
 
-        dependentObservable.notifySubscribers(_latestValue);
+        dependentObservable.notifySubscribers(_latestValue, force);
         _hasBeenEvaluated = true;
     }
 
@@ -939,6 +939,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             if (typeof options["write"] === "function") {
                 // Writing a value
                 var valueToWrite = arguments[0];
+                _latestValue = valueToWrite;
                 options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
@@ -966,7 +967,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
-    
+    dependentObservable.forceRefresh = function () { evaluate(true); }
+        ko.exportProperty(dependentObservable, 'forceRefresh', dependentObservable.forceRefresh);
     return dependentObservable;
 };
 ko.dependentObservable.__ko_proto__ = ko.observable;
@@ -2216,4 +2218,4 @@ ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
 // Use this one by default
 ko.setTemplateEngine(new ko.jqueryTmplTemplateEngine());
 
-ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);                  
+ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);})(window);

@@ -45,11 +45,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
     };
     
-    function evaluate() {
+    function evaluate(force) {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
         // going to be in the doc until *after* the first evaluation
-        if ((_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
+        if (!force && (_hasBeenEvaluated) && typeof options["disposeWhen"] == "function") {
             if (options["disposeWhen"]()) {
                 dependentObservable.dispose();
                 return;
@@ -64,7 +64,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             replaceSubscriptionsToDependencies(distinctDependencies);
         }
 
-        dependentObservable.notifySubscribers(_latestValue);
+        dependentObservable.notifySubscribers(_latestValue, force);
         _hasBeenEvaluated = true;
     }
 
@@ -73,6 +73,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             if (typeof options["write"] === "function") {
                 // Writing a value
                 var valueToWrite = arguments[0];
+                _latestValue = valueToWrite;
                 options["owner"] ? options["write"].call(options["owner"], valueToWrite) : options["write"](valueToWrite);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
@@ -100,7 +101,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
-    
+    dependentObservable.forceRefresh = function () { evaluate(true); }
+        ko.exportProperty(dependentObservable, 'forceRefresh', dependentObservable.forceRefresh);
     return dependentObservable;
 };
 ko.dependentObservable.__ko_proto__ = ko.observable;

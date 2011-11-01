@@ -22,11 +22,11 @@ ko.subscribable = function () {
         return subscription;
     };
 
-    this.notifySubscribers = function (valueToNotify) {
+    this.notifySubscribers = function (valueToNotify, force) {
         ko.utils.arrayForEach(_subscriptions.slice(0), function (subscription) {
             // In case a subscription was disposed during the arrayForEach cycle, check
             // for isDisposed on each subscription before invoking its callback
-            if (subscription && (subscription.isDisposed !== true))
+            if (subscription && (force || (subscription.isDisposed !== true)))
                 subscription.callback(valueToNotify);
         });
     };
