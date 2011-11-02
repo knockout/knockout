@@ -227,5 +227,24 @@ describe('Binding attribute syntax', {
             value_of(ex.message).should_be("The binding 'visible' cannot be used with virtual elements");
         }
         value_of(didThrow).should_be(true);
+    },
+    
+    'Should not reinvoke init for notifications triggerd during first evaluation': function () {
+        var observable = new ko.observable('A');
+        var initCalls = 0;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) {
+                var value = valueAccessor();
+                initCalls++;
+                // this logic probably wouldn't be in init but might be indirectly invoked by init
+                if (ko.isWriteableObservable(value)) {
+                    value(value().toLowerCase());
+                }
+            }
+        };
+        testNode.innerHTML = "<div data-bind='test: myObservable'></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(initCalls).should_be(1);
     }
 });
