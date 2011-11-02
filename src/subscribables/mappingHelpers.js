@@ -25,7 +25,7 @@
         
         rootObject = mapInputCallback(rootObject);
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
-        if (!canHaveProperties)
+        if (!canHaveProperties || rootObject instanceof Date)
             return rootObject;
             
         var outputProperties = rootObject instanceof Array ? [] : {};
