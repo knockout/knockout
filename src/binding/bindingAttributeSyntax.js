@@ -95,6 +95,8 @@
                 if (parsedBindings) {
                     // First run all the inits, so bindings can register for notification on changes
                     if (isFirstEvaluation) {
+                        // notifications on the first evaluation may be triggered by init or update so set this flag now
+                        isFirstEvaluation = false;
                         for (var bindingKey in parsedBindings) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && node.nodeType === 8)
