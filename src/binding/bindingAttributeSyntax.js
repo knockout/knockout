@@ -55,7 +55,8 @@
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
-        var isFirstEvaluation = true;
+        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
+        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
 
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
@@ -94,9 +95,8 @@
 
                 if (parsedBindings) {
                     // First run all the inits, so bindings can register for notification on changes
-                    if (isFirstEvaluation) {
-                        // notifications on the first evaluation may be triggered by init or update so set this flag now
-                        isFirstEvaluation = false;
+                    if (initPhase === 0) {
+                        initPhase = 1;
                         for (var bindingKey in parsedBindings) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && node.nodeType === 8)
@@ -113,15 +113,18 @@
                                     bindingHandlerThatControlsDescendantBindings = bindingKey;
                                 }
                             }
-                        }                	
+                        }
+                        initPhase = 2;
                     }
                     
                     // ... then run all the updates, which might trigger changes even on the first evaluation
-                    for (var bindingKey in parsedBindings) {
-                        var binding = ko.bindingHandlers[bindingKey];
-                        if (binding && typeof binding["update"] == "function") {
-                            var handlerUpdateFn = binding["update"];
-                            handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                    if (initPhase === 2) {
+                        for (var bindingKey in parsedBindings) {
+                            var binding = ko.bindingHandlers[bindingKey];
+                            if (binding && typeof binding["update"] == "function") {
+                                var handlerUpdateFn = binding["update"];
+                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                            }
                         }
                     }
                 }
