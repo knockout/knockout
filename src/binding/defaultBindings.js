@@ -220,6 +220,19 @@ ko.bindingHandlers['options'] = {
                 typeof option.innerText == "string" ? option.innerText = optionText
                                                     : option.textContent = optionText;
 
+                // Apply a title to the option element if specified
+                var optionsTitleValue = allBindings['optionsTitle'];
+                if (typeof optionsTitleValue == "function")
+                    optionTitle = optionsTitleValue(value[i]); // Given a function; run it against the data value
+                else if (typeof optionsTitleValue == "string")
+                    optionTitle = value[i][optionsTitleValue]; // Given a string; treat it as a property name on the data value
+                else
+                    optionTitle = "";                          // Given no optionsTitle arg; use the empty string
+                optionTitle = ko.utils.unwrapObservable(optionTitle).toString();
+                if (optionTitle !== "") {
+                    option.title = optionTitle;
+                }
+
                 element.appendChild(option);
             }
 

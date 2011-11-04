@@ -362,28 +362,32 @@ describe('Binding: Options', {
         value_of(displayedOptions).should_be(["A", "B", "C"]);
     },
     
-    'Should accept optionsText and optionsValue params to display subproperties of the model values': function() {
+    'Should accept optionsText, optionsValue and optionsTitle params to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
-            { name: 'bob', id: ko.observable(6) }, // Note that subproperties can be observable
-            { name: ko.observable('frank'), id: 13 }
+            { name: 'bob', id: ko.observable(6), job: 'manager' }, // Note that subproperties can be observable
+            { name: ko.observable('frank'), id: 13, job: ko.observable('coder & tester') }
         ]);	
-        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\"'><option>should be deleted</option></select>";
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\", optionsTitle: \"job\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
+        var displayedTitle = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.title; });
         var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });	
         value_of(displayedText).should_be(["bob", "frank"]);
+        value_of(displayedTitle).should_be(["manager", "coder & tester"]);
         value_of(displayedValues).should_be([6, 13]);
     },
 
-    'Should accept function in optionsText param to display subproperties of the model values': function() {
+    'Should accept function in optionsText and optionsTitle params to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', job: 'manager' }, 
             { name: 'frank', job: 'coder & tester' }
         ]);	
-        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }, optionsValue: \"id\"'><option>should be deleted</option></select>";
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }, optionsTitle: function (v) { return v[\"name\"] + \" (title: \" + v[\"job\"] + \")\"; }, optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });	
+        var displayedTitle = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.title; });
         value_of(displayedText).should_be(["bob (manager)", "frank (coder & tester)"]);
+        value_of(displayedTitle).should_be(["bob (title: manager)", "frank (title: coder & tester)"]);
     },
 
     'Should update the SELECT node\'s options if the model changes': function () {
