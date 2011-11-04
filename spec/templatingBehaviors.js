@@ -658,5 +658,14 @@ describe('Templating', {
         testNode.innerHTML = "Start <!-- ko template: { data: someData } -->Childprop: [js: childProp]<!-- /ko --> End";
         ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
         value_of(testNode).should_contain_html("start <!-- ko template: { data: somedata } --><div>childprop: abc</div><!-- /ko -->end");
-    }    
+    },
+
+    'Should be able to use anonymous templates that contain first-child comment nodes': function() {
+        // This represents issue https://github.com/SteveSanderson/knockout/issues/188
+        // (IE < 9 strips out leading comment nodes when you use .innerHTML)   
+        ko.setTemplateEngine(new dummyTemplateEngine({}));
+        testNode.innerHTML = "start <div data-bind='foreach: [1,2]'><span><!-- leading comment -->hello</span></div>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_html('start <div data-bind="foreach: [1,2]"><span><!-- leading comment -->hello</span><span><!-- leading comment -->hello</span></div>');
+    }
 })

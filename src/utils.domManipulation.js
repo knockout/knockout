@@ -5,19 +5,6 @@
         // Based on jQuery's "clean" function, but only accounting for table-related elements.
         // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
 
-        // Trim any leading whitespace/comment nodes, otherwise IE < 9 will discard them. We'll need to restore them after.
-        html = html || "";
-        var prefixNodes = [];
-        while (html.match(leadingCommentRegex)) {
-            html = html.replace(leadingCommentRegex, function() {
-                var whitespace = arguments[1], comment = arguments[2];
-                if (whitespace)
-                    prefixNodes.push(document.createTextNode(whitespace));
-                prefixNodes.push(document.createComment(comment));
-                return "";
-            });
-        }
-
         // Note that there's still an issue in IE < 9 whereby it will discard comment nodes that are the first child of
         // a descendant node. For example: "<div><!-- mycomment -->abc</div>" will get parsed as "<div>abc</div>"
         // This won't affect anyone who has referenced jQuery, and there's always the workaround of inserting a dummy node
@@ -33,13 +20,14 @@
                    /* anything else */                                 [0, "", ""];
 
         // Go to html and back, then peel off extra wrappers
-        div.innerHTML = wrap[1] + html + wrap[2];
+        // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
+        div.innerHTML = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
 
         // Move to the right depth
         while (wrap[0]--)
             div = div.lastChild;
 
-        return prefixNodes.concat(ko.utils.makeArray(div.childNodes));
+        return ko.utils.makeArray(div.lastChild.childNodes);
     }
     
     ko.utils.parseHtmlFragment = function(html) {
