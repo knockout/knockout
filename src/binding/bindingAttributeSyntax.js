@@ -133,7 +133,6 @@
             { 'disposeWhenNodeIsRemoved' : node }
         );
         
-        isFirstEvaluation = false;
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
