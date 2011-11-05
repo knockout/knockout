@@ -75,6 +75,12 @@ describe('Binding attribute syntax', {
         ko.applyBindings(null, testNode); // No exception means success
     },
 
+    'Should tolerate wacky IE conditional comments': function() {
+        // Represents issue https://github.com/SteveSanderson/knockout/issues/186. Would fail on IE9, but work on earlier IE versions.
+        testNode.innerHTML = "<div><!--[if IE]><!-->Hello<!--<![endif]--></div>";
+        ko.applyBindings(null, testNode); // No exception means success          
+    },
+
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {

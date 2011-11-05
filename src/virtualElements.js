@@ -7,16 +7,21 @@
     // The point of all this is to support containerless templates (e.g., <!-- ko foreach:someCollection -->blah<!-- /ko -->)
     // without having to scatter special cases all over the binding and templating code.
 
-    var startCommentRegex = /^\s*ko\s+(.*\:.*)\s*$/;
-    var endCommentRegex =   /^\s*\/ko\s*$/;
+    // IE 9 cannot reliably read the "nodeValue" property of a comment node (see https://github.com/SteveSanderson/knockout/issues/186)
+    // but it does give them a nonstandard alternative property called "text" that it can read reliably. Other browsers don't have that property.
+    // So, use node.text where available, and node.nodeValue elsewhere
+    var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
+
+    var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko\s+(.*\:.*)\s*-->$/ : /^\s*ko\s+(.*\:.*)\s*$/;
+    var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko\s*-->$/ : /^\s*\/ko\s*$/;
     var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 
     function isStartComment(node) {
-        return (node.nodeType == 8) && node.nodeValue.match(startCommentRegex);
+        return (node.nodeType == 8) && (commentNodesHaveTextProperty ? node.text : node.nodeValue).match(startCommentRegex);
     }
 
     function isEndComment(node) {
-        return (node.nodeType == 8) && node.nodeValue.match(endCommentRegex);
+        return (node.nodeType == 8) && (commentNodesHaveTextProperty ? node.text : node.nodeValue).match(endCommentRegex);
     }
 
     function getVirtualChildren(startComment, allowUnbalanced) {
