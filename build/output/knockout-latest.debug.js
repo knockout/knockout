@@ -61,8 +61,8 @@ ko.utils = new (function () {
         },
 
         arrayIndexOf: function (array, item) {
-            if (typeof array.indexOf == "function")
-                return array.indexOf(item);
+            if (typeof Array.prototype.indexOf == "function")
+                return Array.prototype.indexOf.call(array, item);
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
@@ -2875,6 +2875,28 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
     // "callbackAfterAddingNodes" will be invoked after any "mapping"-generated nodes are inserted into the container node
     // You can use this, for example, to activate bindings on those nodes.
 
+    function fixUpVirtualElements(contiguousNodeArray) {
+        // Ensures that contiguousNodeArray really *is* an array of contiguous siblings, even if some of the interior
+        // ones have changed since your array was first built (e.g., because your array contains virtual elements, and
+        // their virtual children changed when binding was applied to them).
+        // This is needed so that we can reliably remove or update the nodes corresponding to a given array item
+
+        if (contiguousNodeArray.length > 2) {
+            // Build up the actual new contiguous node set
+            var current = contiguousNodeArray[0], last = contiguousNodeArray[contiguousNodeArray.length - 1], newContiguousSet = [current];
+            while (current !== last) {
+                current = current.nextSibling;
+                if (!current) // Won't happen, except if the developer has manually removed some DOM elements (then we're in an undefined scenario)
+                    return;
+                newContiguousSet.push(current);
+            }
+
+            // ... then mutate the input array to match this. 
+            // (The following line replaces the contents of contiguousNodeArray with newContiguousSet)
+            Array.prototype.splice.apply(contiguousNodeArray, [0, contiguousNodeArray.length].concat(newContiguousSet));
+        }
+    }
+
     function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
@@ -2883,6 +2905,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
+                fixUpVirtualElements(mappedNodes);
                 ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
                 if (callbackAfterAddingNodes)
                     callbackAfterAddingNodes(valueToMap, newMappedNodes);
@@ -2929,6 +2952,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                     lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
                 
                     // Queue these nodes for later removal
+                    fixUpVirtualElements(lastMappingResult[lastMappingResultIndex].domNodes);
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
                         nodesToDelete.push({
                           element: node,

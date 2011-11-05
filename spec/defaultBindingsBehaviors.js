@@ -1194,6 +1194,29 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">second child</span>');
     },
 
+    'Should remove all nodes corresponding to a removed array item, even if they were generated via containerless templates': function() {
+        // Represents issue https://github.com/SteveSanderson/knockout/issues/185
+        testNode.innerHTML = "<div data-bind='foreach: someitems'>a<!-- ko if:true -->b<!-- /ko --></div>";
+        var someitems = ko.observableArray([1,2]);
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_html('<div data-bind="foreach: someitems">a<!-- ko if:true -->b<!-- /ko -->a<!-- ko if:true -->b<!-- /ko --></div>');
+
+        // Now remove items, and check the corresponding child nodes vanished
+        someitems.splice(1, 1);
+        value_of(testNode).should_contain_html('<div data-bind="foreach: someitems">a<!-- ko if:true -->b<!-- /ko --></div>');
+    },
+
+    'Should update all nodes corresponding to a changed array item, even if they were generated via containerless templates': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someitems'><!-- ko if:true --><span data-bind='text: $data'></span><!-- /ko --></div>";
+        var someitems = [ ko.observable('A'), ko.observable('B') ];
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_text('AB');
+
+        // Now update an item
+        someitems[0]('A2');
+        value_of(testNode).should_contain_text('A2B');
+    },    
+
     'Should be able to supply show "_destroy"ed items via includeDestroyed option': function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: true }'><span data-bind='text: childProp'></span></div>";
         var someItems = ko.observableArray([
