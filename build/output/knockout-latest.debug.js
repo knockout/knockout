@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1089,6 +1089,29 @@ ko.dependentObservable.__ko_proto__ = ko.observable;
 
 ko.exportSymbol('ko.dependentObservable', ko.dependentObservable);
 ko.exportSymbol('ko.computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
+ko.liveObservable = function(model, property) {
+    function liveObservable() {
+        if (arguments.length > 0) {  // Write
+            // Ignore writes if the value hasn't changed
+            if ((!liveObservable['equalityComparer']) || !liveObservable['equalityComparer'](model[property], arguments[0])) {
+                model[property] = arguments[0];
+                liveObservable.notifySubscribers(model[property]);
+            }
+            return this; // Permits chained assignments
+        } else {
+            ko.dependencyDetection.registerDependency(liveObservable); // The caller only needs to be notified of changes if they did a "read" operation
+            return model[property];
+        }
+    }
+    liveObservable.__ko_proto__ = ko.observable;
+    ko.subscribable.call(liveObservable);
+    liveObservable.valueHasMutated = function () { liveObservable.notifySubscribers(model[property]); };
+    ko.exportProperty(liveObservable, "valueHasMutated", liveObservable.valueHasMutated);
+    return liveObservable;
+};
+
+ko.exportSymbol('ko.liveObservable', ko.liveObservable);
+
 (function() {    
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
     
@@ -3120,4 +3143,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
-})();})(window);                  
+})();})(window);
