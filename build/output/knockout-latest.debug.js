@@ -2013,7 +2013,13 @@ ko.bindingHandlers['options'] = {
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
-        ko.utils.emptyDomNode(element);
+
+        // Remove all existing <option>s. 
+        // Need to use .remove() rather than .removeChild() for <option>s otherwise IE behaves oddly (https://github.com/SteveSanderson/knockout/issues/134)
+        while (element.length > 0) {
+            ko.cleanNode(element.options[0]);
+            element.remove(0);
+        }
 
         if (value) {
             var allBindings = allBindingsAccessor();
