@@ -688,7 +688,8 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");        
+        value_of(myobservable()).should_be("another value");
+        testNode.childNodes[0].click();
         value_of(myobservable()).should_be("this radio button value");
     },
     
