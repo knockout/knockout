@@ -1928,6 +1928,19 @@ ko.bindingHandlers['disable'] = {
     } 	
 };
 
+function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, preferModelValue) {
+    if (preferModelValue) {
+        if (modelValue !== ko.selectExtensions.readValue(element))
+            ko.selectExtensions.writeValue(element, modelValue);
+    }
+
+    // No matter which direction we're syncing in, we want the end result to be equality between dropdown value and model value.
+    // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
+    // change the model value to match the dropdown.
+    if (modelValue !== ko.selectExtensions.readValue(element))
+        ko.utils.triggerEvent(element, "change");
+};
+
 ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) { 
         // Always catch "change" event; possibly other events too if asked
@@ -1989,13 +2002,10 @@ ko.bindingHandlers['value'] = {
                 setTimeout(applyValueAction, 0);
         }
         
-        // For SELECT nodes, you're not allowed to have a model value that disagrees with the UI selection, so if there is a
-        // difference, treat it as a change that should be written back to the model
-        if (element.tagName == "SELECT") {
-            elementValue = ko.selectExtensions.readValue(element);
-            if(elementValue !== newValue)
-                ko.utils.triggerEvent(element, "change");
-        }
+        // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+        // because you're not allowed to have a model value that disagrees with a visible UI selection.
+        if ((element.tagName == "SELECT") && (element.length > 0))
+            ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
 
@@ -2004,6 +2014,7 @@ ko.bindingHandlers['options'] = {
         if (element.tagName != "SELECT")
             throw new Error("options binding applies only to SELECT elements");
 
+        var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && node.tagName == "OPTION" && node.selected;
         }), function (node) {
@@ -2070,6 +2081,13 @@ ko.bindingHandlers['options'] = {
             
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
+
+            if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+                // Ensure consistency between model value and selected option.
+                // If the dropdown is being populated for the first time here (or was otherwise previously empty),
+                // the dropdown selection state is meaningless, so we preserve the model value.
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
+            }
         }
     }
 };
