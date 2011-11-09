@@ -1656,10 +1656,8 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
             this['$root'] = dataItem;        	
         }
     }
-    ko.bindingContext.prototype = {
-        createChildContext: function (dataItem) {
-            return new ko.bindingContext(dataItem, this);
-        }
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
+        return new ko.bindingContext(dataItem, this);
     };
 
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {
@@ -2370,7 +2368,7 @@ ko.bindingHandlers['foreach'] = {
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['foreach'] = true;
-// If you want to make a custom template engine,
+ko.exportSymbol('ko.allowedVirtualElementBindings', ko.virtualElements.allowedBindings);// If you want to make a custom template engine,
 // 
 // [1] Inherit from this class (like ko.nativeTemplateEngine does)
 // [2] Override 'renderTemplateSource', supplying a function with this signature:
@@ -2701,7 +2699,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
         var createInnerBindingContext = function(arrayValue) {
-            return parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+            return parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
         };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
@@ -2778,8 +2776,8 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
-                        ? bindingContext.createChildContext(ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
-                        : bindingContext;                                                                    // Given no explicit 'data' value, we retain the same binding context
+                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        : bindingContext;                                                                       // Given no explicit 'data' value, we retain the same binding context
                     templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
                     ko.virtualElements.emptyNode(element);
