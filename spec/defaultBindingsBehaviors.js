@@ -266,14 +266,29 @@ describe('Binding: Value', {
         value_of(myobservable()).should_be("some user-entered value");
     },           
     
-    'For select boxes, should update selectedIndex when the model changes': function() {
+    'For select boxes, should update selectedIndex when the model changes (options specified before value)': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        value_of(observable()).should_be('B');
+
         observable('A');
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
+        value_of(observable()).should_be('A');
     },
+
+    'For select boxes, should update selectedIndex when the model changes (value specified before options)': function() {
+        var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        value_of(observable()).should_be('B');
+
+        observable('A');
+        value_of(testNode.childNodes[0].selectedIndex).should_be(0);
+        value_of(observable()).should_be('A');
+    },    
     
     'For select boxes, should display the caption when the model value changes to undefined': function() {
         var observable = new ko.observable('B');
@@ -325,12 +340,21 @@ describe('Binding: Value', {
         //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
         //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
         var observable = new ko.observable(); // Undefined by default
+
+        // Should work with options specified before value
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(observable()).should_be("A");
+
+        // ... and with value specified before options
+        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+        observable(undefined);
+        value_of(observable()).should_be(undefined);
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");        
     },
     
-    'For select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
+    'For nonempty select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
