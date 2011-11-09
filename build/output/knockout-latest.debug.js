@@ -1793,6 +1793,11 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
     };
 
+    ko.applyBindingsToDescendants = function(viewModel, rootNode) {
+        if (rootNode.nodeType === 1)
+            applyBindingsToDescendantsInternal(viewModel, rootNode);
+    };
+
     ko.applyBindings = function (viewModel, rootNode) {
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
@@ -1821,6 +1826,7 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('ko.contextFor', ko.contextFor);
     ko.exportSymbol('ko.dataFor', ko.dataFor);
