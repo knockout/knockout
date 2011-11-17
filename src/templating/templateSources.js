@@ -33,7 +33,7 @@
             if (this.domElement.tagName.toLowerCase() == "script")
                 this.domElement.text = valueToWrite;
             else
-                this.domElement.innerHTML = valueToWrite;
+                ko.utils.setHtml(this.domElement, valueToWrite);
         }
     };
     
