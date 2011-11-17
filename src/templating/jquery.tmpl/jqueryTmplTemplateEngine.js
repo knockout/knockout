@@ -59,13 +59,15 @@
             document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
         };
     
-        jQuery['tmpl']['tag']['ko_code'] = {
-            open: "__.push($1 || '');"
-        };
-        jQuery['tmpl']['tag']['ko_with'] = {
-            open: "with($1) {",
-            close: "} "
-        };
+        if (jQueryTmplVersion > 0) {
+            jQuery['tmpl']['tag']['ko_code'] = {
+                open: "__.push($1 || '');"
+            };
+            jQuery['tmpl']['tag']['ko_with'] = {
+                open: "with($1) {",
+                close: "} "
+            };
+        }
     };
     
     ko.jqueryTmplTemplateEngine.prototype = new ko.templateEngine();
