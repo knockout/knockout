@@ -21,7 +21,12 @@
 
         // Go to html and back, then peel off extra wrappers
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
-        div.innerHTML = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
+        var markup = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
+        if (typeof window['innerShiv'] == "function") {
+            div.appendChild(window['innerShiv'](markup));
+        } else {
+            div.innerHTML = markup;
+        }
 
         // Move to the right depth
         while (wrap[0]--)
@@ -58,3 +63,4 @@
 })();
 
 ko.exportSymbol('ko.utils.parseHtmlFragment', ko.utils.parseHtmlFragment);
+ko.exportSymbol('ko.utils.setHtml', ko.utils.setHtml);

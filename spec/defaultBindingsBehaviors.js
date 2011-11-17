@@ -1418,5 +1418,15 @@ describe('Binding: Foreach', {
             // ... but IE < 8 doesn't add ones that immediately precede a <li>
             value_of(testNode).should_contain_html('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha<li data-bind="text: $data">beta</li><!-- /ko --></ul>');
         }
+    },
+
+    'Should be able to output HTML5 elements (even on IE<9, as long as you reference either innershiv.js or jQuery1.7+Modernizr)': function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/194
+        ko.utils.setHtml(testNode, "<div data-bind='foreach:someitems'><section data-bind='text: $data'></section></div>");
+        var viewModel = {
+            someitems: [ 'Alpha', 'Beta' ]
+        };
+        ko.applyBindings(viewModel, testNode);
+        value_of(testNode).should_contain_html('<div data-bind="foreach:someitems"><section data-bind="text: $data">alpha</section><section data-bind="text: $data">beta</section></div>');
     }
 });
