@@ -70,7 +70,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
             });
             var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
-            _latestValue = options["read"].call(valueForThis);
+            var newValue = options["read"].call(valueForThis);
+            dependentObservable.notifySubscribers(_latestValue, "beforeChange");
+            _latestValue = newValue;
         } finally {
             ko.dependencyDetection.end();
         }
@@ -95,7 +97,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
-    }    
+    }
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {

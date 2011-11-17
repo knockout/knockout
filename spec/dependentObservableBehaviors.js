@@ -144,6 +144,18 @@ describe('Dependent Observable', {
         value_of(notifiedValue).should_be(3);
     },
 
+    'Should notify "beforeChange" subscribers before changes': function () {
+        var notifiedValue;
+        var observable = new ko.observable(1);
+        var depedentObservable = new ko.dependentObservable(function () { return observable() + 1; });
+        depedentObservable.subscribe(function (value) { notifiedValue = value; }, null, "beforeChange");
+
+        value_of(notifiedValue).should_be(undefined);
+        observable(2);
+        value_of(notifiedValue).should_be(2);
+        value_of(depedentObservable()).should_be(3);
+    },
+
     'Should only update once when each dependency changes, even if evaluation calls the dependency multiple times': function () {
         var notifiedValues = [];
         var observable = new ko.observable();

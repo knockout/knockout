@@ -81,6 +81,43 @@ describe('Observable', {
         value_of(notifiedValues[1]).should_be("B");
     },
     
+    'Should notify "beforeChange" subscribers before each new value': function () {
+        var instance = new ko.observable();
+        var notifiedValues = [];
+        instance.subscribe(function (value) {
+            notifiedValues.push(value);
+        }, null, "beforeChange");
+
+        instance('A');
+        instance('B');
+
+        value_of(notifiedValues.length).should_be(2);
+        value_of(notifiedValues[0]).should_be(undefined);
+        value_of(notifiedValues[1]).should_be('A');
+    },
+
+    'Should be able to tell it that its value will mutate, at which point it notifies "beforeChange" subscribers': function () {
+        var instance = new ko.observable();
+        var notifiedValues = [];
+        instance.subscribe(function (value) {
+            notifiedValues.push(value ? value.childProperty : value);
+        }, null, "beforeChange");
+
+        var someUnderlyingObject = { childProperty : "A" };
+        instance(someUnderlyingObject);
+        value_of(notifiedValues.length).should_be(1);
+        value_of(notifiedValues[0]).should_be(undefined);
+
+        instance.valueWillMutate();
+        value_of(notifiedValues.length).should_be(2);
+        value_of(notifiedValues[1]).should_be("A");
+        
+        someUnderlyingObject.childProperty = "B";
+        instance.valueHasMutated();
+        value_of(notifiedValues.length).should_be(2);
+        value_of(notifiedValues[1]).should_be("A");
+    },
+    
     'Should ignore writes when the new value is primitive and strictly equals the old value': function() {
         var instance = new ko.observable();
         var notifiedValues = [];
