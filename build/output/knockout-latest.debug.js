@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -1115,7 +1115,7 @@ ko.exportSymbol('ko.computed', ko.dependentObservable); // Make "ko.computed" an
         
         rootObject = mapInputCallback(rootObject);
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
-        if (!canHaveProperties)
+        if (!canHaveProperties || rootObject instanceof Date)
             return rootObject;
             
         var outputProperties = rootObject instanceof Array ? [] : {};
@@ -3150,4 +3150,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
-})();})(window);                  
+})();})(window);

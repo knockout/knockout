@@ -24,7 +24,7 @@
         visitedObjects = visitedObjects || new objectLookup();
         
         rootObject = mapInputCallback(rootObject);
-        var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined);
+        var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined) && (!(rootObject instanceof Date));
         if (!canHaveProperties)
             return rootObject;
             
