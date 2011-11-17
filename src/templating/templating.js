@@ -222,5 +222,5 @@
     ko.virtualElements.allowedBindings['template'] = true;
 })();
 
-ko.exportSymbol('ko.setTemplateEngine', ko.setTemplateEngine);
-ko.exportSymbol('ko.renderTemplate', ko.renderTemplate);
+ko.exportSymbol('setTemplateEngine', ko.setTemplateEngine);
+ko.exportSymbol('renderTemplate', ko.renderTemplate);

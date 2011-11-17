@@ -43,4 +43,4 @@
     ko.bindingProvider['instance'] = new ko.bindingProvider();
 })();
 
-ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);
+ko.exportSymbol('bindingProvider', ko.bindingProvider);
