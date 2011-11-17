@@ -3,6 +3,17 @@ describe('DOM node disposal', {
     before_each: function () {
         testNode = document.createElement("div");
     },
+
+	'DOM node should not be attached to document after removal': function () {
+        value_of(ko.utils.domNodeIsAttachedToDocument(testNode)).should_be(false);
+
+		var body = document.getElementsByTagName("BODY")[0];
+		body.appendChild(testNode);
+		value_of(ko.utils.domNodeIsAttachedToDocument(testNode)).should_be(true);
+
+        body.removeChild(testNode);
+        value_of(ko.utils.domNodeIsAttachedToDocument(testNode)).should_be(false);
+ },
         
     'Should run registered disposal callbacks when a node is cleaned': function () {
         var didRun = false;

@@ -97,7 +97,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
     }    
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
-    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
+	dependentObservable.isKnockoutObservable = true;
+    dependentObservable.isKnockoutWritableObservable = typeof options["write"] === "function";
     dependentObservable.dispose = function () {
         if (disposeWhenNodeIsRemoved)
             ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, disposeWhenNodeIsRemovedCallback);
