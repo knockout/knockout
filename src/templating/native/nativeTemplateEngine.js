@@ -11,4 +11,4 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
 ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
 ko.setTemplateEngine(ko.nativeTemplateEngine.instance);
 
-ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);
+ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);

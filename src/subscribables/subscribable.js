@@ -65,5 +65,5 @@ ko.isSubscribable = function (instance) {
     return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
 };
 
-ko.exportSymbol('ko.subscribable', ko.subscribable);
-ko.exportSymbol('ko.isSubscribable', ko.isSubscribable);
+ko.exportSymbol('subscribable', ko.subscribable);
+ko.exportSymbol('isSubscribable', ko.isSubscribable);
