@@ -57,4 +57,4 @@
     }    
 })();
 
-ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);
+ko.exportSymbol('bindingProvider', ko.bindingProvider);

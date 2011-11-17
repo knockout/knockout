@@ -63,8 +63,8 @@ ko.memoization = (function () {
     };
 })();
 
-ko.exportSymbol('ko.memoization', ko.memoization);
-ko.exportSymbol('ko.memoization.memoize', ko.memoization.memoize);
-ko.exportSymbol('ko.memoization.unmemoize', ko.memoization.unmemoize);
-ko.exportSymbol('ko.memoization.parseMemoText', ko.memoization.parseMemoText);
-ko.exportSymbol('ko.memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);
+ko.exportSymbol('memoization', ko.memoization);
+ko.exportSymbol('memoization.memoize', ko.memoization.memoize);
+ko.exportSymbol('memoization.unmemoize', ko.memoization.unmemoize);
+ko.exportSymbol('memoization.parseMemoText', ko.memoization.parseMemoText);
+ko.exportSymbol('memoization.unmemoizeDomNodeAndDescendants', ko.memoization.unmemoizeDomNodeAndDescendants);

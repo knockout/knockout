@@ -58,6 +58,6 @@ ko.isWriteableObservable = function (instance) {
 }
 
 
-ko.exportSymbol('ko.observable', ko.observable);
-ko.exportSymbol('ko.isObservable', ko.isObservable);
-ko.exportSymbol('ko.isWriteableObservable', ko.isWriteableObservable);
+ko.exportSymbol('observable', ko.observable);
+ko.exportSymbol('isObservable', ko.isObservable);
+ko.exportSymbol('isWriteableObservable', ko.isWriteableObservable);

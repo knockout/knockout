@@ -41,4 +41,4 @@ function applyExtenders(requestedExtenders) {
     return target;
 }
 
-ko.exportSymbol('ko.extenders', ko.extenders);
+ko.exportSymbol('extenders', ko.extenders);

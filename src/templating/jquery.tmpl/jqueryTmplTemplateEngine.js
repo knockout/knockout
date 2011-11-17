@@ -77,5 +77,5 @@
     if (jqueryTmplTemplateEngineInstance.jQueryTmplVersion > 0)
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
-    ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
+    ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();

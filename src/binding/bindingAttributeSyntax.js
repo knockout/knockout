@@ -181,10 +181,10 @@
         return context ? context['$data'] : undefined;
     };    
     
-    ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
-    ko.exportSymbol('ko.applyBindings', ko.applyBindings);
-    ko.exportSymbol('ko.applyBindingsToDescendants', ko.applyBindingsToDescendants);
-    ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
-    ko.exportSymbol('ko.contextFor', ko.contextFor);
-    ko.exportSymbol('ko.dataFor', ko.dataFor);
+    ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('applyBindings', ko.applyBindings);
+    ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
+    ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);
+    ko.exportSymbol('contextFor', ko.contextFor);
+    ko.exportSymbol('dataFor', ko.dataFor);
 })();
