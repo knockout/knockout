@@ -582,7 +582,7 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
     }
     
     ko.utils.parseHtmlFragment = function(html) {
-        return typeof jQuery != 'undefined' ? jQuery['clean']([html]) // As below, benefit from jQuery's optimisations where possible
+        return (false && typeof jQuery != 'undefined') ? jQuery['clean']([html]) // As below, benefit from jQuery's optimisations where possible
                                             : simpleHtmlParse(html);  // ... otherwise, this simple logic will do in most common cases.
     };
     
@@ -596,7 +596,7 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (typeof jQuery != 'undefined') {
+            if (false && typeof jQuery != 'undefined') {
                 jQuery(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.
