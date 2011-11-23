@@ -1,0 +1,27 @@
+
+{% if live_example_view %}
+<div class="liveExample" {% if live_example_id %}id="{{ live_example_id }}"{% endif %}>
+{{ live_example_view }}
+<script type="text/javascript">
+{% if live_example_id %}
+// Temporarily redirect ko.applyBindings to scope it to this live example
+var realKoApplyBindings = ko.applyBindings;
+ko.applyBindings = function() {
+	if (arguments.length === 1)
+		return ko.applyBindings(arguments[0], document.getElementById('{{ live_example_id }}'));
+	return realKoApplyBindings.apply(ko, arguments);
+}
+{% endif %}
+/*<![CDATA[*/{{ live_example_viewmodel }}/*]]>*/
+{% if live_example_id %}
+ko.applyBindings = realKoApplyBindings;
+{% endif %}
+</script>
+</div>
+
+<h4>Source code: View</h4>
+<pre class="brush:html">{{ live_example_view | replace:'/*<![CDATA[*/','' | replace:'/*]]>*/','' | escape }}</pre>
+<h4>Source code: View model</h4>
+<pre class="brush:js">{{ live_example_viewmodel | replace:'/*<![CDATA[*/','' | replace:'/*]]>*/','' | escape }}</pre>
+
+{% endif %}
