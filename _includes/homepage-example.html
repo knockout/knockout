@@ -1,21 +1,17 @@
 <h2>Run it:</h2>
 <div class="liveExample">
-	<p>
+    <p>
     Choose a ticket class:
-    <select data-bind="options: tickets, 
+    <select data-bind="options: tickets,
                        optionsCaption: 'Choose...',
                        optionsText: 'name',
                        value: chosenTicket"></select>
-	</p>
-    <p data-bind="template: 'ticketTemplate'"></p>
-        
-    <script id="ticketTemplate" type="text/x-jquery-tmpl">
-        {{'{{'}}if chosenTicket}}
-            You have chosen <b>${ chosenTicket().name }</b>
-            ($${ chosenTicket().price })
-            <button data-bind="click: resetTicket">Clear</button>
-        {{'{{'}}/if}}
-    </script>
+    </p>
+    <p data-bind="with: chosenTicket">
+        You have chosen <b data-bind="text: name"> </b>
+        (<span data-bind="text: price"> </span>)
+        <button data-bind="click: $root.resetTicket">Clear</button>
+    </p>
     
     <script type="text/javascript">
         var viewModel = {
@@ -25,7 +21,7 @@
                 { name: "First Class", price: 1199.99 }
             ],
             chosenTicket: ko.observable(),
-            resetTicket: function() { this.chosenTicket(null) }
+            resetTicket: function() { viewModel.chosenTicket(null) }
         };
         ko.applyBindings(viewModel);
     </script>	
