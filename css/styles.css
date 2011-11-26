@@ -27,6 +27,8 @@ code { font-family: Consolas, Monaco, "Courier New", mono-space, monospace !impo
 	overflow-y: hidden;
 }
 
+li ul, li ol  { margin-bottom: 1em !important ; }
+
 .center { text-align: center }
 .left { text-align: left }
 .right { text-align: right }
