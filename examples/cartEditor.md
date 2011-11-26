@@ -16,81 +16,89 @@ title: Cart editor example
     .liveExample td select { height: 1.8em; white-space: nowrap; }
 </style>
 
-This example shows how dependent observables can be chained together. Each cart line has a `dependentObservable` to compute its own subtotal, and these in turn are combined in a further `dependentObservable` that computes the grand total. When you change the data, your changes ripple out through this chain of dependent observables, and all associated UI is updated.
+This example shows how dependent observables can be chained together. Each cart line has a `computed` property for its own subtotal, and these in turn are combined in a further `compouted` property for the grand total. When you change the data, your changes ripple out through this chain of dependent observables, and all associated UI is updated.
 
 This example also demonstrates a simple way to create cascading dropdowns.
 
 {% capture live_example_view %}
-<div id="cartEditor">
-    <table width="100%">
+<div id='cartEditor'>
+    <table width='100%'>
         <thead>
             <tr>
-                <th width="25%">Category</th>
-                <th width="25%">Product</th>
-                <th width="15%" class='price'>Price</th>
-                <th width="10%" class='quantity'>Quantity</th>
-                <th width="15%" class='price'>Subtotal</th>
-                <th width="10%"> </th>
+                <th width='25%'>Category</th>
+                <th width='25%'>Product</th>
+                <th class='price' width='15%'>Price</th>
+                <th class='quantity' width='10%'>Quantity</th>
+                <th class='price' width='15%'>Subtotal</th>
+                <th width='10%'> </th>
             </tr>
         </thead>
-        <tbody data-bind='template: {name: "cartRowTemplate", foreach: lines}'> </tbody>
+        <tbody data-bind='foreach: lines'>
+            <tr>
+                <td><select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category' /></td>
+                <td data-bind="if: category"><select data-bind='options: category().products, optionsText: "name", optionsCaption: "Select...", value: product' /></td>
+                <td class='price' data-bind="with: product"><span data-bind='text: formatCurrency(price)' /></td>
+                <td class='quantity'><input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' /></td>
+                <td class='price'><span data-bind='visible: product, text: formatCurrency(subtotal())' /></td>
+                <td><a href='#' data-bind='click: function() { cartViewModel.removeLine($data) }'>Remove</a></td>
+            </tr>
+        </tbody>
     </table>
-    <p class="grandTotal">
-        Total value: <span data-bind="text: formatCurrency(grandTotal())"> </span>            	
+    <p class='grandTotal'>
+        Total value: <span data-bind='text: formatCurrency(grandTotal())'> </span>
     </p>
-    <button data-bind="click: addLine">Add product</button>
-    <button data-bind="click: save">Submit order</button>
+    <button data-bind='click: addLine'>Add product</button>
+    <button data-bind='click: save'>Submit order</button>
 </div>
-        
-<script type="text/html" id="cartRowTemplate">
-    <tr>
-        <td><select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category'></select></td>
-        <td><select data-bind='visible: category, options: category() ? category().products : null, optionsText: "name", optionsCaption: "Select...", value: product'></select></td>
-        <td class='price'><span data-bind='text: product() ? formatCurrency(product().price) : ""'></span></td>
-        <td class='quantity'><input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' /></td>
-        <td class='price'><span data-bind='visible: product, text: formatCurrency(subtotal())'></span></td>
-        <td><a href="#" data-bind='click: function() { cartViewModel.removeLine($data) }'>Remove</a></td>
-    </tr>
-</script>
-
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    function formatCurrency(value) { return "$" + value.toFixed(2); }
-    
-    var cartLine = function() {
+    function formatCurrency(value) {
+        return "$" + value.toFixed(2);
+    }
+
+    var CartLine = function() {
         this.category = ko.observable();
         this.product = ko.observable();
-        this.quantity = ko.observable(1);        		
-        this.subtotal = ko.dependentObservable(function() {
-            return this.product() ? this.product().price * parseInt("0"+this.quantity(), 10) : 0;
+        this.quantity = ko.observable(1);
+        this.subtotal = ko.computed(function() {
+            return this.product() ? this.product().price * parseInt("0" + this.quantity(), 10) : 0;
         }.bind(this));
-        
+
         // Whenever the category changes, reset the product selection
-        this.category.subscribe(function() { this.product(undefined); }.bind(this));
+        this.category.subscribe(function() {
+            this.product(undefined);
+        }.bind(this));
     };
-    var cart = function() {
+    var Cart = function() {
         // Stores an array of lines, and from these, can work out the grandTotal
-        this.lines = ko.observableArray([new cartLine()]);   // Put one line in by default     		
-        this.grandTotal = ko.dependentObservable(function() {
+        this.lines = ko.observableArray([new CartLine()]); // Put one line in by default
+        this.grandTotal = ko.computed(function() {
             var total = 0;
             for (var i = 0; i < this.lines().length; i++)
-                total += this.lines()[i].subtotal();
+            total += this.lines()[i].subtotal();
             return total;
         }.bind(this));
-        
+
         // Operations
-        this.addLine = function() { this.lines.push(new cartLine()) };
-        this.removeLine = function(line) { this.lines.remove(line) };
+        this.addLine = function() {
+            this.lines.push(new CartLine())
+        };
+        this.removeLine = function(line) {
+            this.lines.remove(line)
+        };
         this.save = function() {
-            var dataToSave = $.map(this.lines(), function(line) { 
-                return line.product() ? { productName: line.product().name, quantity: line.quantity() } : undefined     				
+            var dataToSave = $.map(this.lines(), function(line) {
+                return line.product() ? {
+                    productName: line.product().name,
+                    quantity: line.quantity()
+                } : undefined
             });
             alert("Could now send this to server: " + JSON.stringify(dataToSave));
         };
     };
 
-    var cartViewModel = new cart();
+    var cartViewModel = new Cart();
     ko.applyBindings(cartViewModel, document.getElementById("cartEditor"));
 {% endcapture %}
 {% include live-example-tabs.html %}
