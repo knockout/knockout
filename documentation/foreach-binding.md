@@ -122,12 +122,12 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 When you're nesting control-flow bindings, it's often desirable to reach back up the hierarchy and access data or functions from parent contexts. You can use the following pseudovariables:
 
  * `$parent` --- is the data item outside the current `foreach` block
- * `$parents` --- is an array representing data items from all outer scopes.
-   * `$parents[0]` is the item from the parent scope (i.e., it's the same as `$parent`)
-   * `$parents[1]` is the item from the grandparent scope
-   * `$parents[2]` is the item from the great-grandparent scope
+ * `$parents` --- is an array representing data items from all outer control-flow scopes.
+   * `$parents[0]` is the item from the parent control-flow scope (i.e., it's the same as `$parent`)
+   * `$parents[1]` is the item from the grandparent control-flow scope
+   * `$parents[2]` is the item from the great-grandparent control-flow scope
    * ... and so on 
- * `$root` is the item from the outer-most scope. Typically this is your top-level viewmodel object. This is the same as `$parents[$parents.length-1]`.
+ * `$root` is the item from the outer-most control-flow scope. Typically this is your top-level viewmodel object. This is the same as `$parents[$parents.length-1]`.
 
 For example, see the use of `$parent` in [Example 2](#example_2_live_example_with_addremove).
 
