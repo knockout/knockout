@@ -10,31 +10,34 @@ Knockout tracks dependencies. Internally, `hasClickedTooManyTimes` has a subscri
 You don't have to define or manage these subscriptions manually. They are created and destroyed as needed by the framework. Check the HTML source code to see how simple this is.
 
 {% capture live_example_view %}
-<div>You've clicked <span data-bind="text: numberOfClicks">&nbsp;</span> times</div>
+<div>You've clicked <span data-bind='text: numberOfClicks'>&nbsp;</span> times</div>
 
-<button data-bind="click: registerClick, enable: !hasClickedTooManyTimes()">Click me</button>
+<button data-bind='click: registerClick, disable: hasClickedTooManyTimes'>Click me</button>
 
-<div data-bind="visible: hasClickedTooManyTimes">
+<div data-bind='visible: hasClickedTooManyTimes'>
     That's too many clicks! Please stop before you wear out your fingers.
-    <button data-bind="click: function() { numberOfClicks(0) }">Reset clicks</button>
+    <button data-bind='click: resetClicks'>Reset clicks</button>
 </div>
-
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var clickCounterViewModel = function () {
+    var ClickCounterViewModel = function() {
         this.numberOfClicks = ko.observable(0);
 
-        this.registerClick = function () {
+        this.registerClick = function() {
             this.numberOfClicks(this.numberOfClicks() + 1);
-        }
+        };
 
-        this.hasClickedTooManyTimes = ko.dependentObservable(function () {
+        this.resetClicks = function() {
+            this.numberOfClicks(0);
+        };
+
+        this.hasClickedTooManyTimes = ko.computed(function() {
             return this.numberOfClicks() >= 3;
         }, this);
     };
 
-    ko.applyBindings(new clickCounterViewModel());
+    ko.applyBindings(new ClickCounterViewModel());
 {% endcapture %}
 
 {% include live-example-tabs.html %}
