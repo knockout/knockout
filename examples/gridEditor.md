@@ -3,7 +3,7 @@ layout: example
 title: Grid editor example
 ---
 
-An example of using the 'foreach' binding to render a template for each item in an array. The advantage of doing this (compared to just using a 'for' loop inside the template) is that when you add or remove items, Knockout doesn't need to re-render everything - it only runs the template for the new item. The means the state of other rich UI controls (e.g., validators) isn't wiped out.
+An example of using the 'foreach' binding to render content for each item in an array. When you add or remove items, Knockout doesn't need to re-render everything - it only renders the appropriate elements for the new item. The means the state of other rich UI controls (e.g., validators) isn't wiped out.
 
 For a detailed step-by-step tutorial about building this example and integrating it with ASP.NET MVC, see [this blog post](http://blog.stevensanderson.com/2010/07/12/editing-a-variable-length-list-knockout-style/).
 
@@ -17,56 +17,60 @@ For a detailed step-by-step tutorial about building this example and integrating
 <script type="text/javascript" src="../js/jquery.validate.js"> </script>
 
 {% capture live_example_view %}
-<form action="/someServerSideHandler">
-    <p>You have asked for <span data-bind="text: gifts().length">&nbsp;</span> gift(s)</p>
-    <table data-bind="visible: gifts().length > 0">
+<form action='/someServerSideHandler'>
+    <p>You have asked for <span data-bind='text: gifts().length'>&nbsp;</span> gift(s)</p>
+    <table data-bind='visible: gifts().length > 0'>
         <thead>
             <tr>
                 <th>Gift name</th>
                 <th>Price</th>
-                <th></th>
+                <th />
             </tr>
         </thead>
-        <tbody data-bind='template: { name: "giftRowTemplate", foreach: gifts }'></tbody>
+        <tbody data-bind='foreach: gifts'>
+            <tr>
+                <td><input class='required' data-bind='value: name, uniqueName: true' /></td>
+                <td><input class='required number' data-bind='value: price, uniqueName: true' /></td>
+                <td><a href='#' data-bind='click: function() { viewModel.removeGift($data) }'>Delete</a></td>
+            </tr>
+        </tbody>
     </table>
 
-    <button data-bind="click: addGift">Add Gift</button>
-    <button data-bind="enable: gifts().length > 0" type="submit">Submit</button>
+    <button data-bind='click: addGift'>Add Gift</button>
+    <button data-bind='enable: gifts().length > 0' type='submit'>Submit</button>
 </form>
-
-<script type="text/html" id="giftRowTemplate">
-    <tr>
-        <td><input class="required" data-bind="value: name, uniqueName: true"/></td>
-        <td><input class="required number" data-bind="value: price, uniqueName: true"/></td>
-        <td><a href="#" data-bind="click: function() { viewModel.removeGift($data) }">Delete</a></td>
-    </tr>
-</script>
-
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var viewModel = {
-        gifts: ko.observableArray([
-            { name: "Tall Hat", price: "39.95" },
-            { name: "Long Cloak", price: "120.00" }
-        ]),
+var initialGifts = [
+    { name: "Tall Hat", price: "39.95"},
+    { name: "Long Cloak", price: "120.00"}
+];
 
-        addGift: function () {
-            this.gifts.push({ name: "", price: "" });
-        },
+var ViewModel = function(gifts) {
+    this.gifts = ko.observableArray(gifts);
 
-        removeGift: function (gift) {
-            this.gifts.remove(gift);
-        },
-
-        save: function (form) {        	
-            alert("Could now transmit to server: " + ko.utils.stringifyJson(this.gifts));
-            // To transmit to server, write this: ko.utils.postJson($("form")[0], this.gifts);
-        }
+    this.addGift = function() {
+        this.gifts.push({
+            name: "",
+            price: ""
+        });
     };
 
-    ko.applyBindings(viewModel);
+    this.removeGift = function(gift) {
+        this.gifts.remove(gift);
+    };
 
-    $("form").validate({ submitHandler: function () { viewModel.save() } });
+    this.save = function(form) {
+        alert("Could now transmit to server: " + ko.utils.stringifyJson(this.gifts));
+        // To transmit to server, write this: ko.utils.postJson($("form")[0], this.gifts);
+    };
+};
+
+var viewModel = new ViewModel(initialGifts);
+
+ko.applyBindings(viewModel);
+
+$("form").validate({ submitHandler: function() { viewModel.save() } });
 {% endcapture %}
 {% include live-example-tabs.html %}
