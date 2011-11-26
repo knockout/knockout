@@ -15,16 +15,17 @@ Edit either text box to see the "full name" display update. See the HTML source 
 
 {% capture live_example_viewmodel %}
     // Here's my data model
-    var viewModel = { 
-    	firstName : ko.observable("Planet"),
-    	lastName : ko.observable("Earth")
-    };
-    viewModel.fullName = ko.dependentObservable(function () {
-    	// Knockout tracks dependencies automatically. It knows that fullName depends on firstName and lastName, because these get called when evaluating fullName.
-        return viewModel.firstName() + " " + viewModel.lastName(); 
-    });
+    var ViewModel = function(first, last) {
+        this.firstName = ko.observable(first);
+        this.lastName = ko.observable(last);
 
-    ko.applyBindings(viewModel); // This makes Knockout get to work
+        this.fullName = ko.computed(function() {
+            // Knockout tracks dependencies automatically. It knows that fullName depends on firstName and lastName, because these get called when evaluating fullName.
+            return this.firstName() + " " + this.lastName();
+        }, this);
+    };
+
+    ko.applyBindings(new ViewModel("Planet", "Earth")); // This makes Knockout get to work
 {% endcapture %}
 
 {% include live-example-tabs.html %}
