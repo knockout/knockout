@@ -17,79 +17,92 @@ It's not the number of lines of code that's so important (though the Knockout im
 
 {% capture live_example_view %} 
 <h2>Contacts</h2>
-<div id="contactsList" data-bind='template: "contactsListTemplate"'> </div>
-<script type="text/html" id="contactsListTemplate">
+<div id='contactsList'>
     <table class='contactsEditor'>
         <tr>
             <th>First name</th>
             <th>Last name</th>
             <th>Phone numbers</th>
         </tr>
-        {{'{{'}}each(i, contact) contacts()}}                    
+        <tbody data-bind="foreach: contacts">
             <tr>
                 <td>
-                    <input data-bind="value: firstName" />
-                    <div><a href="#" data-bind="click: function() { viewModel.removeContact(contact) }">Delete</a></div>
+                    <input data-bind='value: firstName' />
+                    <div><a href='#' data-bind='click: function() { $root.removeContact($data); }'>Delete</a></div>
                 </td>
-                <td><input data-bind="value: lastName" /></td>
+                <td><input data-bind='value: lastName' /></td>
                 <td>
                     <table>
-                        {{'{{'}}each(i, phone) phones}}
+                        <tbody data-bind="foreach: phones">
                             <tr>
-                                <td><input data-bind="value: type" /></td>
-                                <td><input data-bind="value: number" /></td>
-                                <td><a href="#" data-bind="click: function() { viewModel.removePhone(contact, phone) }">Delete</a></td>
+                                <td><input data-bind='value: type' /></td>
+                                <td><input data-bind='value: number' /></td>
+                                <td><a href='#' data-bind='click: function() { $root.removePhone($parent, $data); }'>Delete</a></td>
                             </tr>
-                        {{'{{'}}/each}}
+                        </tbody>
                     </table>
-                    <a href="#" data-bind="click: function() { viewModel.addPhone(contact) }">Add number</a>
+                    <a href='#' data-bind='click: function() { $root.addPhone($data); }'>Add number</a>
                 </td>
             </tr>
-        {{'{{'}}/each}}
+        </tbody>
     </table>
-</script>
+</div>
 
 <p>
-    <button data-bind="click: addContact">Add a contact</button>
-    <button data-bind="click: save, enable: contacts().length > 0">Save to JSON</button>
+    <button data-bind='click: addContact'>Add a contact</button>
+    <button data-bind='click: save, enable: contacts().length > 0'>Save to JSON</button>
 </p>
 
-<textarea data-bind="value: lastSavedJson" rows="5" cols="60" disabled="disabled"> </textarea>
-
+<textarea data-bind='value: lastSavedJson' rows='5' cols='60' disabled='disabled'> </textarea>
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var viewModel = {
-        contacts: new ko.observableArray([
-            { firstName: "Danny", lastName: "LaRusso", phones: [
-                { type: "Mobile", number: "(555) 121-2121" },
-                { type: "Home", number: "(555) 123-4567"}]
-            },
-            { firstName: "Sensei", lastName: "Miyagi", phones: [
-                { type: "Mobile", number: "(555) 444-2222" },
-                { type: "Home", number: "(555) 999-1212"}]
-            }
-        ]),
-        addContact: function () {
-            viewModel.contacts.push({ firstName: "", lastName: "", phones: [] });
+    var initialData = [
+        { firstName: "Danny", lastName: "LaRusso", phones: [
+            { type: "Mobile", number: "(555) 121-2121" },
+            { type: "Home", number: "(555) 123-4567"}]
         },
-        removeContact: function (contact) {
-            viewModel.contacts.remove(contact);
-        },
-        addPhone: function (contact) {
-            contact.phones.push({ type: "", number: "" });
-            viewModel.contacts.valueHasMutated();
-        },
-        removePhone: function (contact, phone) {
-            ko.utils.arrayRemoveItem(contact.phones, phone);
-            viewModel.contacts.valueHasMutated();
-        },
-        save: function () {
-            viewModel.lastSavedJson(JSON.stringify(viewModel.contacts(), null, 2));
-        },
-        lastSavedJson: new ko.observable("")
+        { firstName: "Sensei", lastName: "Miyagi", phones: [
+            { type: "Mobile", number: "(555) 444-2222" },
+            { type: "Home", number: "(555) 999-1212"}]
+        }
+    ];
+
+    var ViewModel = function(contacts) {
+        this.contacts = ko.observableArray(ko.utils.arrayMap(contacts, function(contact) {
+            return { firstName: contact.firstName, lastName: contact.lastName, phones: ko.observableArray(contact.phones) };
+        }));
+
+        this.addContact = function() {
+            this.contacts.push({
+                firstName: "",
+                lastName: "",
+                phones: ko.observableArray()
+            });
+        };
+
+        this.removeContact = function(contact) {
+            this.contacts.remove(contact);
+        };
+
+        this.addPhone = function(contact) {
+            contact.phones.push({
+                type: "",
+                number: ""
+            });
+        };
+
+        this.removePhone = function(contact, phone) {
+            contact.phones.remove(phone);
+        };
+
+        this.save = function() {
+            this.lastSavedJson(JSON.stringify(ko.toJS(this.contacts), null, 2));
+        };
+
+        this.lastSavedJson = ko.observable("")
     };
 
-    ko.applyBindings(viewModel);
+    ko.applyBindings(new ViewModel(initialData));
 {% endcapture %}
 {% include live-example-tabs.html %}

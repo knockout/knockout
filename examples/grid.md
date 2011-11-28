@@ -11,7 +11,7 @@ If a plugin provides its own standard view model class (e.g., `ko.simpleGrid.vie
 
 Take a look at the HTML source code - it's pretty easy to use and interact with this simple grid.
 
-<script src="resources/knockout.simpleGrid.js" type="text/javascript"> </script>
+<script src="resources/knockout.simpleGrid.1.3.js" type="text/javascript"> </script>
 <style type="text/css">
     .ko-grid { margin-bottom: 1em; width: 25em; border: 1px solid silver; background-color:White; }
     .ko-grid th { text-align:left; background-color: Black; color:White; }
@@ -24,20 +24,19 @@ Take a look at the HTML source code - it's pretty easy to use and interact with 
 </style>        
 
 {% capture live_example_view %} 
-<div data-bind="simpleGrid: gridViewModel"> </div>
+<div data-bind='simpleGrid: gridViewModel'> </div>
 
-<button data-bind='click: function() { items.push({ name: "New item", sales: 0, price: 100 }) }'>
-	Add item	
+<button data-bind='click: addItem'>
+    Add item
 </button>
 
-<button data-bind="click: sortByName">
-	Sort by name
+<button data-bind='click: sortByName'>
+    Sort by name
 </button>
 
-<button data-bind="click: function() { gridViewModel.currentPageIndex(0) }">
-	Jump to first page	
-</button>
-
+<button data-bind='click: jumpToFirstPage, enable: gridViewModel.currentPageIndex'>
+    Jump to first page
+</button> 
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
@@ -51,12 +50,19 @@ Take a look at the HTML source code - it's pretty easy to use and interact with 
             { name: "Ingenious Tadpole", sales: 39450, price: 0.35 },
             { name: "Optimistic Snail", sales: 420, price: 1.50 }
         ]),
-        sortByName: function () {
-            this.items.sort(function (a, b) {
+        addItem: function() {
+            this.items.push({ name: "New item", sales: 0, price: 100 });
+        },
+        sortByName: function() {
+            this.items.sort(function(a, b) {
                 return a.name < b.name ? -1 : 1;
             });
+        },
+        jumpToFirstPage: function() {
+            this.gridViewModel.currentPageIndex(0);
         }
     };
+
     myModel.gridViewModel = new ko.simpleGrid.viewModel({
         data: myModel.items,
         columns: [

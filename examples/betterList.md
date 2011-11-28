@@ -6,8 +6,8 @@ title: Better list example
 This example builds on the earlier [simple list example](simpleList.html) by making it possible to remove items (with multi-selection) and to sort the list. The "remove" and "sort" buttons become disabled if they are not applicable (e.g., if there aren't enough items to sort).
 
 Check out the HTML source code to see how little code all this takes. This example also shows how you can use function literals in bindings (see the binding for 'sort').
-            
-{% capture live_example_view %}        
+
+{% capture live_example_view %}
 <form data-bind="submit:addItem">
     Add item: <input type="text" data-bind='value:itemToAdd, valueUpdate: "afterkeydown"' />
     <button type="submit" data-bind="enable: itemToAdd().length > 0">Add</button>

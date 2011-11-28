@@ -19,16 +19,17 @@ Notice how the "Add" button is enabled only when you have entered some text - ch
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var viewModel = {};
-    viewModel.items = ko.observableArray(["Alpha", "Beta", "Gamma"]);
-    viewModel.itemToAdd = ko.observable("");
-    viewModel.addItem = function () {
-        if (viewModel.itemToAdd() != "") {
-            viewModel.items.push(viewModel.itemToAdd()); // Adds the item. Writing to the "items" observableArray causes any associated UI to update.
-            viewModel.itemToAdd("");                     // Clears the text box, because it's bound to the "itemToAdd" observable
-        }
-    }
+    var ViewModel = function(items) {
+        this.items = ko.observableArray(items);
+        this.itemToAdd = ko.observable("");
+        this.addItem = function() {
+            if (this.itemToAdd() != "") {
+                this.items.push(this.itemToAdd()); // Adds the item. Writing to the "items" observableArray causes any associated UI to update.
+                this.itemToAdd(""); // Clears the text box, because it's bound to the "itemToAdd" observable
+            }
+        }.bind(this);  // Ensure that "this" is always this view model
+    };
 
-    ko.applyBindings(viewModel);
+    ko.applyBindings(new ViewModel(["Alpha", "Beta", "Gamma"]));
 {% endcapture %}
 {% include live-example-tabs.html %}
