@@ -35,7 +35,7 @@ This is a sophisticated example showing how many different features in Knockout 
     <form data-bind='submit: addUser'>
         <label>Add user:</label>
         <input data-bind='value: userNameToAdd, valueUpdate: "keyup", css: { invalid: !userNameToAddIsValid() }' />
-        <button data-bind='enable: userNameToAddIsValid() && userNameToAdd() != ""' type='submit'>Add</button>
+        <button data-bind='enable: canAddUserName' type='submit'>Add</button>
     </form>
 </div>
 <div class='tweets'>
@@ -132,6 +132,10 @@ This is a sophisticated example showing how many different features in Knockout 
 
         this.userNameToAddIsValid = ko.computed(function() {
             return (this.userNameToAdd() == "") || (this.userNameToAdd().match(/^\s*[a-zA-Z0-9_]{1,15}\s*$/) != null);
+        }, this);
+
+        this.canAddUserName = ko.computed(function() {
+            return this.userNameToAddIsValid() && this.userNameToAdd() != "";
         }, this);
 
         // The active user tweets are (asynchronously) computed from editingList.userNames
