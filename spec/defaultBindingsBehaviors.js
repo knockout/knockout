@@ -1420,6 +1420,14 @@ describe('Binding: Foreach', {
         }
     },
 
+    'Should be able to nest containerless templates directly inside UL elements, even on IE < 8 with its bizarre HTML parsing/formatting' : function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/212
+        // Note that the </li> tags are omitted, to simulate IE<9's weird parsing, hence the <!-- /ko --> tags are moved into the <li>
+        ko.utils.setHtml(testNode, "<ul><!-- ko foreach: ['A', 'B'] --><!-- ko if: $data == 'B' --><li data-bind='text: $data'><!-- /ko --><!-- /ko --></ul>");
+        ko.applyBindings(null, testNode);        
+        value_of(testNode).should_contain_text("B");
+    },    
+
     'Should be able to output HTML5 elements (even on IE<9, as long as you reference either innershiv.js or jQuery1.7+Modernizr)': function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/194
         ko.utils.setHtml(testNode, "<div data-bind='foreach:someitems'><section data-bind='text: $data'></section></div>");

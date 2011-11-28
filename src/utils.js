@@ -278,11 +278,14 @@ ko.utils = new (function () {
         },
 
         outerHTML: function(node) {
-            // For IE and Chrome
-            var nativeOuterHtml = node.outerHTML;
-            if (typeof nativeOuterHtml == "string")
-                return nativeOuterHtml;
-            
+            // For Chrome on non-text nodes
+            // (Although IE supports outerHTML, the way it formats HTML is inconsistent - sometimes closing </li> tags are omitted, sometimes not. That caused https://github.com/SteveSanderson/knockout/issues/212.)
+            if (ieVersion === undefined) {
+                var nativeOuterHtml = node.outerHTML;
+                if (typeof nativeOuterHtml == "string")
+                    return nativeOuterHtml;
+            }
+
             // Other browsers
             var dummyContainer = window.document.createElement("div");
             dummyContainer.appendChild(node.cloneNode(true));
