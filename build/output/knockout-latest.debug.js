@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
+(function(window,undefined){
 var ko = window["ko"] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
@@ -30,6 +30,9 @@ ko.utils = new (function () {
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
     }
+    
+    // Detect support for innerText, at startup time instead of within each text binding.
+    var innerTextAttr = (typeof document.head.innerText === "string" ? "innerText" : "textContent");
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     var ieVersion = (function() {
@@ -325,6 +328,7 @@ ko.utils = new (function () {
             return result;
         },
         
+        innerTextAttr: innerTextAttr,
         isIe6 : isIe6,
         isIe7 : isIe7,
         
@@ -2101,9 +2105,7 @@ ko.bindingHandlers['options'] = {
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
                 optionText = ko.utils.unwrapObservable(optionText).toString();
-                typeof option.innerText == "string" ? option.innerText = optionText
-                                                    : option.textContent = optionText;
-
+                option[ko.utils.innerTextAttr] = optionText;
                 element.appendChild(option);
             }
 
@@ -2176,8 +2178,7 @@ ko.bindingHandlers['text'] = {
         var value = ko.utils.unwrapObservable(valueAccessor());
         if ((value === null) || (value === undefined))
             value = "";
-        typeof element.innerText == "string" ? element.innerText = value
-                                             : element.textContent = value;
+        element[ko.utils.innerTextAttr] = value;
     }
 };
 
@@ -3176,4 +3177,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
-})();})(window);                  
+})();})(window);
