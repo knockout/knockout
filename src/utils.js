@@ -14,6 +14,9 @@ ko.utils = new (function () {
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
     }
+    
+    // Detect support for innerText, at startup time instead of within each text binding.
+    var innerTextAttr = (typeof document.head.innerText === "string" ? "innerText" : "textContent");
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     var ieVersion = (function() {
@@ -309,6 +312,7 @@ ko.utils = new (function () {
             return result;
         },
         
+        innerTextAttr: innerTextAttr,
         isIe6 : isIe6,
         isIe7 : isIe7,
         

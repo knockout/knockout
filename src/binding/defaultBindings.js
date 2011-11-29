@@ -234,9 +234,7 @@ ko.bindingHandlers['options'] = {
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
                 optionText = ko.utils.unwrapObservable(optionText).toString();
-                typeof option.innerText == "string" ? option.innerText = optionText
-                                                    : option.textContent = optionText;
-
+                option[ko.utils.innerTextAttr] = optionText;
                 element.appendChild(option);
             }
 
@@ -309,8 +307,7 @@ ko.bindingHandlers['text'] = {
         var value = ko.utils.unwrapObservable(valueAccessor());
         if ((value === null) || (value === undefined))
             value = "";
-        typeof element.innerText == "string" ? element.innerText = value
-                                             : element.textContent = value;
+        element[ko.utils.innerTextAttr] = value;
     }
 };
 
