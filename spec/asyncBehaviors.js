@@ -71,7 +71,7 @@ asyncTest("Should notify subscribers asynchronously after dependencies stop upda
 			equal(asyncDepObs(), 'New value');
 			equal(notifiedValues.length, 1);
 			equal(notifiedValues[0], 'New value');
-		}, 60);
+		}, 100);
 	}, 50);
 });
 
