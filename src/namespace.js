@@ -1,10 +1,8 @@
-var globalRoot,
-    ko;
+var ko;
 
 if (typeof exports !== 'undefined') {
-  globalRoot = global;
+  ko = exports;
 } else {
-  globalRoot = window;
+  ko = window["ko"] = {};
 }
 
-ko = globalRoot['ko'] = {};
