@@ -2,19 +2,29 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){ 
-var ko = window["ko"] = {};
+(function(window,document,navigator,undefined){
+var globalRoot,
+    ko;
+
+if (typeof exports !== 'undefined') {
+  globalRoot = global;
+} else {
+  globalRoot = window;
+}
+
+ko = globalRoot['ko'] = {};
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(publicPath, object) {
-	var tokens = publicPath.split(".");
-	var target = window;
-	for (var i = 0; i < tokens.length - 1; i++)
-		target = target[tokens[i]];
-	target[tokens[tokens.length - 1]] = object;
+  var tokens = publicPath.split(".");
+  var target = globalRoot;
+  for (var i = 0; i < tokens.length - 1; i++)
+    target = target[tokens[i]];
+  target[tokens[tokens.length - 1]] = object;
 };
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
+
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     
@@ -431,6 +441,7 @@ if (!Function.prototype['bind']) {
         }; 
     };
 }
+
 ko.utils.domData = new (function () {
     var uniqueId = 0;
     var dataStoreKeyExpandoPropertyName = "__ko__" + (new Date).getTime();
@@ -3176,4 +3187,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
-})();})(window);                  
+})();})(window,document,navigator);
