@@ -1,4 +1,4 @@
-﻿var twitterApi = (function () {
+﻿window.twitterApi = (function () {
     var throttleFunction = function (fn, throttleMilliseconds) {
         var invocationTimeout;
 
@@ -30,8 +30,11 @@
     }, 50);
 
     return {
+        getTweetsForUser: function (userName, callback) {
+            return this.getTweetsForUsers([userName], callback);
+        },
         getTweetsForUsers: function (userNames, callback) {
-            getTweetsForUsersThrottled(userNames, callback);
+            return getTweetsForUsersThrottled(userNames, callback);
         }
     };
 })();
