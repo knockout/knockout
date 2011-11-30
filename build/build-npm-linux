@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OutFile='npm/bin/knockout.js'
+OutFile='npm/lib/knockout.js'
 
 # Combine the source files
 SourceFiles=`grep js < source-references.js | # Find JS references 
