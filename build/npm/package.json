@@ -1,0 +1,15 @@
+{
+  "name"          : "knockout-mvvm"
+, "version"       : "1.3.0ctp"
+, "description"   : "DOM-less Knockout MVVM Framework, used for testability of client side scripts that use knockout.js"
+, "homepage"      : ["http://www.knockoutjs.com"]
+, "repository"    : { "type" : "git"
+                    , "url"  : "https://mtscout6@github.com/mtscout6/knockout.git"
+, "keywords"      : ["testing", "knockout", "mvvm"]
+, "author"        : "Matthew Smith <mtscout6@gmail.com>"
+, "contributors"  : []
+, "maintainers"   : "Matthew Smith <mtscout6@gmail.com"
+, "licenses"      : ["MIT"]
+, "dependencies"  : { "jsdom" : ">=0.2.8" }
+, "bin"           : "bin/knockout.js"
+}
