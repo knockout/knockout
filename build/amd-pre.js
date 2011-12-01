@@ -1,3 +1,3 @@
-!function(id, factory){
-    typeof define === 'function' && define['amd'] ? define(id, ['exports'], factory) : factory(window[id] = {});
-}('ko', function(koExports){
+!function(factory){
+    typeof define === 'function' && define['amd'] ? define(['exports'], factory) : factory(window['ko'] = {});
+}(function(koExports){
