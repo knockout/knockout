@@ -3,9 +3,9 @@
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
 (function(window,undefined){
-!function(id, factory){
-    typeof define === 'function' && define['amd'] ? define(id, ['exports'], factory) : factory(window[id] = {});
-}('ko', function(koExports){
+!function(factory){
+    typeof define === 'function' && define['amd'] ? define(['exports'], factory) : factory(window['ko'] = {});
+}(function(koExports){
 var ko = {};// Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(koPath, object) {
 	var tokens = koPath.split(".");
