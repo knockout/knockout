@@ -306,11 +306,7 @@ ko.bindingHandlers['selectedOptions'] = {
 
 ko.bindingHandlers['text'] = {
     'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        if ((value === null) || (value === undefined))
-            value = "";
-        typeof element.innerText == "string" ? element.innerText = value
-                                             : element.textContent = value;
+        ko.utils.setTextContent(element, valueAccessor());
     }
 };
 
