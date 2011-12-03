@@ -66,7 +66,7 @@ ko.extenders.numeric = function(target, precision) {
 
 function AppViewModel(one, two) {
     this.myNumberOne = ko.observable(one).extend({ numeric: 0 });
-    this.myNumberTwo = ko.observable(two).extend({ numeric: 3 });
+    this.myNumberTwo = ko.observable(two).extend({ numeric: 2 });
 }
 
 ko.applyBindings(new AppViewModel(221.2234, 123.4525), document.getElementById("numericFields"));
