@@ -27,7 +27,6 @@ ko.bindingHandlers['event'] = {
                         var handlerFunction = valueAccessor()[eventName];
                         if (!handlerFunction)
                             return;
-                        var allBindings = allBindingsAccessor();
                         
                         try { 
                             handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
@@ -40,7 +39,7 @@ ko.bindingHandlers['event'] = {
                             }
                         }
                         
-                        var bubble = allBindings[eventName + 'Bubble'] !== false;
+                        var bubble = allBindingsAccessor(eventName + 'Bubble') !== false;
                         if (!bubble) {
                             event.cancelBubble = true;
                             if (event.stopPropagation)
@@ -117,7 +116,7 @@ ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) { 
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
-        var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        var requestedEventsToCatch = allBindingsAccessor("valueUpdate");
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -144,9 +143,9 @@ ko.bindingHandlers['value'] = {
                     if (ko.isWriteableObservable(modelValue))
                         modelValue(elementValue);
                     else {
-                        var allBindings = allBindingsAccessor();
-                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                            allBindings['_ko_property_writers']['value'](elementValue); 
+                        var propWriters = allBindingsAccessor('_ko_property_writers');
+                        if (propWriters && propWriters['value'])
+                            propWriters['value'](elementValue);
                     }
                 });
             });	    	
@@ -205,25 +204,25 @@ ko.bindingHandlers['options'] = {
         }
 
         if (value) {
-            var allBindings = allBindingsAccessor();
             if (typeof value.length != "number")
                 value = [value];
-            if (allBindings['optionsCaption']) {
+            if (allBindingsAccessor('optionsCaption')) {
                 var option = document.createElement("OPTION");
-                ko.utils.setHtml(option, allBindings['optionsCaption']);
+                ko.utils.setHtml(option, allBindingsAccessor('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
+            var optionsValueValue = allBindingsAccessor('optionsValue');
+            var optionsTextValue = allBindingsAccessor('optionsText');
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 
                 // Apply a value to the option element
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                var optionValue = typeof optionsValueValue == "string" ? value[i][optionsValueValue] : value[i];
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 ko.selectExtensions.writeValue(option, optionValue);
                 
                 // Apply some text to the option element
-                var optionsTextValue = allBindings['optionsText'];
                 var optionText;
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
@@ -254,11 +253,11 @@ ko.bindingHandlers['options'] = {
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
 
-            if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+            if (selectWasPreviouslyEmpty && allBindingsAccessor('value')) {
                 // Ensure consistency between model value and selected option.
                 // If the dropdown is being populated for the first time here (or was otherwise previously empty),
                 // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindingsAccessor('value')), /* preferModelValue */ true);
             }
         }
     }
@@ -282,9 +281,9 @@ ko.bindingHandlers['selectedOptions'] = {
             if (ko.isWriteableObservable(value))
                 value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                    allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['value'])
+                    propWriters['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             }
         });    	
     },
@@ -386,9 +385,9 @@ ko.bindingHandlers['checked'] = {
                     modelValue(valueToWrite);
                 }
             } else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
-                    allBindings['_ko_property_writers']['checked'](valueToWrite);
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['checked']) {
+                    propWriters['checked'](valueToWrite);
                 }
             }
         };
@@ -444,9 +443,9 @@ ko.bindingHandlers['hasfocus'] = {
             if (ko.isWriteableObservable(modelValue))
                 modelValue(valueToWrite);
             else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['hasfocus']) {
-                    allBindings['_ko_property_writers']['hasfocus'](valueToWrite);
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['hasfocus']) {
+                    propWriters['hasfocus'](valueToWrite);
                 }                
             }
         };

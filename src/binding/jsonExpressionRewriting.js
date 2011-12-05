@@ -136,7 +136,7 @@ ko.jsonExpressionRewriting = (function () {
                     var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
                     resultStrings.push(":");              
-                    resultStrings.push(val);
+                    resultStrings.push("function() { return (" + val + "); }");
 
                     if (isWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)

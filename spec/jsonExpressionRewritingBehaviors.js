@@ -57,7 +57,7 @@ describe('JSON Expression Rewriting', {
 
     'Should ensure all keys are wrapped in quotes': function() {
         var rewritten = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson("a: 1, 'b': 2, \"c\": 3");
-        value_of(rewritten).should_be("'a': 1, 'b': 2, \"c\": 3");
+        value_of(rewritten).should_be("'a':function() { return ( 1); }, 'b':function() { return ( 2); }, \"c\":function() { return ( 3); }");
     },
 
     'Should convert JSON values to property accessors': function () {
@@ -66,9 +66,9 @@ describe('JSON Expression Rewriting', {
         var model = { firstName: "bob", lastName: "smith" };
         with (model) {
             var parsedRewritten = eval("({" + rewritten + "})");
-            value_of(parsedRewritten.a).should_be(1);
-            value_of(parsedRewritten.b).should_be("bob");
-            value_of(parsedRewritten.c()).should_be("returnValue");
+            value_of(parsedRewritten.a()).should_be(1);
+            value_of(parsedRewritten.b()).should_be("bob");
+            value_of(parsedRewritten.c()()).should_be("returnValue");
 
             parsedRewritten._ko_property_writers.b("bob2");
             value_of(model.firstName).should_be("bob2");
@@ -77,8 +77,8 @@ describe('JSON Expression Rewriting', {
 
     'Should be able to eval rewritten literals that contain unquoted keywords as keys': function() {
         var rewritten = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson("if: true");
-        value_of(rewritten).should_be("'if': true");
+        value_of(rewritten).should_be("'if':function() { return ( true); }");
         var evaluated = eval("({" + rewritten + "})");
-        value_of(evaluated['if']).should_be(true);
+        value_of(evaluated['if']()).should_be(true);
     }
 });

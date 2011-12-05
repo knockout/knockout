@@ -88,13 +88,13 @@ describe('Binding attribute syntax', {
                 methodsInvoked.push("init");
                 value_of(element.id).should_be("testElement");
                 value_of(valueAccessor()).should_be("Hello");
-                value_of(allBindingsAccessor().another).should_be(123);
+                value_of(allBindingsAccessor('another')).should_be(123);
             },
             update: function (element, valueAccessor, allBindingsAccessor) {
                 methodsInvoked.push("update");
                 value_of(element.id).should_be("testElement");
                 value_of(valueAccessor()).should_be("Hello");
-                value_of(allBindingsAccessor().another).should_be(123);
+                value_of(allBindingsAccessor('another')).should_be(123);
             }
         }
         testNode.innerHTML = "<div id='testElement' data-bind='test:\"Hello\", another:123'></div>";
@@ -127,7 +127,7 @@ describe('Binding attribute syntax', {
 
     'If the associated DOM element was removed by KO, handler subscriptions are disposed immediately': function () {
         var observable = new ko.observable("A");
-        testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
+        testNode.innerHTML = "<div data-bind='text: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
         
         value_of(observable.getSubscriptionsCount()).should_be(1);
@@ -139,7 +139,7 @@ describe('Binding attribute syntax', {
 
     'If the associated DOM element was removed independently of KO, handler subscriptions are disposed on the next evaluation': function () {
         var observable = new ko.observable("A");
-        testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
+        testNode.innerHTML = "<div data-bind='text: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
         
         value_of(observable.getSubscriptionsCount()).should_be(1);
