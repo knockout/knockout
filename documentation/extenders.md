@@ -32,11 +32,10 @@ This example creates an extender that forces writes to an observable to be numer
    .error input { border: 1px solid red; }
 </style>
 
+{% capture live_example_id %}numericFields{% endcapture %}
 {% capture live_example_view %}
-<div id="numericFields">
-    <p><input data-bind="value: myNumberOne" /> (round to whole number)</p>
-    <p><input data-bind="value: myNumberTwo" /> (round to two decimals)</p>
-</div>
+<p><input data-bind="value: myNumberOne" /> (round to whole number)</p>
+<p><input data-bind="value: myNumberTwo" /> (round to two decimals)</p>
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
@@ -69,7 +68,7 @@ function AppViewModel(one, two) {
     this.myNumberTwo = ko.observable(two).extend({ numeric: 2 });
 }
 
-ko.applyBindings(new AppViewModel(221.2234, 123.4525), document.getElementById("numericFields"));
+ko.applyBindings(new AppViewModel(221.2234, 123.4525));
 {% endcapture %}
 
 {% include live-example-minimal.html %}
@@ -78,17 +77,16 @@ ko.applyBindings(new AppViewModel(221.2234, 123.4525), document.getElementById("
 
 This example creates an extender that allows an observable to be marked as required. Instead of returning a new object, this extender simply adds additional sub-observables to the existing observable. Since observables are functions, they can actually have their own properties. However, when the view model is converted to JSON, the sub-observables will be dropped and we will simply be left with the value of our actual observable.  This is a nice way to add additional functionality that is only relevant for the UI and does not need to be sent back to the server.
 
+{% capture live_example_id %}requiredFields{% endcapture %}
 {% capture live_example_view %}
-<div id="requiredFields">
-    <p data-bind="css: { error: firstName.hasError }">
-        <input data-bind="value: firstName, valueUpdate: 'afterkeydown'" />
-        <span data-bind="visible: firstName.hasError, text: firstName.validationMessage"></span>
-    </p>
-    <p data-bind="css: { error: lastName.hasError }">
-        <input data-bind="value: lastName, valueUpdate: 'afterkeydown'" />
-        <span data-bind="visible: lastName.hasError, text: lastName.validationMessage"></span>
-    </p>
-</div>
+<p data-bind="css: { error: firstName.hasError }">
+    <input data-bind="value: firstName, valueUpdate: 'afterkeydown'" />
+    <span data-bind="visible: firstName.hasError, text: firstName.validationMessage"></span>
+</p>
+<p data-bind="css: { error: lastName.hasError }">
+    <input data-bind="value: lastName, valueUpdate: 'afterkeydown'" />
+    <span data-bind="visible: lastName.hasError, text: lastName.validationMessage"></span>
+</p>
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
@@ -118,7 +116,7 @@ function AppViewModel(first, last) {
     this.lastName = ko.observable(last).extend({ required: "" });
 }
 
-ko.applyBindings(new AppViewModel("Bob","Smith"), document.getElementById("requiredFields"));
+ko.applyBindings(new AppViewModel("Bob","Smith"));
 {% endcapture %}
 
 {% include live-example-minimal.html %}
