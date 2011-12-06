@@ -99,19 +99,6 @@ ko.bindingHandlers['disable'] = {
     } 	
 };
 
-function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, preferModelValue) {
-    if (preferModelValue) {
-        if (modelValue !== ko.selectExtensions.readValue(element))
-            ko.selectExtensions.writeValue(element, modelValue);
-    }
-
-    // No matter which direction we're syncing in, we want the end result to be equality between dropdown value and model value.
-    // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
-    // change the model value to match the dropdown.
-    if (modelValue !== ko.selectExtensions.readValue(element))
-        ko.utils.triggerEvent(element, "change");
-};
-
 ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) { 
         // Always catch "change" event; possibly other events too if asked
@@ -151,7 +138,14 @@ ko.bindingHandlers['value'] = {
             });	    	
         });
     },
-    'update': function (element, valueAccessor) {
+    'update': function (element, valueAccessor, allBindingsAccessor) {
+        var valueIsSelectOption = element.tagName == "SELECT";
+
+        // For SELECT elements, make sure value gets updated if the options are updated        
+        if (valueIsSelectOption) {
+            allBindingsAccessor('options');
+        }
+        
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
@@ -159,6 +153,11 @@ ko.bindingHandlers['value'] = {
         // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same). 
         // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.
         if ((newValue === 0) && (elementValue !== 0) && (elementValue !== "0"))
+            valueHasChanged = true;
+            
+        // If a SELECT element has a caption, both no selection and caption selection will evaluate to
+        // undefined. Make sure the caption is selected if the new value is undefined.
+        if (valueIsSelectOption && !valueHasChanged && newValue === undefined && element.selectedIndex === -1)
             valueHasChanged = true;
         
         if (valueHasChanged) {
@@ -168,15 +167,16 @@ ko.bindingHandlers['value'] = {
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
             // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
             // to apply the value as well.
-            var alsoApplyAsynchronously = element.tagName == "SELECT";
-            if (alsoApplyAsynchronously)
+            if (valueIsSelectOption)
                 setTimeout(applyValueAction, 0);
         }
         
         // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
         // because you're not allowed to have a model value that disagrees with a visible UI selection.
-        if ((element.tagName == "SELECT") && (element.length > 0))
-            ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
+        if (valueIsSelectOption) {
+            if (newValue !== ko.selectExtensions.readValue(element))
+                ko.utils.triggerEvent(element, "change");
+        }
     }
 };
 
@@ -252,13 +252,6 @@ ko.bindingHandlers['options'] = {
             
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
-
-            if (selectWasPreviouslyEmpty && allBindingsAccessor('value')) {
-                // Ensure consistency between model value and selected option.
-                // If the dropdown is being populated for the first time here (or was otherwise previously empty),
-                // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindingsAccessor('value')), /* preferModelValue */ true);
-            }
         }
     }
 };

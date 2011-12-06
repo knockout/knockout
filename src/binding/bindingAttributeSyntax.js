@@ -74,6 +74,26 @@
             return val && typeof val == 'function' ? val() : val;
         }
         
+        var bindingObservables = {};
+        function parsedBindingsUpdate(bindingKey) {
+            if (bindingKey in bindingObservables) {
+                bindingObservables[bindingKey]();
+            } else {
+                var binding = ko.bindingHandlers[bindingKey];
+                if (binding && typeof binding["update"] == "function") {
+                    bindingObservables[bindingKey] = ko.dependentObservable(function () {
+                        binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsObservableAccessor, viewModel, bindingContextInstance);
+                    }, null, {'disposeWhenNodeIsRemoved': node});
+                }
+            }
+        }
+        function parsedBindingsObservableAccessor(bindingKey, noReturn) {
+            var val = parsedBindingsAccessor(bindingKey);
+            if (val !== undefined)
+                parsedBindingsUpdate(bindingKey);
+            return val;
+        }
+        
         // Ensure we have a nonnull binding context to work with
         var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
@@ -117,15 +137,7 @@
             // ... then run all the updates, which might trigger changes even on the first evaluation
             if (initPhase === 2) {
                 for (var bindingKey in parsedBindings) {
-                    var binding = ko.bindingHandlers[bindingKey];
-                    if (binding && typeof binding["update"] == "function") {
-                        ko.dependentObservable((function(bindingKey, binding){
-                            return function () {
-                                var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                            }
-                        })(bindingKey, binding), null, {'disposeWhenNodeIsRemoved': node});
-                    }
+                    parsedBindingsUpdate(bindingKey);
                 }
             }
         }
