@@ -1413,7 +1413,7 @@ ko.jsonExpressionRewriting = (function () {
                     var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
                     resultStrings.push(":");              
-                    resultStrings.push(val);
+                    resultStrings.push("function() { return (" + val + "); }");
 
                     if (isWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)
@@ -1758,70 +1758,68 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
         // associated with this node's bindings) that all the closures can access.
         var parsedBindings;
         function makeValueAccessor(bindingKey) {
-            return function () { return parsedBindings[bindingKey] }
+            return function () { return parsedBindingsAccessor(bindingKey); }
         }
-        function parsedBindingsAccessor() {
-            return parsedBindings;
+        function parsedBindingsAccessor(bindingKey) {
+            var val = parsedBindings[bindingKey];
+            return val && typeof val == 'function' ? val() : val;
         }
         
+        // Ensure we have a nonnull binding context to work with
+        var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
+            ? viewModelOrBindingContext
+            : new ko.bindingContext(ko.utils.unwrapObservable(viewModelOrBindingContext));
+        var viewModel = bindingContextInstance['$data'];
+
+        // We only need to store the bindingContext at the root of the subtree where it applies
+        // as all descendants will be able to find it by scanning up their ancestry
+        if (isRootNodeForBindingContext)
+            ko.storedBindingContextForNode(node, bindingContextInstance);
+
+        // Use evaluatedBindings if given, otherwise fall back on asking the bindings provider to give us some bindings
+        var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
+        parsedBindings = evaluatedBindings || ko.bindingProvider['instance']['getBindings'](node, bindingContextInstance);
+
         var bindingHandlerThatControlsDescendantBindings;
-        new ko.dependentObservable(
-            function () {
-                // Ensure we have a nonnull binding context to work with
-                var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
-                    ? viewModelOrBindingContext
-                    : new ko.bindingContext(ko.utils.unwrapObservable(viewModelOrBindingContext));
-                var viewModel = bindingContextInstance['$data'];
+        if (parsedBindings) {
+            // First run all the inits, so bindings can register for notification on changes
+            if (initPhase === 0) {
+                initPhase = 1;
+                for (var bindingKey in parsedBindings) {
+                    var binding = ko.bindingHandlers[bindingKey];
+                    if (binding && node.nodeType === 8)
+                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
 
-                // We only need to store the bindingContext at the root of the subtree where it applies
-                // as all descendants will be able to find it by scanning up their ancestry
-                if (isRootNodeForBindingContext)
-                    ko.storedBindingContextForNode(node, bindingContextInstance);
-
-                // Use evaluatedBindings if given, otherwise fall back on asking the bindings provider to give us some bindings
-                var evaluatedBindings = (typeof bindings == "function") ? bindings() : bindings;
-                parsedBindings = evaluatedBindings || ko.bindingProvider['instance']['getBindings'](node, bindingContextInstance);
-
-                if (parsedBindings) {
-                    // First run all the inits, so bindings can register for notification on changes
-                    if (initPhase === 0) {
-                        initPhase = 1;
-                        for (var bindingKey in parsedBindings) {
-                            var binding = ko.bindingHandlers[bindingKey];
-                            if (binding && node.nodeType === 8)
-                                validateThatBindingIsAllowedForVirtualElements(bindingKey);
-
-                            if (binding && typeof binding["init"] == "function") {
-                                var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                                
-                                // If this binding handler claims to control descendant bindings, make a note of this
-                                if (initResult && initResult['controlsDescendantBindings']) {
-                                    if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                        throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
-                                    bindingHandlerThatControlsDescendantBindings = bindingKey;
-                                }
-                            }
-                        }
-                        initPhase = 2;
-                    }
-                    
-                    // ... then run all the updates, which might trigger changes even on the first evaluation
-                    if (initPhase === 2) {
-                        for (var bindingKey in parsedBindings) {
-                            var binding = ko.bindingHandlers[bindingKey];
-                            if (binding && typeof binding["update"] == "function") {
-                                var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                            }
+                    if (binding && typeof binding["init"] == "function") {
+                        var handlerInitFn = binding["init"];
+                        var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                        
+                        // If this binding handler claims to control descendant bindings, make a note of this
+                        if (initResult && initResult['controlsDescendantBindings']) {
+                            if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                                throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                            bindingHandlerThatControlsDescendantBindings = bindingKey;
                         }
                     }
                 }
-            },
-            null,
-            { 'disposeWhenNodeIsRemoved' : node }
-        );
-        
+                initPhase = 2;
+            }
+            
+            // ... then run all the updates, which might trigger changes even on the first evaluation
+            if (initPhase === 2) {
+                for (var bindingKey in parsedBindings) {
+                    var binding = ko.bindingHandlers[bindingKey];
+                    if (binding && typeof binding["update"] == "function") {
+                        ko.dependentObservable((function(bindingKey, binding){
+                            return function () {
+                                var handlerUpdateFn = binding["update"];
+                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                            }
+                        })(bindingKey, binding), null, {'disposeWhenNodeIsRemoved': node});
+                    }
+                }
+            }
+        }
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
@@ -1907,7 +1905,6 @@ ko.bindingHandlers['event'] = {
                         var handlerFunction = valueAccessor()[eventName];
                         if (!handlerFunction)
                             return;
-                        var allBindings = allBindingsAccessor();
                         
                         try { 
                             handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
@@ -1920,7 +1917,7 @@ ko.bindingHandlers['event'] = {
                             }
                         }
                         
-                        var bubble = allBindings[eventName + 'Bubble'] !== false;
+                        var bubble = allBindingsAccessor(eventName + 'Bubble') !== false;
                         if (!bubble) {
                             event.cancelBubble = true;
                             if (event.stopPropagation)
@@ -1997,7 +1994,7 @@ ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) { 
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
-        var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        var requestedEventsToCatch = allBindingsAccessor("valueUpdate");
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -2024,9 +2021,9 @@ ko.bindingHandlers['value'] = {
                     if (ko.isWriteableObservable(modelValue))
                         modelValue(elementValue);
                     else {
-                        var allBindings = allBindingsAccessor();
-                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                            allBindings['_ko_property_writers']['value'](elementValue); 
+                        var propWriters = allBindingsAccessor('_ko_property_writers');
+                        if (propWriters && propWriters['value'])
+                            propWriters['value'](elementValue);
                     }
                 });
             });	    	
@@ -2085,25 +2082,25 @@ ko.bindingHandlers['options'] = {
         }
 
         if (value) {
-            var allBindings = allBindingsAccessor();
             if (typeof value.length != "number")
                 value = [value];
-            if (allBindings['optionsCaption']) {
+            if (allBindingsAccessor('optionsCaption')) {
                 var option = document.createElement("OPTION");
-                ko.utils.setHtml(option, allBindings['optionsCaption']);
+                ko.utils.setHtml(option, allBindingsAccessor('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
+            var optionsValueValue = allBindingsAccessor('optionsValue');
+            var optionsTextValue = allBindingsAccessor('optionsText');
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("OPTION");
                 
                 // Apply a value to the option element
-                var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
+                var optionValue = typeof optionsValueValue == "string" ? value[i][optionsValueValue] : value[i];
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 ko.selectExtensions.writeValue(option, optionValue);
                 
                 // Apply some text to the option element
-                var optionsTextValue = allBindings['optionsText'];
                 var optionText;
                 if (typeof optionsTextValue == "function")
                     optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
@@ -2134,11 +2131,11 @@ ko.bindingHandlers['options'] = {
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
 
-            if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+            if (selectWasPreviouslyEmpty && allBindingsAccessor('value')) {
                 // Ensure consistency between model value and selected option.
                 // If the dropdown is being populated for the first time here (or was otherwise previously empty),
                 // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindingsAccessor('value')), /* preferModelValue */ true);
             }
         }
     }
@@ -2162,9 +2159,9 @@ ko.bindingHandlers['selectedOptions'] = {
             if (ko.isWriteableObservable(value))
                 value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                    allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['value'])
+                    propWriters['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
             }
         });    	
     },
@@ -2266,9 +2263,9 @@ ko.bindingHandlers['checked'] = {
                     modelValue(valueToWrite);
                 }
             } else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
-                    allBindings['_ko_property_writers']['checked'](valueToWrite);
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['checked']) {
+                    propWriters['checked'](valueToWrite);
                 }
             }
         };
@@ -2324,9 +2321,9 @@ ko.bindingHandlers['hasfocus'] = {
             if (ko.isWriteableObservable(modelValue))
                 modelValue(valueToWrite);
             else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['hasfocus']) {
-                    allBindings['_ko_property_writers']['hasfocus'](valueToWrite);
+                var propWriters = allBindingsAccessor('_ko_property_writers');
+                if (propWriters && propWriters['hasfocus']) {
+                    propWriters['hasfocus'](valueToWrite);
                 }                
             }
         };
