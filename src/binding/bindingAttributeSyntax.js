@@ -84,6 +84,7 @@
                     bindingObservables[bindingKey] = ko.dependentObservable(function () {
                         binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsObservableAccessor, viewModel, bindingContextInstance);
                     }, null, {'disposeWhenNodeIsRemoved': node});
+                    bindingObservables[bindingKey]();
                 }
             }
         }
