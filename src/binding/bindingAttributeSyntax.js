@@ -70,8 +70,16 @@
             return function () { return parsedBindingsAccessor(bindingKey); }
         }
         function parsedBindingsAccessor(bindingKey) {
-            var val = parsedBindings[bindingKey];
-            return val && typeof val == 'function' ? val() : val;
+            if (bindingKey === undefined) {
+                // backwards compatible support
+                var bindingValues = {};
+                for (var bindingKey in parsedBindings)
+                    bindingValues[bindingKey] = parsedBindingsAccessor(bindingKey);
+                return bindingValues;
+            } else {
+                var val = parsedBindings[bindingKey];
+                return val && typeof val == 'function' ? val() : val;
+            }
         }
         
         var bindingObservables = {};
@@ -87,7 +95,7 @@
         }
         function parsedBindingsObservableAccessor(bindingKey) {
             var val = parsedBindingsAccessor(bindingKey);
-            if (val !== undefined) {
+            if (val !== undefined && bindingKey !== undefined) {
                 parsedBindingsUpdate(bindingKey);
                 if (bindingKey in bindingObservables)
                     bindingObservables[bindingKey]();
