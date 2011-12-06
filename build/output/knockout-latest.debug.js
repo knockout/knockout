@@ -1775,22 +1775,22 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
         
         var bindingObservables = {};
         function parsedBindingsUpdate(bindingKey) {
-            if (bindingKey in bindingObservables) {
-                bindingObservables[bindingKey]();
-            } else {
+            if (!(bindingKey in bindingObservables)) {
                 var binding = ko.bindingHandlers[bindingKey];
                 if (binding && typeof binding["update"] == "function") {
                     bindingObservables[bindingKey] = ko.dependentObservable(function () {
                         binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsObservableAccessor, viewModel, bindingContextInstance);
                     }, null, {'disposeWhenNodeIsRemoved': node});
-                    bindingObservables[bindingKey]();
                 }
             }
         }
-        function parsedBindingsObservableAccessor(bindingKey, noReturn) {
+        function parsedBindingsObservableAccessor(bindingKey) {
             var val = parsedBindingsAccessor(bindingKey);
-            if (val !== undefined)
+            if (val !== undefined) {
                 parsedBindingsUpdate(bindingKey);
+                if (bindingKey in bindingObservables)
+                    bindingObservables[bindingKey]();
+            }
             return val;
         }
         
