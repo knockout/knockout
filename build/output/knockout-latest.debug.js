@@ -1783,6 +1783,7 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
                     bindingObservables[bindingKey] = ko.dependentObservable(function () {
                         binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsObservableAccessor, viewModel, bindingContextInstance);
                     }, null, {'disposeWhenNodeIsRemoved': node});
+                    bindingObservables[bindingKey]();
                 }
             }
         }
@@ -2065,15 +2066,15 @@ ko.bindingHandlers['value'] = {
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
             // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
             // to apply the value as well.
-            if (valueIsSelectOption)
+            if (valueIsSelectOption) {
+                // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+                // because you're not allowed to have a model value that disagrees with a visible UI selection.
+                if (valueIsSelectOption && newValue !== ko.selectExtensions.readValue(element)) {
+                    ko.utils.triggerEvent(element, "change");
+                }
+                newValue = ko.utils.unwrapObservable(valueAccessor());
                 setTimeout(applyValueAction, 0);
-        }
-        
-        // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
-        // because you're not allowed to have a model value that disagrees with a visible UI selection.
-        if (valueIsSelectOption) {
-            if (newValue !== ko.selectExtensions.readValue(element))
-                ko.utils.triggerEvent(element, "change");
+            }
         }
     }
 };
