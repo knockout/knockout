@@ -53,18 +53,12 @@
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
-        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
-        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
-
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
 
-        // Each time the dependentObservable is evaluated (after data changes),
-        // the binding attribute is reparsed so that it can pick out the correct
-        // model properties in the context of the changed data.
-        // DOM event callbacks need to be able to access this changed data,
-        // so we need a single parsedBindings variable (shared by all callbacks
-        // associated with this node's bindings) that all the closures can access.
+        // The data for each binding is wrapped in a function so that it is 
+        // re-evaluated on each access. parsedBindings itself doesn't change
+        // once it's been initialized, but it's still shared by all the bindings.   
         var parsedBindings;
         function makeValueAccessor(bindingKey) {
             return function () { return parsedBindingsAccessor(bindingKey); }
@@ -81,28 +75,39 @@
                 return val && typeof val == 'function' ? val() : val;
             }
         }
-        
-        var bindingObservables = {};
-        function parsedBindingsUpdate(bindingKey) {
-            if (!(bindingKey in bindingObservables)) {
+
+        // The binding update functions are wrapped in a dependentObservable so
+        // that any update to value of the binding will triiger a call to the 
+        // binding's update function. Normally these observables are initialized
+        // (and the update function run) in the order they appear in parsedBindings,
+        // but the order can be altered if a binding handler references another 
+        // binding through it's allBindingsAccessor function (see below).
+        var bindingUpdateObservables = {};
+        function initializeBindingUpdateObservable(bindingKey) {
+            if (!(bindingKey in bindingUpdateObservables)) {
                 var binding = ko.bindingHandlers[bindingKey];
                 if (binding && typeof binding["update"] == "function") {
-                    bindingObservables[bindingKey] = ko.dependentObservable(function () {
+                    bindingUpdateObservables[bindingKey] = ko.dependentObservable(function () {
                         binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsObservableAccessor, viewModel, bindingContextInstance);
                     }, null, {'disposeWhenNodeIsRemoved': node});
                 }
             }
         }
+        // This function (instead of parsedBindingsAccessor, above) is passed to 
+        // binding handlers' update functions. In addition to returning the value 
+        // of the specified binding, it will also make sure the binding's update 
+        // observable has been initialized. Thus if one binding is dependent on
+        // another, the order they are specified in the binding list doesn't matter.
         function parsedBindingsObservableAccessor(bindingKey) {
             var val = parsedBindingsAccessor(bindingKey);
             if (val !== undefined && bindingKey !== undefined) {
-                parsedBindingsUpdate(bindingKey);
-                if (bindingKey in bindingObservables)
-                    bindingObservables[bindingKey]();
+                initializeBindingUpdateObservable(bindingKey);
+                if (bindingKey in bindingUpdateObservables)
+                    bindingUpdateObservables[bindingKey]();
             }
             return val;
         }
-        
+
         // Ensure we have a nonnull binding context to work with
         var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
@@ -121,35 +126,29 @@
         var bindingHandlerThatControlsDescendantBindings;
         if (parsedBindings) {
             // First run all the inits, so bindings can register for notification on changes
-            if (initPhase === 0) {
-                initPhase = 1;
-                for (var bindingKey in parsedBindings) {
-                    var binding = ko.bindingHandlers[bindingKey];
-                    if (binding && node.nodeType === 8)
-                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
+            for (var bindingKey in parsedBindings) {
+                var binding = ko.bindingHandlers[bindingKey];
+                if (binding && node.nodeType === 8)
+                    validateThatBindingIsAllowedForVirtualElements(bindingKey);
 
-                    if (binding && typeof binding["init"] == "function") {
-                        var handlerInitFn = binding["init"];
-                        var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                        
-                        // If this binding handler claims to control descendant bindings, make a note of this
-                        if (initResult && initResult['controlsDescendantBindings']) {
-                            if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
-                            bindingHandlerThatControlsDescendantBindings = bindingKey;
-                        }
+                if (binding && typeof binding["init"] == "function") {
+                    var initResult = binding["init"](node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                    
+                    // If this binding handler claims to control descendant bindings, make a note of this
+                    if (initResult && initResult['controlsDescendantBindings']) {
+                        if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                            throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                        bindingHandlerThatControlsDescendantBindings = bindingKey;
                     }
                 }
-                initPhase = 2;
             }
             
             // ... then run all the updates, which might trigger changes even on the first evaluation
-            if (initPhase === 2) {
-                for (var bindingKey in parsedBindings) {
-                    parsedBindingsUpdate(bindingKey);
-                }
+            for (var bindingKey in parsedBindings) {
+                initializeBindingUpdateObservable(bindingKey);
             }
         }
+
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
