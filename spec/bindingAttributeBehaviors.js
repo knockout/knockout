@@ -283,5 +283,38 @@ describe('Binding attribute syntax', {
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(hasUpdatedSecondBinding).should_be(true);
+    },
+
+    'Should invoke update for binding when accessed by an earlier binding handler and not run it twice': function() {
+        var observable = ko.observable('A'), hasUpdatedFirstBinding = false, hasUpdatedSecondBinding = false, secondBindingUpdateCount = 0;
+        ko.bindingHandlers.test1 = {
+            update: function(element, valueAccessor, allBindingsAccessor) {
+                var secondValue = allBindingsAccessor('test2');
+                if (!hasUpdatedSecondBinding)
+                    throw new Error("Didn't call second 'update'");
+                secondValue();
+                hasUpdatedFirstBinding = true;
+            }
+        }
+        ko.bindingHandlers.test2 = {
+            update: function(element, valueAccessor) {
+                var value = valueAccessor();
+                value();
+                hasUpdatedSecondBinding = true;
+                secondBindingUpdateCount++;
+            }
+        }
+        testNode.innerHTML = "<div data-bind='test1: true, test2: myObservable'></div>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(hasUpdatedFirstBinding).should_be(true);
+        value_of(hasUpdatedSecondBinding).should_be(true);
+        value_of(secondBindingUpdateCount).should_be(1);
+
+        // verify that order of updates is maintained when observer is updated
+        hasUpdatedFirstBinding = false, hasUpdatedSecondBinding = false, secondBindingUpdateCount = 0;
+        observable('B');
+        value_of(hasUpdatedFirstBinding).should_be(true);
+        value_of(hasUpdatedSecondBinding).should_be(true);
+        value_of(secondBindingUpdateCount).should_be(1);
     }
 });
