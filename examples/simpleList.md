@@ -19,7 +19,7 @@ Notice how the "Add" button is enabled only when you have entered some text - ch
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var ViewModel = function(items) {
+    var SimpleListModel = function(items) {
         this.items = ko.observableArray(items);
         this.itemToAdd = ko.observable("");
         this.addItem = function() {
@@ -30,6 +30,6 @@ Notice how the "Add" button is enabled only when you have entered some text - ch
         }.bind(this);  // Ensure that "this" is always this view model
     };
 
-    ko.applyBindings(new ViewModel(["Alpha", "Beta", "Gamma"]));
+    ko.applyBindings(new SimpleListModel(["Alpha", "Beta", "Gamma"]));
 {% endcapture %}
 {% include live-example-tabs.html %}

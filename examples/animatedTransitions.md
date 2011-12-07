@@ -44,7 +44,7 @@ This example shows two ways to animate transitions:
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    var ViewModel = function() {
+    var PlanetsModel = function() {
         this.planets = ko.observableArray([
             { name: "Mercury", type: "rock"},
             { name: "Venus", type: "rock"},
@@ -93,6 +93,6 @@ This example shows two ways to animate transitions:
         }
     };
 
-    ko.applyBindings(new ViewModel());
+    ko.applyBindings(new PlanetsModel());
 {% endcapture %}
 {% include live-example-tabs.html %}

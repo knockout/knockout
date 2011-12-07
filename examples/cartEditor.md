@@ -40,7 +40,7 @@ This example also demonstrates a simple way to create cascading dropdowns.
                 <td class='price' data-bind="with: product"><span data-bind='text: formatCurrency(price)' /></td>
                 <td class='quantity'><input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' /></td>
                 <td class='price'><span data-bind='visible: product, text: formatCurrency(subtotal())' /></td>
-                <td><a href='#' data-bind='click: function() { cartViewModel.removeLine($data) }'>Remove</a></td>
+                <td><a href='#' data-bind='click: function() { $root.removeLine($data) }'>Remove</a></td>
             </tr>
         </tbody>
     </table>
@@ -70,6 +70,7 @@ This example also demonstrates a simple way to create cascading dropdowns.
             this.product(undefined);
         }.bind(this));
     };
+    
     var Cart = function() {
         // Stores an array of lines, and from these, can work out the grandTotal
         this.lines = ko.observableArray([new CartLine()]); // Put one line in by default
@@ -98,7 +99,6 @@ This example also demonstrates a simple way to create cascading dropdowns.
         };
     };
 
-    var cartViewModel = new Cart();
-    ko.applyBindings(cartViewModel, document.getElementById("cartEditor"));
+    ko.applyBindings(new Cart());
 {% endcapture %}
 {% include live-example-tabs.html %}

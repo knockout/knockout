@@ -64,7 +64,7 @@ This is a sophisticated example showing how many different features in Knockout 
         { name: "Tech pundits", userNames: ['Scobleizer', 'LeoLaporte', 'techcrunch', 'BoingBoing', 'timoreilly', 'codinghorror']}
     ];
 
-    var ViewModel = function(lists, selectedList) {
+    var TwitterListModel = function(lists, selectedList) {
         this.savedLists = ko.observableArray(lists);
         this.editingList = {
             name: ko.observable(selectedList),
@@ -147,7 +147,7 @@ This is a sophisticated example showing how many different features in Knockout 
         }, this);
     };
 
-    ko.applyBindings(new ViewModel(savedLists, "Tech pundits"));
+    ko.applyBindings(new TwitterListModel(savedLists, "Tech pundits"));
 
     // Using jQuery for Ajax loading indicator - nothing to do with Knockout
     $(".loadingIndicator").ajaxStart(function() {

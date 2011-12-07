@@ -68,7 +68,7 @@ It's not the number of lines of code that's so important (though the Knockout im
         }
     ];
 
-    var ViewModel = function(contacts) {
+    var ContactsModel = function(contacts) {
         this.contacts = ko.observableArray(ko.utils.arrayMap(contacts, function(contact) {
             return { firstName: contact.firstName, lastName: contact.lastName, phones: ko.observableArray(contact.phones) };
         }));
@@ -103,6 +103,6 @@ It's not the number of lines of code that's so important (though the Knockout im
         this.lastSavedJson = ko.observable("")
     };
 
-    ko.applyBindings(new ViewModel(initialData));
+    ko.applyBindings(new ContactsModel(initialData));
 {% endcapture %}
 {% include live-example-tabs.html %}

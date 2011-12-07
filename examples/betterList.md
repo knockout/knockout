@@ -18,14 +18,12 @@ Check out the HTML source code to see how little code all this takes. This examp
 
 <div>
     <button data-bind="click: removeSelected, enable: selectedItems().length > 0">Remove</button>
-    <button data-bind="click: function() { allItems.sort() }, enable: allItems().length > 1">Sort</button>
+    <button data-bind="click: sortItems, enable: allItems().length > 1">Sort</button>
 </div>
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-    // In this example, betterListModel is a class, and the view model is an instance of it.
-    // See simpleList.html for an example of how to construct a view model without defining a class for it. Either technique works fine.
-    var betterListModel = function () {
+    var BetterListModel = function () {
         this.itemToAdd = new ko.observable("");
         this.allItems = new ko.observableArray(["Fries", "Eggs Benedict", "Ham", "Cheese"]); // Initial items
         this.selectedItems = new ko.observableArray(["Ham"]);                                // Initial selection
@@ -34,14 +32,18 @@ Check out the HTML source code to see how little code all this takes. This examp
             if ((this.itemToAdd() != "") && (this.allItems.indexOf(this.itemToAdd()) < 0)) // Prevent blanks and duplicates
                 this.allItems.push(this.itemToAdd());
             this.itemToAdd(""); // Clear the text box
-        }
+        };
 
         this.removeSelected = function () {
             this.allItems.removeAll(this.selectedItems());
             this.selectedItems([]); // Clear selection
-        }
+        };
+
+        this.sortItems = function() {
+            this.allItems.sort();
+        };
     };
 
-    ko.applyBindings(new betterListModel());
+    ko.applyBindings(new BetterListModel());
 {% endcapture %}
 {% include live-example-tabs.html %}
