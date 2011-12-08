@@ -7,7 +7,7 @@ describe('Binding attribute syntax', {
         testNode.id = "testNode";
         document.body.appendChild(testNode);
     },
-    
+
     'applyBindings should accept no parameters and then act on document.body with undefined model': function() {
         var didInit = false;
         ko.bindingHandlers.test = {
@@ -22,7 +22,7 @@ describe('Binding attribute syntax', {
         value_of(didInit).should_be(true);
 
         // Just to avoid interfering with other specs:
-        ko.utils.domData.clear(document.body);        
+        ko.utils.domData.clear(document.body);
     },
 
     'applyBindings should accept one parameter and then act on document.body with parameter as model': function() {
@@ -42,7 +42,7 @@ describe('Binding attribute syntax', {
         // Just to avoid interfering with other specs:
         ko.utils.domData.clear(document.body);
     },
-    
+
     'applyBindings should accept two parameters and then act on second param as DOM node with first param as model': function() {
         var didInit = false;
         var suppliedViewModel = {};
@@ -59,7 +59,7 @@ describe('Binding attribute syntax', {
         document.body.appendChild(shouldNotMatchNode);
         try {
             ko.applyBindings(suppliedViewModel, testNode);
-            value_of(didInit).should_be(true);    	
+            value_of(didInit).should_be(true);
         } finally {
             shouldNotMatchNode.parentNode.removeChild(shouldNotMatchNode);
         }
@@ -78,7 +78,7 @@ describe('Binding attribute syntax', {
     'Should tolerate wacky IE conditional comments': function() {
         // Represents issue https://github.com/SteveSanderson/knockout/issues/186. Would fail on IE9, but work on earlier IE versions.
         testNode.innerHTML = "<div><!--[if IE]><!-->Hello<!--<![endif]--></div>";
-        ko.applyBindings(null, testNode); // No exception means success          
+        ko.applyBindings(null, testNode); // No exception means success
     },
 
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
@@ -129,11 +129,11 @@ describe('Binding attribute syntax', {
         var observable = new ko.observable("A");
         testNode.innerHTML = "<div data-bind='text: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
-        
+
         value_of(observable.getSubscriptionsCount()).should_be(1);
-        
+
         ko.removeNode(testNode);
-        
+
         value_of(observable.getSubscriptionsCount()).should_be(0);
     },
 
@@ -141,12 +141,12 @@ describe('Binding attribute syntax', {
         var observable = new ko.observable("A");
         testNode.innerHTML = "<div data-bind='text: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
-        
+
         value_of(observable.getSubscriptionsCount()).should_be(1);
-        
+
         testNode.parentNode.removeChild(testNode);
         observable("B"); // Force re-evaluation
-        
+
         value_of(observable.getSubscriptionsCount()).should_be(0);
     },
 
@@ -164,15 +164,15 @@ describe('Binding attribute syntax', {
         value_of(passedValues.length).should_be(2);
         value_of(passedValues[1]).should_be("goodbye");
     },
-    
+
     'Should be able to refer to the bound object itself (at the root scope, the viewmodel) via $data': function() {
         testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
         ko.applyBindings({ someProp: 'My prop value' }, testNode);
         value_of(testNode).should_contain_text("My prop value");
     },
-    
+
     'Bindings can signal that they control descendant bindings by returning a flag from their init function': function() {
-        ko.bindingHandlers.test = {  
+        ko.bindingHandlers.test = {
             init: function() { return { controlsDescendantBindings : true } }
         };
         testNode.innerHTML = "<div data-bind='test: true'>"
@@ -180,30 +180,30 @@ describe('Binding attribute syntax', {
                            + "</div>"
                            + "<div data-bind='text: 123'>456</div>";
         ko.applyBindings(null, testNode);
-        
+
         value_of(testNode.childNodes[0].childNodes[0].innerHTML).should_be("456");
         value_of(testNode.childNodes[1].innerHTML).should_be("123");
     },
-    
+
     'Should not be allowed to have multiple bindings on the same element that claim to control descendant bindings': function() {
-        ko.bindingHandlers.test1 = {  
+        ko.bindingHandlers.test1 = {
             init: function() { return { controlsDescendantBindings : true } }
         };
         ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
         testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>"
         var didThrow = false;
-        
+
         try { ko.applyBindings(null, testNode) }
         catch(ex) { didThrow = true; value_of(ex.message).should_contain('Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.') }
         value_of(didThrow).should_be(true);
     },
-    
+
     'Should use properties on the view model in preference to properties on the binding context': function() {
         testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
         ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
         value_of(testNode).should_contain_text("Inner value");
     },
-    
+
     'Should be able to retrieve the binding context associated with any node': function() {
         testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
         ko.applyBindings({ name: 'Bert' }, testNode.childNodes[0]);
@@ -222,7 +222,7 @@ describe('Binding attribute syntax', {
         value_of(ko.dataFor(testNode.childNodes[0].childNodes[0]).name).should_be("Bert");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).should_be("Bert");
     },
-    
+
     'Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones': function() {
         testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye"
         var didThrow = false;
@@ -234,7 +234,7 @@ describe('Binding attribute syntax', {
         }
         value_of(didThrow).should_be(true);
     },
-    
+
     'Should not reinvoke init for notifications triggered during first evaluation': function () {
         var observable = ko.observable('A');
         var initCalls = 0;
@@ -243,7 +243,7 @@ describe('Binding attribute syntax', {
                 initCalls++;
 
                 var value = valueAccessor();
-                
+
                 // Read the observable (to set up a dependency on it), and then also write to it (to trigger re-eval of bindings)
                 // This logic probably wouldn't be in init but might be indirectly invoked by init
                 value();
@@ -266,7 +266,7 @@ describe('Binding attribute syntax', {
                 // This logic probably wouldn't be in init but might be indirectly invoked by init
                 var value = valueAccessor();
                 value();
-                value('B');                   
+                value('B');
             }
         }
         ko.bindingHandlers.test2 = {
@@ -283,6 +283,20 @@ describe('Binding attribute syntax', {
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(hasUpdatedSecondBinding).should_be(true);
+    },
+
+    'Should not subscribe to observables accessed in init function': function() {
+        var observable = ko.observable('A');
+        ko.bindingHandlers.test = {
+            init: function(element, valueAccessor) {
+                var value = valueAccessor();
+                value();
+            }
+        }
+        testNode.innerHTML = "<div data-bind='if: true'><div data-bind='test1: myObservable'></div></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable.getSubscriptionsCount()).should_be(0);
     },
 
     'Should invoke update for binding when accessed by an earlier binding handler and not run it twice': function() {
