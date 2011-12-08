@@ -293,7 +293,7 @@ describe('Binding attribute syntax', {
                 value();
             }
         }
-        testNode.innerHTML = "<div data-bind='if: true'><div data-bind='test1: myObservable'></div></div>";
+        testNode.innerHTML = "<div data-bind='if: true'><div data-bind='test: myObservable'></div></div>";
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(observable.getSubscriptionsCount()).should_be(0);
