@@ -47,7 +47,7 @@ var initialGifts = [
     { name: "Long Cloak", price: "120.00"}
 ];
 
-var ViewModel = function(gifts) {
+var GiftModel = function(gifts) {
     this.gifts = ko.observableArray(gifts);
 
     this.addGift = function() {
@@ -67,7 +67,7 @@ var ViewModel = function(gifts) {
     };
 };
 
-var viewModel = new ViewModel(initialGifts);
+var viewModel = new GiftModel(initialGifts);
 
 ko.applyBindings(viewModel);
 
