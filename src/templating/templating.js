@@ -13,28 +13,28 @@
                 continue;
             if ((node.nodeType === 1) || (node.nodeType === 8))
                 action(node);
-        }        
+        }
     }
 
     ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {
-        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element. 
-        // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g., 
+        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element.
+        // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g.,
         // if a binding inserts siblings), and for each:
         // (1) Does a regular "applyBindings" to associate bindingContext with this node and to activate any non-memoized bindings
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
 
         var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
         var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
-        
+
         // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
         // whereas a regular applyBindings won't introduce new memoized nodes
-        
+
         invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
             ko.applyBindings(bindingContext, node);
         });
         invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
-            ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);            
-        });        
+            ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
+        });
     }
 
     function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
@@ -55,23 +55,23 @@
 
         var haveAddedNodesToParent = false;
         switch (renderMode) {
-            case "replaceChildren": 
-                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
+            case "replaceChildren":
+                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray);
                 haveAddedNodesToParent = true;
                 break;
-            case "replaceNode": 
-                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
+            case "replaceNode":
+                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray);
                 haveAddedNodesToParent = true;
                 break;
             case "ignoreTargetNode": break;
-            default: 
+            default:
                 throw new Error("Unknown renderMode: " + renderMode);
         }
 
         if (haveAddedNodesToParent) {
             ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](renderedNodesArray, bindingContext['$data']);            
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);
         }
 
         return renderedNodesArray;
@@ -85,11 +85,11 @@
 
         if (targetNodeOrNodeArray) {
             var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-            
+
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
             var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
-            
-            return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
+
+            return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes
                 function () {
                     // Ensure we've got a proper binding context to work with
                     var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
@@ -97,7 +97,7 @@
                         : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
                     // Support selecting template as a function of the data being rendered
-                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template; 
+                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template;
 
                     var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
                     if (renderMode == "replaceNode") {
@@ -116,7 +116,7 @@
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         var createInnerBindingContext = function(arrayValue) {
             return parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
         };
@@ -126,9 +126,9 @@
             var bindingContext = createInnerBindingContext(arrayValue);
             ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
+                options['afterRender'](addedNodesArray, bindingContext['$data']);
         };
-         
+
         return new ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -144,7 +144,7 @@
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
             }, options, activateBindingsCallback);
-            
+
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
@@ -155,11 +155,11 @@
             oldSubscription.dispose();
         ko.utils.domData.set(element, templateSubscriptionDomDataKey, newSubscription);
     }
-    
+
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
-            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            var bindingValue = valueAccessor();
             if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
                 // It's an anonymous template - store the element contents, then clear the element
                 new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
@@ -169,23 +169,23 @@
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            var templateName; 
+            var templateName;
             var shouldDisplay = true;
-            
+
             if (typeof bindingValue == "string") {
                 templateName = bindingValue;
             } else {
                 templateName = bindingValue.name;
-                
+
                 // Support "if"/"ifnot" conditions
                 if ('if' in bindingValue)
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
-            }    
-            
+            }
+
             var templateSubscription = null;
-            
+
             if (typeof bindingValue['foreach'] != "undefined") {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
@@ -201,7 +201,7 @@
                 } else
                     ko.virtualElements.emptyNode(element);
             }
-            
+
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
             disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
         }
