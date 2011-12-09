@@ -25,7 +25,7 @@ If the `firstName` observable's value was changed to `Ted`, then the console wou
 
 ### Live Example 1: Forcing input to be numeric
 
-This example creates an extender that forces writes to an observable to be numeric with a configurable level of precision.  In this case, the extender will return a new writeable computed property that will sit in front of the real observable intercepting writes.
+This example creates an extender that forces writes to an observable to be numeric rounded to a configurable level of precision.  In this case, the extender will return a new writeable computed property that will sit in front of the real observable intercepting writes.
 
 <style type="text/css">
    .error {  color: red; }
@@ -42,17 +42,22 @@ This example creates an extender that forces writes to an observable to be numer
 ko.extenders.numeric = function(target, precision) {
     //create a writeable computed property to intercept writes to our observable
     var result = ko.computed({
-        read: target,
+        read: target,  //always return the original observables value
         write: function(newValue) {
-           var valueToWrite = isNaN(newValue) ? 0 : parseFloat(newValue).toFixed(precision);
+            var current = target(),
+                roundingMultiplier = Math.pow(10, precision),
+                newValueAsNum = isNaN(newValue) ? 0 : parseFloat(newValue),
+                valueToWrite = Math.round(newValueAsNum * roundingMultiplier) / roundingMultiplier;
 
-           //write value
-           target(valueToWrite);
-
-           //if value is the same, then subscribers would not be notified, so force a notification
-           if (valueToWrite === target()) {
-              target.notifySubscribers(valueToWrite);
-           }
+            //only write if it changed
+            if (valueToWrite !== current) {
+                target(valueToWrite);
+            } else {
+                //if the rounded value is the same, but a different value was written, force a notification for the current field
+                if (newValue != current) {
+                    target.notifySubscribers(valueToWrite);
+                }
+            }
         }
     });
 
@@ -72,6 +77,7 @@ ko.applyBindings(new AppViewModel(221.2234, 123.4525));
 {% endcapture %}
 
 {% include live-example-minimal.html %}
+
 
 ### Live Example 2: Adding validation to an observable
 
