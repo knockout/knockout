@@ -212,7 +212,30 @@ describe('Observable', {
         instance({ id: 1 });
         value_of(notifiedValues.length).should_be(5);
     },
-    
+
+    'Should expose an "update" extender that can configure the observable to notify on all writes, even if the value is unchanged': function() {
+        var instance = new ko.observable();
+        var notifiedValues = [];
+        instance.subscribe(notifiedValues.push, notifiedValues);
+        
+        instance(123);
+        value_of(notifiedValues.length).should_be(1);
+        
+        // Typically, unchanged values don't trigger a notification        
+        instance(123);
+        value_of(notifiedValues.length).should_be(1);
+        
+        // ... but you can enable notifications regardless of change
+        instance.extend({ notify: 'always' });
+        instance(123);
+        value_of(notifiedValues.length).should_be(2);  
+        
+        // ... or later disable that
+        instance.extend({ notify: null });
+        instance(123);
+        value_of(notifiedValues.length).should_be(2);                    
+    },
+
     'Should be possible to replace notifySubscribers with a custom handler': function() {
         var instance = new ko.observable(123);
         var interceptedNotifications = [];

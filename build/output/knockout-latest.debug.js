@@ -715,6 +715,13 @@ ko.extenders = {
                 }, timeout);                
             }
         });
+    },
+
+    'notify': function(target, notifyWhen) {
+        target["equalityComparer"] = notifyWhen == "always" 
+            ? function() { return false } // Treat all values as not equal
+            : ko.observable["fn"]["equalityComparer"];
+        return target;
     }
 };
 
