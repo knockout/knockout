@@ -83,5 +83,19 @@ describe('Subscribable', {
         instance.subscribe(function() { });
         instance.subscribe(function() { }, null, "someSpecificEvent");
         value_of(instance.getSubscriptionsCount()).should_be(2);
-    }
+    },
+
+    'Should be possible to replace notifySubscribers with a custom handler': function() {
+        var instance = new ko.subscribable();
+        var interceptedNotifications = [];
+        instance.subscribe(function() { throw new Error("Should not notify subscribers by default once notifySubscribers is overridden") });
+        instance.notifySubscribers = function(newValue, eventName) {
+            interceptedNotifications.push({ eventName: eventName, value: newValue });
+        };
+        instance.notifySubscribers(123, "myEvent");
+
+        value_of(interceptedNotifications.length).should_be(1);
+        value_of(interceptedNotifications[0].eventName).should_be("myEvent");
+        value_of(interceptedNotifications[0].value).should_be(123);
+    }    
 });

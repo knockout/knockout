@@ -71,13 +71,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             });
             var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
             var newValue = options["read"].call(valueForThis);
-            dependentObservable.notifySubscribers(_latestValue, "beforeChange");
+            dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
         } finally {
             ko.dependencyDetection.end();
         }
 
-        dependentObservable.notifySubscribers(_latestValue);
+        dependentObservable["notifySubscribers"](_latestValue);
         _hasBeenEvaluated = true;
     }
 

@@ -211,5 +211,21 @@ describe('Observable', {
         // undefined vs object - change
         instance({ id: 1 });
         value_of(notifiedValues.length).should_be(5);
-    }    
+    },
+    
+    'Should be possible to replace notifySubscribers with a custom handler': function() {
+        var instance = new ko.observable(123);
+        var interceptedNotifications = [];
+        instance.subscribe(function() { throw new Error("Should not notify subscribers by default once notifySubscribers is overridden") });
+        instance.notifySubscribers = function(newValue, eventName) {
+            interceptedNotifications.push({ eventName: eventName || "None", value: newValue });
+        };
+        instance(456);
+
+        value_of(interceptedNotifications.length).should_be(2);
+        value_of(interceptedNotifications[0].eventName).should_be("beforeChange");
+        value_of(interceptedNotifications[1].eventName).should_be("None");
+        value_of(interceptedNotifications[0].value).should_be(123);
+        value_of(interceptedNotifications[1].value).should_be(456);
+    }
 });

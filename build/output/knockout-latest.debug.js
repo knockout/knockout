@@ -748,7 +748,6 @@ ko.subscribable = function () {
     ko.utils.extend(this, ko.subscribable['fn']);
     ko.exportProperty(this, 'subscribe', this.subscribe);
     ko.exportProperty(this, 'extend', this.extend);
-    ko.exportProperty(this, 'notifySubscribers', this.notifySubscribers);
     ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
 }
 
@@ -769,7 +768,7 @@ ko.subscribable['fn'] = {
         return subscription;
     },
 
-    notifySubscribers: function (valueToNotify, event) {
+    "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
         if (this._subscriptions[event]) {
             ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
@@ -795,7 +794,7 @@ ko.subscribable['fn'] = {
 
 
 ko.isSubscribable = function (instance) {
-    return typeof instance.subscribe == "function" && typeof instance.notifySubscribers == "function";
+    return typeof instance.subscribe == "function" && typeof instance["notifySubscribers"] == "function";
 };
 
 ko.exportSymbol('ko.subscribable', ko.subscribable);
@@ -849,8 +848,8 @@ ko.observable = function (initialValue) {
         }
     }
     ko.subscribable.call(observable);
-    observable.valueHasMutated = function () { observable.notifySubscribers(_latestValue); }
-    observable.valueWillMutate = function () { observable.notifySubscribers(_latestValue, "beforeChange"); }
+    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
+    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
@@ -1082,13 +1081,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             });
             var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
             var newValue = options["read"].call(valueForThis);
-            dependentObservable.notifySubscribers(_latestValue, "beforeChange");
+            dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
         } finally {
             ko.dependencyDetection.end();
         }
 
-        dependentObservable.notifySubscribers(_latestValue);
+        dependentObservable["notifySubscribers"](_latestValue);
         _hasBeenEvaluated = true;
     }
 
