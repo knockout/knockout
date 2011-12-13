@@ -1471,8 +1471,30 @@ describe('Binding: Foreach', {
 
     'Should be able to nest containerless templates directly inside UL elements, even on IE < 8 with its bizarre HTML parsing/formatting' : function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/212
-        // Note that the </li> tags are omitted, to simulate IE<9's weird parsing, hence the <!-- /ko --> tags are moved into the <li>
-        ko.utils.setHtml(testNode, "<ul><!-- ko foreach: ['A', 'B'] --><!-- ko if: $data == 'B' --><li data-bind='text: $data'><!-- /ko --><!-- /ko --></ul>");
+        // This test starts with the following DOM structure:
+        //    <ul>
+        //        <!-- ko foreach: ['A', 'B'] -->
+        //        <!-- ko if: $data == 'B' -->
+        //        <li data-bind='text: $data'>
+        //            <!-- /ko -->
+        //            <!-- /ko -->
+        //        </li>
+        //    </ul>
+        // Note that:
+        //   1. The closing comments are inside the <li> to simulate IE<8's weird parsing
+        //   2. We have to build this with manual DOM operations, otherwise IE<8 will deform it in a different weird way
+        // It would be a more authentic test if we could set up the scenario using .innerHTML and then let the browser do whatever parsing it does normally,
+        // but unfortunately IE varies its weirdness according to whether it's really parsing an HTML doc, or whether you're using .innerHTML.
+
+        testNode.innerHTML = "";
+        testNode.appendChild(document.createElement("ul"));
+        testNode.firstChild.appendChild(document.createComment("ko foreach: ['A', 'B']"));
+        testNode.firstChild.appendChild(document.createComment("ko if: $data == 'B'"));
+        testNode.firstChild.appendChild(document.createElement("li"));
+        testNode.firstChild.lastChild.setAttribute("data-bind", "text: $data");
+        testNode.firstChild.lastChild.appendChild(document.createComment("/ko"));
+        testNode.firstChild.lastChild.appendChild(document.createComment("/ko"));
+
         ko.applyBindings(null, testNode);        
         value_of(testNode).should_contain_text("B");
     },    
