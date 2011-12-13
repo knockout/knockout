@@ -501,10 +501,27 @@ describe('Binding: Submit', {
 describe('Binding: Event', {
     before_each: prepareTestNode,
 
-    'Should invoke the supplied function when the event occurs, using model as \'this\' param': function () {
+    'Should invoke the supplied function when the event occurs, using model as \'this\' param and first arg, and event as second arg': function () {
         var model = { 
-            firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
-            secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
+            firstWasCalled: false, 
+            firstHandler: function (passedModel, evt) { 
+                value_of(evt.type).should_be("click");
+                value_of(this).should_be(model);
+                value_of(passedModel).should_be(model);
+
+                value_of(model.firstWasCalled).should_be(false);
+                model.firstWasCalled = true; 
+            },
+
+            secondWasCalled: false, 
+            secondHandler: function (passedModel, evt) {
+                value_of(evt.type).should_be("mouseover");
+                value_of(this).should_be(model);
+                value_of(passedModel).should_be(model);
+
+                value_of(model.secondWasCalled).should_be(false);
+                model.secondWasCalled = true; 
+            }
         };
         testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler, mouseout:null}'>hey</button>";
         ko.applyBindings(model, testNode);
@@ -552,8 +569,15 @@ describe('Binding: Click', {
     // This is just a special case of the "event" binding, so not necessary to respecify all its behaviours	
     before_each: prepareTestNode,
 
-    'Should invoke the supplied function on click, using model as \'this\' param': function () {
-        var model = { wasCalled: false, doCall: function () { this.wasCalled = true; } };
+    'Should invoke the supplied function on click, using model as \'this\' param and first arg, and event as second arg': function () {
+        var model = { 
+            wasCalled: false, 
+            doCall: function (arg1, arg2) { 
+                this.wasCalled = true;
+                value_of(arg1).should_be(model);
+                value_of(arg2.type).should_be("click");
+            } 
+        };
         testNode.innerHTML = "<button data-bind='click:doCall'>hey</button>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
