@@ -59,7 +59,7 @@ ko.bindingHandlers['event'] = {
 ko.bindingHandlers['submit'] = {
     'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
         if (typeof valueAccessor() != "function")
-            throw new Error("The value for a submit binding must be a function to invoke on submit");
+            throw new Error("The value for a submit binding must be a function");
         ko.utils.registerEventHandler(element, "submit", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
@@ -267,7 +267,7 @@ ko.bindingHandlers['options'] = {
         }
     }
 };
-ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.bindingHandlers.options.optionValueDomData__';
+ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.optionValueDomData__';
 
 ko.bindingHandlers['selectedOptions'] = {
     getSelectedValuesFromSelectNode: function (selectNode) {
