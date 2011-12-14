@@ -1,4 +1,4 @@
-// Knockout JavaScript library v1.3.0rc
+// Knockout JavaScript library v2.0.0rc
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -414,25 +414,29 @@ ko.utils = new (function () {
 })();
 
 ko.exportSymbol('ko.utils', ko.utils);
-ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
-ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
-ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
-ko.exportSymbol('ko.utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
-ko.exportSymbol('ko.utils.arrayIndexOf', ko.utils.arrayIndexOf);
-ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
-ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
-ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
-ko.exportSymbol('ko.utils.extend', ko.utils.extend);
-ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
-ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
-ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
-ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
-ko.exportSymbol('ko.utils.registerEventHandler', ko.utils.registerEventHandler);
-ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
-ko.exportSymbol('ko.utils.range', ko.utils.range);
-ko.exportSymbol('ko.utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
-ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
-ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+ko.utils.arrayForEach([
+    ['arrayForEach', ko.utils.arrayForEach],
+    ['arrayFirst', ko.utils.arrayFirst],
+    ['arrayFilter', ko.utils.arrayFilter],
+    ['arrayGetDistinctValues', ko.utils.arrayGetDistinctValues],
+    ['arrayIndexOf', ko.utils.arrayIndexOf],
+    ['arrayMap', ko.utils.arrayMap],
+    ['arrayPushAll', ko.utils.arrayPushAll],
+    ['arrayRemoveItem', ko.utils.arrayRemoveItem],
+    ['extend', ko.utils.extend],
+    ['fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost],
+    ['getFormFields', ko.utils.getFormFields],
+    ['postJson', ko.utils.postJson],
+    ['parseJson', ko.utils.parseJson],
+    ['registerEventHandler', ko.utils.registerEventHandler],
+    ['stringifyJson', ko.utils.stringifyJson],
+    ['range', ko.utils.range],
+    ['toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass],
+    ['triggerEvent', ko.utils.triggerEvent],
+    ['unwrapObservable', ko.utils.unwrapObservable]
+], function(item) {
+    ko.exportSymbol('ko.utils.' + item[0], item[1]);
+});
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)
@@ -1935,7 +1939,10 @@ ko.bindingHandlers['event'] = {
                         var allBindings = allBindingsAccessor();
                         
                         try { 
-                            handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
+                            // Take all the event args, and prefix with the viewmodel
+                            var argsForHandler = ko.utils.makeArray(arguments);
+                            argsForHandler.unshift(viewModel);
+                            handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
                         } finally {
                             if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                                 if (event.preventDefault)
@@ -1961,7 +1968,7 @@ ko.bindingHandlers['event'] = {
 ko.bindingHandlers['submit'] = {
     'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
         if (typeof valueAccessor() != "function")
-            throw new Error("The value for a submit binding must be a function to invoke on submit");
+            throw new Error("The value for a submit binding must be a function");
         ko.utils.registerEventHandler(element, "submit", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
@@ -2169,7 +2176,7 @@ ko.bindingHandlers['options'] = {
         }
     }
 };
-ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.bindingHandlers.options.optionValueDomData__';
+ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.optionValueDomData__';
 
 ko.bindingHandlers['selectedOptions'] = {
     getSelectedValuesFromSelectNode: function (selectNode) {
@@ -2473,11 +2480,11 @@ ko.exportSymbol('ko.allowedVirtualElementBindings', ko.virtualElements.allowedBi
 ko.templateEngine = function () { };
 
 ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    throw "Override renderTemplateSource in your ko.templateEngine subclass";
+    throw "Override renderTemplateSource";
 };
 
 ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script) {
-    throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";    
+    throw "Override createJavaScriptEvaluatorBlock";
 };
 
 ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
@@ -2491,7 +2498,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
         // Anonymous template
         return new ko.templateSources.anonymousTemplate(template);
     } else
-        throw new Error("Unrecognised template type: " + template);
+        throw new Error("Unknown template type: " + template);
 };
 
 ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options) {
