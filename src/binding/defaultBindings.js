@@ -31,7 +31,7 @@ ko.bindingHandlers['event'] = {
                         
                         try { 
                             // Take all the event args, and prefix with the viewmodel
-                            var argsForHandler = Array.prototype.splice.call(arguments, 0);
+                            var argsForHandler = ko.utils.makeArray(arguments);
                             argsForHandler.unshift(viewModel);
                             handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
                         } finally {
