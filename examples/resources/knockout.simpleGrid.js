@@ -30,12 +30,12 @@
             // If you don't specify columns configuration, we'll use scaffolding
             this.columns = configuration.columns || getColumnsForScaffolding(ko.utils.unwrapObservable(this.data)); 
 
-            this.itemsOnCurrentPage = ko.dependentObservable(function () {
+            this.itemsOnCurrentPage = ko.computed(function () {
                 var startIndex = this.pageSize * this.currentPageIndex();
                 return this.data.slice(startIndex, startIndex + this.pageSize);
             }, this);
 
-            this.maxPageIndex = ko.dependentObservable(function () {
+            this.maxPageIndex = ko.computed(function () {
                 return Math.ceil(ko.utils.unwrapObservable(this.data).length / this.pageSize);
             }, this);
         }

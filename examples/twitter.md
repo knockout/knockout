@@ -54,7 +54,7 @@ This is a sophisticated example showing how many different features in Knockout 
 
 {% capture live_example_viewmodel %}
     // The view model holds all the state we're working with. It also has methods that can edit it, and it uses
-    // computed properties to calculate more state in terms of the underlying data
+    // computed observables to calculate more state in terms of the underlying data
     // --
     // The view (i.e., the HTML UI) binds to this using data-bind attributes, so it always stays up-to-date with
     // the view model, even though the view model does not know or care about any view that binds to it
