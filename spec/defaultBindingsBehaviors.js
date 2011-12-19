@@ -1211,6 +1211,13 @@ describe('Binding: Foreach', {
         ko.applyBindings({ someItem: null }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
     },
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is undefined': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: undefined }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);        
+    },    
     
     'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {		
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
