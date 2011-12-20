@@ -142,11 +142,11 @@
             // call afterAdd and beforeRemove custom events
             for (var i = 0; i < nodesAdded.length; i++) {
                 if (nodesAdded[i].element.nodeType == 1)
-                    ko.utils.triggerEvent(nodesAdded[i].element, "koAfterAdd", {'ko_index': nodesAdded[i].index, 'ko_data': nodesAdded[i].value});
+                    ko.utils.triggerEvent(nodesAdded[i].element, "koAfterAdd", {bubbles: false, 'ko_index': nodesAdded[i].index, 'ko_data': nodesAdded[i].value});
             }
             for (var i = 0; i < nodesToDelete.length; i++) {
                 if (nodesToDelete[i].element.nodeType == 1) {
-                    if (ko.utils.triggerEvent(nodesToDelete[i].element, "koBeforeRemove", {'ko_index': nodesToDelete[i].index, 'ko_data': nodesToDelete[i].value}) === false) {
+                    if (ko.utils.triggerEvent(nodesToDelete[i].element, "koBeforeRemove", {bubbles: false, 'ko_index': nodesToDelete[i].index, 'ko_data': nodesToDelete[i].value}) === false) {
                         nodesToDelete[i].removedByCallback = true;
                     }
                 }

@@ -74,7 +74,7 @@
                 options['afterRender'](renderedNodesArray, bindingContext['$data']);
             for (var i = 0; i < renderedNodesArray.length; i++) {
                 if (renderedNodesArray[i].nodeType == 1)
-                    ko.utils.triggerEvent(renderedNodesArray[i], "koAfterRender", {'ko_data': bindingContext['$data']});
+                    ko.utils.triggerEvent(renderedNodesArray[i], "koAfterRender", {bubbles: false, 'ko_data': bindingContext['$data']});
             }
         }
 
@@ -133,7 +133,7 @@
                 options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
             for (var i = 0; i < addedNodesArray.length; i++) {
                 if (addedNodesArray[i].nodeType == 1)
-                    ko.utils.triggerEvent(addedNodesArray[i], "koAfterRender", {'ko_data': bindingContext['$data']});
+                    ko.utils.triggerEvent(addedNodesArray[i], "koAfterRender", {bubbles: false, 'ko_data': bindingContext['$data']});
             }
         };
          
