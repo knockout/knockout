@@ -237,9 +237,8 @@ ko.bindingHandlers['options'] = {
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
-                optionText = ko.utils.unwrapObservable(optionText).toString();
-                typeof option.innerText == "string" ? option.innerText = optionText
-                                                    : option.textContent = optionText;
+
+                ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
             }
