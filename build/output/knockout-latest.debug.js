@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.0.0rc
+// Knockout JavaScript library v2.0.0rc2
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -1252,13 +1252,15 @@ ko.exportSymbol('ko.computed', ko.dependentObservable); // Make "ko.computed" an
 
 ko.exportSymbol('ko.toJS', ko.toJS);
 ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
+    var hasDomDataExpandoProperty = '__ko__hasDomDataOptionValue__';
+
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
     // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
     ko.selectExtensions = {
         readValue : function(element) {
             if (element.tagName == 'OPTION') {
-                if (element['__ko__hasDomDataOptionValue__'] === true)
+                if (element[hasDomDataExpandoProperty] === true)
                     return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
                 return element.getAttribute("value");
             } else if (element.tagName == 'SELECT')
@@ -1271,18 +1273,19 @@ ko.exportSymbol('ko.toJSON', ko.toJSON);(function () {
             if (element.tagName == 'OPTION') {
                 switch(typeof value) {
                     case "string":
-                    case "number":
                         ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
-                        if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
-                            delete element['__ko__hasDomDataOptionValue__'];
+                        if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                            delete element[hasDomDataExpandoProperty];
                         }
                         element.value = value;                                   
                         break;
                     default:
                         // Store arbitrary object using DomData
                         ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                        element['__ko__hasDomDataOptionValue__'] = true;
-                        element.value = "";
+                        element[hasDomDataExpandoProperty] = true;
+
+                        // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
+                        element.value = typeof value === "number" ? value : "";
                         break;
                 }			
             } else if (element.tagName == 'SELECT') {
@@ -2850,12 +2853,11 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
             
             var templateSubscription = null;
             
-            if (typeof bindingValue['foreach'] != "undefined") {
+            if ((typeof bindingValue === 'object') && ('foreach' in bindingValue)) { // Note: can't use 'in' operator on strings
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
                 templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
-            }
-            else {
+            } else {
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
