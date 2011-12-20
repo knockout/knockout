@@ -362,6 +362,21 @@ describe('Binding: Value', {
         
         observable('D'); // This change should be rejected, as there's no corresponding option in the UI
         value_of(observable()).should_not_be('D');
+    },
+
+    'For select boxes, option values can be numerical, and are not implicitly converted to strings': function() {
+        var observable = new ko.observable(30);
+        testNode.innerHTML = "<select data-bind='options:[10,20,30,40], value:myObservable'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+
+        // First check that numerical model values will match a dropdown option
+        value_of(testNode.childNodes[0].selectedIndex).should_be(2); // 3rd element, zero-indexed
+
+        // Then check that dropdown options map back to numerical model values
+        testNode.childNodes[0].selectedIndex = 1;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(typeof observable()).should_be("number");
+        value_of(observable()).should_be(20);
     }
 })
 
