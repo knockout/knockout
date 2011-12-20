@@ -32,14 +32,14 @@ This example shows two ways to animate transitions:
 </p>
 
 <div data-bind='template: { foreach: planetsToShow,
-                            beforeRemove: function(elem) { if (elem.nodeType === 1) $(elem).slideUp(function() { $(elem).remove(); }) },
-                            afterAdd: function(elem) { if (elem.nodeType === 1) $(elem).hide().slideDown(); } }'>
+                            beforeRemove: hidePlanetElement,
+                            afterAdd: showPlanetElement }'>
     <div data-bind="attr: { 'class': 'planet ' + type }, text: name"> </div>
 </div>
 
 <p data-bind='fadeVisible: displayAdvancedOptions'>
-    <button data-bind='click: function() { addPlanet("rock") }'>Add rocky planet</button>
-    <button data-bind='click: function() { addPlanet("gasgiant") }'>Add gas giant</button>
+    <button data-bind='click: addPlanet.bind($data, "rock")'>Add rocky planet</button>
+    <button data-bind='click: addPlanet.bind($data, "gasgiant")'>Add gas giant</button>
 </p>
 {% endcapture %}
 
@@ -76,6 +76,10 @@ This example shows two ways to animate transitions:
                 return planet.type == desiredType;
             });
         }, this);
+
+        // Animation callbacks for the planets list
+        this.showPlanetElement = function(elem) { if (elem.nodeType === 1) $(elem).hide().slideDown() }
+        this.hidePlanetElement = function(elem) { if (elem.nodeType === 1) $(elem).slideUp(function() { $(elem).remove(); }) }
     };
 
     // Here's a custom Knockout binding that makes elements shown/hidden via jQuery's fadeIn()/fadeOut() methods
