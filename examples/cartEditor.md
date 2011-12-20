@@ -16,40 +16,50 @@ title: Cart editor example
     .liveExample td select { height: 1.8em; white-space: nowrap; }
 </style>
 
-This example shows how dependent observables can be chained together. Each cart line has a `computed` property for its own subtotal, and these in turn are combined in a further `compouted` property for the grand total. When you change the data, your changes ripple out through this chain of dependent observables, and all associated UI is updated.
+This example shows how computed observables can be chained together. Each cart line has a `ko.computed` property for its own subtotal, and these in turn are combined in a further `ko.computed` property for the grand total. When you change the data, your changes ripple out through this chain of computed properties, and all associated UI is updated.
 
 This example also demonstrates a simple way to create cascading dropdowns.
 
 {% capture live_example_view %}
-<div id='cartEditor'>
-    <table width='100%'>
-        <thead>
-            <tr>
-                <th width='25%'>Category</th>
-                <th width='25%'>Product</th>
-                <th class='price' width='15%'>Price</th>
-                <th class='quantity' width='10%'>Quantity</th>
-                <th class='price' width='15%'>Subtotal</th>
-                <th width='10%'> </th>
-            </tr>
-        </thead>
-        <tbody data-bind='foreach: lines'>
-            <tr>
-                <td><select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category' /></td>
-                <td data-bind="if: category"><select data-bind='options: category().products, optionsText: "name", optionsCaption: "Select...", value: product' /></td>
-                <td class='price' data-bind="with: product"><span data-bind='text: formatCurrency(price)' /></td>
-                <td class='quantity'><input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' /></td>
-                <td class='price'><span data-bind='visible: product, text: formatCurrency(subtotal())' /></td>
-                <td><a href='#' data-bind='click: function() { $root.removeLine($data) }'>Remove</a></td>
-            </tr>
-        </tbody>
-    </table>
-    <p class='grandTotal'>
-        Total value: <span data-bind='text: formatCurrency(grandTotal())'> </span>
-    </p>
-    <button data-bind='click: addLine'>Add product</button>
-    <button data-bind='click: save'>Submit order</button>
-</div>
+<table width='100%'>
+    <thead>
+        <tr>
+            <th width='25%'>Category</th>
+            <th width='25%'>Product</th>
+            <th class='price' width='15%'>Price</th>
+            <th class='quantity' width='10%'>Quantity</th>
+            <th class='price' width='15%'>Subtotal</th>
+            <th width='10%'> </th>
+        </tr>
+    </thead>
+    <tbody data-bind='foreach: lines'>
+        <tr>
+            <td>
+                <select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category' />
+            </td>
+            <td data-bind="if: category">
+                <select data-bind='options: category().products, optionsText: "name", optionsCaption: "Select...", value: product' />
+            </td>
+            <td class='price' data-bind="with: product">
+                <span data-bind='text: formatCurrency(price)' />
+            </td>
+            <td class='quantity'>
+                <input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' />
+            </td>
+            <td class='price'>
+                <span data-bind='visible: product, text: formatCurrency(subtotal())' />
+            </td>
+            <td>
+                <a href='#' data-bind='click: $parent.removeLine'>Remove</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<p class='grandTotal'>
+    Total value: <span data-bind='text: formatCurrency(grandTotal())'> </span>
+</p>
+<button data-bind='click: addLine'>Add product</button>
+<button data-bind='click: save'>Submit order</button>
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
@@ -63,33 +73,29 @@ This example also demonstrates a simple way to create cascading dropdowns.
         this.quantity = ko.observable(1);
         this.subtotal = ko.computed(function() {
             return this.product() ? this.product().price * parseInt("0" + this.quantity(), 10) : 0;
-        }.bind(this));
+        }, this);
 
         // Whenever the category changes, reset the product selection
         this.category.subscribe(function() {
             this.product(undefined);
-        }.bind(this));
+        }, this);
     };
     
     var Cart = function() {
         // Stores an array of lines, and from these, can work out the grandTotal
-        this.lines = ko.observableArray([new CartLine()]); // Put one line in by default
-        this.grandTotal = ko.computed(function() {
+        var self = this;
+        self.lines = ko.observableArray([new CartLine()]); // Put one line in by default
+        self.grandTotal = ko.computed(function() {
             var total = 0;
-            for (var i = 0; i < this.lines().length; i++)
-            total += this.lines()[i].subtotal();
+            $.each(self.lines(), function() { total += this.subtotal() })
             return total;
-        }.bind(this));
+        });
 
         // Operations
-        this.addLine = function() {
-            this.lines.push(new CartLine())
-        };
-        this.removeLine = function(line) {
-            this.lines.remove(line)
-        };
-        this.save = function() {
-            var dataToSave = $.map(this.lines(), function(line) {
+        self.addLine = function() { self.lines.push(new CartLine()) };
+        self.removeLine = function(line) { self.lines.remove(line) };
+        self.save = function() {
+            var dataToSave = $.map(self.lines(), function(line) {
                 return line.product() ? {
                     productName: line.product().name,
                     quantity: line.quantity()
