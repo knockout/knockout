@@ -161,7 +161,7 @@ Of course, inside the `create` callback you can do another call to `ko.mapping.f
 	var myChildModel = function(data) {
 		ko.mapping.fromJS(data, {}, this);
 		
-		this.nameLength = ko.dependentObservable(function() {
+		this.nameLength = ko.computed(function() {
 			return this.name().length;
 		}, this);
 	}

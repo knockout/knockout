@@ -43,7 +43,7 @@ For example, define a view model as follows:
         pets : ko.observableArray(["Cat", "Dog", "Fish"]),
         type : "Customer"
     };
-    viewModel.hasALotOfPets = ko.dependentObservable(function() {
+    viewModel.hasALotOfPets = ko.computed(function() {
         return this.pets().length > 2
     }, viewModel)
     
