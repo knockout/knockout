@@ -31,7 +31,7 @@ For a detailed step-by-step tutorial about building this example and integrating
             <tr>
                 <td><input class='required' data-bind='value: name, uniqueName: true' /></td>
                 <td><input class='required number' data-bind='value: price, uniqueName: true' /></td>
-                <td><a href='#' data-bind='click: function() { viewModel.removeGift($data) }'>Delete</a></td>
+                <td><a href='#' data-bind='click: $root.removeGift'>Delete</a></td>
             </tr>
         </tbody>
     </table>
@@ -42,35 +42,34 @@ For a detailed step-by-step tutorial about building this example and integrating
 {% endcapture %}
 
 {% capture live_example_viewmodel %}
-var initialGifts = [
-    { name: "Tall Hat", price: "39.95"},
-    { name: "Long Cloak", price: "120.00"}
-];
-
 var GiftModel = function(gifts) {
-    this.gifts = ko.observableArray(gifts);
+    var self = this;
+    self.gifts = ko.observableArray(gifts);
 
-    this.addGift = function() {
-        this.gifts.push({
+    self.addGift = function() {
+        self.gifts.push({
             name: "",
             price: ""
         });
     };
 
-    this.removeGift = function(gift) {
-        this.gifts.remove(gift);
+    self.removeGift = function(gift) {
+        self.gifts.remove(gift);
     };
 
-    this.save = function(form) {
-        alert("Could now transmit to server: " + ko.utils.stringifyJson(this.gifts));
-        // To transmit to server, write this: ko.utils.postJson($("form")[0], this.gifts);
+    self.save = function(form) {
+        alert("Could now transmit to server: " + ko.utils.stringifyJson(self.gifts));
+        // To actually transmit to server as a regular form post, write this: ko.utils.postJson($("form")[0], self.gifts);
     };
 };
 
-var viewModel = new GiftModel(initialGifts);
-
+var viewModel = new GiftModel([
+    { name: "Tall Hat", price: "39.95"},
+    { name: "Long Cloak", price: "120.00"}
+]);
 ko.applyBindings(viewModel);
 
-$("form").validate({ submitHandler: function() { viewModel.save() } });
+// Activate jQuery Validation
+$("form").validate({ submitHandler: viewModel.save });
 {% endcapture %}
 {% include live-example-tabs.html %}
