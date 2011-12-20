@@ -38,7 +38,7 @@ Whenever the associated observable changes, KO will call your `update` callback,
  * `element` --- The DOM element involved in this binding
  * `valueAccessor` --- A JavaScript function that you can call to get the current model property that is involved in this binding. Call this without passing any parameters (i.e., call `valueAccessor()`) to get the current model property value.
  * `allBindingsAccessor` --- A JavaScript function that you can call to get *all* the model properties bound to this DOM element. Like `valueAccessor`, call it without any parameters to get the current bound model properties. 
- * `viewModel` --- The view model object that was passed to `ko.applyBindings`. Inside of a template, this parameter will be set to the data that is being bound against the template.
+ * `viewModel` --- The view model object that was passed to `ko.applyBindings`. Inside a nested binding context, this parameter will be set to the current data item (e.g., inside a `with: person` binding, `viewModel` will be set to `person`).
  
 For example, you might have been controlling an element's visibility using the `visible` binding, but now you want to go a step further and animate the transition. You want elements to slide into and out of existence according to the value of an observable. You can do this by writing a custom binding that calls jQuery's `slideUp`/`slideDown` functions:
 
