@@ -1,29 +1,31 @@
 <h2>Run it:</h2>
-<div class="liveExample">
+<div id="liveExample" class="liveExample">
     <p>
     Choose a ticket class:
-    <select data-bind="options: tickets,
+    <select data-bind="options: tickets, 
                        optionsCaption: 'Choose...',
                        optionsText: 'name',
                        value: chosenTicket"></select>
-    </p>
+                       
+    <button data-bind="enable: chosenTicket, 
+                       click: resetTicket">Clear</button>
+    </p>                   
     <p data-bind="with: chosenTicket">
-        You have chosen <b data-bind="text: name"> </b>
-        (<span data-bind="text: price"> </span>)
-        <button data-bind="click: $root.resetTicket">Clear</button>
+        You have chosen <b data-bind="text: name"></b>
+        ($<span data-bind="text: price"></span>)    
     </p>
     
     <script type="text/javascript">
-        var viewModel = {
-            tickets: [
+        function TicketsViewModel() {
+            this.tickets = [
                 { name: "Economy", price: 199.95 },
                 { name: "Business", price: 449.22 },
                 { name: "First Class", price: 1199.99 }
-            ],
-            chosenTicket: ko.observable(),
-            resetTicket: function() { viewModel.chosenTicket(null) }
-        };
-        ko.applyBindings(viewModel);
+            ];
+            this.chosenTicket = ko.observable();
+            this.resetTicket = function() { this.chosenTicket(null) }
+        }
+        ko.applyBindings(new TicketsViewModel(), document.getElementById("liveExample"));
     </script>	
 </div>
 
