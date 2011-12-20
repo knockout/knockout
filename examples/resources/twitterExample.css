@@ -1,6 +1,6 @@
 .configuration, .tweets, .tweets td { font-family: Verdana; font-size: 13px; }
 .configuration { background-color: #DEDEDE; border: 2px solid gray; float:left; height: 40em; width: 40%; padding: 0.5em; border-right-width:0; }
-.tweets { width: 55%; border: 2px solid gray; height: 40em; overflow: scroll; overflow-x: hidden; background-color: Black; color: White; padding: 0.5em; }
+.tweets { width: 55%; border: 2px solid gray; height: 40em; overflow: scroll; overflow-x: hidden; background-color: Black; color: White; padding: 0.5em; position: relative; }
 .tweets table { border-width: 0;}
 .tweets tr { vertical-align: top; }
 .tweets td { padding: 0.4em 0.3em 1em 0.4em; border-width: 0; }
@@ -24,4 +24,4 @@ input.invalid { border: 1px solid red !important; background-color: #FFAAAA !imp
 .configuration form input { width:40%; font-size: 1.3em; border:1px solid silver; background-color: White; padding: 0.1em; }
 .configuration form button { width: 20%; margin-left: 0.3em; height: 2em; }
 
-.loadingIndicator { position: absolute; top: 0.1em; left: 0.1em; font: 0.8em Arial; background-color: #292; color: White; padding: 0.2em 0.5em 0.2em 0.5em; display: none; }
+.loadingIndicator { position: absolute; top: 0.1em; left: 0.1em; font: 0.8em Arial; background-color: #229; color: White; padding: 0.2em 0.5em 0.2em 0.5em; display: none; }

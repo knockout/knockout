@@ -17,7 +17,6 @@ This is a sophisticated example showing how many different features in Knockout 
 </style>
 
 {% capture live_example_view %}
-<div class='loadingIndicator'>Loading...</div>
 <div class='configuration'>
     <div class='listChooser'>
         <button data-bind='click: deleteList, enable: editingList.name'>Delete</button>
@@ -28,7 +27,10 @@ This is a sophisticated example showing how many different features in Knockout 
     <p>Currently viewing <span data-bind='text: editingList.userNames().length'> </span> user(s):</p>
     <div class='currentUsers' data-bind='with: editingList'>
         <ul data-bind='foreach: userNames'>
-            <li><button data-bind='click: function() { $parent.userNames.remove($data) }'>Remove</button> <div data-bind="text: $data"> </div></li>
+            <li>
+                <button data-bind='click: $root.removeUser'>Remove</button>
+                <div data-bind="text: $data"> </div>
+            </li>
         </ul>
     </div>
 
@@ -39,6 +41,7 @@ This is a sophisticated example showing how many different features in Knockout 
     </form>
 </div>
 <div class='tweets'>
+    <div class='loadingIndicator'>Loading...</div>
     <table width='100%' data-bind="foreach: currentTweets">
         <tr>
             <td><img data-bind='attr: { src: profile_image_url }' /></td>
@@ -86,6 +89,10 @@ This is a sophisticated example showing how many different features in Knockout 
                 this.userNameToAdd("");
             }
         };
+
+        this.removeUser = function(userName) { 
+            this.editingList.userNames.remove(userName) 
+        }.bind(this);
 
         this.saveChanges = function() {
             var saveAs = prompt("Save as", this.editingList.name());
@@ -140,10 +147,7 @@ This is a sophisticated example showing how many different features in Knockout 
 
         // The active user tweets are (asynchronously) computed from editingList.userNames
         ko.computed(function() {
-            var currentTweets = this.currentTweets;
-            twitterApi.getTweetsForUsers(this.editingList.userNames(), function(data) {
-                currentTweets(data)
-            })
+            twitterApi.getTweetsForUsers(this.editingList.userNames(), this.currentTweets);
         }, this);
     };
 
