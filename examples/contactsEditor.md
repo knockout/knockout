@@ -3,9 +3,7 @@ layout: example
 title: Contacts editor example
 ---
 
-This example is a duplicate of the <a href="http://github.com/nje/jquery-datalink">contacts editor</a> sample provided with Microsoft's <a href='http://wiki.github.com/nje/jquery-datalink/jquery-data-linking-proposal'>jQuery Data Linking Proposal</a>. I wanted to see whether the implementation would be harder or easier with Knockout. 
-
-It's not the number of lines of code that's so important (though the Knockout implementation is quite concise); what matters is how easily you can understand the code at a glance. Check the HTML source code to see how simple the viewModel is, and how straightforward it is to bind the template to it.
+This examples shows a fairly typical way to edit a nested data structure. Check the HTML source code to see how simple the viewmodel is, and how straightforward it is to bind the view to it.
 
 <style type="text/css">
     .liveExample TR { vertical-align: top; }
@@ -28,7 +26,7 @@ It's not the number of lines of code that's so important (though the Knockout im
             <tr>
                 <td>
                     <input data-bind='value: firstName' />
-                    <div><a href='#' data-bind='click: function() { $root.removeContact($data); }'>Delete</a></div>
+                    <div><a href='#' data-bind='click: $root.removeContact'>Delete</a></div>
                 </td>
                 <td><input data-bind='value: lastName' /></td>
                 <td>
@@ -37,11 +35,11 @@ It's not the number of lines of code that's so important (though the Knockout im
                             <tr>
                                 <td><input data-bind='value: type' /></td>
                                 <td><input data-bind='value: number' /></td>
-                                <td><a href='#' data-bind='click: function() { $root.removePhone($parent, $data); }'>Delete</a></td>
+                                <td><a href='#' data-bind='click: $root.removePhone'>Delete</a></td>
                             </tr>
                         </tbody>
                     </table>
-                    <a href='#' data-bind='click: function() { $root.addPhone($data); }'>Add number</a>
+                    <a href='#' data-bind='click: $root.addPhone'>Add number</a>
                 </td>
             </tr>
         </tbody>
@@ -69,38 +67,39 @@ It's not the number of lines of code that's so important (though the Knockout im
     ];
 
     var ContactsModel = function(contacts) {
-        this.contacts = ko.observableArray(ko.utils.arrayMap(contacts, function(contact) {
+        var self = this;
+        self.contacts = ko.observableArray(ko.utils.arrayMap(contacts, function(contact) {
             return { firstName: contact.firstName, lastName: contact.lastName, phones: ko.observableArray(contact.phones) };
         }));
 
-        this.addContact = function() {
-            this.contacts.push({
+        self.addContact = function() {
+            self.contacts.push({
                 firstName: "",
                 lastName: "",
                 phones: ko.observableArray()
             });
         };
 
-        this.removeContact = function(contact) {
-            this.contacts.remove(contact);
+        self.removeContact = function(contact) {
+            self.contacts.remove(contact);
         };
 
-        this.addPhone = function(contact) {
+        self.addPhone = function(contact) {
             contact.phones.push({
                 type: "",
                 number: ""
             });
         };
 
-        this.removePhone = function(contact, phone) {
-            contact.phones.remove(phone);
+        self.removePhone = function(phone) {
+            $.each(self.contacts(), function() { this.phones.remove(phone) })
         };
 
-        this.save = function() {
-            this.lastSavedJson(JSON.stringify(ko.toJS(this.contacts), null, 2));
+        self.save = function() {
+            self.lastSavedJson(JSON.stringify(ko.toJS(self.contacts), null, 2));
         };
 
-        this.lastSavedJson = ko.observable("")
+        self.lastSavedJson = ko.observable("")
     };
 
     ko.applyBindings(new ContactsModel(initialData));
