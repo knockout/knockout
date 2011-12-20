@@ -128,24 +128,35 @@
             }
         }
         
-        ko.utils.arrayForEach(nodesToDelete, function (node) { ko.cleanNode(node.element) });
-
-        var invokedBeforeRemoveCallback = false;
         if (!isFirstExecution) {
             if (options['afterAdd']) {
                 for (var i = 0; i < nodesAdded.length; i++)
                     options['afterAdd'](nodesAdded[i].element, nodesAdded[i].index, nodesAdded[i].value);
             }
             if (options['beforeRemove']) {
-                for (var i = 0; i < nodesToDelete.length; i++)
+                for (var i = 0; i < nodesToDelete.length; i++) {
                     options['beforeRemove'](nodesToDelete[i].element, nodesToDelete[i].index, nodesToDelete[i].value);
-                invokedBeforeRemoveCallback = true;
+                    nodesToDelete[i].removedByCallback = true;
+                }
+            }
+            // call afterAdd and beforeRemove custom events
+            for (var i = 0; i < nodesAdded.length; i++) {
+                if (nodesAdded[i].element.nodeType == 1)
+                    ko.utils.triggerEvent(nodesAdded[i].element, "koAfterAdd", {'ko_index': nodesAdded[i].index, 'ko_data': nodesAdded[i].value});
+            }
+            for (var i = 0; i < nodesToDelete.length; i++) {
+                if (nodesToDelete[i].element.nodeType == 1) {
+                    if (ko.utils.triggerEvent(nodesToDelete[i].element, "koBeforeRemove", {'ko_index': nodesToDelete[i].index, 'ko_data': nodesToDelete[i].value}) === false) {
+                        nodesToDelete[i].removedByCallback = true;
+                    }
+                }
             }
         }
-        if (!invokedBeforeRemoveCallback)
-            ko.utils.arrayForEach(nodesToDelete, function (node) {
+        ko.utils.arrayForEach(nodesToDelete, function (node) {
+            if (!node.removedByCallback)
                 ko.removeNode(node.element);
-            });
+            ko.cleanNode(node.element);
+        });
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
