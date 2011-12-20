@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.0.0rc2
+// Knockout JavaScript library v2.0.0rc3
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -312,9 +312,10 @@ ko.utils = new (function () {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))
                 value = "";
-            typeof element.innerText == "string" ? element.innerText = value
-                                                 : element.textContent = value;
 
+            'innerText' in element ? element.innerText = value
+                                   : element.textContent = value;
+                                   
             if (ieVersion) {
                 // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
                 element.innerHTML = element.innerHTML;
