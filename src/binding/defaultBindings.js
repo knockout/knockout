@@ -466,6 +466,21 @@ ko.bindingHandlers['hasfocus'] = {
     }
 };
 
+ko.bindingHandlers['afterRender'] = {
+    'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        var newValueAccessor = function () {
+            var result = {'koAfterRender': function(data, event) {
+                var handlerFunction = valueAccessor();
+                if (!handlerFunction)
+                    return;
+                return handlerFunction.call(this, event.target, event.ko_data);
+            }};
+            return result;
+        };
+        return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindingsAccessor, viewModel);
+    }
+};
+	
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {

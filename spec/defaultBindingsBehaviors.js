@@ -1241,6 +1241,21 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
     },
     
+    'Should be able to use afterRender to do something with each item': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data, afterRender: $parent.myAfterRender'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        var afterRenderData = [];
+        ko.applyBindings({
+            someItems: someItems,
+            myAfterRender: function(elem, data) {
+                afterRenderData.push(data);
+            }
+        }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alphabeta');
+        value_of(afterRenderData.length).should_be(2);
+        value_of(afterRenderData[0]).should_be("alpha");
+        value_of(afterRenderData[1]).should_be("beta");
+    },
     
     'Should add and remove nodes to match changes in the bound array': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
