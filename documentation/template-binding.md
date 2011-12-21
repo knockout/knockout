@@ -6,100 +6,92 @@ title: The "template" binding
 ### Purpose
 The `template` binding populates the associated DOM element with the results of rendering a template. Templates are a simple and convenient way to build sophisticated UI structures - possibly with repeating or nested blocks - as a function of your view model data.
 
-By default, Knockout works with the [jquery.tmpl](http://api.jquery.com/jquery.tmpl/) template engine, a popular jQuery plugin. To use it, download and reference both `jquery.tmpl` and jQuery itself as described on [the installation page](installation.html). Or if you prefer, it's possible to integrate with a different template engine, though that is a more advanced task requiring some understanding of Knockout internals.
+There are two main ways of using templates:
 
-### Example
-    <div data-bind='template: "personTemplate"'> </div>
-    
-	<script id='personTemplate' type='text/html'>
-		${ name } is ${ age } years old
-		<button data-bind='click: makeOlder'>Make older</button>
-	</script>
-	
-	<script type='text/javascript'>
-        var viewModel = {
-            name: ko.observable('Bert'),
-            age: ko.observable(78),
-            makeOlder: function() {
-                this.age(this.age() + 1);	
-            }    	
-        };	
-        ko.applyBindings(viewModel);
-	</script>
-	
-Knockout automatically re-renders templates when any observables (or dependent observables) that they reference change value. In this example, the template will be re-rendered each time you click the button to make the person older.
-
-### Syntax
-
-You can use any legal syntax that your template engine supports. For `jquery.tmpl`, this includes
- * `${ someValue }` --- [documentation](http://api.jquery.com/template-tag-equal)
- * `{{'{{'}}html someValue}}` --- [documentation](http://api.jquery.com/template-tag-html)
- * `{{'{{'}}if someCondition}}` --- [documentation](http://api.jquery.com/template-tag-if)
- * `{{'{{'}}else someCondition}}` --- [documentation](http://api.jquery.com/template-tag-else)
- * `{{'{{'}}each someArray}}` --- [documentation](http://api.jquery.com/template-tag-each). 
-
-**Using `{{'{{'}}each}}` with an observable array**
-
-When using `{{'{{'}}each someArray}}`, if your value is an [`observableArray`](observableArrays.html), you *must* pass the *underlying array* to `each` by writing `{{'{{'}}each myObservableArray()}}`, *not* just `{{'{{'}}each myObservableArray}}`.
+ * *Native templating* is the mechanism that underpins `foreach`, `if`, `with`, and other control flow bindings. Internally, those control
+   flow bindings capture the HTML markup contained in your element, and use it as a template to render against an arbitrary data item.
+   This feature is built into Knockout and doesn't require any external library.
+ * *String-based templating* is a way to connect Knockout to a third-party template engine. Knockout will pass your model values to
+   the external template engine and inject the resulting markup string into your document. See below for examples that use the *jquery.tmpl*
+   and *Underscore* template engines.
 
 ### Parameters
 
  * Main parameter
  
-   * Shorthand syntax: If you just supply a string value (as in the preceding example), KO will interpret this as the ID of a template to render. The data it supplies to the template will be your whole view model object (i.e., the object you originally passed to `ko.applyBindings`).
+   * Shorthand syntax: If you just supply a string value, KO will interpret this as the ID of a template to render. The data it supplies to the template will be your current model object.
    
-   * For more control, pass a JavaScript object with the following properties:
+   * For more control, pass a JavaScript object with some combination of the following properties:
    
-     * `name` (required) --- the ID of a template to render - see [Note 5](#note_5_dynamically_choosing_which_template_is_used) for how to use a function to determine the ID.
-     * `data` (optional) --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your whole view model object.
-     * `foreach` (optional) --- instructs KO to render the template in "foreach" mode - see [Note 3](#note_3_using_the__option) for details.
-     * `afterAdd` and/or `beforeRemove` (optional) --- used in conjunction with [`foreach` mode](#note_3_using_the__option).
-     * `templateOptions` (optional) --- allows you to pass additional data that is accessible during template rendering. See [Note 6](#note_6_passing_additional_data_to_your_template_using_) for details.
+     * `name` --- the ID of an element that contains the template you wish to render - see [Note 4](#note_4_dynamically_choosing_which_template_is_used) for how to vary this programmatically.
+     * `data` --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your current model object.
+     * `foreach` --- instructs KO to render the template in "foreach" mode - see [Note 2](#note_2_using_the_foreach_option_with_a_named_template) for details.
+     * `afterRender`, `afterAdd`, or `beforeRemove` --- callback functions to be invoked against the rendered DOM elements - see [Note 3](#note_3_using_afterrender_afteradd_and_beforeremove)
      
-Example of passing multiple parameters:
+### Note 1: Rendering a named template
 
-    <div data-bind='template: { name: "personTemplate", data: someObject }'> </div>
+Normally, when you're using control flow bindings (`foreach`, `with`, `if`, etc.), there's no need to give names to your templates: they are defined implicitly
+and anonymously by the markup inside your DOM element. But if you want to, you can factor out templates into a separate element and then reference them by name:
 
-### Note 1: Rendering nested templates
+    <h2>Participants</h2>
+    Here are the participants:
+    <div data-bind="template: { name: 'person-template', data: buyer }"></div>
+    <div data-bind="template: { name: 'person-template', data: seller }"></div>
 
-Since you can use `data-bind` attributes from within templates, it's trivial to set up nested templates -- just use `data-bind='template: ...'` again on an element inside your template.
+    <script type="text/html" id="person-template">
+        <h3 data-bind="text: name"></h3>
+        <p>Credits: <span data-bind="text: credits"></span></p>
+    </script>
 
-This is better than using whatever native syntax your template engine has for nested templates (e.g., the `{{'{{'}}tmpl}}` syntax in `jquery.tmpl`). The advantage with Knockout's syntax is that it enables Knockout to track dependencies separately at each level of template rendering, so if a dependency changes, KO only re-renders the innermost templates affected by that change, and doesn't need to re-render everything. This significantly improves performance in demanding situations.
+    <script type="text/javascript">
+         function MyViewModel() {
+             this.buyer = { name: 'Franklin', credits: 250 };
+             this.seller = { name: 'Mario', credits: 5800 };     
+         }
+         ko.applyBindings(new MyViewModel());        
+    </script>
 
-### Note 2: How `${ val }` differs from `<span data-bind='text: val'></span>`
+In this example, the `person-template` markup is used twice: once for `buyer`, and once for `seller`. Notice that the template markup is wrapped in a `<script type="text/html">` ---
+the dummy `type` attribute is necessary to ensure that the markup is not executed as JavaScript, and Knockout does not attempt to apply
+bindings to that markup except when it is being used as a template.
 
-When you use data binding attributes from inside a template, KO tracks the dependencies separately for that binding. When a model value changes, KO knows that it only needs to update the bound element and its children, and need not re-render the whole template. So, if you write `<span data-bind='text: someObservableValue'></span>` and then `someObservableValue` changes, KO will simply update the text on that `<span>` element and doesn't need to re-render the whole template. 
+It's not very often that you'll need to use named templates, but on occasion it can help to minimise duplication of markup.
 
-However, if you access observables inline in a template (e.g., using `${ someObservableValue }`) then when any such observable changes, KO needs to re-render that whole template.
+### Note 2: Using the "foreach" option with a named template
 
-In some cases this means `<span data-bind='text: someObservableValue'></span>` is better than `${ someObservableValue }` for performance and because it doesn't interfere with the state of other nearby elements when its value updates. However, `${ someObservableValue }` is a tidy and concise syntax so is often preferable if your template is small and won't update rapidly enough to cause a performance burden.
+If you want the equivalent of a `foreach` binding, but using a named template, you can do so in the natural way:
 
-### Note 3: Using the `foreach` option
+    <h2>Participants</h2>
+    Here are the participants:
+    <div data-bind="template: { name: 'person-template', foreach: people }"></div>
 
-If you want to render a template once for each item in a collection, there are two main approaches:
+    <script type="text/html" id="person-template">
+        <h3 data-bind="text: name"></h3>
+        <p>Credits: <span data-bind="text: credits"></span></p>
+    </script>
 
- 1. You can use your template engine's native 'each' support. For `jquery.tmpl`, this means using its `{{'{{'}}each}}` syntax to iterate over the array.
- 1. Alternatively, you can use Knockout's `foreach` template rendering mode. 
+     function MyViewModel() {
+         this.people = [
+             { name: 'Franklin', credits: 250 },
+             { name: 'Mario', credits: 5800 }
+         ]
+     }
+     ko.applyBindings(new MyViewModel());
 
-Example:
+This gives the same result as embedding an anonymous template directly inside the element to which you use `foreach`, i.e.:
 
-    <div data-bind='template: { name: "personTemplate", 
-                                foreach: someObservableArrayOfPeople }'> </div>
+    <div data-bind="foreach: people">
+        <h3 data-bind="text: name"></h3>
+        <p>Credits: <span data-bind="text: credits"></span></p>  
+    </div>
 
-The benefits of the `foreach` template mode are:
- * when you add items to your collection, KO will only render the template for the new item and will insert it into the existing DOM
- * when you remove items from your collection, KO will simply delete the associated elements from your DOM without re-rendering any template
- * KO allows you to give `afterAdd` and/or `beforeRemove` callbacks to manipulate the added/removed DOM elements in a custom way. This makes animated transitions easy, as in [this example](../examples/animatedTransitions.html). Note that if a `beforeRemove` callback is used, then the callback is responsible for removing the element(s) from the DOM upon completion of any animation or manipulation.
- 
-This differs from the template engine's native 'each' support: after any change, the template engine is forced to re-render everything because it isn't aware of KO's dependency tracking mechanism.
+### Note 3: Using "afterRender", "afterAdd", and "beforeRemove"
 
-For examples of using `foreach` mode, see the [grid editor](../examples/gridEditor.html) and the [animated transitions example](../examples/animatedTransitions.html).
+Sometimes you might want to run custom post-processing logic on the DOM elements generated by your templates. For example, if you're using a JavaScript widgets library such as jQuery UI, you might want to intercept your templates' output so that you can run jQuery UI commands on it to transform some of the rendered elements into date pickers, sliders, or anything else. 
 
-### Note 4: Using the `afterRender` option
+Generally, the best way to perform such post-processing on DOM elements is to write a [custom binding](custom-bindings.html), but if you really just want to access the raw DOM elements emitted by a template, you can use `afterRender`. 
 
-Sometimes you might want to run custom post-processing logic on the DOM elements generated by your templates. For example, if you're using a JavaScript widgets library such as jQuery UI, you might want to intercept your templates' output so that you can run jQuery UI commands on it to transform some of the rendered elements into date pickers, sliders, or anything else.
-
-You can do this using the `afterRender` option. Simply pass a function reference (either a function literal, or give the name of a function on your view model), and Knockout will invoke it immediately after rendering or re-rendering your template. If you're using `foreach`, Knockout will invoke your `afterRender` callback for each item added to your observable array. For example,
+Pass a function reference (either a function literal, or give the name of a function on your view model), and Knockout will invoke it immediately after rendering or re-rendering your template. If you're using `foreach`, Knockout will invoke your `afterRender` callback for each item added to your observable array. For example,
 
     <div data-bind='template: { name: "personTemplate", 
                                 data: myData,
@@ -108,13 +100,15 @@ You can do this using the `afterRender` option. Simply pass a function reference
 ... and define a corresponding function on your view model (i.e., the object that contains `myData`):
 
     viewModel.myPostProcessingLogic = function(elements) {
-    	// "elements" is an array of DOM nodes just rendered by the template
-    	// You can add custom post-processing logic here
+        // "elements" is an array of DOM nodes just rendered by the template
+        // You can add custom post-processing logic here
     }
 
-### Note 5: Dynamically choosing which template is used
+If you are using `foreach` and only want to be notified about elements are specifically being added or are being removed, you can use `afterAdd` and `beforeRemove` instead. For details, see documentation for the [`foreach` binding](foreach-binding.html).
 
-In some scenarios, it may be useful to programmatically determine the template ID based on the state of your data. This can be accomplished by supplying a function for the `name` option that returns the ID. If you are using the `foreach` template mode, Knockout will evaluate the function for each item in your array passing that item's value as the only argument. Otherwise, the function will be given the `data` option's value or fall back to providing your whole view model.
+### Note 4: Dynamically choosing which template is used
+
+If you have multiple named templates, you can use a callback function to determine which one of them is used. This can be accomplished by supplying a function for the `name` option. If you're using the `foreach` template mode, Knockout will evaluate the function for each item in your array, passing that item's value as the only argument. Otherwise, the function will be given the `data` option's value or fall back to providing your whole current model object.
 
 For example,
  
@@ -136,36 +130,61 @@ For example,
     viewModel.employees()[1].active(true); // Now "Brynn" is also rendered using the "active" template.
 
 If your function references observable values, then the binding will update whenever any of those values change.  This will cause the data to be re-rendered using the appropriate template.
-    
-### Note 6: Passing additional data to your template using `templateOptions`
 
-If you need to make additional information available during template rendering besides the data that you are binding against, an easy way to do this is through the `templateOptions` object. This can help you create reusable templates that vary based on filtering criteria or string values that don't necessarily belong in your view model. This is also useful in cases where scope is a concern, as it is a way to include data that would be otherwise inaccessible from within your template.
+### Note 5: Using jQuery.tmpl, an external string-based template engine
 
-For example,
+In the vast majority of cases, Knockout's native templating and the `foreach`, `if`, `with` and other control flow bindings will be all you need to construct an arbitrarily sophisticated UI. But in case you wish to integrate with an external templating library, such as the [Underscore template engine](http://documentcloud.github.com/underscore/#template) or [jquery.tmpl](http://api.jquery.com/jquery.tmpl/), Knockout offers a way to do it.
 
-    <ul data-bind='template: { name: "personTemplate",
-                               foreach: employees,
-                               templateOptions: { label: "Employee:",
-                                                  selectedPerson: selectedEmployee } }'> </ul>
+By default, Knockout comes with support for [jquery.tmpl](http://api.jquery.com/jquery.tmpl/). To use it, you need to reference the following libraries, in this order:
 
-    <script id='personTemplate' type='text/html'>
-		<div data-bind="css: { selected: $data === $item.selectedPerson()" }">
-            ${ $item.label } <input data-bind="value: name" />
-        </div>
-	</script>
-                               
-In this case, we have a `personTemplate` that is perhaps being used for both employee and customer objects. Through `templateOptions`, we supply an appropriate string for the field's label and also include the currently selected employee as `selectedPerson` to aid in styling. In `jquery.tmpl` templates, these values are accessible as properties of the $item object.  
+    <!-- First jQuery -->     <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> 
+    <!-- Then jQuery.tmpl --> <script src="http://github.com/downloads/SteveSanderson/knockout/jquery.tmpl.js"></script>
+    <!-- Then Knockout -->    <script src="knockout-x.y.z.js"></script> 
 
-### Note 7: Templates are precompiled and cached
+Then, you can use jQuery.tmpl syntax in your templates. For example,
 
-To maximise performance, Knockout's built-in `jquery.tmpl` provider automatically uses `jquery.tmpl`'s ability to precompile your templates into runnable JavaScript code, and caches the output from this compilation process. This makes templates significantly faster to execute, and that's well worthwhile in case you're executing the same templates over and over in a `foreach` loop.
+    <h1>People</h1>
+    <div data-bind="template: 'peopleList'"></div>
 
-Typically you won't notice that this is happening, so in most cases you can forget about it. However, it does mean that if for some reason you programmatically overwrite a template's `<script>` element, and that template has already been used at least once, your changes to the template `<script>` element won't actually make any difference because the existing precompiled template will keep being used. (If this turns out to be problematic, we will consider adding a mechanism to disable or reset template caches in a future version of KO, however it's unlikely that you will have a good reason to modify template `<script>` elements programmatically, since the whole point of templates is that they **contain** the programmatic logic to produce the different outputs that you need!)
+    <script type="text/html" id="peopleList">
+        {{'{{'}}each people}}
+            <p>
+                <b>${name}</b> is ${age} years old
+            </p>
+        {{'{{'}}/each}}
+    </script>
+        
+    <script type="text/javascript">
+        var viewModel = {
+            people: ko.observableArray([
+                { name: 'Rod', age: 123 },
+                { name: 'Jane', age: 125 },
+            ])        
+        }
+        ko.applyBindings(viewModel);
+    </script>
 
-### Note 8: Using a different template engine
+This works because `{{'{{'}}each ...}}` and `${ ... }` are jQuery.tmpl syntaxes. What's more, it's trivial to nest templates: because you can use data-bind attributes from inside a template, you can simply put a `data-bind="template: ..."` inside a template to render a nested one.
 
-If you want to use a different JavaScript-based template engine (perhaps because you don't want to take a dependency on jQuery for some reason), it's possible to do so by writing a KO driver for the template engine. For an example, see `jqueryTmplTemplateEngine.js` in the KO source code, though bear in mind that this is complicated by having to support multiple versions of `jquery.tmpl`. Supporting a single version of another template engine could be much simpler.
+Please note that, as of December 2011, jQuery.tmpl is no longer under active development. In due course, it will be succeded by [JsRender](https://github.com/BorisMoore/jsrender), which is currently not yet in beta. 
+
+### Note 6: Using the Underscore.js template engine
+
+The [Underscore.js template engine](http://documentcloud.github.com/underscore/#template) by default uses ERB-style delimiters (`<%= ... %>`). Here's how the preceding example's template might look with Underscore:
+
+    <script type="text/html" id="peopleList">
+        <% _.each(people(), function(person) { %>
+            <li>
+                <b><%= person.name %></b> is <%= person.age %> years old
+            </li>
+        <% }) %>
+    </script>
+
+Here's [a simple implementation of integrating Underscore templates with Knockout](http://jsfiddle.net/6pStz/). The integration code is just 16 lines long, but it's enough to support Knockout `data-bind` attributes (and hence nested templates) and Knockout binding context variables (`$parent`, `$root`, etc.) too. 
+
+If you're not a fan of the `<%= ... %>` delimiters, you can configure the Underscore template engine to use any other delimiter characters of your choice.
 
 ### Dependencies
 
-The `template` binding works only once you've referenced a suitable template engine, such as `jquery.tmpl` as described on [the installation page](installation.html).
+ * **Native templating** does not require any library other than Knockout itself
+ * **String-based templating** works only once you've referenced a suitable template engine, such as jQuery.tmpl or the Underscore template engine.
