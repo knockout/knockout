@@ -465,6 +465,25 @@ ko.bindingHandlers['hasfocus'] = {
     }
 };
 
+// "command: functionName" is a combination of the 'click' and 'enable' bindings. this is similar to xaml ICommand interface
+// functionName should support a functionName.enabled() or functionName.canExecute() to enable/disable the element it's bound to
+ko.bindingHandlers['command'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        ko.bindingHandlers['click']['init'](element, valueAccessor, allBindingsAccessor, viewModel);
+    },
+    'update': function (element, valueAccessor, allBindingAccessor, viewModel) {
+        ko.bindingHandlers['enable']['update'](element, function () {
+            var command = ko.utils.unwrapObservable(valueAccessor());
+            if (command.enabled)
+    			return jQuery.isFunction(command.enabled) ? command.enabled() : command.enabled;
+			if(command.canExecute)
+				return jQuery.isFunction(command.canExecute) ? command.canExecute() : command.canExecute;
+
+            return true;
+        });
+    }
+};
+
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
 ko.bindingHandlers['with'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
