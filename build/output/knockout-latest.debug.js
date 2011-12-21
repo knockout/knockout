@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.0.0rc3
+// Knockout JavaScript library v2.0.0
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -316,7 +316,7 @@ ko.utils = new (function () {
             'innerText' in element ? element.innerText = value
                                    : element.textContent = value;
                                    
-            if (ieVersion) {
+            if (ieVersion >= 9) {
                 // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
                 element.innerHTML = element.innerHTML;
             }
