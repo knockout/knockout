@@ -45,15 +45,15 @@ This example shows "add" and "remove" links on multiple levels of parents and ch
 </style>
 
 {% capture live_example_view %}
-<ul id="people" data-bind="template: { name: 'personTmpl', foreach: people }">
+<ul id="people" data-bind='template: { name: "personTmpl", foreach: people }'>
 </ul>
 
 <script id="personTmpl" type="text/html">
     <li>
         <a class="remove" href="#"> x </a>
-        <span data-bind="text: name"></span>
+        <span data-bind='text: name'></span>
         <a class="add" href="#"> add child </a>
-        <ul data-bind="template: { name: 'personTmpl', foreach: children }"></ul>
+        <ul data-bind='template: { name: "personTmpl", foreach: children }'></ul>
     </li>
 </script>
 {% endcapture %}
