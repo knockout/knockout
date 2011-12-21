@@ -225,7 +225,7 @@ ko.utils = new (function () {
                     // IE doesn't support custom events, so we'll highjack a standard event (keypress)
                     element.attachEvent("onkeypress", function (event) {
                         if (event.data == eventType) {
-                            // IE doesn't let us add new propertis to the event object; so make a copy
+                            // IE doesn't let us add new properties to the event object; so make a copy
                             var newevent = ko.utils.extend(ko.utils.extend({}, event), event.recordset);
                             newevent.type = eventType;
                             newevent.target = event.srcElement; 
