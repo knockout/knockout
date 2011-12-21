@@ -312,10 +312,11 @@ ko.utils = new (function () {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))
                 value = "";
-            typeof element.innerText == "string" ? element.innerText = value
-                                                 : element.textContent = value;
 
-            if (ieVersion) {
+            'innerText' in element ? element.innerText = value
+                                   : element.textContent = value;
+                                   
+            if (ieVersion >= 9) {
                 // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
                 element.innerHTML = element.innerHTML;
             }
@@ -2149,9 +2150,8 @@ ko.bindingHandlers['options'] = {
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
-                optionText = ko.utils.unwrapObservable(optionText).toString();
-                typeof option.innerText == "string" ? option.innerText = optionText
-                                                    : option.textContent = optionText;
+
+                ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
             }
