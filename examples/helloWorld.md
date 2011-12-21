@@ -3,7 +3,7 @@ layout: example
 title: Hello World example
 ---
 
-In this example, the two text boxes are bound to <em>observable</em> variables on a data model. The "full name" display is bound to a <em>dependent observable</em>, whose value is computed in terms of the observables.
+In this example, the two text boxes are bound to <em>observable</em> variables on a data model. The "full name" display is bound to a <em>computed observable</em>, whose value is calculated in terms of the observables.
 
 Edit either text box to see the "full name" display update. See the HTML source code and notice there's no need to catch "onchange" events. Knockout knows when to update the UI.
 

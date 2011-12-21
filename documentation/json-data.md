@@ -28,7 +28,7 @@ Or, if you don't want to use jQuery, you can use any other mechanism for loading
 
 ### Converting View Model Data to Plain JSON
 
-Your view models *are* JavaScript objects, so in a sense, you could just serialize them as JSON using any standard JSON serializer, such as `JSON.serialize()` (a native function in modern browsers), or the [`json2.js`](https://github.com/douglascrockford/JSON-js/blob/master/json2.js) library. However, your view models probably contain observables, dependent observables, and observable arrays, which are implemented as JavaScript functions and therefore won't always serialize cleanly without additional work on your behalf.
+Your view models *are* JavaScript objects, so in a sense, you could just serialize them as JSON using any standard JSON serializer, such as `JSON.serialize()` (a native function in modern browsers), or the [`json2.js`](https://github.com/douglascrockford/JSON-js/blob/master/json2.js) library. However, your view models probably contain observables, computed observables, and observable arrays, which are implemented as JavaScript functions and therefore won't always serialize cleanly without additional work on your behalf.
 
 To make it easy to serialize view model data, including observables and the like, Knockout includes two helper functions:
 
@@ -47,7 +47,7 @@ For example, define a view model as follows:
         return this.pets().length > 2
     }, viewModel)
     
-This contains a mix of observables, dependent observables, observable arrays, and plain values. You can convert it to a JSON string suitable for sending to the server using `ko.toJSON` as follows:
+This contains a mix of observables, computed observables, observable arrays, and plain values. You can convert it to a JSON string suitable for sending to the server using `ko.toJSON` as follows:
 
     var jsonData = ko.toJSON(viewModel);
     

@@ -156,7 +156,7 @@ The `options` argument supplied to your `create` callback is a JavaScript object
  * `data`: The JavaScript object containing the data for this child
  * `parent`: The parent object or array to which this child belongs
  
-Of course, inside the `create` callback you can do another call to `ko.mapping.fromJS` if you wish. A typical use-case might be if you want to augment the original JavaScript object with some additional [dependent observables](observables.html):
+Of course, inside the `create` callback you can do another call to `ko.mapping.fromJS` if you wish. A typical use-case might be if you want to augment the original JavaScript object with some additional [computed observables](computedObservables.html):
 
 	var myChildModel = function(data) {
 		ko.mapping.fromJS(data, {}, this);

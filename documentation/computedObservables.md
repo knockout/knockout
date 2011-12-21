@@ -26,7 +26,7 @@ Now you could bind UI elements to it, e.g.:
 
     The name is <span data-bind="text: fullName"></span>
     
-... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other dependent observables).
+... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
 
 ### Managing 'this'
 
@@ -57,7 +57,7 @@ Of course, you can create whole chains of computed observables if you wish. For 
 * an **observable** called `items` representing a set of items
 * another **observable** called `selectedIndexes` storing which item indexes have been 'selected' by the user
 * a **computed observable** called `selectedItems` that returns an array of item objects corresponding to the selected indexes
-* another **dependent observable** that returns `true` or `false` depending on whether any of `selectedItems` has some property (like being new or being unsaved). Some UI element, like a button, might be enabled or disabled based on this value.
+* another **computed observable** that returns `true` or `false` depending on whether any of `selectedItems` has some property (like being new or being unsaved). Some UI element, like a button, might be enabled or disabled based on this value.
 
 Then, changes to `items` or `selectedIndexes` will ripple through the chain of computed observables, which in turn updates any UI bound to them. Very tidy and elegant.
 
