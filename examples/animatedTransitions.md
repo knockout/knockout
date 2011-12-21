@@ -34,7 +34,7 @@ This example shows two ways to animate transitions:
 <div data-bind='template: { foreach: planetsToShow,
                             beforeRemove: hidePlanetElement,
                             afterAdd: showPlanetElement }'>
-    <div data-bind="attr: { 'class': 'planet ' + type }, text: name"> </div>
+    <div data-bind='attr: { "class": "planet " + type }, text: name'> </div>
 </div>
 
 <p data-bind='fadeVisible: displayAdvancedOptions'>
