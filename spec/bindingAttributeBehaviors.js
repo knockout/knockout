@@ -75,6 +75,12 @@ describe('Binding attribute syntax', {
         ko.applyBindings(null, testNode); // No exception means success
     },
 
+    'Should tolerate wacky IE conditional comments': function() {
+        // Represents issue https://github.com/SteveSanderson/knockout/issues/186. Would fail on IE9, but work on earlier IE versions.
+        testNode.innerHTML = "<div><!--[if IE]><!-->Hello<!--<![endif]--></div>";
+        ko.applyBindings(null, testNode); // No exception means success          
+    },
+
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {
@@ -227,5 +233,55 @@ describe('Binding attribute syntax', {
             value_of(ex.message).should_be("The binding 'visible' cannot be used with virtual elements");
         }
         value_of(didThrow).should_be(true);
+    },
+    
+    'Should not reinvoke init for notifications triggered during first evaluation': function () {
+        var observable = ko.observable('A');
+        var initCalls = 0;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) {
+                initCalls++;
+
+                var value = valueAccessor();
+                
+                // Read the observable (to set up a dependency on it), and then also write to it (to trigger re-eval of bindings)
+                // This logic probably wouldn't be in init but might be indirectly invoked by init
+                value();
+                value('B');
+            }
+        };
+        testNode.innerHTML = "<div data-bind='test: myObservable'></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(initCalls).should_be(1);
+    },
+
+    'Should not run update before init, even if an associated observable is updated by a different binding before init': function() {
+        // Represents the "theoretical issue" posed by Ryan in comments on https://github.com/SteveSanderson/knockout/pull/193
+
+        var observable = ko.observable('A'), hasInittedSecondBinding = false, hasUpdatedSecondBinding = false;
+        ko.bindingHandlers.test1 = {
+            init: function(element, valueAccessor) {
+                // Read the observable (to set up a dependency on it), and then also write to it (to trigger re-eval of bindings)
+                // This logic probably wouldn't be in init but might be indirectly invoked by init
+                var value = valueAccessor();
+                value();
+                value('B');                   
+            }
+        }
+        ko.bindingHandlers.test2 = {
+            init: function() {
+                hasInittedSecondBinding = true;
+            },
+            update: function() {
+                if (!hasInittedSecondBinding)
+                    throw new Error("Called 'update' before 'init'");
+                hasUpdatedSecondBinding = true;
+            }
+        }
+        testNode.innerHTML = "<div data-bind='test1: myObservable, test2: true'></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(hasUpdatedSecondBinding).should_be(true);
     }
 });

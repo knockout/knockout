@@ -13,10 +13,8 @@
             this['$root'] = dataItem;        	
         }
     }
-    ko.bindingContext.prototype = {
-        createChildContext: function (dataItem) {
-            return new ko.bindingContext(dataItem, this);
-        }
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
+        return new ko.bindingContext(dataItem, this);
     };
 
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {
@@ -55,7 +53,8 @@
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
-        var isFirstEvaluation = true;
+        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
+        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
 
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
@@ -94,7 +93,8 @@
 
                 if (parsedBindings) {
                     // First run all the inits, so bindings can register for notification on changes
-                    if (isFirstEvaluation) {
+                    if (initPhase === 0) {
+                        initPhase = 1;
                         for (var bindingKey in parsedBindings) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && node.nodeType === 8)
@@ -111,15 +111,18 @@
                                     bindingHandlerThatControlsDescendantBindings = bindingKey;
                                 }
                             }
-                        }                	
+                        }
+                        initPhase = 2;
                     }
                     
                     // ... then run all the updates, which might trigger changes even on the first evaluation
-                    for (var bindingKey in parsedBindings) {
-                        var binding = ko.bindingHandlers[bindingKey];
-                        if (binding && typeof binding["update"] == "function") {
-                            var handlerUpdateFn = binding["update"];
-                            handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                    if (initPhase === 2) {
+                        for (var bindingKey in parsedBindings) {
+                            var binding = ko.bindingHandlers[bindingKey];
+                            if (binding && typeof binding["update"] == "function") {
+                                var handlerUpdateFn = binding["update"];
+                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                            }
                         }
                     }
                 }
@@ -128,7 +131,6 @@
             { 'disposeWhenNodeIsRemoved' : node }
         );
         
-        isFirstEvaluation = false;
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
@@ -146,6 +148,11 @@
         if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
             ko.virtualElements.normaliseVirtualElementDomStructure(node);        
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
+    };
+
+    ko.applyBindingsToDescendants = function(viewModel, rootNode) {
+        if (rootNode.nodeType === 1)
+            applyBindingsToDescendantsInternal(viewModel, rootNode);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
@@ -176,6 +183,7 @@
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('ko.contextFor', ko.contextFor);
     ko.exportSymbol('ko.dataFor', ko.dataFor);

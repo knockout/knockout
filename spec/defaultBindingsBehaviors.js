@@ -266,14 +266,29 @@ describe('Binding: Value', {
         value_of(myobservable()).should_be("some user-entered value");
     },           
     
-    'For select boxes, should update selectedIndex when the model changes': function() {
+    'For select boxes, should update selectedIndex when the model changes (options specified before value)': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        value_of(observable()).should_be('B');
+
         observable('A');
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
+        value_of(observable()).should_be('A');
     },
+
+    'For select boxes, should update selectedIndex when the model changes (value specified before options)': function() {
+        var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(testNode.childNodes[0].selectedIndex).should_be(1);
+        value_of(observable()).should_be('B');
+
+        observable('A');
+        value_of(testNode.childNodes[0].selectedIndex).should_be(0);
+        value_of(observable()).should_be('A');
+    },    
     
     'For select boxes, should display the caption when the model value changes to undefined': function() {
         var observable = new ko.observable('B');
@@ -325,12 +340,21 @@ describe('Binding: Value', {
         //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
         //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
         var observable = new ko.observable(); // Undefined by default
+
+        // Should work with options specified before value
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(observable()).should_be("A");
+
+        // ... and with value specified before options
+        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+        observable(undefined);
+        value_of(observable()).should_be(undefined);
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(observable()).should_be("A");        
     },
     
-    'For select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
+    'For nonempty select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
@@ -688,7 +712,8 @@ describe('Binding: Checked', {
         testNode.innerHTML = "<input type='radio' value='this radio button value' data-bind='checked:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
 
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");        
+        value_of(myobservable()).should_be("another value");
+        testNode.childNodes[0].click();
         value_of(myobservable()).should_be("this radio button value");
     },
     
@@ -1193,6 +1218,29 @@ describe('Binding: Foreach', {
         someItems.destroy(someItems()[0]);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">second child</span>');
     },
+
+    'Should remove all nodes corresponding to a removed array item, even if they were generated via containerless templates': function() {
+        // Represents issue https://github.com/SteveSanderson/knockout/issues/185
+        testNode.innerHTML = "<div data-bind='foreach: someitems'>a<!-- ko if:true -->b<!-- /ko --></div>";
+        var someitems = ko.observableArray([1,2]);
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_html('<div data-bind="foreach: someitems">a<!-- ko if:true -->b<!-- /ko -->a<!-- ko if:true -->b<!-- /ko --></div>');
+
+        // Now remove items, and check the corresponding child nodes vanished
+        someitems.splice(1, 1);
+        value_of(testNode).should_contain_html('<div data-bind="foreach: someitems">a<!-- ko if:true -->b<!-- /ko --></div>');
+    },
+
+    'Should update all nodes corresponding to a changed array item, even if they were generated via containerless templates': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someitems'><!-- ko if:true --><span data-bind='text: $data'></span><!-- /ko --></div>";
+        var someitems = [ ko.observable('A'), ko.observable('B') ];
+        ko.applyBindings({ someitems: someitems }, testNode);
+        value_of(testNode).should_contain_text('AB');
+
+        // Now update an item
+        someitems[0]('A2');
+        value_of(testNode).should_contain_text('A2B');
+    },    
 
     'Should be able to supply show "_destroy"ed items via includeDestroyed option': function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: true }'><span data-bind='text: childProp'></span></div>";

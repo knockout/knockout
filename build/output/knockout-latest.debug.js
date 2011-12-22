@@ -61,8 +61,8 @@ ko.utils = new (function () {
         },
 
         arrayIndexOf: function (array, item) {
-            if (typeof array.indexOf == "function")
-                return array.indexOf(item);
+            if (typeof Array.prototype.indexOf == "function")
+                return Array.prototype.indexOf.call(array, item);
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
@@ -551,19 +551,6 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
         // Based on jQuery's "clean" function, but only accounting for table-related elements.
         // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
 
-        // Trim any leading whitespace/comment nodes, otherwise IE < 9 will discard them. We'll need to restore them after.
-        html = html || "";
-        var prefixNodes = [];
-        while (html.match(leadingCommentRegex)) {
-            html = html.replace(leadingCommentRegex, function() {
-                var whitespace = arguments[1], comment = arguments[2];
-                if (whitespace)
-                    prefixNodes.push(document.createTextNode(whitespace));
-                prefixNodes.push(document.createComment(comment));
-                return "";
-            });
-        }
-
         // Note that there's still an issue in IE < 9 whereby it will discard comment nodes that are the first child of
         // a descendant node. For example: "<div><!-- mycomment -->abc</div>" will get parsed as "<div>abc</div>"
         // This won't affect anyone who has referenced jQuery, and there's always the workaround of inserting a dummy node
@@ -579,13 +566,14 @@ ko.exportSymbol('ko.utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNo
                    /* anything else */                                 [0, "", ""];
 
         // Go to html and back, then peel off extra wrappers
-        div.innerHTML = wrap[1] + html + wrap[2];
+        // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
+        div.innerHTML = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
 
         // Move to the right depth
         while (wrap[0]--)
             div = div.lastChild;
 
-        return prefixNodes.concat(ko.utils.makeArray(div.childNodes));
+        return ko.utils.makeArray(div.lastChild.childNodes);
     }
     
     ko.utils.parseHtmlFragment = function(html) {
@@ -983,7 +971,6 @@ function prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, opt
         // Multi-parameter syntax - construct the options according to the params passed
         options = options || {};
         options["read"] = evaluatorFunctionOrOptions || options["read"];
-        options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
     // By here, "options" is always non-null
     
@@ -1047,7 +1034,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             ko.dependencyDetection.begin(function(subscribable) {
                 _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
             });
-            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
+            var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
+            _latestValue = options["read"].call(valueForThis);
         } finally {
             ko.dependencyDetection.end();
         }
@@ -1060,7 +1048,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof options["write"] === "function") {
                 // Writing a value
-                var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
+                var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
                 options["write"].apply(valueForThis, arguments);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
@@ -1420,16 +1408,21 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     // The point of all this is to support containerless templates (e.g., <!-- ko foreach:someCollection -->blah<!-- /ko -->)
     // without having to scatter special cases all over the binding and templating code.
 
-    var startCommentRegex = /^\s*ko\s+(.*\:.*)\s*$/;
-    var endCommentRegex =   /^\s*\/ko\s*$/;
+    // IE 9 cannot reliably read the "nodeValue" property of a comment node (see https://github.com/SteveSanderson/knockout/issues/186)
+    // but it does give them a nonstandard alternative property called "text" that it can read reliably. Other browsers don't have that property.
+    // So, use node.text where available, and node.nodeValue elsewhere
+    var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
+
+    var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko\s+(.*\:.*)\s*-->$/ : /^\s*ko\s+(.*\:.*)\s*$/;
+    var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko\s*-->$/ : /^\s*\/ko\s*$/;
     var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 
     function isStartComment(node) {
-        return (node.nodeType == 8) && node.nodeValue.match(startCommentRegex);
+        return (node.nodeType == 8) && (commentNodesHaveTextProperty ? node.text : node.nodeValue).match(startCommentRegex);
     }
 
     function isEndComment(node) {
-        return (node.nodeType == 8) && node.nodeValue.match(endCommentRegex);
+        return (node.nodeType == 8) && (commentNodesHaveTextProperty ? node.text : node.nodeValue).match(endCommentRegex);
     }
 
     function getVirtualChildren(startComment, allowUnbalanced) {
@@ -1663,10 +1656,8 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
             this['$root'] = dataItem;        	
         }
     }
-    ko.bindingContext.prototype = {
-        createChildContext: function (dataItem) {
-            return new ko.bindingContext(dataItem, this);
-        }
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
+        return new ko.bindingContext(dataItem, this);
     };
 
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {
@@ -1705,7 +1696,8 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
-        var isFirstEvaluation = true;
+        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
+        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
 
         // Pre-process any anonymous template bounded by comment nodes
         ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
@@ -1744,7 +1736,8 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
 
                 if (parsedBindings) {
                     // First run all the inits, so bindings can register for notification on changes
-                    if (isFirstEvaluation) {
+                    if (initPhase === 0) {
+                        initPhase = 1;
                         for (var bindingKey in parsedBindings) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && node.nodeType === 8)
@@ -1761,15 +1754,18 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
                                     bindingHandlerThatControlsDescendantBindings = bindingKey;
                                 }
                             }
-                        }                	
+                        }
+                        initPhase = 2;
                     }
                     
                     // ... then run all the updates, which might trigger changes even on the first evaluation
-                    for (var bindingKey in parsedBindings) {
-                        var binding = ko.bindingHandlers[bindingKey];
-                        if (binding && typeof binding["update"] == "function") {
-                            var handlerUpdateFn = binding["update"];
-                            handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                    if (initPhase === 2) {
+                        for (var bindingKey in parsedBindings) {
+                            var binding = ko.bindingHandlers[bindingKey];
+                            if (binding && typeof binding["update"] == "function") {
+                                var handlerUpdateFn = binding["update"];
+                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                            }
                         }
                     }
                 }
@@ -1778,7 +1774,6 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
             { 'disposeWhenNodeIsRemoved' : node }
         );
         
-        isFirstEvaluation = false;
         return { 
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
@@ -1796,6 +1791,11 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
         if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
             ko.virtualElements.normaliseVirtualElementDomStructure(node);        
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
+    };
+
+    ko.applyBindingsToDescendants = function(viewModel, rootNode) {
+        if (rootNode.nodeType === 1)
+            applyBindingsToDescendantsInternal(viewModel, rootNode);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
@@ -1826,6 +1826,7 @@ ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {
     
     ko.exportSymbol('ko.bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('ko.applyBindings', ko.applyBindings);
+    ko.exportSymbol('ko.applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('ko.applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('ko.contextFor', ko.contextFor);
     ko.exportSymbol('ko.dataFor', ko.dataFor);
@@ -1931,6 +1932,19 @@ ko.bindingHandlers['disable'] = {
     } 	
 };
 
+function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, preferModelValue) {
+    if (preferModelValue) {
+        if (modelValue !== ko.selectExtensions.readValue(element))
+            ko.selectExtensions.writeValue(element, modelValue);
+    }
+
+    // No matter which direction we're syncing in, we want the end result to be equality between dropdown value and model value.
+    // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
+    // change the model value to match the dropdown.
+    if (modelValue !== ko.selectExtensions.readValue(element))
+        ko.utils.triggerEvent(element, "change");
+};
+
 ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) { 
         // Always catch "change" event; possibly other events too if asked
@@ -1992,13 +2006,10 @@ ko.bindingHandlers['value'] = {
                 setTimeout(applyValueAction, 0);
         }
         
-        // For SELECT nodes, you're not allowed to have a model value that disagrees with the UI selection, so if there is a
-        // difference, treat it as a change that should be written back to the model
-        if (element.tagName == "SELECT") {
-            elementValue = ko.selectExtensions.readValue(element);
-            if(elementValue !== newValue)
-                ko.utils.triggerEvent(element, "change");
-        }
+        // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+        // because you're not allowed to have a model value that disagrees with a visible UI selection.
+        if ((element.tagName == "SELECT") && (element.length > 0))
+            ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
 
@@ -2007,6 +2018,7 @@ ko.bindingHandlers['options'] = {
         if (element.tagName != "SELECT")
             throw new Error("options binding applies only to SELECT elements");
 
+        var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && node.tagName == "OPTION" && node.selected;
         }), function (node) {
@@ -2016,7 +2028,13 @@ ko.bindingHandlers['options'] = {
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
-        ko.utils.emptyDomNode(element);
+
+        // Remove all existing <option>s. 
+        // Need to use .remove() rather than .removeChild() for <option>s otherwise IE behaves oddly (https://github.com/SteveSanderson/knockout/issues/134)
+        while (element.length > 0) {
+            ko.cleanNode(element.options[0]);
+            element.remove(0);
+        }
 
         if (value) {
             var allBindings = allBindingsAccessor();
@@ -2067,6 +2085,13 @@ ko.bindingHandlers['options'] = {
             
             if (previousScrollTop)
                 element.scrollTop = previousScrollTop;
+
+            if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+                // Ensure consistency between model value and selected option.
+                // If the dropdown is being populated for the first time here (or was otherwise previously empty),
+                // the dropdown selection state is meaningless, so we preserve the model value.
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
+            }
         }
     }
 };
@@ -2161,8 +2186,10 @@ ko.bindingHandlers['uniqueName'] = {
         if (valueAccessor()) {
             element.name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
 
-            // Workaround IE 6 issue - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
-            if (ko.utils.isIe6)
+            // Workaround IE 6/7 issue
+            // - https://github.com/SteveSanderson/knockout/issues/197
+            // - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
+            if (ko.utils.isIe6 || ko.utils.isIe7)
                 element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
         }
     }
@@ -2347,7 +2374,7 @@ ko.bindingHandlers['foreach'] = {
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['foreach'] = true;
-// If you want to make a custom template engine,
+ko.exportSymbol('ko.allowedVirtualElementBindings', ko.virtualElements.allowedBindings);// If you want to make a custom template engine,
 // 
 // [1] Inherit from this class (like ko.nativeTemplateEngine does)
 // [2] Override 'renderTemplateSource', supplying a function with this signature:
@@ -2678,7 +2705,7 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
         var createInnerBindingContext = function(arrayValue) {
-            return parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
+            return parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
         };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
@@ -2755,8 +2782,8 @@ ko.exportSymbol('ko.templateRewriting.applyMemoizedBindingsToNextSibling', ko.te
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
-                        ? bindingContext.createChildContext(ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
-                        : bindingContext;                                                                    // Given no explicit 'data' value, we retain the same binding context
+                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        : bindingContext;                                                                       // Given no explicit 'data' value, we retain the same binding context
                     templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
                     ko.virtualElements.emptyNode(element);
@@ -2878,6 +2905,28 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
     // "callbackAfterAddingNodes" will be invoked after any "mapping"-generated nodes are inserted into the container node
     // You can use this, for example, to activate bindings on those nodes.
 
+    function fixUpVirtualElements(contiguousNodeArray) {
+        // Ensures that contiguousNodeArray really *is* an array of contiguous siblings, even if some of the interior
+        // ones have changed since your array was first built (e.g., because your array contains virtual elements, and
+        // their virtual children changed when binding was applied to them).
+        // This is needed so that we can reliably remove or update the nodes corresponding to a given array item
+
+        if (contiguousNodeArray.length > 2) {
+            // Build up the actual new contiguous node set
+            var current = contiguousNodeArray[0], last = contiguousNodeArray[contiguousNodeArray.length - 1], newContiguousSet = [current];
+            while (current !== last) {
+                current = current.nextSibling;
+                if (!current) // Won't happen, except if the developer has manually removed some DOM elements (then we're in an undefined scenario)
+                    return;
+                newContiguousSet.push(current);
+            }
+
+            // ... then mutate the input array to match this. 
+            // (The following line replaces the contents of contiguousNodeArray with newContiguousSet)
+            Array.prototype.splice.apply(contiguousNodeArray, [0, contiguousNodeArray.length].concat(newContiguousSet));
+        }
+    }
+
     function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
@@ -2886,6 +2935,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
+                fixUpVirtualElements(mappedNodes);
                 ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
                 if (callbackAfterAddingNodes)
                     callbackAfterAddingNodes(valueToMap, newMappedNodes);
@@ -2932,6 +2982,7 @@ ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
                     lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
                 
                     // Queue these nodes for later removal
+                    fixUpVirtualElements(lastMappingResult[lastMappingResultIndex].domNodes);
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
                         nodesToDelete.push({
                           element: node,

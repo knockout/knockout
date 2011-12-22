@@ -6,7 +6,6 @@ function prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, opt
         // Multi-parameter syntax - construct the options according to the params passed
         options = options || {};
         options["read"] = evaluatorFunctionOrOptions || options["read"];
-        options["owner"] = evaluatorFunctionTarget || options["owner"];
     }
     // By here, "options" is always non-null
     
@@ -70,7 +69,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             ko.dependencyDetection.begin(function(subscribable) {
                 _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
             });
-            _latestValue = options["owner"] ? options["read"].call(options["owner"]) : options["read"]();
+            var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
+            _latestValue = options["read"].call(valueForThis);
         } finally {
             ko.dependencyDetection.end();
         }
@@ -83,7 +83,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof options["write"] === "function") {
                 // Writing a value
-                var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
+                var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
                 options["write"].apply(valueForThis, arguments);
             } else {
                 throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
