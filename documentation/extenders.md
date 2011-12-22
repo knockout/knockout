@@ -87,11 +87,11 @@ This example creates an extender that allows an observable to be marked as requi
 {% capture live_example_view %}
 <p data-bind="css: { error: firstName.hasError }">
     <input data-bind='value: firstName, valueUpdate: "afterkeydown"' />
-    <span data-bind='visible: firstName.hasError, text: firstName.validationMessage'></span>
+    <span data-bind='visible: firstName.hasError, text: firstName.validationMessage'> </span>
 </p>
 <p data-bind="css: { error: lastName.hasError }">
     <input data-bind='value: lastName, valueUpdate: "afterkeydown"' />
-    <span data-bind='visible: lastName.hasError, text: lastName.validationMessage'></span>
+    <span data-bind='visible: lastName.hasError, text: lastName.validationMessage'> </span>
 </p>
 {% endcapture %}
 
