@@ -27,6 +27,9 @@ ko.observableArray['fn'] = {
         for (var i = 0; i < underlyingArray.length; i++) {
             var value = underlyingArray[i];
             if (predicate(value)) {
+                if (removedValues.length === 0) {
+                    this.valueWillMutate();
+                }
                 removedValues.push(value);
                 underlyingArray.splice(i, 1);
                 i--;
@@ -43,6 +46,7 @@ ko.observableArray['fn'] = {
         if (arrayOfValues === undefined) {
             var underlyingArray = this();
             var allValues = underlyingArray.slice(0);
+            this.valueWillMutate();
             underlyingArray.splice(0, underlyingArray.length);
             this.valueHasMutated();
             return allValues;
@@ -58,6 +62,7 @@ ko.observableArray['fn'] = {
     destroy: function (valueOrPredicate) {
         var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
+        this.valueWillMutate();
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
             var value = underlyingArray[i];
             if (predicate(value))
@@ -87,9 +92,10 @@ ko.observableArray['fn'] = {
     replace: function(oldItem, newItem) {
         var index = this.indexOf(oldItem);
         if (index >= 0) {
+            this.valueWillMutate();
             this()[index] = newItem;
             this.valueHasMutated();
-        }   
+        }
     }    
 }
 
@@ -97,6 +103,7 @@ ko.observableArray['fn'] = {
 ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
     ko.observableArray['fn'][methodName] = function () { 
         var underlyingArray = this();
+        this.valueWillMutate();
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
         this.valueHasMutated();
         return methodCallResult;

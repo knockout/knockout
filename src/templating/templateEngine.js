@@ -27,11 +27,11 @@
 ko.templateEngine = function () { };
 
 ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    throw "Override renderTemplateSource in your ko.templateEngine subclass";
+    throw "Override renderTemplateSource";
 };
 
 ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script) {
-    throw "Override createJavaScriptEvaluatorBlock in your ko.templateEngine subclass";    
+    throw "Override createJavaScriptEvaluatorBlock";
 };
 
 ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
@@ -45,7 +45,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
         // Anonymous template
         return new ko.templateSources.anonymousTemplate(template);
     } else
-        throw new Error("Unrecognised template type: " + template);
+        throw new Error("Unknown template type: " + template);
 };
 
 ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options) {

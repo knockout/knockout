@@ -1,11 +1,13 @@
 (function () {
+    var hasDomDataExpandoProperty = '__ko__hasDomDataOptionValue__';
+
     // Normally, SELECT elements and their OPTIONs can only take value of type 'string' (because the values
     // are stored on DOM attributes). ko.selectExtensions provides a way for SELECTs/OPTIONs to have values
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
     ko.selectExtensions = {
         readValue : function(element) {
             if (element.tagName == 'OPTION') {
-                if (element['__ko__hasDomDataOptionValue__'] === true)
+                if (element[hasDomDataExpandoProperty] === true)
                     return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
                 return element.getAttribute("value");
             } else if (element.tagName == 'SELECT')
@@ -18,18 +20,19 @@
             if (element.tagName == 'OPTION') {
                 switch(typeof value) {
                     case "string":
-                    case "number":
                         ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
-                        if ('__ko__hasDomDataOptionValue__' in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
-                            delete element['__ko__hasDomDataOptionValue__'];
+                        if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                            delete element[hasDomDataExpandoProperty];
                         }
                         element.value = value;                                   
                         break;
                     default:
                         // Store arbitrary object using DomData
                         ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                        element['__ko__hasDomDataOptionValue__'] = true;
-                        element.value = "";
+                        element[hasDomDataExpandoProperty] = true;
+
+                        // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
+                        element.value = typeof value === "number" ? value : "";
                         break;
                 }			
             } else if (element.tagName == 'SELECT') {

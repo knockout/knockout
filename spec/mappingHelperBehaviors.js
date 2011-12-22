@@ -58,7 +58,14 @@ describe('Mapping helpers', {
         obj.someProp = { owner : ko.observable(obj) };
         var result = ko.toJS(obj);
         value_of(result.someProp.owner).should_be(result);
-    },    
+    },
+    
+    'ko.toJS should treat Date instances as primitives (and not walk their subproperties)': function () {
+        var date = new Date();
+        var result = ko.toJS({ due: ko.observable(date) });
+        value_of(result.due instanceof Date).should_be(true);
+        value_of(result.due).should_be(date);
+    },
     
     'ko.toJSON should unwrap everything and then stringify': function() {
         var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);	

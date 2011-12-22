@@ -6,6 +6,10 @@ describe('Observable Array', {
         testObservableArray.subscribe(function (value) {
             notifiedValues.push(value ? value.slice(0) : value);
         });
+        beforeNotifiedValues = [];
+        testObservableArray.subscribe(function (value) {
+            beforeNotifiedValues.push(value ? value.slice(0) : value);
+        }, null, "beforeChange");
     },
 
     'Should be observable': function () {
@@ -72,16 +76,33 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([[1, 2, 3, "Some new value"]]);
     },
 
+    'Should notify "beforeChange" subscribers before push': function () {
+        testObservableArray.push("Some new value");
+        value_of(beforeNotifiedValues).should_be([[1, 2, 3]]);
+    },
+
     'Should notify subscribers on pop': function () {
         var popped = testObservableArray.pop();
         value_of(popped).should_be(3);
         value_of(notifiedValues).should_be([[1, 2]]);
     },
 
+    'Should notify "beforeChange" subscribers before pop': function () {
+        var popped = testObservableArray.pop();
+        value_of(popped).should_be(3);
+        value_of(beforeNotifiedValues).should_be([[1, 2, 3]]);
+    },
+
     'Should notify subscribers on splice': function () {
         var spliced = testObservableArray.splice(1, 1);
         value_of(spliced).should_be([2]);
         value_of(notifiedValues).should_be([[1, 3]]);
+    },
+
+    'Should notify "beforeChange" subscribers before splice': function () {
+        var spliced = testObservableArray.splice(1, 1);
+        value_of(spliced).should_be([2]);
+        value_of(beforeNotifiedValues).should_be([[1, 2, 3]]);
     },
 
     'Should notify subscribers on remove by value': function () {
@@ -116,12 +137,28 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([[]]);
     },
     
+    'Should notify "beforeChange" subscribers before remove': function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        beforeNotifiedValues = [];
+        var removed = testObservableArray.remove("Beta");
+        value_of(removed).should_be(["Beta"]);
+        value_of(beforeNotifiedValues).should_be([["Alpha", "Beta", "Gamma"]]);
+    },
+
     'Should not notify subscribers on remove by value with no match': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         notifiedValues = [];
         var removed = testObservableArray.remove("Delta");
         value_of(removed).should_be([]);
         value_of(notifiedValues).should_be([]);
+    },
+
+    'Should not notify "beforeChange" subscribers before remove by value with no match': function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        beforeNotifiedValues = [];
+        var removed = testObservableArray.remove("Delta");
+        value_of(removed).should_be([]);
+        value_of(beforeNotifiedValues).should_be([]);
     },
 
     'Should modify original array on remove': function () {
@@ -147,6 +184,13 @@ describe('Observable Array', {
         value_of(notifiedValues).should_be([["Alpha", "Delta", "Gamma"]]);
     },    
     
+    'Should notify "beforeChange" subscribers before replace': function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        beforeNotifiedValues = [];
+        testObservableArray.replace("Beta", "Delta");
+        value_of(beforeNotifiedValues).should_be([["Alpha", "Beta", "Gamma"]]);
+    },    
+    
     'Should notify subscribers after marking items as destroyed': function () {
         var x = {}, y = {}, didNotify = false;
         testObservableArray([x, y]);
@@ -155,6 +199,18 @@ describe('Observable Array', {
             value_of(y._destroy).should_be(true);
             didNotify = true;
         });
+        testObservableArray.destroy(y);
+        value_of(didNotify).should_be(true);
+    },
+
+    'Should notify "beforeChange" subscribers before marking items as destroyed': function () {
+        var x = {}, y = {}, didNotify = false;
+        testObservableArray([x, y]);
+        testObservableArray.subscribe(function(value) {
+            value_of(x._destroy).should_be(undefined);
+            value_of(y._destroy).should_be(undefined);
+            didNotify = true;
+        }, null, "beforeChange");
         testObservableArray.destroy(y);
         value_of(didNotify).should_be(true);
     },

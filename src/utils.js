@@ -278,15 +278,32 @@ ko.utils = new (function () {
         },
 
         outerHTML: function(node) {
-            // For IE and Chrome
-            var nativeOuterHtml = node.outerHTML;
-            if (typeof nativeOuterHtml == "string")
-                return nativeOuterHtml;
-            
+            // For Chrome on non-text nodes
+            // (Although IE supports outerHTML, the way it formats HTML is inconsistent - sometimes closing </li> tags are omitted, sometimes not. That caused https://github.com/SteveSanderson/knockout/issues/212.)
+            if (ieVersion === undefined) {
+                var nativeOuterHtml = node.outerHTML;
+                if (typeof nativeOuterHtml == "string")
+                    return nativeOuterHtml;
+            }
+
             // Other browsers
             var dummyContainer = window.document.createElement("div");
             dummyContainer.appendChild(node.cloneNode(true));
             return dummyContainer.innerHTML;
+        },
+
+        setTextContent: function(element, textContent) {
+            var value = ko.utils.unwrapObservable(textContent);
+            if ((value === null) || (value === undefined))
+                value = "";
+
+            'innerText' in element ? element.innerText = value
+                                   : element.textContent = value;
+                                   
+            if (ieVersion >= 9) {
+                // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
+                element.innerHTML = element.innerHTML;
+            }
         },
 
         range: function (min, max) {
@@ -382,25 +399,29 @@ ko.utils = new (function () {
 })();
 
 ko.exportSymbol('ko.utils', ko.utils);
-ko.exportSymbol('ko.utils.arrayForEach', ko.utils.arrayForEach);
-ko.exportSymbol('ko.utils.arrayFirst', ko.utils.arrayFirst);
-ko.exportSymbol('ko.utils.arrayFilter', ko.utils.arrayFilter);
-ko.exportSymbol('ko.utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
-ko.exportSymbol('ko.utils.arrayIndexOf', ko.utils.arrayIndexOf);
-ko.exportSymbol('ko.utils.arrayMap', ko.utils.arrayMap);
-ko.exportSymbol('ko.utils.arrayPushAll', ko.utils.arrayPushAll);
-ko.exportSymbol('ko.utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
-ko.exportSymbol('ko.utils.extend', ko.utils.extend);
-ko.exportSymbol('ko.utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
-ko.exportSymbol('ko.utils.getFormFields', ko.utils.getFormFields);
-ko.exportSymbol('ko.utils.postJson', ko.utils.postJson);
-ko.exportSymbol('ko.utils.parseJson', ko.utils.parseJson);
-ko.exportSymbol('ko.utils.registerEventHandler', ko.utils.registerEventHandler);
-ko.exportSymbol('ko.utils.stringifyJson', ko.utils.stringifyJson);
-ko.exportSymbol('ko.utils.range', ko.utils.range);
-ko.exportSymbol('ko.utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
-ko.exportSymbol('ko.utils.triggerEvent', ko.utils.triggerEvent);
-ko.exportSymbol('ko.utils.unwrapObservable', ko.utils.unwrapObservable);
+ko.utils.arrayForEach([
+    ['arrayForEach', ko.utils.arrayForEach],
+    ['arrayFirst', ko.utils.arrayFirst],
+    ['arrayFilter', ko.utils.arrayFilter],
+    ['arrayGetDistinctValues', ko.utils.arrayGetDistinctValues],
+    ['arrayIndexOf', ko.utils.arrayIndexOf],
+    ['arrayMap', ko.utils.arrayMap],
+    ['arrayPushAll', ko.utils.arrayPushAll],
+    ['arrayRemoveItem', ko.utils.arrayRemoveItem],
+    ['extend', ko.utils.extend],
+    ['fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost],
+    ['getFormFields', ko.utils.getFormFields],
+    ['postJson', ko.utils.postJson],
+    ['parseJson', ko.utils.parseJson],
+    ['registerEventHandler', ko.utils.registerEventHandler],
+    ['stringifyJson', ko.utils.stringifyJson],
+    ['range', ko.utils.range],
+    ['toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass],
+    ['triggerEvent', ko.utils.triggerEvent],
+    ['unwrapObservable', ko.utils.unwrapObservable]
+], function(item) {
+    ko.exportSymbol('ko.utils.' + item[0], item[1]);
+});
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)

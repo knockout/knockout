@@ -362,6 +362,21 @@ describe('Binding: Value', {
         
         observable('D'); // This change should be rejected, as there's no corresponding option in the UI
         value_of(observable()).should_not_be('D');
+    },
+
+    'For select boxes, option values can be numerical, and are not implicitly converted to strings': function() {
+        var observable = new ko.observable(30);
+        testNode.innerHTML = "<select data-bind='options:[10,20,30,40], value:myObservable'></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+
+        // First check that numerical model values will match a dropdown option
+        value_of(testNode.childNodes[0].selectedIndex).should_be(2); // 3rd element, zero-indexed
+
+        // Then check that dropdown options map back to numerical model values
+        testNode.childNodes[0].selectedIndex = 1;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(typeof observable()).should_be("number");
+        value_of(observable()).should_be(20);
     }
 })
 
@@ -501,10 +516,27 @@ describe('Binding: Submit', {
 describe('Binding: Event', {
     before_each: prepareTestNode,
 
-    'Should invoke the supplied function when the event occurs, using model as \'this\' param': function () {
+    'Should invoke the supplied function when the event occurs, using model as \'this\' param and first arg, and event as second arg': function () {
         var model = { 
-            firstWasCalled: false, firstHandler: function () { this.firstWasCalled = true; },
-            secondWasCalled: false, secondHandler: function () { this.secondWasCalled = true; }
+            firstWasCalled: false, 
+            firstHandler: function (passedModel, evt) { 
+                value_of(evt.type).should_be("click");
+                value_of(this).should_be(model);
+                value_of(passedModel).should_be(model);
+
+                value_of(model.firstWasCalled).should_be(false);
+                model.firstWasCalled = true; 
+            },
+
+            secondWasCalled: false, 
+            secondHandler: function (passedModel, evt) {
+                value_of(evt.type).should_be("mouseover");
+                value_of(this).should_be(model);
+                value_of(passedModel).should_be(model);
+
+                value_of(model.secondWasCalled).should_be(false);
+                model.secondWasCalled = true; 
+            }
         };
         testNode.innerHTML = "<button data-bind='event:{click:firstHandler, mouseover:secondHandler, mouseout:null}'>hey</button>";
         ko.applyBindings(model, testNode);
@@ -545,6 +577,31 @@ describe('Binding: Event', {
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
         value_of(model.innerWasCalled).should_be(true);    	
         value_of(model.outerWasCalled).should_be(false);    	
+    },
+
+    'Should be able to supply handler params using "bind" helper': function() {
+        // Using "bind" like this just eliminates the function literal wrapper - it's purely stylistic
+        var didCallHandler = false, someObj = {};
+        var myHandler = function() {
+            value_of(this).should_be(someObj);
+            value_of(arguments.length).should_be(5);
+
+            // First x args will be the ones you bound
+            value_of(arguments[0]).should_be(123);
+            value_of(arguments[1]).should_be("another");
+            value_of(arguments[2].something).should_be(true);
+
+            // Then you get the args we normally pass to handlers, i.e., the model then the event
+            value_of(arguments[3]).should_be(viewModel);
+            value_of(arguments[4].type).should_be("mouseover");
+
+            didCallHandler = true;
+        };
+        testNode.innerHTML = "<button data-bind='event:{ mouseover: myHandler.bind(someObj, 123, \"another\", { something: true }) }'>hey</button>";
+        var viewModel = { myHandler: myHandler, someObj: someObj };
+        ko.applyBindings(viewModel, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
+        value_of(didCallHandler).should_be(true);        
     }
 });
 
@@ -552,8 +609,15 @@ describe('Binding: Click', {
     // This is just a special case of the "event" binding, so not necessary to respecify all its behaviours	
     before_each: prepareTestNode,
 
-    'Should invoke the supplied function on click, using model as \'this\' param': function () {
-        var model = { wasCalled: false, doCall: function () { this.wasCalled = true; } };
+    'Should invoke the supplied function on click, using model as \'this\' param and first arg, and event as second arg': function () {
+        var model = { 
+            wasCalled: false, 
+            doCall: function (arg1, arg2) { 
+                this.wasCalled = true;
+                value_of(arg1).should_be(model);
+                value_of(arg2.type).should_be("click");
+            } 
+        };
         testNode.innerHTML = "<button data-bind='click:doCall'>hey</button>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
@@ -1162,6 +1226,13 @@ describe('Binding: Foreach', {
         ko.applyBindings({ someItem: null }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);		
     },
+
+    'Should remove descendant nodes from the document (and not bind them) if the value is undefined': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
+        value_of(testNode.childNodes[0].childNodes.length).should_be(1);
+        ko.applyBindings({ someItem: undefined }, testNode);
+        value_of(testNode.childNodes[0].childNodes.length).should_be(0);        
+    },    
     
     'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {		
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
@@ -1418,5 +1489,45 @@ describe('Binding: Foreach', {
             // ... but IE < 8 doesn't add ones that immediately precede a <li>
             value_of(testNode).should_contain_html('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha<li data-bind="text: $data">beta</li><!-- /ko --></ul>');
         }
+    },
+
+    'Should be able to nest containerless templates directly inside UL elements, even on IE < 8 with its bizarre HTML parsing/formatting' : function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/212
+        // This test starts with the following DOM structure:
+        //    <ul>
+        //        <!-- ko foreach: ['A', 'B'] -->
+        //        <!-- ko if: $data == 'B' -->
+        //        <li data-bind='text: $data'>
+        //            <!-- /ko -->
+        //            <!-- /ko -->
+        //        </li>
+        //    </ul>
+        // Note that:
+        //   1. The closing comments are inside the <li> to simulate IE<8's weird parsing
+        //   2. We have to build this with manual DOM operations, otherwise IE<8 will deform it in a different weird way
+        // It would be a more authentic test if we could set up the scenario using .innerHTML and then let the browser do whatever parsing it does normally,
+        // but unfortunately IE varies its weirdness according to whether it's really parsing an HTML doc, or whether you're using .innerHTML.
+
+        testNode.innerHTML = "";
+        testNode.appendChild(document.createElement("ul"));
+        testNode.firstChild.appendChild(document.createComment("ko foreach: ['A', 'B']"));
+        testNode.firstChild.appendChild(document.createComment("ko if: $data == 'B'"));
+        testNode.firstChild.appendChild(document.createElement("li"));
+        testNode.firstChild.lastChild.setAttribute("data-bind", "text: $data");
+        testNode.firstChild.lastChild.appendChild(document.createComment("/ko"));
+        testNode.firstChild.lastChild.appendChild(document.createComment("/ko"));
+
+        ko.applyBindings(null, testNode);        
+        value_of(testNode).should_contain_text("B");
+    },    
+
+    'Should be able to output HTML5 elements (even on IE<9, as long as you reference either innershiv.js or jQuery1.7+Modernizr)': function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/194
+        ko.utils.setHtml(testNode, "<div data-bind='foreach:someitems'><section data-bind='text: $data'></section></div>");
+        var viewModel = {
+            someitems: [ 'Alpha', 'Beta' ]
+        };
+        ko.applyBindings(viewModel, testNode);
+        value_of(testNode).should_contain_html('<div data-bind="foreach:someitems"><section data-bind="text: $data">alpha</section><section data-bind="text: $data">beta</section></div>');
     }
 });

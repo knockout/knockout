@@ -5,13 +5,10 @@
         // Note that as of Knockout 1.3, we only support jQuery.tmpl 1.0.0pre and later,
         // which KO internally refers to as version "2", so older versions are no longer detected.
         var jQueryTmplVersion = this.jQueryTmplVersion = (function() {      
-            if ((typeof(jQuery) == "undefined") || !(jQuery['tmpl']|| jQuery['render']))
+            if ((typeof(jQuery) == "undefined") || !(jQuery['tmpl']))
                 return 0;
             // Since it exposes no official version number, we use our own numbering system. To be updated as jquery-tmpl evolves.
             try {
-                if (jQuery['render'])
-                    return 3; // Current preview of jsRender
-
                 if (jQuery['tmpl']['tag']['tmpl']['open'].toString().indexOf('__') >= 0) {
                     // Since 1.0.0pre, custom tags should append markup to an array called "__"
                     return 2; // Final version of jquery.tmpl
@@ -27,11 +24,7 @@
         }
 
         function executeTemplate(compiledTemplate, data, jQueryTemplateOptions) {
-            if (jQueryTmplVersion < 3)
-                return jQuery['tmpl'](compiledTemplate, data, jQueryTemplateOptions);
-
-            var renderedHtml = jQuery['render'](compiledTemplate, data, jQueryTemplateOptions);
-            return jQuery(ko.utils.parseHtmlFragment(renderedHtml));
+            return jQuery['tmpl'](compiledTemplate, data, jQueryTemplateOptions);
         }
         
         this['renderTemplateSource'] = function(templateSource, bindingContext, options) {
@@ -43,8 +36,7 @@
             if (!precompiled) {
                 var templateText = templateSource.text() || "";
                 // Wrap in "with($whatever.koBindingContext) { ... }"
-                var contextContainer = jQueryTmplVersion == 2 ? "$item" : "$ctx";
-                templateText = "{{ko_with " + contextContainer + ".koBindingContext}}" + templateText + "{{/ko_with}}";
+                templateText = "{{ko_with $item.koBindingContext}}" + templateText + "{{/ko_with}}";
 
                 precompiled = jQuery['template'](null, templateText);
                 templateSource['data']('precompiled', precompiled);
@@ -67,12 +59,11 @@
             document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
         };
     
-        if (jQueryTmplVersion >= 2) {
-            var tagContainer = jQueryTmplVersion == 2 ? "tmpl" : "tmplSettings";
-            jQuery[tagContainer]['tag']['ko_code'] = {
+        if (jQueryTmplVersion > 0) {
+            jQuery['tmpl']['tag']['ko_code'] = {
                 open: "__.push($1 || '');"
             };
-            jQuery[tagContainer]['tag']['ko_with'] = {
+            jQuery['tmpl']['tag']['ko_with'] = {
                 open: "with($1) {",
                 close: "} "
             };

@@ -30,7 +30,10 @@ ko.bindingHandlers['event'] = {
                         var allBindings = allBindingsAccessor();
                         
                         try { 
-                            handlerReturnValue = handlerFunction.apply(viewModel, arguments);                     	
+                            // Take all the event args, and prefix with the viewmodel
+                            var argsForHandler = ko.utils.makeArray(arguments);
+                            argsForHandler.unshift(viewModel);
+                            handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
                         } finally {
                             if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                                 if (event.preventDefault)
@@ -56,7 +59,7 @@ ko.bindingHandlers['event'] = {
 ko.bindingHandlers['submit'] = {
     'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
         if (typeof valueAccessor() != "function")
-            throw new Error("The value for a submit binding must be a function to invoke on submit");
+            throw new Error("The value for a submit binding must be a function");
         ko.utils.registerEventHandler(element, "submit", function (event) {
             var handlerReturnValue;
             var value = valueAccessor();
@@ -193,6 +196,7 @@ ko.bindingHandlers['options'] = {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
         var previousScrollTop = element.scrollTop;
+        element.scrollTop = 0; // Workaround for a Chrome rendering bug. Note that we restore the scroll position later. (https://github.com/SteveSanderson/knockout/issues/215)
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -210,7 +214,7 @@ ko.bindingHandlers['options'] = {
                 value = [value];
             if (allBindings['optionsCaption']) {
                 var option = document.createElement("OPTION");
-                option.innerHTML = allBindings['optionsCaption'];
+                ko.utils.setHtml(option, allBindings['optionsCaption']);
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
@@ -233,9 +237,8 @@ ko.bindingHandlers['options'] = {
                     optionText = optionValue;				 // Given no optionsText arg; use the data value itself
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
-                optionText = ko.utils.unwrapObservable(optionText).toString();
-                typeof option.innerText == "string" ? option.innerText = optionText
-                                                    : option.textContent = optionText;
+
+                ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
             }
@@ -263,7 +266,7 @@ ko.bindingHandlers['options'] = {
         }
     }
 };
-ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.bindingHandlers.options.optionValueDomData__';
+ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.optionValueDomData__';
 
 ko.bindingHandlers['selectedOptions'] = {
     getSelectedValuesFromSelectNode: function (selectNode) {
@@ -306,11 +309,7 @@ ko.bindingHandlers['selectedOptions'] = {
 
 ko.bindingHandlers['text'] = {
     'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        if ((value === null) || (value === undefined))
-            value = "";
-        typeof element.innerText == "string" ? element.innerText = value
-                                             : element.textContent = value;
+        ko.utils.setTextContent(element, valueAccessor());
     }
 };
 
