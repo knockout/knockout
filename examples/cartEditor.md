@@ -68,17 +68,18 @@ This example also demonstrates a simple way to create cascading dropdowns.
     }
 
     var CartLine = function() {
-        this.category = ko.observable();
-        this.product = ko.observable();
-        this.quantity = ko.observable(1);
-        this.subtotal = ko.computed(function() {
-            return this.product() ? this.product().price * parseInt("0" + this.quantity(), 10) : 0;
-        }, this);
+        var self = this;
+        self.category = ko.observable();
+        self.product = ko.observable();
+        self.quantity = ko.observable(1);
+        self.subtotal = ko.computed(function() {
+            return self.product() ? self.product().price * parseInt("0" + self.quantity(), 10) : 0;
+        });
 
         // Whenever the category changes, reset the product selection
-        this.category.subscribe(function() {
-            this.product(undefined);
-        }, this);
+        self.category.subscribe(function() {
+            self.product(undefined);
+        });
     };
     
     var Cart = function() {
