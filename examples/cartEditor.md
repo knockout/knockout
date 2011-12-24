@@ -35,19 +35,19 @@ This example also demonstrates a simple way to create cascading dropdowns.
     <tbody data-bind='foreach: lines'>
         <tr>
             <td>
-                <select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category' />
+                <select data-bind='options: sampleProductCategories, optionsText: "name", optionsCaption: "Select...", value: category'> </select>
             </td>
-            <td data-bind="if: category">
-                <select data-bind='options: category().products, optionsText: "name", optionsCaption: "Select...", value: product' />
+            <td data-bind="with: category">
+                <select data-bind='options: products, optionsText: "name", optionsCaption: "Select...", value: $parent.product'> </select>
             </td>
-            <td class='price' data-bind="with: product">
-                <span data-bind='text: formatCurrency(price)' />
+            <td class='price' data-bind='with: product'>
+                <span data-bind='text: formatCurrency(price)'> </span>
             </td>
             <td class='quantity'>
                 <input data-bind='visible: product, value: quantity, valueUpdate: "afterkeydown"' />
             </td>
             <td class='price'>
-                <span data-bind='visible: product, text: formatCurrency(subtotal())' />
+                <span data-bind='visible: product, text: formatCurrency(subtotal())' > </span>
             </td>
             <td>
                 <a href='#' data-bind='click: $parent.removeLine'>Remove</a>
