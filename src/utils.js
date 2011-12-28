@@ -166,19 +166,17 @@ ko.utils = new (function () {
             return string.substring(0, startsWith.length) === startsWith;
         },
 
-        evalWithinScope: function (expression /*, scope1, scope2, scope3... */) {
+        buildEvalFunction: function (expression, scopeLevels) {
             // Build the source for a function that evaluates "expression"
             // For each scope variable, add an extra level of "with" nesting
             // Example result: with(sc[1]) { with(sc[0]) { return (expression) } }
-            var scopes = Array.prototype.slice.call(arguments, 1);
             var functionBody = "return (" + expression + ")";
-            for (var i = 0; i < scopes.length; i++) {
-                if (scopes[i] && typeof scopes[i] == "object")
-                    functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
+            for (var i = 0; i < scopeLevels; i++) {
+                functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
             }
-            return (new Function("sc", functionBody))(scopes);
+            return new Function("sc", functionBody);
         },
-
+        
         domNodeIsContainedBy: function (node, containedByNode) {
             if (containedByNode.compareDocumentPosition)
                 return (containedByNode.compareDocumentPosition(node) & 16) == 16;
