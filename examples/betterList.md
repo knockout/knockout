@@ -24,9 +24,9 @@ Check out the HTML source code to see how little code all this takes. This examp
 
 {% capture live_example_viewmodel %}
     var BetterListModel = function () {
-        this.itemToAdd = new ko.observable("");
-        this.allItems = new ko.observableArray(["Fries", "Eggs Benedict", "Ham", "Cheese"]); // Initial items
-        this.selectedItems = new ko.observableArray(["Ham"]);                                // Initial selection
+        this.itemToAdd = ko.observable("");
+        this.allItems = ko.observableArray(["Fries", "Eggs Benedict", "Ham", "Cheese"]); // Initial items
+        this.selectedItems = ko.observableArray(["Ham"]);                                // Initial selection
 
         this.addItem = function () {
             if ((this.itemToAdd() != "") && (this.allItems.indexOf(this.itemToAdd()) < 0)) // Prevent blanks and duplicates
