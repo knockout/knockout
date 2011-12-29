@@ -12,6 +12,8 @@ function prepareOptions(evaluatorFunctionOrOptions, evaluatorFunctionTarget, opt
     if (typeof options["read"] != "function")
         throw "Pass a function that returns the value of the dependentObservable";
         
+    options["owner"] = evaluatorFunctionTarget || options["owner"];
+
     return options;    
 }
 
@@ -65,12 +67,25 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         try {
-            disposeAllSubscriptionsToDependencies();
+            var oldSubscriptions = ko.utils.arrayMap(_subscriptionsToDependencies, function(item) {return item.target;});
             ko.dependencyDetection.begin(function(subscribable) {
-                _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
+                var inOld;
+                if ((inOld = ko.utils.arrayIndexOf(oldSubscriptions, subscribable)) >= 0)
+                    oldSubscriptions[inOld] = undefined;
+                else
+                    _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
             });
-            var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
+
+            var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
             var newValue = options["read"].call(valueForThis);
+
+            for (var oldPos = 0, i = 0, len = oldSubscriptions.length; i < len; i++) {
+                if (oldSubscriptions[i])
+                    _subscriptionsToDependencies.splice(oldPos, 1)[0].dispose();
+                else
+                    oldPos++;
+            }
+
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
         } finally {
@@ -83,21 +98,30 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     function dependentObservable() {
         if (arguments.length > 0) {
-            if (typeof options["write"] === "function") {
-                // Writing a value
-                var valueForThis = options["owner"] || evaluatorFunctionTarget; // If undefined, it will default to "window" by convention. This might change in the future.
-                options["write"].apply(valueForThis, arguments);
-            } else {
-                throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
-            }
+            dependentObservable.set.apply(dependentObservable, arguments);
         } else {
-            // Reading the value
-            if (!_hasBeenEvaluated)
-                evaluateImmediate();
-            ko.dependencyDetection.registerDependency(dependentObservable);
-            return _latestValue;
+            return dependentObservable.get();             
         }
     }
+    
+    dependentObservable.set = function() {
+        if (typeof options["write"] === "function") {
+            // Writing a value
+            var valueForThis = options["owner"]; // If undefined, it will default to "window" by convention. This might change in the future.
+            options["write"].apply(valueForThis, arguments);
+        } else {
+            throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+        }
+    }
+
+    dependentObservable.get = function() {
+        // Reading the value
+        if (!_hasBeenEvaluated)
+            evaluateImmediate();
+        ko.dependencyDetection.registerDependency(dependentObservable);
+        return _latestValue;
+    }
+
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; }
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () {

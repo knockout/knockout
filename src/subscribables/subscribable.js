@@ -1,5 +1,6 @@
 
-ko.subscription = function (callback, disposeCallback) {
+ko.subscription = function (target, callback, disposeCallback) {
+    this.target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
     ko.exportProperty(this, 'dispose', this.dispose);
@@ -25,7 +26,7 @@ ko.subscribable['fn'] = {
         event = event || defaultEvent;
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
-        var subscription = new ko.subscription(boundCallback, function () {
+        var subscription = new ko.subscription(this, boundCallback, function () {
             ko.utils.arrayRemoveItem(this._subscriptions[event], subscription);
         }.bind(this));
 
