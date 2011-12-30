@@ -401,17 +401,26 @@ describe('Binding: Options', {
         value_of(displayedOptions).should_be(["A", "B", "C"]);
     },
     
-    'Should accept optionsText and optionsValue params to display subproperties of the model values': function() {
+    'Should accept optionsText, optionsValue and optionsAttr params to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
-            { name: 'bob', id: ko.observable(6) }, // Note that subproperties can be observable
-            { name: ko.observable('frank'), id: 13 }
-        ]);	
-        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\"'><option>should be deleted</option></select>";
-        ko.applyBindings({ myValues: modelValues }, testNode);
+            { name: 'bob', id: ko.observable(6), hobby: 'chess' }, // Note that subproperties can be observable
+            { name: ko.observable('frank'), id: 13, hobby: 'mancala' }
+        ]);
+        var hello = function(item) {
+            return 'I like ' + item.hobby;
+        };
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\", optionsAttr: {firstAttribute: \"hobby\", \"second-attribute\": true, thirdAttribute: hello}'><option>should be deleted</option></select>";
+        ko.applyBindings({ myValues: modelValues, hello: hello }, testNode);
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });	
         var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });	
+        var firstAttributeValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.getAttribute("firstAttribute"); });
+        var secondAttributeValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.getAttribute("second-attribute"); });
+        var thirdAttributeValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.getAttribute("thirdAttribute"); });
         value_of(displayedText).should_be(["bob", "frank"]);
         value_of(displayedValues).should_be([6, 13]);
+        value_of(firstAttributeValues).should_be(["chess", "mancala"]);
+        value_of(secondAttributeValues).should_be(["true", "true"]);
+        value_of(thirdAttributeValues).should_be(["I like chess", "I like mancala"]);
     },
 
     'Should accept function in optionsText param to display subproperties of the model values': function() {

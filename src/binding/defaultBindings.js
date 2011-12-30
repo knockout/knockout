@@ -238,6 +238,32 @@ ko.bindingHandlers['options'] = {
                 if ((optionText === null) || (optionText === undefined))
                     optionText = "";                                    
 
+                // Apply some attributes to the option element
+                var optionsAttrValue = allBindings['optionsAttr'];
+                if (typeof optionsAttrValue === "object") {
+                    for (var attrName in optionsAttrValue) {
+                        if (typeof attrName == "string") {
+                            var attrValue = ko.utils.unwrapObservable(optionsAttrValue[attrName]);
+
+                            var attrResult;
+                            if (typeof attrValue == "function")
+                                attrResult = attrValue(value[i]); // Given a function; run it against the data value
+                            else if (typeof attrValue == "string")
+                                attrResult = value[i][attrValue]; // Given a string; treat it as a property name on the data value
+                            else
+                                attrResult = attrValue;				    // Given no optionsText arg; use the data value itself
+
+                            // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely
+                            // when someProp is a "no value"-like value (strictly null, false, or undefined)
+                            // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)
+                            if ((attrResult === false) || (attrResult === null) || (attrResult === undefined))
+                                option.removeAttribute(attrName);
+                            else
+                                option.setAttribute(attrName, attrResult.toString());
+                        }
+                    }
+                }
+
                 ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
