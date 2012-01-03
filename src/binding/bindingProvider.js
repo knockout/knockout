@@ -33,16 +33,9 @@
         // It's not part of the interface definition for a general binding provider.
         'parseBindingsString': function(bindingsString, bindingContext) {
             try {
-                var viewModel = bindingContext['$data'];
-                var scopes = (typeof viewModel == 'object' && viewModel != null) ? [viewModel, bindingContext] : [bindingContext];
-                var cacheKey = scopes.length + '_' + bindingsString;
-                var bindingFunction;
-                if (cacheKey in this.bindingCache) {
-                    bindingFunction = this.bindingCache[cacheKey];
-                } else {
-                    var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
-                    bindingFunction = this.bindingCache[cacheKey] = ko.utils.buildEvalFunction(rewrittenBindings, scopes.length);
-                }
+                var viewModel = bindingContext['$data'],
+                    scopes = (viewModel !== null && viewModel !== undefined) ? [viewModel, bindingContext] : [bindingContext],
+                    bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, scopes.length, this.bindingCache);
                 return bindingFunction(scopes);
             } catch (ex) {
                 throw new Error("Unable to parse bindings.\nMessage: " + ex + ";\nBindings value: " + bindingsString);
@@ -51,6 +44,17 @@
     });
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
+
+    function createBindingsStringEvaluatorViaCache(bindingsString, scopesCount, cache) {
+        var cacheKey = scopesCount + '_' + bindingsString;
+        return cache[cacheKey] 
+            || (cache[cacheKey] = createBindingsStringEvaluator(bindingsString, scopesCount));
+    }
+
+    function createBindingsStringEvaluator(bindingsString, scopesCount) {
+        var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
+        return ko.utils.buildEvalWithinScopeFunction(rewrittenBindings, scopesCount);
+    }    
 })();
 
 ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);
