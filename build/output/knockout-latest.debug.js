@@ -192,17 +192,15 @@ ko.utils = new (function () {
             return string.substring(0, startsWith.length) === startsWith;
         },
 
-        evalWithinScope: function (expression /*, scope1, scope2, scope3... */) {
+        buildEvalWithinScopeFunction: function (expression, scopeLevels) {
             // Build the source for a function that evaluates "expression"
             // For each scope variable, add an extra level of "with" nesting
             // Example result: with(sc[1]) { with(sc[0]) { return (expression) } }
-            var scopes = Array.prototype.slice.call(arguments, 1);
             var functionBody = "return (" + expression + ")";
-            for (var i = 0; i < scopes.length; i++) {
-                if (scopes[i] && typeof scopes[i] == "object")
-                    functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
+            for (var i = 0; i < scopeLevels; i++) {
+                functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
             }
-            return (new Function("sc", functionBody))(scopes);
+            return new Function("sc", functionBody);
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
@@ -328,7 +326,7 @@ ko.utils = new (function () {
                                    
             if (ieVersion >= 9) {
                 // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
-                element.innerHTML = element.innerHTML;
+                element.style.display = element.style.display;
             }
         },
 
@@ -1691,7 +1689,9 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
 (function() {
     var defaultBindingAttributeName = "data-bind";
 
-    ko.bindingProvider = function() { };
+    ko.bindingProvider = function() {
+        this.bindingCache = {};
+    };
 
     ko.utils.extend(ko.bindingProvider.prototype, {
         'nodeHasBindings': function(node) {
@@ -1721,9 +1721,10 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
         // It's not part of the interface definition for a general binding provider.
         'parseBindingsString': function(bindingsString, bindingContext) {
             try {
-                var viewModel = bindingContext['$data'];
-                var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
-                return ko.utils.evalWithinScope(rewrittenBindings, viewModel === null ? window : viewModel, bindingContext);
+                var viewModel = bindingContext['$data'],
+                    scopes = (viewModel !== null && viewModel !== undefined) ? [viewModel, bindingContext] : [bindingContext],
+                    bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, scopes.length, this.bindingCache);
+                return bindingFunction(scopes);
             } catch (ex) {
                 throw new Error("Unable to parse bindings.\nMessage: " + ex + ";\nBindings value: " + bindingsString);
             }           
@@ -1731,6 +1732,17 @@ ko.exportSymbol('ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko
     });
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
+
+    function createBindingsStringEvaluatorViaCache(bindingsString, scopesCount, cache) {
+        var cacheKey = scopesCount + '_' + bindingsString;
+        return cache[cacheKey] 
+            || (cache[cacheKey] = createBindingsStringEvaluator(bindingsString, scopesCount));
+    }
+
+    function createBindingsStringEvaluator(bindingsString, scopesCount) {
+        var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
+        return ko.utils.buildEvalWithinScopeFunction(rewrittenBindings, scopesCount);
+    }    
 })();
 
 ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);(function () {

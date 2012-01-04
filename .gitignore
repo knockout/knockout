@@ -10,3 +10,4 @@ _ReSharper*
 desktop.ini
 .eprj
 perf/*
+.orig
