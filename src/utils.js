@@ -300,7 +300,7 @@ ko.utils = new (function () {
                                    
             if (ieVersion >= 9) {
                 // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
-                element.innerHTML = element.innerHTML;
+                element.style.display = element.style.display;
             }
         },
 
