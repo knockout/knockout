@@ -2,10 +2,14 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
+var jsdom = require('jsdom').jsdom,
+    document = jsdom('<html><head></head><body></body></html>'),
+    window = document.createWindow(),
+    navigator = window.navigator;
 (function(window,document,navigator,undefined){
 !function(factory){
   // Export the ko object for NodeJs and CommonJs with 
-  // backwards compatability for the old `require()` API. 
+  // backwards compatability for the old `require()` API.
   // If we're not in CommonJs, add `ko` to the global object.
   if (typeof exports !== 'undefined') {
     if (typeof module !== 'undefined' && module.exports){

@@ -23,13 +23,13 @@ tools\curl -d output_info=compiled_code -d output_format=text -d compilation_lev
 
 @rem Finalise each file by prefixing with version header and surrounding in function closure
 copy /y version-header.js %OutDebugFile%
-echo (function(window,undefined){ >> %OutDebugFile%
-type %OutDebugFile%.temp          >> %OutDebugFile%
-echo })(window);                  >> %OutDebugFile%
+echo (function(window,document,navigator,undefined){ >> %OutDebugFile%
+type %OutDebugFile%.temp                             >> %OutDebugFile%
+echo })(window,document,navigator);                  >> %OutDebugFile%
 del %OutDebugFile%.temp
 
 copy /y version-header.js %OutMinFile%
-echo (function(window,undefined){ >> %OutMinFile%
-type %OutMinFile%.temp            >> %OutMinFile%
-echo })(window);                  >> %OutMinFile%
+echo (function(window,document,navigator,undefined){ >> %OutMinFile%
+type %OutMinFile%.temp                               >> %OutMinFile%
+echo })(window,document,navigator);                  >> %OutMinFile%
 del %OutMinFile%.temp
