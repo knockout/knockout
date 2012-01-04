@@ -2,6 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
+define(function() { var exports = {};
 (function(window,document,navigator,undefined){
 var ko;
 
@@ -3244,3 +3245,4 @@ ko.exportSymbol('ko.nativeTemplateEngine', ko.nativeTemplateEngine);(function() 
     
     ko.exportSymbol('ko.jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();})(window,document,navigator);
+return exports; });

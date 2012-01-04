@@ -1,7 +1,7 @@
 #!/bin/sh
 
-OutDebugFile='output/knockout-latest.debug.js'
-OutMinFile='output/knockout-latest.js'
+OutDebugFile='requirejs/knockout-latest.debug.js'
+OutMinFile='requirejs/knockout-latest.js'
 
 # Combine the source files
 SourceFiles=`grep js < source-references.js | # Find JS references 
@@ -16,13 +16,18 @@ curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADV
 
 # Finalise each file by prefixing with version header and surrounding in function closure
 cp version-header.js $OutDebugFile
+echo "define(function() { var exports = {};"           >> $OutDebugFile
 echo "(function(window,document,navigator,undefined){" >> $OutDebugFile
-cat $OutDebugFile.temp				>> $OutDebugFile
+cat $OutDebugFile.temp                                 >> $OutDebugFile
 echo "})(window,document,navigator);"                  >> $OutDebugFile
+echo "return exports; });"                             >> $OutDebugFile
 rm $OutDebugFile.temp
 
 cp version-header.js $OutMinFile
+echo "define(function() { var exports = {};"           >> $OutMinFile
 echo "(function(window,document,navigator,undefined){" >> $OutMinFile
-cat $OutMinFile.temp				>> $OutMinFile
+cat $OutMinFile.temp                                   >> $OutMinFile
 echo "})(window,document,navigator);"                  >> $OutMinFile
+echo "return exports;});"                             >> $OutMinFile
 rm $OutMinFile.temp
+

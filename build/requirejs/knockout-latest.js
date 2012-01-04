@@ -2,6 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
+define(function() { var exports = {};
 (function(window,document,navigator,undefined){
 function c(a){throw a;}var l=void 0,m=!0,o=null,p=!1,r;r="undefined"!==typeof exports?exports:window.ko={};r.b=function(a,b){if("undefined"===typeof exports){for(var d=a.split("."),e=window,f=0;f<d.length-1;f++)e=e[d[f]];e[d[d.length-1]]=b}};r.l=function(a,b,d){a[b]=d};
 r.a=new function(){function a(a,e){if("INPUT"!=a.tagName||!a.type)return p;if("click"!=e.toLowerCase())return p;var b=a.type.toLowerCase();return"checkbox"==b||"radio"==b}var b=/^(\s|\u00A0)+|(\s|\u00A0)+$/g,d={},e={};d[/Firefox\/2/i.test(navigator.userAgent)?"KeyboardEvent":"UIEvents"]=["keyup","keydown","keypress"];d.MouseEvents="click,dblclick,mousedown,mouseup,mousemove,mouseover,mouseout,mouseenter,mouseleave".split(",");for(var f in d){var h=d[f];if(h.length)for(var g=0,i=h.length;g<i;g++)e[h[g]]=
@@ -95,3 +96,4 @@ r.b("ko.utils.setDomNodeChildrenFromArrayMapping",r.a.Ka);r.p=function(){this.al
 d=[e.$data];e=jQuery.extend({koBindingContext:e},f.templateOptions);e=jQuery.tmpl(h,d,e);e.appendTo(document.createElement("div"));jQuery.fragments={};return e};this.createJavaScriptEvaluatorBlock=function(a){return"{{ko_code ((function() { return "+a+" })()) }}"};this.addTemplate=function(a,b){document.write("<script type='text/html' id='"+a+"'>"+b+"<\/script>")};if(0<a)jQuery.tmpl.tag.ko_code={open:"__.push($1 || '');"},jQuery.tmpl.tag.ko_with={open:"with($1) {",close:"} "}};r.ja.prototype=new r.t;
 var a=new r.ja;0<a.rb&&r.pa(a);r.b("ko.jqueryTmplTemplateEngine",r.ja)})();
 })(window,document,navigator);
+return exports;});

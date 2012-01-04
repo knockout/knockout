@@ -1,0 +1,15 @@
+{
+  "name"          : "knockout"
+, "version"       : "2.0.0"
+, "description"   : "NodeJs Testable version of client script which Simplifies Dynamic JavaScript UIs by applying the Model-View-ViewModel (MVVM) Pattern"
+, "repository"    : { "type" : "git"
+                    , "url"  : "https://github.com/mtscout6/knockout"
+                    }
+, "keywords"      : ["testing", "mvvm"]
+, "author"        : "Steven Sanderson"
+, "contributors"  : [ "Matthew Smith <mtscout6@gmail.com" ]
+, "maintainers"   : "Matthew Smith <mtscout6@gmail.com>"
+, "licenses"      : ["MIT"]
+, "dependencies"  : { "jsdom" : ">=0.2.8" }
+, "main"           : "bin/knockout"
+}

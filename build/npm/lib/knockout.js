@@ -2,6 +2,10 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
+var jsdom = require('jsdom').jsdom,
+    document = jsdom('<html><head></head><body></body></html>'),
+    window = document.createWindow(),
+    navigator = window.navigator;
 (function(window,document,navigator,undefined){
 var ko;
 
