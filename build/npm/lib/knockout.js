@@ -2,9 +2,26 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,undefined){
+var jsdom = require('jsdom').jsdom,
+    document = jsdom('<html><head></head><body></body></html>'),
+    window = document.createWindow(),
+    navigator = window.navigator;
+(function(window,document,navigator,undefined){
 !function(factory){
-    typeof define === 'function' && define['amd'] ? define(['exports'], factory) : factory(window['ko'] = {});
+  // Export the ko object for NodeJs and CommonJs with 
+  // backwards compatability for the old `require()` API.
+  // If we're not in CommonJs, add `ko` to the global object.
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports){
+      exports = module.exports;
+    }
+    factory(exports);
+  } else if (typeof define === 'function' && define.amd) {
+    // Register as a named module with AMD
+    define(['exports'], factory);
+  } else {
+    factory(window['ko'] = {});
+  }
 }(function(koExports){
 var ko = {};// Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(koPath, object) {
