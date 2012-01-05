@@ -14,7 +14,7 @@ goto :Combine
 goto :EOF 
 
 :Combine
-type amd-pre.js                   >> %OutDebugFile%.temp
+type amd-pre.js                   > %OutDebugFile%.temp
 type %AllFiles%                   >> %OutDebugFile%.temp
 type amd-post.js                  >> %OutDebugFile%.temp
 

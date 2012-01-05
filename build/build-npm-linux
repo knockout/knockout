@@ -7,7 +7,7 @@ SourceFiles=`grep js < source-references.js | # Find JS references
              sed "s/[ \',]//g" |              # Strip off JSON fluff (whitespace, commas, quotes)
              sed -e 's/.*/..\/&/' |           # Fix the paths by prefixing with ../
              tr '\n' ' '`                     # Combine into single line
-cat amd-pre.js                      >> $OutFile.temp
+cat amd-pre.js                      > $OutFile.temp
 cat $SourceFiles                    >> $OutFile.temp
 cat amd-post.js                     >> $OutFile.temp
 
