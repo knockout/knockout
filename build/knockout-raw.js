@@ -2,7 +2,7 @@
 // It uses JSONP to fetch the list of source files from source-references.js
 (function () {
     var debugFileName = "build/knockout-raw.js";
-    var sourcesReferenceFile = "build/source-references.js";
+    var sourcesReferenceFile = "build/fragments/source-references.js";
 
     function getPathToScriptTagSrc(scriptTagSrc) {
         scriptTagSrc = "/" + scriptTagSrc.toLowerCase();

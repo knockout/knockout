@@ -81,5 +81,5 @@
     };
 })();
 
-ko.exportSymbol('ko.utils.parseHtmlFragment', ko.utils.parseHtmlFragment);
-ko.exportSymbol('ko.utils.setHtml', ko.utils.setHtml);
+ko.exportSymbol('utils.parseHtmlFragment', ko.utils.parseHtmlFragment);
+ko.exportSymbol('utils.setHtml', ko.utils.setHtml);

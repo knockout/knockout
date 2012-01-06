@@ -83,5 +83,5 @@
     };
 })();
 
-ko.exportSymbol('ko.toJS', ko.toJS);
-ko.exportSymbol('ko.toJSON', ko.toJSON);
+ko.exportSymbol('toJS', ko.toJS);
+ko.exportSymbol('toJSON', ko.toJSON);

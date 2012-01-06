@@ -396,30 +396,26 @@ ko.utils = new (function () {
     }
 })();
 
-ko.exportSymbol('ko.utils', ko.utils);
-ko.utils.arrayForEach([
-    ['arrayForEach', ko.utils.arrayForEach],
-    ['arrayFirst', ko.utils.arrayFirst],
-    ['arrayFilter', ko.utils.arrayFilter],
-    ['arrayGetDistinctValues', ko.utils.arrayGetDistinctValues],
-    ['arrayIndexOf', ko.utils.arrayIndexOf],
-    ['arrayMap', ko.utils.arrayMap],
-    ['arrayPushAll', ko.utils.arrayPushAll],
-    ['arrayRemoveItem', ko.utils.arrayRemoveItem],
-    ['extend', ko.utils.extend],
-    ['fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost],
-    ['getFormFields', ko.utils.getFormFields],
-    ['postJson', ko.utils.postJson],
-    ['parseJson', ko.utils.parseJson],
-    ['registerEventHandler', ko.utils.registerEventHandler],
-    ['stringifyJson', ko.utils.stringifyJson],
-    ['range', ko.utils.range],
-    ['toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass],
-    ['triggerEvent', ko.utils.triggerEvent],
-    ['unwrapObservable', ko.utils.unwrapObservable]
-], function(item) {
-    ko.exportSymbol('ko.utils.' + item[0], item[1]);
-});
+ko.exportSymbol('utils', ko.utils);
+ko.exportSymbol('utils.arrayForEach', ko.utils.arrayForEach);
+ko.exportSymbol('utils.arrayFirst', ko.utils.arrayFirst);
+ko.exportSymbol('utils.arrayFilter', ko.utils.arrayFilter);
+ko.exportSymbol('utils.arrayGetDistinctValues', ko.utils.arrayGetDistinctValues);
+ko.exportSymbol('utils.arrayIndexOf', ko.utils.arrayIndexOf);
+ko.exportSymbol('utils.arrayMap', ko.utils.arrayMap);
+ko.exportSymbol('utils.arrayPushAll', ko.utils.arrayPushAll);
+ko.exportSymbol('utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
+ko.exportSymbol('utils.extend', ko.utils.extend);
+ko.exportSymbol('utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
+ko.exportSymbol('utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('utils.postJson', ko.utils.postJson);
+ko.exportSymbol('utils.parseJson', ko.utils.parseJson);
+ko.exportSymbol('utils.registerEventHandler', ko.utils.registerEventHandler);
+ko.exportSymbol('utils.stringifyJson', ko.utils.stringifyJson);
+ko.exportSymbol('utils.range', ko.utils.range);
+ko.exportSymbol('utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
+ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
+ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)

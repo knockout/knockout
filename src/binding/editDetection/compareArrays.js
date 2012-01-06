@@ -80,4 +80,4 @@
     };    
 })();
 
-ko.exportSymbol('ko.utils.compareArrays', ko.utils.compareArrays);
+ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);

@@ -61,7 +61,7 @@
         }
     };
     
-    ko.exportSymbol('ko.templateSources', ko.templateSources);
-    ko.exportSymbol('ko.templateSources.domElement', ko.templateSources.domElement);
-    ko.exportSymbol('ko.templateSources.anonymousTemplate', ko.templateSources.anonymousTemplate);
+    ko.exportSymbol('templateSources', ko.templateSources);
+    ko.exportSymbol('templateSources.domElement', ko.templateSources.domElement);
+    ko.exportSymbol('templateSources.anonymousTemplate', ko.templateSources.anonymousTemplate);
 })();

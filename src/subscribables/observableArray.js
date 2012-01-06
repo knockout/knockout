@@ -118,4 +118,4 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
     };
 });
 
-ko.exportSymbol('ko.observableArray', ko.observableArray);
+ko.exportSymbol('observableArray', ko.observableArray);
