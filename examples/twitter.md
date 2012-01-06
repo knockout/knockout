@@ -63,7 +63,7 @@ This is a sophisticated example showing how many different features in Knockout 
     // the view model, even though the view model does not know or care about any view that binds to it
     var savedLists = [
         { name: "Celebrities", userNames: ['JohnCleese', 'MCHammer', 'StephenFry', 'algore', 'StevenSanderson']},
-        { name: "Microsoft people", userNames: ['BillGates', 'shanselman', 'haacked', 'ScottGu']},
+        { name: "Microsoft people", userNames: ['BillGates', 'shanselman', 'ScottGu']},
         { name: "Tech pundits", userNames: ['Scobleizer', 'LeoLaporte', 'techcrunch', 'BoingBoing', 'timoreilly', 'codinghorror']}
     ];
 
