@@ -31,6 +31,9 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
+ko.version = "2.1.0pre";
+
+ko.exportSymbol('version', ko.version);
 
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
