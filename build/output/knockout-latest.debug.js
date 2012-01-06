@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){ 
+(function(window,document,navigator,undefined){
 !function(factory) {
     // Support AMD where available and opted in via define.amd.ko
     if (typeof define === 'function' && define['amd'] && define['amd']['ko']) {
@@ -3257,4 +3257,4 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);(function() {
     
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();});
-})(window,document,navigator);                  
+})(window,document,navigator);

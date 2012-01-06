@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){ 
+(function(window,document,navigator,undefined){
 function l(x){throw x;}var m=void 0,o=!0,p=null,q=!1;
 function B(x){function D(a,c){a&&"object"==typeof a?c=a:(c=c||{},c.read=a||c.read);"function"!=typeof c.read&&l("Pass a function that returns the value of the dependentObservable");return c}function C(b,c,d){d&&c!==a.h.q(b)&&a.h.S(b,c);c!==a.h.q(b)&&a.a.sa(b,"change")}var a="undefined"!==typeof x?x:{};a.b=function(b,c){for(var d=b.split("."),e=a,f=0;f<d.length-1;f++)e=e[d[f]];e[d[d.length-1]]=c};a.l=function(a,c,d){a[c]=d};a.version="2.1.0pre";a.b("version",a.version);a.a=new function(){function b(a,
 b){if("INPUT"!=a.tagName||!a.type)return q;if("click"!=b.toLowerCase())return q;var e=a.type.toLowerCase();return"checkbox"==e||"radio"==e}var c=/^(\s|\u00A0)+|(\s|\u00A0)+$/g,d={},e={};d[/Firefox\/2/i.test(navigator.userAgent)?"KeyboardEvent":"UIEvents"]=["keyup","keydown","keypress"];d.MouseEvents="click,dblclick,mousedown,mouseup,mousemove,mouseover,mouseout,mouseenter,mouseleave".split(",");for(var f in d){var h=d[f];if(h.length)for(var g=0,i=h.length;g<i;g++)e[h[g]]=f}var j=function(){for(var a=
@@ -82,4 +82,4 @@ k[r].index,k[r].value);if(h.beforeRemove){for(r=0;r<t.length;r++)h.beforeRemove(
 (function(){a.ja=function(){var a=this.rb=function(){if("undefined"==typeof jQuery||!jQuery.tmpl)return 0;try{if(0<=jQuery.tmpl.tag.tmpl.open.toString().indexOf("__"))return 2}catch(a){}return 1}();this.renderTemplateSource=function(b,e,f){f=f||{};2>a&&l(Error("Your version of jQuery.tmpl is too old. Please upgrade to jQuery.tmpl 1.0.0pre or later."));var h=b.data("precompiled");h||(h=b.text()||"",h=jQuery.template(p,"{{ko_with $item.koBindingContext}}"+h+"{{/ko_with}}"),b.data("precompiled",h));
 b=[e.$data];e=jQuery.extend({koBindingContext:e},f.templateOptions);e=jQuery.tmpl(h,b,e);e.appendTo(document.createElement("div"));jQuery.fragments={};return e};this.createJavaScriptEvaluatorBlock=function(a){return"{{ko_code ((function() { return "+a+" })()) }}"};this.addTemplate=function(a,b){document.write("<script type='text/html' id='"+a+"'>"+b+"<\/script>")};if(0<a)jQuery.tmpl.tag.ko_code={open:"__.push($1 || '');"},jQuery.tmpl.tag.ko_with={open:"with($1) {",close:"} "}};a.ja.prototype=new a.t;
 var b=new a.ja;0<b.rb&&a.pa(b);a.b("jqueryTmplTemplateEngine",a.ja)})()}"function"===typeof define&&define.amd&&define.amd.ko?define(["exports"],B):B(window.ko={});
-})(window,document,navigator);                  
+})(window,document,navigator);

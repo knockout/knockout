@@ -19,11 +19,6 @@ cat fragments/amd-pre.js            > $OutDebugFile.temp
 cat $SourceFiles                    >> $OutDebugFile.temp
 cat fragments/amd-post.js           >> $OutDebugFile.temp
 
-Version=`cat fragments/version.txt`
-VersionHeaderPath='fragments/version-header.js'
-rm -rf $VersionHeaderPath.temp
-sed "s/##VERSION##/$Version/" <$VersionHeaderPath > $VersionHeaderPath.temp
-
 # Now call Google Closure Compiler to produce a minified version
 curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
 
