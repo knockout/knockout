@@ -1,28 +1,29 @@
-// Knockout JavaScript library v2.0.0
+// Knockout JavaScript library v2.1.0pre
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){
-!function(factory){
-  // Export the ko object for NodeJs and CommonJs with 
-  // backwards compatability for the old `require()` API.
-  // If we're not in CommonJs, add `ko` to the global object.
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports){
-      exports = module.exports;
+(function(window,document,navigator,undefined){ 
+!function(factory) {
+    // Support AMD where available and opted in via define.amd.ko
+    if (typeof define === 'function' && define['amd'] && define['amd']['ko']) {
+        // Register as an AMD anonymous module
+        define(['exports'], factory);
+    } else {
+        // AMD not in use (e.g., when referenced via aplain <script> tag) - put ko directly in global namespace
+        factory(window['ko'] = {});
     }
-    factory(exports);
-  } else if (typeof define === 'function' && define.amd) {
-    // Register as a named module with AMD
-    define(['exports'], factory);
-  } else {
-    factory(window['ko'] = {});
-  }
 }(function(koExports){
-var ko = {};// Google Closure Compiler helpers (used only to make the minified file smaller)
+// Internally, all KO objects are attached to koExports (even the non-exported ones whose names will be minified by the closure compiler).
+// In the future, the following "ko" variable may be made distinct from "koExports" so that private objects are not externally reachable.
+var ko = typeof koExports !== 'undefined' ? koExports : {};
+// Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(koPath, object) {
 	var tokens = koPath.split(".");
-	var target = typeof koExports !== "undefined" ? koExports : ko;
+	
+	// In the future, "ko" may become distinct from "koExports" (so that non-exported objects are not reachable)
+	// At that point, "target" would be set to: (typeof koExports !== "undefined" ? koExports : ko)
+	var target = ko;
+
 	for (var i = 0; i < tokens.length - 1; i++)
 		target = target[tokens[i]];
 	target[tokens[tokens.length - 1]] = object;
@@ -1727,7 +1728,7 @@ ko.exportSymbol('jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.js
         'parseBindingsString': function(bindingsString, bindingContext) {
             try {
                 var viewModel = bindingContext['$data'],
-                    scopes = (viewModel !== null && viewModel !== undefined) ? [viewModel, bindingContext] : [bindingContext],
+                    scopes = (typeof viewModel == 'object' && viewModel != null) ? [viewModel, bindingContext] : [bindingContext],
                     bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, scopes.length, this.bindingCache);
                 return bindingFunction(scopes);
             } catch (ex) {
@@ -3253,4 +3254,4 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);(function() {
     
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();});
-})(window,document,navigator);
+})(window,document,navigator);                  
