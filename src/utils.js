@@ -1,4 +1,3 @@
-
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     
@@ -254,6 +253,16 @@ ko.utils = new (function () {
 
         unwrapObservable: function (value) {
             return ko.isObservable(value) ? value() : value;
+        },
+
+        wrapObservable: function (container, key, value) {
+            if(!container || !container[key])
+                return;
+            
+            if(ko.isObservable(container[key]))
+                container[key](value);
+            else
+                container[key] = value;
         },
 
         domNodeHasCssClass: function (node, className) {
