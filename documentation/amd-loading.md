@@ -1,9 +1,12 @@
 ---
 layout: documentation
-title: AMD (Asynchronous Module Definition) With RequireJs
+title: Asynchronous Module Definition (AMD) With RequireJs
 ---
 
 ### Overview of AMD
+
+Excerpt From [Writing Modular JavaScript With AMD, CommonJs & ES Harmony](http://addyosmani.com/writing-modular-js/):
+
 > When we say an application is modular, we generally mean it's composed of a set of highly decoupled, distinct pieces of functionality stored in modules. As you probably know, loose coupling facilitates easier maintainability of apps by removing dependencies where possible. When this is implemented efficiently, its quite easy to see how changes to one part of a system may affect another.
 >
 > Unlike some more traditional programming languages however, the current iteration of JavaScript (ECMA-262) doesn't provide developers with the means to import such modules of code in a clean, organized manner. It's one of the concerns with specifications that haven't required great thought until more recent years where the need for more organized JavaScript applications became apparent.
@@ -12,47 +15,39 @@ title: AMD (Asynchronous Module Definition) With RequireJs
 >
 > Whilst native solutions to these problems will be arriving in ES Harmony, the good news is that writing modular JavaScript has never been easier and you can start doing it today.
 
-Excerpt From "[Writing Modular JavaScript With AMD, CommonJs & ES Harmony](http://addyosmani.com/writing-modular-js/)"
+### Loading Knockout.js and a ViewModel class via RequireJs
 
-### Usage With RequireJs
 HTML
 
     <html>
-      <head>
-        <script type="text/javascript" data-main="main.js" src="require.js"></script>
-      </head>
-      <body>
-        <p>First name: <strong data-bind="text: firstName"></strong></p>
-        <p>Last name: <strong data-bind="text: lastName"></strong></p>
-
-        <p>First name: <input data-bind="value: firstName" /></p>
-        <p>Last name: <input data-bind="value: lastName" /></p>
-
-        <p>Full name: <strong data-bind="text: fullName"></strong></p>
-
-        <button data-bind="click: capitalizeLastName">Go caps</button>
-      </body>
+        <head>
+            <script type="text/javascript" data-main="scripts/init.js" src="scripts/require.js"></script>
+        </head>
+        <body>
+            <p>First name: <input data-bind="value: firstName" /></p>
+            <p>First name capitalized: <strong data-bind="text: firstNameCaps"></strong></p>
+            <script src=""></script>
+        </body>
     </html>
 
-main.js
+scripts/init.js
 
-    require(['knockout-x.y.z'], function(ko){
-      function AppViewModel() {
-          this.firstName = ko.observable("Bert");
-          this.lastName = ko.observable("Bertington");
-
-          this.fullName = ko.computed(function() {
-              return this.firstName() + " " + this.lastName();
-          }, this);
-
-          this.capitalizeLastName = function() {
-              var currentVal = this.lastName();        // Read the current value
-              this.lastName(currentVal.toUpperCase()); // Write back a modified value
-          };
-      }
-
-      // Activates knockout.js
-      ko.applyBindings(new AppViewModel());
+    require(['knockout-x.y.z', 'appViewModel', 'domReady!'], function(ko, appViewModel) {
+        ko.applyBindings(new appViewModel());
     });
 
-RequireJs can be downloaded from: [http://requirejs.org/docs/download.html](http://requirejs.org/docs/download.html)
+scripts/appViewModel.js
+
+    // Main viewmodel class
+    define(['knockout-x.y.z'], function(ko) {        
+        return function appViewModel() {
+            this.firstName = ko.observable('Bert');
+            this.firstNameCaps = ko.computed(function() {
+                return this.firstName().toUpperCase();
+            }, this);
+        }
+    });
+
+Of course, `x.y.z` should be replaced with the version number of the Knockout script you are loading (e.g., `knockout-2.0.0`).
+
+RequireJs can be downloaded from [http://requirejs.org/docs/download.html](http://requirejs.org/docs/download.html).
