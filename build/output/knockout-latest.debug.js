@@ -4,12 +4,16 @@
 
 (function(window,document,navigator,undefined){ 
 !function(factory) {
-    // Support AMD where available and opted in via define.amd.ko
-    if (typeof define === 'function' && define['amd'] && define['amd']['ko']) {
-        // Register as an AMD anonymous module
+    // Support three module loading scenarios
+    if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+        // [1] CommonJS/Node.js
+        var target = module['exports'] || exports; // module.exports is for Node.js
+        factory(target);
+    } else if (typeof define === 'function' && define['amd']) {
+        // [2] AMD anonymous module
         define(['exports'], factory);
     } else {
-        // AMD not in use (e.g., when referenced via aplain <script> tag) - put ko directly in global namespace
+        // [3] No module loader (plain <script> tag) - put directly in global namespace
         factory(window['ko'] = {});
     }
 }(function(koExports){
