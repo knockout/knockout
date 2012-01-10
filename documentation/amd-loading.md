@@ -26,7 +26,6 @@ HTML
         <body>
             <p>First name: <input data-bind="value: firstName" /></p>
             <p>First name capitalized: <strong data-bind="text: firstNameCaps"></strong></p>
-            <script src=""></script>
         </body>
     </html>
 
@@ -39,15 +38,46 @@ scripts/init.js
 scripts/appViewModel.js
 
     // Main viewmodel class
-    define(['knockout-x.y.z'], function(ko) {        
+    define(['knockout-x.y.z'], function(ko) {
         return function appViewModel() {
             this.firstName = ko.observable('Bert');
             this.firstNameCaps = ko.computed(function() {
                 return this.firstName().toUpperCase();
             }, this);
-        }
+        };
     });
 
 Of course, `x.y.z` should be replaced with the version number of the Knockout script you are loading (e.g., `knockout-2.0.0`).
 
+### Loading Knockout.js, a Binding Handler, and a ViewModel class via RequireJs
+
+Documentation on Binding Handlers in general can be found [here](http://knockoutjs.com/documentation/custom-bindings.html). This section is meant to demonstrate the power that AMD modules provide in maintaining your custom handlers. We will take the example of the `ko.bindingHandlers.hasFocus` example from the binding handlers documentation. By wrapping that handler in it's own module you can restrict it's use only to the pages that need it. The wrapped module becomes:
+
+    define(['knockout-x.y.z'], function(ko){
+        ko.bindingHandlers.hasFocus = {
+            init: function(element, valueAccessor) { ... },
+            update: function(element, valueAccessor) { ... }
+        }
+    });
+
+After you have defined the module update the input element from the HTML example above to be:
+
+    <p>First name: <input data-bind="value: firstName, hasFocus: editingName" /><span data-bind="editingName"> You're editing the name!</span></p>
+
+Include the module in the list of dependencies for your view model:
+
+    define(['knockout-x.y.z', 'customBindingHandlers/hasFocus'], function(ko) {
+        return function appViewModel(){
+            ...
+            // Add an editingName observable
+            this.editingName = ko.observable();
+        };
+    });
+
+Note that the custom binding handler module does not inject anything into our ViewModel module, that is because it does not return anything. It just appends additional behavior to the knockout module.
+
+### RequireJs Download
+
 RequireJs can be downloaded from [http://requirejs.org/docs/download.html](http://requirejs.org/docs/download.html).
+
+
