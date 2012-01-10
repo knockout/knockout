@@ -24,7 +24,7 @@ v1.2.1.js
 
     $(document).ready(function(){
       var appViewModel = function() {
-        this.loadedVersion = ko.observable(!ko.computed ? 'Knockout v1.2.1' : 'Knockout v2.0.0');
+        this.loadedVersion = ko.observable(!ko.computed ? 'Knockout v2.0.0' : 'Knockout v1.2.1');
       }
 
       ko.applyBindings(new appViewModel());
@@ -69,7 +69,7 @@ v2.0.0.js
 
     define(['knockout-2.0.0'], function(ko){
       var appViewModel = function() {
-        this.loadedVersion = ko.observable(!ko.computed ? 'Knockout v1.2.1' : 'Knockout v2.0.0');
+        this.loadedVersion = ko.observable(ko.computed ? 'Knockout v2.0.0' : 'Knockout v1.2.1');
       }
 
       ko.applyBindings(new appViewModel(), $('#v200')[0]);
