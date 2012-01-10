@@ -1,3 +1,3 @@
-ko.version = "Working-Debug";
+ko.version = "##VERSION##";
 
 ko.exportSymbol('version', ko.version);
