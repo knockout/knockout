@@ -1,9 +1,9 @@
 ---
 layout: documentation
-title: Asynchronous Module Definition (AMD) With RequireJs
+title: Using an AMD Loader
 ---
 
-### Overview of AMD
+### Overview of AMD (Asynchronous Module Definition)
 
 Excerpt From [Writing Modular JavaScript With AMD, CommonJs & ES Harmony](http://addyosmani.com/writing-modular-js/):
 
