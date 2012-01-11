@@ -93,8 +93,8 @@ ko.utils = new (function () {
         },
         
         arrayPushAll: function (array, valuesToPush) {
-            if ( valuesToPush instanceof  Array )
-                array.push.apply( array, valuesToPush );
+            if (valuesToPush instanceof Array)
+                array.push.apply(array, valuesToPush);
             else
                 for (var i = 0, j = valuesToPush.length; i < j; i++) 
                     array.push(valuesToPush[i]);	
