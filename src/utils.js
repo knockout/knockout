@@ -1,4 +1,3 @@
-
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
     
@@ -94,8 +93,11 @@ ko.utils = new (function () {
         },
         
         arrayPushAll: function (array, valuesToPush) {
-            for (var i = 0, j = valuesToPush.length; i < j; i++)
-                array.push(valuesToPush[i]);	
+            if ( valuesToPush instanceof  Array )
+                array.push.apply( array, valuesToPush );
+            else
+                for (var i = 0, j = valuesToPush.length; i < j; i++) 
+                    array.push(valuesToPush[i]);	
             return array;
         },
 
