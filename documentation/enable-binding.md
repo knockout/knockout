@@ -43,7 +43,7 @@ In this example, the "Your cellphone number" text box will initially be disabled
 
 You're not limited to referencing variables - you can reference arbitrary expressions to control an element's enabledness. For example,
 
-    <button data-bind="enabled: parseAreaCode(viewModel.cellphoneNumber()) != '555'">
+    <button data-bind="enable: parseAreaCode(viewModel.cellphoneNumber()) != '555'">
         Do something
     </button>
 
