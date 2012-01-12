@@ -15,7 +15,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
     // By here, "options" is always non-null
     if (typeof readFunction != "function")
-        throw "Pass a function that returns the value of the dependentObservable";
+        throw "Pass a function that returns the value of the ko.computed";
 
     var writeFunction = options["write"];
     if (!evaluatorFunctionTarget)
@@ -97,22 +97,22 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     function dependentObservable() {
         if (arguments.length > 0) {
-            dependentObservable.set.apply(dependentObservable, arguments);
+            set.apply(dependentObservable, arguments);
         } else {
-            return dependentObservable.get();             
+            return get();             
         }
     }
     
-    dependentObservable.set = function() {
+    function set() {
         if (typeof writeFunction === "function") {
             // Writing a value
             writeFunction.apply(evaluatorFunctionTarget, arguments);
         } else {
-            throw "Cannot write a value to a dependentObservable unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
+            throw "Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.";
         }
     }
 
-    dependentObservable.get = function() {
+    function get() {
         // Reading the value
         if (!_hasBeenEvaluated)
             evaluateImmediate();
