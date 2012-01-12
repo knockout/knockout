@@ -116,22 +116,35 @@ ko.utils = new (function () {
             }
         },
 
-        setDomNodeChildren: function (domNode, childNodes) {
-            ko.utils.emptyDomNode(domNode);
-            if (childNodes) {
-                ko.utils.arrayForEach(childNodes, function (childNode) {
-                    domNode.appendChild(childNode);
-                });
+        createAndPopulateDocumentFragment: function(nodesArray) {
+            var docFrag = document.createDocumentFragment();
+            ko.utils.arrayForEach(nodesArray, function (node) {
+                docFrag.appendChild(node);
+            });
+            return docFrag;
+        },
+
+        getDocumentFragmentAndNodes: function(docFragOrNodesArray) {
+            // Check if it's a DocumentFragment
+            if (docFragOrNodesArray.nodeType && docFragOrNodesArray.nodeType == 11) {
+                return {docFrag: docFragOrNodesArray, nodesArray: ko.utils.makeArray(docFragOrNodesArray.childNodes)};
+            // Loosely check if result is an array of DOM nodes
+            } else if (typeof docFragOrNodesArray.length == "number" && (!docFragOrNodesArray.length || typeof docFragOrNodesArray[0].nodeType == "number")) {
+                return {docFrag: ko.utils.createAndPopulateDocumentFragment(docFragOrNodesArray), nodesArray: docFragOrNodesArray};
             }
         },
 
-        replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesArray) {
+        setDomNodeChildren: function (domNode, newNodesDocFrag) {
+            ko.utils.emptyDomNode(domNode);
+            domNode.appendChild(newNodesDocFrag);
+        },
+
+        replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesDocFrag) {
             var nodesToReplaceArray = nodeToReplaceOrNodeArray.nodeType ? [nodeToReplaceOrNodeArray] : nodeToReplaceOrNodeArray;
             if (nodesToReplaceArray.length > 0) {
                 var insertionPoint = nodesToReplaceArray[0];
                 var parent = insertionPoint.parentNode;
-                for (var i = 0, j = newNodesArray.length; i < j; i++)
-                    parent.insertBefore(newNodesArray[i], insertionPoint);
+                parent.insertBefore(newNodesDocFrag, insertionPoint);
                 for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
                     ko.removeNode(nodesToReplaceArray[i]);
                 }

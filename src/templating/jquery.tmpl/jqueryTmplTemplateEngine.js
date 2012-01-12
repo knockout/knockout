@@ -34,7 +34,7 @@
             // Ensure we have stored a precompiled version of this template (don't want to reparse on every render)
             var precompiled = templateSource['data']('precompiled');
             if (!precompiled) {
-                var templateText = templateSource.text() || "";
+                var templateText = templateSource['text']() || "";
                 // Wrap in "with($whatever.koBindingContext) { ... }"
                 templateText = "{{ko_with $item.koBindingContext}}" + templateText + "{{/ko_with}}";
 
@@ -46,9 +46,11 @@
             var jQueryTemplateOptions = jQuery['extend']({ 'koBindingContext': bindingContext }, options['templateOptions']);
 
             var resultNodes = executeTemplate(precompiled, data, jQueryTemplateOptions);
-            resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
+
+            var docfrag = document.createDocumentFragment();
+            resultNodes['appendTo'](docfrag); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
             jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
-            return resultNodes;     		
+            return docfrag;
         };
         
         this['createJavaScriptEvaluatorBlock'] = function(script) {

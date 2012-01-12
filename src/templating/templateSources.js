@@ -44,6 +44,13 @@
             ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
         }
     };
+    ko.templateSources.domElement.prototype['fragment'] = function(/* valueToWrite */) {
+        if (arguments.length === 0) {
+            return this['data']('fragment');
+        } else {
+            this['data']('fragment', arguments[0]);
+        }
+    };
     
     // ---- ko.templateSources.anonymousTemplate -----
     
