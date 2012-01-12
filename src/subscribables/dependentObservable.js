@@ -67,19 +67,23 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         try {
-            var oldSubscriptions = ko.utils.arrayMap(_subscriptionsToDependencies, function(item) {return item.target;});
+            // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal). 
+            // Then, during evaluation, we cross off any that are in fact still being used.
+            var disposalCandidates = ko.utils.arrayMap(_subscriptionsToDependencies, function(item) {return item.target;});
+
             ko.dependencyDetection.begin(function(subscribable) {
                 var inOld;
-                if ((inOld = ko.utils.arrayIndexOf(oldSubscriptions, subscribable)) >= 0)
-                    oldSubscriptions[inOld] = undefined;
+                if ((inOld = ko.utils.arrayIndexOf(disposalCandidates, subscribable)) >= 0)
+                    disposalCandidates[inOld] = undefined; // Don't want to dispose this subscription, as it's still being used
                 else
-                    _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync));
+                    _subscriptionsToDependencies.push(subscribable.subscribe(evaluatePossiblyAsync)); // Brand new subscription - add it
             });
 
             var newValue = readFunction.call(evaluatorFunctionTarget);
 
-            for (var oldPos = 0, i = 0, len = oldSubscriptions.length; i < len; i++) {
-                if (oldSubscriptions[i])
+            // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
+            for (var oldPos = 0, i = 0, len = disposalCandidates.length; i < len; i++) {
+                if (disposalCandidates[i])
                     _subscriptionsToDependencies.splice(oldPos, 1)[0].dispose();
                 else
                     oldPos++;
