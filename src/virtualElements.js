@@ -155,13 +155,12 @@
             return regexMatch ? regexMatch[1] : null;               
         },
 
-        extractAnonymousTemplateIfVirtualElement: function(node) {
+        extractAnonymousTemplateIfVirtualElement: function(node, templateSource) {
             if (ko.virtualElements.virtualNodeBindingValue(node)) {
                 // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
                 var virtualChildren = ko.virtualElements.childNodes(node);
-                var anonymousTemplateText = nodeArrayToText(virtualChildren, true);
+                templateSource && templateSource.text(nodeArrayToText(virtualChildren, true));
                 ko.virtualElements.emptyNode(node);
-                new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
             }
         },
         

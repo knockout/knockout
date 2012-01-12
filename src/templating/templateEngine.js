@@ -37,10 +37,14 @@ ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script
 ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
     // Named template
     if (typeof template == "string") {
-        var elem = document.getElementById(template);
-        if (!elem)
-            throw new Error("Cannot find template with ID " + template);
-        return new ko.templateSources.domElement(elem);
+        if (ko.templateSources.memoryTemplate.isInCache(template)) {
+            return new ko.templateSources.memoryTemplate(template);
+        } else {
+            var elem = document.getElementById(template);
+            if (!elem)
+                throw new Error("Cannot find template with ID " + template);
+            return new ko.templateSources.domElement(elem);
+        }
     } else if ((template.nodeType == 1) || (template.nodeType == 8)) {
         // Anonymous template
         return new ko.templateSources.anonymousTemplate(template);

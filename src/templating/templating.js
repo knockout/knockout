@@ -157,13 +157,23 @@
     }
     
     ko.bindingHandlers['template'] = {
-        'init': function(element, valueAccessor) {
+        'init': function(element, valueAccessor, allBindingsAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            if ((typeof bindingValue != "string") && (!bindingValue.name) && (element.nodeType == 1)) {
+            if ((typeof bindingValue != "string") && (!bindingValue['name']) && (element.nodeType == 1 || element.nodeType == 8)) {
                 // It's an anonymous template - store the element contents, then clear the element
-                new ko.templateSources.anonymousTemplate(element).text(element.innerHTML);
-                ko.utils.emptyDomNode(element);
+                var templateId = 'id' in bindingValue ? bindingValue['id'] : allBindingsAccessor()['templateId'], templateSource;
+                if (!templateId) {
+                    templateSource = new ko.templateSources.anonymousTemplate(element);
+                } else if (!ko.templateSources.memoryTemplate.isInCache(templateId)) {
+                    templateSource = new ko.templateSources.memoryTemplate(templateId);
+                }
+                if (element.nodeType == 1) {
+                    templateSource && templateSource.text(element.innerHTML); 
+                    ko.utils.emptyDomNode(element);
+                } else {
+                    ko.virtualElements.extractAnonymousTemplateIfVirtualElement(element, templateSource);
+                }
             }
             return { 'controlsDescendantBindings': true };
         },
@@ -175,14 +185,17 @@
             if (typeof bindingValue == "string") {
                 templateName = bindingValue;
             } else {
-                templateName = bindingValue.name;
+                templateName = bindingValue['name'];
                 
                 // Support "if"/"ifnot" conditions
                 if ('if' in bindingValue)
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
-            }    
+
+                if (!templateName)
+                    templateName = 'id' in bindingValue ? bindingValue['id'] : allBindingsAccessor()['templateId'];
+            }
             
             var templateSubscription = null;
             

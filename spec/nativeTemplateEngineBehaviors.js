@@ -16,6 +16,8 @@ describe('Native template engine', {
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
         window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");        
         window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
+
+        ko.templateSources.memoryTemplateCache = {};
     }, 
 
     'Named template can display static content from regular DOM element': function () {
@@ -107,6 +109,53 @@ describe('Native template engine', {
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
     },   
+
+    'Memory template can display static content': function () {
+        new ko.templateSources.memoryTemplate('testTemplate').text("this is some static content");
+        window.templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate("testTemplate", null, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("this is some static content");
+    },
+
+    'Memory template can data-bind on results': function () {
+        new ko.templateSources.memoryTemplate('testTemplate').text("name: <div data-bind='text: name'></div>");
+        window.templateOutput.innerHTML = "irrelevant initial content";
+        ko.renderTemplate("testTemplate", { name: 'bert' }, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+    },
+
+    'Memory templates can be used by giving a template id': function() {
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem, id: \"testTemplate\" }'>Value: <span data-bind='text: val'></span></div>"
+        var viewModel = { someItem: { val: 'abc' } };
+        ko.applyBindings(viewModel, window.testDivTemplate);
+        value_of(window.testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
+    },
+
+    'Memory templates can be used by giving a template id as a separate binding': function() {
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }, templateId: \"testTemplate\"'>Value: <span data-bind='text: val'></span></div>"
+        var viewModel = { someItem: { val: 'abc' } };
+        ko.applyBindings(viewModel, window.testDivTemplate);
+        value_of(window.testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
+    },
+
+    'Memory templates can be used with if and foreach': function() {
+        window.testDivTemplate.innerHTML = "<div data-bind='if: someItem, templateId: \"if_someItem\"'>" +
+            "<div data-bind='foreach: someItem, templateId: \"foreach_someItem\"'><b>Item: <span data-bind='text: itemProp'></span></b></div></div>"
+        var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
+        var viewModel = { someItem: myItems };
+        ko.applyBindings(viewModel, window.testDivTemplate);
+
+        var testNode = window.testDivTemplate.childNodes[0].childNodes[0];
+        value_of(testNode.childNodes[0]).should_contain_text("Item: Alpha");
+        value_of(testNode.childNodes[1]).should_contain_text("Item: Beta");
+        value_of(testNode.childNodes[2]).should_contain_text("Item: Gamma");
+    },
+
+    'Memory templates can be used with virtual containers': function() {
+        window.testDivTemplate.innerHTML = "Start <!-- ko with: somedata, templateId: 'testTemplate' -->Childprop: <span data-bind='text: childProp'></span><!-- /ko --> End";
+        ko.applyBindings({ somedata: { childProp: 'abc' } }, window.testDivTemplate);
+        value_of(window.testDivTemplate).should_contain_html("start <!-- ko with: somedata, templateid: 'testtemplate' -->childprop: <span data-bind=\"text: childprop\">abc</span><!-- /ko -->end");
+    },
 
     'Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value': function() {
         window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>"
