@@ -79,7 +79,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             var newValue = readFunction.call(evaluatorFunctionTarget);
 
             for (var i = oldSubscriptions.length-1; i >= 0; i--) {
-                oldSubscriptions[i] && _subscriptionsToDependencies.splice(i, 1)[0].dispose();
+                if (oldSubscriptions[i])
+                    _subscriptionsToDependencies.splice(i, 1)[0].dispose();
             }
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
