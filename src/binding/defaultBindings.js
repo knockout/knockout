@@ -298,6 +298,13 @@ ko.bindingHandlers['selectedOptions'] = {
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         if (newValue && typeof newValue.length == "number") {
             var nodes = element.childNodes;
+            
+            // If the newValue array is an int array, convert it to a string array so it can be compared
+            // against the string value of the select options.
+            if (newValue.length > 0 && typeof newValue[0] == "number")
+                for (var i = 0; i < newValue.length; i++)
+                    newValue[i] += '';
+
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
                 if (node.tagName == "OPTION")
