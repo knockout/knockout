@@ -71,7 +71,11 @@
         if (haveAddedNodesToParent) {
             ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](renderedNodesArray, bindingContext['$data']);            
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);
+            for (var i = 0; i < renderedNodesArray.length; i++) {
+                if (renderedNodesArray[i].nodeType == 1)
+                    ko.utils.triggerEvent(renderedNodesArray[i], "koAfterRender", {bubbles: false, 'ko_data': bindingContext['$data']});
+            }
         }
 
         return renderedNodesArray;
@@ -127,6 +131,10 @@
             ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
+            for (var i = 0; i < addedNodesArray.length; i++) {
+                if (addedNodesArray[i].nodeType == 1)
+                    ko.utils.triggerEvent(addedNodesArray[i], "koAfterRender", {bubbles: false, 'ko_data': bindingContext['$data']});
+            }
         };
          
         return new ko.dependentObservable(function () {

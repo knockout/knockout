@@ -112,6 +112,7 @@
                                 }
                             }
                         }
+                        ko.utils.triggerEvent(node, "koInit");
                         initPhase = 2;
                     }
                     
@@ -124,6 +125,7 @@
                                 handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                             }
                         }
+                        ko.utils.triggerEvent(node, "koUpdate");
                     }
                 }
             },

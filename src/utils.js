@@ -103,7 +103,7 @@ ko.utils = new (function () {
 
         extend: function (target, source) {
             for(var prop in source) {
-                if(source.hasOwnProperty(prop)) {
+                if(!source.hasOwnProperty || source.hasOwnProperty(prop)) {
                     target[prop] = source[prop];
                 }
             }
@@ -206,24 +206,46 @@ ko.utils = new (function () {
                         var jQuerySuppliedCheckedState = this.checked;
                         if (eventData)
                             this.checked = eventData.checkedStateBeforeEvent !== true;
-                        originalHandler.call(this, event);
+                        var r = originalHandler.call(this, event);
                         this.checked = jQuerySuppliedCheckedState; // Restore the state jQuery applied
+                        return r;
                     };                	
                 }
                 jQuery(element)['bind'](eventType, handler);
             } else if (typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
             else if (typeof element.attachEvent != "undefined")
-                element.attachEvent("on" + eventType, function (event) {
-                    handler.call(element, event);
-                });
+                if (eventType in knownEventTypesByEventName) {
+                    element.attachEvent("on" + eventType, function (event) {
+                        if (event.type != "keypress" || event.keyCode) {
+                            return handler.call(element, event);
+                        }
+                    });
+                } else {
+                    // IE doesn't support custom events, so we'll highjack a standard event (keypress)
+                    element.attachEvent("onkeypress", function (event) {
+                        if (event.data == eventType) {
+                            // IE doesn't let us add new properties to the event object; so make a copy
+                            var newevent = ko.utils.extend(ko.utils.extend({}, event), event.recordset);
+                            newevent.type = eventType;
+                            newevent.target = event.srcElement; 
+                            var r = handler.call(element, newevent);
+                            // copy some properties back to original event
+                            event.returnValue = newevent.returnValue;
+                            event.cancelBubble = newevent.cancelBubble;
+                            return r;
+                        }
+                    });
+                }
+
             else
                 throw new Error("Browser doesn't support addEventListener or attachEvent");
         },
 
-        triggerEvent: function (element, eventType) {
+        triggerEvent: function (element, eventType, data) {
             if (!(element && element.nodeType))
                 throw new Error("element must be a DOM node when calling triggerEvent");
+            var bubbles = data && 'bubbles' in data ? data.bubbles : true;
 
             if (typeof jQuery != "undefined") {
                 var eventData = [];
@@ -231,24 +253,52 @@ ko.utils = new (function () {
                     // Work around the jQuery "click events on checkboxes" issue described above by storing the original checked state before triggering the handler
                     eventData.push({ checkedStateBeforeEvent: element.checked });
                 }
-                jQuery(element)['trigger'](eventType, eventData);
+                var e = jQuery(element);
+                // Set a one-time handler that stop the bubbling (since we can't tell jQuery not to bubble the event)
+                if (!bubbles) {
+                    e['bind'](eventType, function(event) {
+                        event.stopPropagation();
+                        e['unbind'](eventType, arguments.callee);
+                    });
+                }
+                var event = new jQuery.Event(eventType, data);
+                e['trigger'](event, eventData);
+                return !event.isDefaultPrevented();
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = knownEventTypesByEventName[eventType] || "HTMLEvents";
                     var event = document.createEvent(eventCategory);
-                    event.initEvent(eventType, true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, element);
-                    element.dispatchEvent(event);
+                    event.initEvent(eventType, bubbles, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, element);
+                    ko.utils.extend(event, data);
+                    return element.dispatchEvent(event);
                 }
                 else
                     throw new Error("The supplied element doesn't support dispatchEvent");
             } else if (typeof element.fireEvent != "undefined") {
-                // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
-                // so to make it consistent, we'll do it manually here
-                if (eventType == "click") {
-                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
-                        element.checked = element.checked !== true;
+                if (eventType in knownEventTypesByEventName) {
+                    // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
+                    // so to make it consistent, we'll do it manually here
+                    if (eventType == "click") {
+                        if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
+                            element.checked = element.checked !== true;
+                    }
+                    return element.fireEvent("on" + eventType);
+                } else {
+                    // IE doesn't support custom events, so we'll highjack a standard event (keypress)
+                    // Set a one-time handler that stop the bubbling (since we can't tell IE not to bubble the event)
+                    if (!bubbles) {
+                        element.attachEvent("onkeypress", function(event) {
+                            if (event.data == eventType) {
+                                event.cancelBubble = true;
+                                element.detachEvent("onkeypress", arguments.callee);
+                            }
+                        });
+                    }
+                    var event = document.createEventObject();
+                    event.data = eventType;
+                    event.recordset = data ? data : {};
+                    return element.fireEvent("onkeypress", event);
                 }
-                element.fireEvent("on" + eventType);
             }
             else
                 throw new Error("Browser doesn't support triggering events");

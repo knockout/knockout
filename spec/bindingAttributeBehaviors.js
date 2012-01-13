@@ -165,6 +165,30 @@ describe('Binding attribute syntax', {
         value_of(passedValues[1]).should_be("goodbye");
     },
     
+    'Should trigger koInit and koUpdate event (with bubbling)': function () {
+        var observable = new ko.observable("hello");
+        var initLog = [];
+        var updateLog = [];
+        testNode.innerHTML = "<div data-bind='event: {koInit: myInit, koUpdate: myUpdate}'><div data-bind='text: myObservable'></div></div>";
+        ko.applyBindings({
+            myObservable: observable,
+            myLog: function(array, elem) { array.push('innerText' in elem ? elem.innerText : elem.textContent); },
+            myInit: function(data, event) { this.myLog(initLog, event.target); },
+            myUpdate: function(data, event) { this.myLog(updateLog, event.target); }
+        }, testNode);
+        value_of(initLog.length).should_be(2);
+        value_of(updateLog.length).should_be(2);
+        value_of(initLog[0]).should_be("");
+        value_of(updateLog[0]).should_be("");
+        value_of(initLog[1]).should_be("");
+        value_of(updateLog[1]).should_be("hello");
+
+        observable("goodbye");
+        value_of(initLog.length).should_be(2);     // init event count should be unchanged
+        value_of(updateLog.length).should_be(3);
+        value_of(updateLog[2]).should_be("goodbye");
+    },
+    
     'Should be able to refer to the bound object itself (at the root scope, the viewmodel) via $data': function() {
         testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
         ko.applyBindings({ someProp: 'My prop value' }, testNode);

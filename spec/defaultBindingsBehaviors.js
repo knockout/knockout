@@ -602,6 +602,30 @@ describe('Binding: Event', {
         ko.applyBindings(viewModel, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
         value_of(didCallHandler).should_be(true);        
+    },
+
+    'Should allow custom events (with bubbling)': function () {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='event:{custom:outerDoCall}'><button data-bind='event:{custom:innerDoCall}'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "custom");
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(true);    	
+    },
+
+    'Should allow custom events (without bubbling)': function () {
+        var model = { 
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='event:{custom:outerDoCall}'><button data-bind='event:{custom:innerDoCall}'>hey</button></div>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "custom", {bubbles: false});
+        value_of(model.innerWasCalled).should_be(true);    	
+        value_of(model.outerWasCalled).should_be(false);    	
     }
 });
 
@@ -1251,6 +1275,21 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
     },
     
+    'Should be able to use afterRender to do something with each item': function() {		
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data, afterRender: $parent.myAfterRender'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        var afterRenderData = [];
+        ko.applyBindings({
+            someItems: someItems,
+            myAfterRender: function(elem, data) {
+                afterRenderData.push(data);
+            }
+        }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alphabeta');
+        value_of(afterRenderData.length).should_be(2);
+        value_of(afterRenderData[0]).should_be("alpha");
+        value_of(afterRenderData[1]).should_be("beta");
+    },
     
     'Should add and remove nodes to match changes in the bound array': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
@@ -1353,6 +1392,38 @@ describe('Binding: Foreach', {
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
         value_of(beforeRemoveCallbackData[0].currentParentClone).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+    },
+
+    'Should be able to handle afterAdd and beforeRemove events (as bindings on child element)': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childprop, afterAdd: $parent.myAfterAdd, beforeRemove: $parent.myBeforeRemove'></span></div>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var afterAddCallbackData = [], beforeRemoveCallbackData = [];
+        ko.applyBindings({ 
+            someItems: someItems,
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
+        }, testNode);
+        
+        value_of(testNode.childNodes[0]).should_contain_text('first child');
+        
+        // Try adding
+        someItems.push({ childprop: 'added child'});
+        value_of(testNode.childNodes[0]).should_contain_text('first childadded child');
+        value_of(afterAddCallbackData.length).should_be(1);
+        value_of(afterAddCallbackData[0].elem).should_be(testNode.childNodes[0].childNodes[1]);
+        value_of(afterAddCallbackData[0].index).should_be(1);
+        value_of(afterAddCallbackData[0].value.childprop).should_be("added child");
+        value_of(afterAddCallbackData[0].currentParentClone).should_contain_text('first childadded child');
+
+        // Try removing
+        someItems.shift();
+        value_of(beforeRemoveCallbackData.length).should_be(1);
+        value_of(beforeRemoveCallbackData[0].elem).should_contain_text("first child");
+        value_of(beforeRemoveCallbackData[0].index).should_be(0);
+        value_of(beforeRemoveCallbackData[0].value.childprop).should_be("first child");
+        // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
+        value_of(beforeRemoveCallbackData[0].currentParentClone).should_contain_text('first childadded child');
+        value_of(testNode.childNodes[0]).should_contain_text('first childadded child');
     },
 
     'Should be able to nest foreaches and access binding contexts both during and after binding': function() {
