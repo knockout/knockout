@@ -44,6 +44,13 @@
             ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
         }
     };
+    ko.templateSources.domElement.prototype['fragment'] = function(/* valueToWrite */) {
+        if (arguments.length === 0) {
+            return this['data']('fragment');
+        } else {
+            this['data']('fragment', arguments[0]);
+        }
+    };
     
     // ---- ko.templateSources.anonymousTemplate -----
     
@@ -69,7 +76,7 @@
         this.store = ko.templateSources.memoryTemplateCache[name] || (ko.templateSources.memoryTemplateCache[name] = {text: '', data: {}});
     }
     ko.templateSources.memoryTemplate.isInCache = function(name) {
-        return name in ko.templateSources.memoryTemplateCache && ko.templateSources.memoryTemplateCache[name].text; 
+        return name in ko.templateSources.memoryTemplateCache && (ko.templateSources.memoryTemplateCache[name].fragment || ko.templateSources.memoryTemplateCache[name].text);
     } 
     ko.templateSources.memoryTemplate.prototype['text'] = function(/* valueToWrite */) {
         if (arguments.length === 0) {
@@ -83,6 +90,13 @@
             return this.store.data[key];
         } else {
             this.store.data[arguments[1]];
+        }
+    };
+    ko.templateSources.memoryTemplate.prototype['fragment'] = function(/* valueToWrite */) {
+        if (arguments.length === 0) {
+            return this.store.fragment;
+        } else {
+            this.store.fragment = arguments[0];
         }
     };
     

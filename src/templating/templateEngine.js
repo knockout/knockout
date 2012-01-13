@@ -10,7 +10,7 @@
 //            //     and bindingContext.$root available in the template too
 //            // - options gives you access to any other properties set on "data-bind: { template: options }"
 //            //
-//            // Return value: an array of DOM nodes
+//            // Return value: an array of DOM nodes or a DocumentFragment (nodeType 11)
 //        }
 //
 // [3] Override 'createJavaScriptEvaluatorBlock', supplying a function with this signature:

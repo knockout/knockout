@@ -55,16 +55,6 @@
             return null; // Must have no matching end comment, and allowUnbalanced is true
     }
 
-    function nodeArrayToText(nodeArray, cleanNodes) {
-        var texts = [];
-        for (var i = 0, j = nodeArray.length; i < j; i++) {
-            if (cleanNodes)
-                ko.utils.domNodeDisposal.cleanNode(nodeArray[i]);
-            texts.push(ko.utils.outerHTML(nodeArray[i]));
-        }
-        return String.prototype.concat.apply("", texts);
-    }   
-
     function getUnbalancedChildTags(node) {
         // e.g., from <div>OK</div><!-- ko blah --><span>Another</span>, returns: <!-- ko blah --><span>Another</span>
         //       from <div>OK</div><!-- /ko --><!-- /ko -->,             returns: <!-- /ko --><!-- /ko -->
@@ -104,14 +94,13 @@
             }
         },
 
-        setDomNodeChildren: function(node, childNodes) {
+        setDomNodeChildren: function(node, newNodesDocFrag) {
             if (!isStartComment(node))
-                ko.utils.setDomNodeChildren(node, childNodes);
+                ko.utils.setDomNodeChildren(node, newNodesDocFrag);
             else {
                 ko.virtualElements.emptyNode(node);
                 var endCommentNode = node.nextSibling; // Must be the next sibling, as we just emptied the children
-                for (var i = 0, j = childNodes.length; i < j; i++)
-                    endCommentNode.parentNode.insertBefore(childNodes[i], endCommentNode);
+                endCommentNode.parentNode.insertBefore(newNodesDocFrag, endCommentNode);
             }
         },
 
@@ -155,15 +144,6 @@
             return regexMatch ? regexMatch[1] : null;               
         },
 
-        extractAnonymousTemplateIfVirtualElement: function(node, templateSource) {
-            if (ko.virtualElements.virtualNodeBindingValue(node)) {
-                // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
-                var virtualChildren = ko.virtualElements.childNodes(node);
-                templateSource && templateSource.text(nodeArrayToText(virtualChildren, true));
-                ko.virtualElements.emptyNode(node);
-            }
-        },
-        
         normaliseVirtualElementDomStructure: function(elementVerified) {
             // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes

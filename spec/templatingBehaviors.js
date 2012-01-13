@@ -28,12 +28,26 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
+    function nodeArrayToText(nodeArray) {
+        var texts = [];
+        for (var i = 0, j = nodeArray.length; i < j; i++) {
+            texts.push(ko.utils.outerHTML(nodeArray[i]));
+        }
+        return String.prototype.concat.apply("", texts);
+    }   
+
     this.renderTemplateSource = function (templateSource, bindingContext, options) {
         var data = bindingContext['$data'];
         options = options || {};
         var templateText = templateSource.text();
         if (typeof templateText == "function")
             templateText = templateText(data, options);
+        if (templateText === undefined) {
+            var docFrag = templateSource.fragment();
+            if (docFrag) {
+                templateText = docFrag.textContent ? docFrag.textContent : nodeArrayToText(docFrag.childNodes);
+            }
+        }
 
         templateText = options.showParams ? templateText + ", data=" + data + ", options=" + options : templateText;
         var templateOptions = options.templateOptions; // Have templateOptions in scope to support [js:templateOptions.foo] syntax
@@ -83,7 +97,7 @@ var dummyTemplateEngine = function (templates) {
     this.rewriteTemplate = function (template, rewriterCallback) {
         // Only rewrite if the template isn't a function (can't rewrite those)
         var templateSource = this.makeTemplateSource(template);
-        if (typeof templateSource.text() != "function")
+        if (templateSource.text() && typeof templateSource.text() != "function")
             return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
@@ -652,9 +666,7 @@ describe('Templating', {
     },
     
     'Should be able to render anonymous templates using virtual containers': function() {
-        ko.setTemplateEngine(new dummyTemplateEngine({
-            myTemplate: "Childprop: [js: childProp]"
-        }));    
+        ko.setTemplateEngine(new dummyTemplateEngine());    
         testNode.innerHTML = "Start <!-- ko template: { data: someData } -->Childprop: [js: childProp]<!-- /ko --> End";
         ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
         value_of(testNode).should_contain_html("start <!-- ko template: { data: somedata } --><div>childprop: abc</div><!-- /ko -->end");
