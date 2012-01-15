@@ -28,12 +28,10 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
-    function nodeArrayToText(nodeArray) {
-        var texts = [];
-        for (var i = 0, j = nodeArray.length; i < j; i++) {
-            texts.push(ko.utils.outerHTML(nodeArray[i]));
-        }
-        return String.prototype.concat.apply("", texts);
+    function docFragToText(docFrag) {
+        var dummyContainer = document.createElement("div");
+        dummyContainer.appendChild(docFrag);
+        return dummyContainer.innerHTML;
     }   
 
     this.renderTemplateSource = function (templateSource, bindingContext, options) {
@@ -45,7 +43,7 @@ var dummyTemplateEngine = function (templates) {
         if (templateText === undefined) {
             var docFrag = templateSource.fragment();
             if (docFrag) {
-                templateText = docFrag.textContent ? docFrag.textContent : nodeArrayToText(docFrag.childNodes);
+                templateText = docFrag.textContent ? docFrag.textContent : docFragToText(docFrag);
             }
         }
 

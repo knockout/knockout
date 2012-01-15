@@ -4,13 +4,21 @@ ko.nativeTemplateEngine = function () {
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    var node = 'fragment' in templateSource && templateSource['fragment']();
+    var node = 'fragment' in templateSource && templateSource['fragment'](), templateText;
     if (node) {
-        return node.cloneNode(true);
+        if (ko.utils.ieVersion < 9) {
+            // IE<9 cloneNode doesn't work properly; extract HTML and use that instead
+            var dummyContainer = document.createElement("div");
+            dummyContainer.appendChild(node);
+            templateSource['fragment'](undefined);
+            templateSource['text'](templateText = dummyContainer.innerHTML);
+        } else {
+            return node.cloneNode(true);
+        }
     } else {
-        var templateText = templateSource['text']();
-        return ko.utils.parseHtmlFragment(templateText);
+        templateText = templateSource['text']();
     }
+    return ko.utils.parseHtmlFragment(templateText);
 };
 
 ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
