@@ -157,23 +157,13 @@
     }
     
     ko.bindingHandlers['template'] = {
-        'init': function(element, valueAccessor, allBindingsAccessor) {
+        'init': function(element, valueAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             if ((typeof bindingValue != "string") && (!bindingValue['name']) && (element.nodeType == 1 || element.nodeType == 8)) {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateId = 'id' in bindingValue ? bindingValue['id'] : allBindingsAccessor()['templateId'], templateSource;
-                if (!templateId) {
-                    templateSource = new ko.templateSources.anonymousTemplate(element);
-                } else if (!ko.templateSources.memoryTemplate.isInCache(templateId)) {
-                    templateSource = new ko.templateSources.memoryTemplate(templateId);
-                }
-                if (templateSource) {
-                    var templateNodes = element.nodeType == 1 ? ko.utils.makeArray(element.childNodes) : ko.virtualElements.childNodes(element);
-                    templateSource['fragment'](ko.utils.createAndPopulateDocumentFragment(templateNodes));
-                } else {
-                    ko.virtualElements.emptyNode(element);
-                }
+                var templateNodes = element.nodeType == 1 ? ko.utils.makeArray(element.childNodes) : ko.virtualElements.childNodes(element);
+                new ko.templateSources.anonymousTemplate(element)['fragment'](ko.utils.createAndPopulateDocumentFragment(templateNodes));
             }
             return { 'controlsDescendantBindings': true };
         },
@@ -192,10 +182,7 @@
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
-
-                if (!templateName)
-                    templateName = 'id' in bindingValue ? bindingValue['id'] : allBindingsAccessor()['templateId'];
-            }
+            }    
             
             var templateSubscription = null;
             
