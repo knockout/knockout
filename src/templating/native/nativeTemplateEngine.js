@@ -4,12 +4,12 @@ ko.nativeTemplateEngine = function () {
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    var useFragmentIfAvailable = !(ko.utils.ieVersion < 9), // IE<9 cloneNode doesn't work properly
-        templateFragFunc = useFragmentIfAvailable ? templateSource['fragment'] : null,
-        templateFrag = templateFragFunc ? templateSource['fragment']() : null;
+    var useNodesIfAvailable = !(ko.utils.ieVersion < 9), // IE<9 cloneNode doesn't work properly
+        templateNodesFunc = useNodesIfAvailable ? templateSource['nodes'] : null,
+        templateNodes = templateNodesFunc ? templateSource['nodes']() : null;
 
-    if (templateFrag) {
-        return ko.utils.makeArray(templateFrag.cloneNode(true).childNodes);
+    if (templateNodes) {
+        return ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
     } else {
         var templateText = templateSource['text']();
         return ko.utils.parseHtmlFragment(templateText);

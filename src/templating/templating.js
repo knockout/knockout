@@ -162,8 +162,8 @@
             if ((typeof bindingValue != "string") && (!bindingValue['name']) && (element.nodeType == 1 || element.nodeType == 8)) {
                 // It's an anonymous template - store the element contents, then clear the element
                 var templateNodes = element.nodeType == 1 ? ko.utils.makeArray(element.childNodes) : ko.virtualElements.childNodes(element),
-                    frag = ko.utils.moveNodesToDocumentFragment(templateNodes); // This also removes the nodes from their current parent
-                new ko.templateSources.anonymousTemplate(element)['fragment'](frag);
+                    container = ko.utils.moveNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
+                new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             }
             return { 'controlsDescendantBindings': true };
         },

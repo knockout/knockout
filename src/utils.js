@@ -116,11 +116,11 @@ ko.utils = new (function () {
             }
         },
 
-        moveNodesToDocumentFragment: function(nodesArray) {
-            var docFrag = document.createDocumentFragment();
+        moveNodesToContainerElement: function(nodesArray) {
+            var container = document.createElement('div');
             for (var i = 0, j = nodesArray.length; i < j; i++)
-                docFrag.appendChild(nodesArray[i]);
-            return docFrag;
+                container.appendChild(nodesArray[i]);
+            return container;
         },
 
         setDomNodeChildren: function (domNode, childNodes) {

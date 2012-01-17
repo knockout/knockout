@@ -15,10 +15,10 @@
     //   data(key, value)	- associates "value" with this template and the key "key". Is used to store information like "isRewritten".
     //
     // Optionally, template sources can also have the following functions:
-    //   fragment()         - returns a DOM fragment representing this template, where available
-    //   fragment(value)    - writes the given DOM fragment to your storage location
-    // If a DOM fragment is available for a given template source, template engines are encouraged to use it in preference over text()
-    // for improved speed. However, all templateSources must supply text() even if they don't supply fragment().
+    //   nodes()            - returns a DOM element containing the nodes of this template, where available
+    //   nodes(value)       - writes the given DOM element to your storage location
+    // If a DOM element is available for a given template source, template engines are encouraged to use it in preference over text()
+    // for improved speed. However, all templateSources must supply text() even if they don't supply nodes().
     //
     // Once you've implemented a templateSource, make your template engine use it by subclassing whatever template engine you were
     // using and overriding "makeTemplateSource" to return an instance of your custom template source.
@@ -52,47 +52,36 @@
     };
     
     // ---- ko.templateSources.anonymousTemplate -----
-    // To optimise the document fragment case, the underlying storage is a document fragment
-    // However, for compatibility, you can also read/write "text" - it will be parsed/serialized to/from the underlying storage on demand
-    // Since there is only one underlying storage location, there is no possibility of text/fragment inconsistency
+    // Anonymous templates are normally saved/retrieved as DOM nodes through "nodes".
+    // For compatibility, you can also read "text"; it will be serialized from the nodes on demand.
+    // Writing to "text" is still supported, but then the template data will not be available as DOM nodes.
 
-    var anonymousTemplatesDomDataKey = "__ko_anon_template__",
-        anonymousTemplatesTextCacheDomDataKey = "__ko_anon_template_text__";
+    var anonymousTemplatesDomDataKey = "__ko_anon_template__";
     ko.templateSources.anonymousTemplate = function(element) {		
         this.domElement = element;
     }
     ko.templateSources.anonymousTemplate.prototype = new ko.templateSources.domElement();
     ko.templateSources.anonymousTemplate.prototype['text'] = function(/* valueToWrite */) {
         if (arguments.length == 0) {
-            // For speed, the serialized text is cached (and invalidated when you write to fragment)
-            var cachedText = ko.utils.domData.get(this.domElement, anonymousTemplatesTextCacheDomDataKey);
-            if (cachedText === undefined) {
-                var dummyContainer = document.createElement('div'),
-                    frag = this['fragment']();
-                if (frag)
-                    dummyContainer.appendChild(frag);
-                cachedText = dummyContainer.innerHTML;
-                this['text'](cachedText); // Calling .appendChild above empties the doc frag; this line recreates it
-            }
-            return cachedText;
-        } else {
-            var valueToWrite = arguments[0],
-                parsedElements = ko.utils.parseHtmlFragment(valueToWrite),
-                frag = ko.utils.moveNodesToDocumentFragment(parsedElements);
-            this['fragment'](frag);
-            ko.utils.domData.set(this.domElement, anonymousTemplatesTextCacheDomDataKey, valueToWrite);
-        }
-    };
-    ko.templateSources.domElement.prototype['fragment'] = function(/* valueToWrite */) {
-        if (arguments.length == 0) {
-            return ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey);
+            var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
+            if (templateData.textData === undefined && templateData.containerData)
+                templateData.textData = templateData.containerData.innerHTML;
+            return templateData.textData;
         } else {
             var valueToWrite = arguments[0];
-            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, valueToWrite);
-            ko.utils.domData.set(this.domElement, anonymousTemplatesTextCacheDomDataKey, undefined);
+            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, {textData: valueToWrite});
         }
     };
-    
+    ko.templateSources.domElement.prototype['nodes'] = function(/* valueToWrite */) {
+        if (arguments.length == 0) {
+            var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
+            return templateData.containerData;
+        } else {
+            var valueToWrite = arguments[0];
+            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, {containerData: valueToWrite});
+        }
+    };
+
     ko.exportSymbol('templateSources', ko.templateSources);
     ko.exportSymbol('templateSources.domElement', ko.templateSources.domElement);
     ko.exportSymbol('templateSources.anonymousTemplate', ko.templateSources.anonymousTemplate);
