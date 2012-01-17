@@ -56,9 +56,6 @@
         // Need to be sure that inits are only run once, and updates never run until all the inits have been run
         var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
 
-        // Pre-process any anonymous template bounded by comment nodes
-        ko.virtualElements.extractAnonymousTemplateIfVirtualElement(node);
-
         // Each time the dependentObservable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
         // model properties in the context of the changed data.

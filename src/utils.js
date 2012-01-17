@@ -116,12 +116,18 @@ ko.utils = new (function () {
             }
         },
 
+        moveNodesToContainerElement: function(nodesArray) {
+            var container = document.createElement('div');
+            for (var i = 0, j = nodesArray.length; i < j; i++)
+                container.appendChild(nodesArray[i]);
+            return container;
+        },
+
         setDomNodeChildren: function (domNode, childNodes) {
             ko.utils.emptyDomNode(domNode);
             if (childNodes) {
-                ko.utils.arrayForEach(childNodes, function (childNode) {
-                    domNode.appendChild(childNode);
-                });
+                for (var i = 0, j = childNodes.length; i < j; i++)
+                    domNode.appendChild(childNodes[i]);
             }
         },
 
@@ -277,21 +283,6 @@ ko.utils = new (function () {
             }
         },
 
-        outerHTML: function(node) {
-            // For Chrome on non-text nodes
-            // (Although IE supports outerHTML, the way it formats HTML is inconsistent - sometimes closing </li> tags are omitted, sometimes not. That caused https://github.com/SteveSanderson/knockout/issues/212.)
-            if (ieVersion === undefined) {
-                var nativeOuterHtml = node.outerHTML;
-                if (typeof nativeOuterHtml == "string")
-                    return nativeOuterHtml;
-            }
-
-            // Other browsers
-            var dummyContainer = window.document.createElement("div");
-            dummyContainer.appendChild(node.cloneNode(true));
-            return dummyContainer.innerHTML;
-        },
-
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))
@@ -325,6 +316,7 @@ ko.utils = new (function () {
         
         isIe6 : isIe6,
         isIe7 : isIe7,
+        ieVersion : ieVersion,
         
         getFormFields: function(form, fieldName) {
             var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));

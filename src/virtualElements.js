@@ -55,16 +55,6 @@
             return null; // Must have no matching end comment, and allowUnbalanced is true
     }
 
-    function nodeArrayToText(nodeArray, cleanNodes) {
-        var texts = [];
-        for (var i = 0, j = nodeArray.length; i < j; i++) {
-            if (cleanNodes)
-                ko.utils.domNodeDisposal.cleanNode(nodeArray[i]);
-            texts.push(ko.utils.outerHTML(nodeArray[i]));
-        }
-        return String.prototype.concat.apply("", texts);
-    }   
-
     function getUnbalancedChildTags(node) {
         // e.g., from <div>OK</div><!-- ko blah --><span>Another</span>, returns: <!-- ko blah --><span>Another</span>
         //       from <div>OK</div><!-- /ko --><!-- /ko -->,             returns: <!-- /ko --><!-- /ko -->
@@ -155,16 +145,6 @@
             return regexMatch ? regexMatch[1] : null;               
         },
 
-        extractAnonymousTemplateIfVirtualElement: function(node) {
-            if (ko.virtualElements.virtualNodeBindingValue(node)) {
-                // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
-                var virtualChildren = ko.virtualElements.childNodes(node);
-                var anonymousTemplateText = nodeArrayToText(virtualChildren, true);
-                ko.virtualElements.emptyNode(node);
-                new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
-            }
-        },
-        
         normaliseVirtualElementDomStructure: function(elementVerified) {
             // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
