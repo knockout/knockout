@@ -116,7 +116,11 @@ ko.utils = new (function () {
             }
         },
 
-        moveNodesToContainerElement: function(nodesArray) {
+        moveNodesToContainerElement: function(nodes) {
+            // Ensure it's a real array, as we're about to reparent the nodes and
+            // we don't want the underlying collection to change while we're doing that.
+            var nodesArray = ko.utils.makeArray(nodes);
+
             var container = document.createElement('div');
             for (var i = 0, j = nodesArray.length; i < j; i++)
                 container.appendChild(nodesArray[i]);
