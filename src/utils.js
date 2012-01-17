@@ -116,11 +116,10 @@ ko.utils = new (function () {
             }
         },
 
-        createAndPopulateDocumentFragment: function(nodesArray) {
+        moveNodesToDocumentFragment: function(nodesArray) {
             var docFrag = document.createDocumentFragment();
-            ko.utils.arrayForEach(nodesArray, function (node) {
-                docFrag.appendChild(node);
-            });
+            for (var i = 0, j = nodesArray.length; i < j; i++)
+                docFrag.appendChild(nodesArray[i]);
             return docFrag;
         },
 
@@ -130,7 +129,7 @@ ko.utils = new (function () {
                 return {docFrag: docFragOrNodesArray, nodesArray: ko.utils.makeArray(docFragOrNodesArray.childNodes)};
             // Loosely check if result is an array of DOM nodes
             } else if (typeof docFragOrNodesArray.length == "number" && (!docFragOrNodesArray.length || typeof docFragOrNodesArray[0].nodeType == "number")) {
-                return {docFrag: ko.utils.createAndPopulateDocumentFragment(docFragOrNodesArray), nodesArray: docFragOrNodesArray};
+                return {docFrag: ko.utils.moveNodesToDocumentFragment(docFragOrNodesArray), nodesArray: docFragOrNodesArray};
             }
         },
 
