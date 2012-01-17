@@ -46,19 +46,20 @@
         options = options || {};
         var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse);
-        var renderedNodes = ko.utils.getDocumentFragmentAndNodes(templateEngineToUse['renderTemplate'](template, bindingContext, options));
+        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options);
 
-        if (!renderedNodes)
-            throw "Template engine must return an array of DOM nodes or a DocumentFragment";
+        // Loosely check result is an array of DOM nodes
+        if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
+            throw "Template engine must return an array of DOM nodes";
 
-        var docFrag = renderedNodes.docFrag, haveAddedNodesToParent = false;
+        var haveAddedNodesToParent = false;
         switch (renderMode) {
             case "replaceChildren": 
-                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, docFrag);
+                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
                 haveAddedNodesToParent = true;
                 break;
             case "replaceNode": 
-                ko.utils.replaceDomNodes(targetNodeOrNodeArray, docFrag);
+                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
                 haveAddedNodesToParent = true;
                 break;
             case "ignoreTargetNode": break;
@@ -67,14 +68,12 @@
         }
 
         if (haveAddedNodesToParent) {
-            var renderedNodesArray = renderedNodes.nodesArray;
             ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](renderedNodesArray, bindingContext['$data']);
-            return renderedNodesArray;
-        } else {
-            return docFrag;
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);  
         }
+
+        return renderedNodesArray;
     }
 
     ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
@@ -162,8 +161,9 @@
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             if ((typeof bindingValue != "string") && (!bindingValue['name']) && (element.nodeType == 1 || element.nodeType == 8)) {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateNodes = element.nodeType == 1 ? ko.utils.makeArray(element.childNodes) : ko.virtualElements.childNodes(element);
-                new ko.templateSources.anonymousTemplate(element)['fragment'](ko.utils.createAndPopulateDocumentFragment(templateNodes));
+                var templateNodes = element.nodeType == 1 ? ko.utils.makeArray(element.childNodes) : ko.virtualElements.childNodes(element),
+                    frag = ko.utils.moveNodesToDocumentFragment(templateNodes); // This also removes the nodes from their current parent
+                new ko.templateSources.anonymousTemplate(element)['fragment'](frag);
             }
             return { 'controlsDescendantBindings': true };
         },

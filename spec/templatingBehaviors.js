@@ -28,24 +28,12 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
-    function docFragToText(docFrag) {
-        var dummyContainer = document.createElement("div");
-        dummyContainer.appendChild(docFrag);
-        return dummyContainer.innerHTML;
-    }   
-
     this.renderTemplateSource = function (templateSource, bindingContext, options) {
         var data = bindingContext['$data'];
         options = options || {};
         var templateText = templateSource.text();
         if (typeof templateText == "function")
             templateText = templateText(data, options);
-        if (templateText === undefined) {
-            var docFrag = templateSource.fragment();
-            if (docFrag) {
-                templateText = docFrag.textContent ? docFrag.textContent : docFragToText(docFrag);
-            }
-        }
 
         templateText = options.showParams ? templateText + ", data=" + data + ", options=" + options : templateText;
         var templateOptions = options.templateOptions; // Have templateOptions in scope to support [js:templateOptions.foo] syntax
@@ -95,7 +83,7 @@ var dummyTemplateEngine = function (templates) {
     this.rewriteTemplate = function (template, rewriterCallback) {
         // Only rewrite if the template isn't a function (can't rewrite those)
         var templateSource = this.makeTemplateSource(template);
-        if (templateSource.text() && typeof templateSource.text() != "function")
+        if (typeof templateSource.text() != "function")
             return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };

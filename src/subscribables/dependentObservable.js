@@ -82,11 +82,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             var newValue = readFunction.call(evaluatorFunctionTarget);
 
             // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
-            for (var oldPos = 0, i = 0, len = disposalCandidates.length; i < len; i++) {
+            for (var i = disposalCandidates.length - 1; i >= 0; i--) {
                 if (disposalCandidates[i])
-                    _subscriptionsToDependencies.splice(oldPos, 1)[0].dispose();
-                else
-                    oldPos++;
+                    _subscriptionsToDependencies.splice(i, 1)[0].dispose();
             }
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
