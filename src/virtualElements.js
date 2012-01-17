@@ -94,13 +94,14 @@
             }
         },
 
-        setDomNodeChildren: function(node, newNodesDocFrag) {
+        setDomNodeChildren: function(node, childNodes) {
             if (!isStartComment(node))
-                ko.utils.setDomNodeChildren(node, newNodesDocFrag);
+                ko.utils.setDomNodeChildren(node, childNodes);
             else {
                 ko.virtualElements.emptyNode(node);
                 var endCommentNode = node.nextSibling; // Must be the next sibling, as we just emptied the children
-                endCommentNode.parentNode.insertBefore(newNodesDocFrag, endCommentNode);
+                for (var i = 0, j = childNodes.length; i < j; i++)
+                    endCommentNode.parentNode.insertBefore(childNodes[i], endCommentNode);
             }
         },
 

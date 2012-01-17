@@ -35,19 +35,15 @@
     function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
-        var docFrag;
         var dependentObservable = ko.dependentObservable(function() {
-            var renderedNodes = ko.utils.getDocumentFragmentAndNodes(mapping(valueToMap) || []), newMappedNodes = renderedNodes.nodesArray;
-            docFrag = renderedNodes.docFrag;
+            var newMappedNodes = mapping(valueToMap) || [];
             
+            // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
-                // On subsequent evaluations, just replace the previously-inserted DOM nodes
                 fixUpVirtualElements(mappedNodes);
-                ko.utils.replaceDomNodes(mappedNodes, docFrag);
+                ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
                 if (callbackAfterAddingNodes)
                     callbackAfterAddingNodes(valueToMap, newMappedNodes);
-            } else {
-                // On first evaluation, return the DocumentFragment for DOM insertion
             }
             
             // Replace the contents of the mappedNodes array, thereby updating the record
@@ -55,7 +51,7 @@
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
         }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
-        return { docFrag : docFrag, mappedNodes : mappedNodes, dependentObservable : dependentObservable };
+        return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
     }
     
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
@@ -107,17 +103,9 @@
                     var valueToMap = editScript[i].value;
                     var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
                     var mappedNodes = mapData.mappedNodes;
-                    var docFrag = mapData.docFrag;
                     
                     // On the first evaluation, insert the nodes at the current insertion point
                     newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
-                    if (insertAfterNode == null) {
-                        // Insert "node" (the newly-created node) as domNode's first child
-                        ko.virtualElements.prepend(domNode, docFrag);
-                    } else {
-                        // Insert "node" into "domNode" immediately after "insertAfterNode"
-                        ko.virtualElements.insertAfter(domNode, docFrag, insertAfterNode);
-                    }
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
                         nodesAdded.push({
@@ -125,8 +113,15 @@
                           index: i,
                           value: editScript[i].value
                         });
+                        if (insertAfterNode == null) {
+                            // Insert "node" (the newly-created node) as domNode's first child
+                            ko.virtualElements.prepend(domNode, node);
+                        } else {
+                            // Insert "node" into "domNode" immediately after "insertAfterNode"
+                            ko.virtualElements.insertAfter(domNode, node, insertAfterNode);
+                        }
                         insertAfterNode = node;
-                    }
+                    } 
                     if (callbackAfterAddingNodes)
                         callbackAfterAddingNodes(valueToMap, mappedNodes);
                     break;

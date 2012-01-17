@@ -123,27 +123,21 @@ ko.utils = new (function () {
             return docFrag;
         },
 
-        getDocumentFragmentAndNodes: function(docFragOrNodesArray) {
-            // Check if it's a DocumentFragment
-            if (docFragOrNodesArray.nodeType && docFragOrNodesArray.nodeType == 11) {
-                return {docFrag: docFragOrNodesArray, nodesArray: ko.utils.makeArray(docFragOrNodesArray.childNodes)};
-            // Loosely check if result is an array of DOM nodes
-            } else if (typeof docFragOrNodesArray.length == "number" && (!docFragOrNodesArray.length || typeof docFragOrNodesArray[0].nodeType == "number")) {
-                return {docFrag: ko.utils.moveNodesToDocumentFragment(docFragOrNodesArray), nodesArray: docFragOrNodesArray};
+        setDomNodeChildren: function (domNode, childNodes) {
+            ko.utils.emptyDomNode(domNode);
+            if (childNodes) {
+                for (var i = 0, j = childNodes.length; i < j; i++)
+                    domNode.appendChild(childNodes[i]);
             }
         },
 
-        setDomNodeChildren: function (domNode, newNodesDocFrag) {
-            ko.utils.emptyDomNode(domNode);
-            domNode.appendChild(newNodesDocFrag);
-        },
-
-        replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesDocFrag) {
+        replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesArray) {
             var nodesToReplaceArray = nodeToReplaceOrNodeArray.nodeType ? [nodeToReplaceOrNodeArray] : nodeToReplaceOrNodeArray;
             if (nodesToReplaceArray.length > 0) {
                 var insertionPoint = nodesToReplaceArray[0];
                 var parent = insertionPoint.parentNode;
-                parent.insertBefore(newNodesDocFrag, insertionPoint);
+                for (var i = 0, j = newNodesArray.length; i < j; i++)
+                    parent.insertBefore(newNodesArray[i], insertionPoint);
                 for (var i = 0, j = nodesToReplaceArray.length; i < j; i++) {
                     ko.removeNode(nodesToReplaceArray[i]);
                 }
