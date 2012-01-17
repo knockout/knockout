@@ -46,11 +46,10 @@
             var jQueryTemplateOptions = jQuery['extend']({ 'koBindingContext': bindingContext }, options['templateOptions']);
 
             var resultNodes = executeTemplate(precompiled, data, jQueryTemplateOptions);
+            resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
 
-            var docfrag = document.createDocumentFragment();
-            resultNodes['appendTo'](docfrag); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
             jQuery['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
-            return docfrag;
+            return resultNodes;
         };
         
         this['createJavaScriptEvaluatorBlock'] = function(script) {
