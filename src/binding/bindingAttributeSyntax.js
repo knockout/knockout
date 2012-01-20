@@ -2,16 +2,17 @@
     ko.bindingHandlers = {};
 
     ko.bindingContext = function(dataItem, parentBindingContext) {
-        this['$data'] = dataItem;
         if (parentBindingContext) {
+            // copy all properties from parent binding context
+            ko.utils.extend(this, parentBindingContext);
             this['$parent'] = parentBindingContext['$data'];
-            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
+            this['$parents'] = (this['$parents'] || []).slice(0);
             this['$parents'].unshift(this['$parent']);
-            this['$root'] = parentBindingContext['$root'];
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;        	
         }
+        this['$data'] = dataItem;
     }
     ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
         return new ko.bindingContext(dataItem, this);
@@ -23,12 +24,12 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    function applyBindingsToDescendantsInternal (viewModel, elementVerified) {
-        var currentChild, nextInQueue = elementVerified.childNodes[0];
+    function applyBindingsToDescendantsInternal (viewModel, elementVerified, areRootNodesForBindingContext) {
+        var currentChild, nextInQueue = ko.virtualElements.firstChild(elementVerified);
         while (currentChild = nextInQueue) {
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
-            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, false);
+            applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, areRootNodesForBindingContext);
         }        
     }
     
@@ -39,7 +40,7 @@
         // (1) It's a root element for this binding context, as we will need to store the binding context on this node
         //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
-        var isElement = (nodeVerified.nodeType == 1);
+        var isElement = (nodeVerified.nodeType === 1);
         if (isElement) // Workaround IE <= 8 HTML parsing weirdness
             ko.virtualElements.normaliseVirtualElementDomStructure(nodeVerified);
 
@@ -48,8 +49,8 @@
         if (shouldApplyBindings)
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, isRootNodeForBindingContext).shouldBindDescendants;
             
-        if (isElement && shouldBindDescendants)
-            applyBindingsToDescendantsInternal(viewModel, nodeVerified);
+        if (shouldBindDescendants)
+            applyBindingsToDescendantsInternal(viewModel, nodeVerified, (!isElement && isRootNodeForBindingContext));
     }    
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, isRootNodeForBindingContext) {
@@ -147,9 +148,9 @@
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
     };
 
-    ko.applyBindingsToDescendants = function(viewModel, rootNode) {
-        if (rootNode.nodeType === 1)
-            applyBindingsToDescendantsInternal(viewModel, rootNode);
+    ko.applyBindingsToDescendants = function(viewModel, rootNode, areRootNodesForBindingContext) {
+        if (rootNode.nodeType === 1 || rootNode.nodeType === 8)
+            applyBindingsToDescendantsInternal(viewModel, rootNode, areRootNodesForBindingContext);
     };
 
     ko.applyBindings = function (viewModel, rootNode) {
@@ -179,6 +180,7 @@
     };    
     
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('bindingContext', ko.bindingContext);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);
