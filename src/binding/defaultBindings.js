@@ -536,8 +536,8 @@ ko.bindingHandlers['case'] = {
         // initialize $switchIndex and push a new observable to $switchSkipNextArray
         bindingContext.$switchIndex = bindingContext.$switchSkipNextArray.length;
         bindingContext.$switchSkipNextArray.push(ko.observable(false));
-        // call template init(); since it doesn't need the 'if' value, just set it to undefined
-        return ko.bindingHandlers['template']['init'](element, this.makeTemplateValueAccessor(undefined));
+        // call template init() to initialize template
+        return ko.bindingHandlers['template']['init'](element, function(){ return {}; });
     },
     'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         // call template update() with calculated value for 'if'
