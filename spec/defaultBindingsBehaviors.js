@@ -1039,6 +1039,28 @@ describe('Binding: Switch/Case', {
         value_of(testNode).should_contain_text("Value is you");
     },
 
+    'Should match truthy cases if control value is boolean true': function() {
+        testNode.innerHTML = "xxx<!-- ko switch: true --><!-- ko case: 'abc' -->Value matched<!-- /ko --><!-- ko case: $else -->Value didn't match<!-- /ko --><!-- /ko -->";
+        ko.applyBindings({}, testNode);
+        value_of(testNode).should_contain_text("xxxValue matched");
+    },
+
+    'Should not match thruthy cases if control value is boolean false': function() {
+        testNode.innerHTML = "xxx<!-- ko switch: false --><!-- ko case: 'abc' -->Value matched<!-- /ko --><!-- ko case: $else -->Value didn't match<!-- /ko --><!-- /ko -->";
+        ko.applyBindings({}, testNode);
+        value_of(testNode).should_contain_text("xxxValue didn't match");
+    },
+
+    'Bindings in containerless switch in templates should be bound only once': function() {
+        var initCalls = 0;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) { initCalls++; }
+        };
+        testNode.innerHTML = "<div data-bind='template: {if:true}'>xxx<!-- ko switch: true --><span data-bind='test: true'></span><!-- /ko --></div>";
+        ko.applyBindings({}, testNode);
+        value_of(initCalls).should_be(1);
+    },
+
     'Should display nodes without a case binding within a switch': function() {
         testNode.innerHTML = "<div data-bind='switch: 0'><div>Some text</div><div data-bind='case: 1'>Value is 1</div></div>";
         ko.applyBindings({}, testNode);
@@ -1058,16 +1080,7 @@ describe('Binding: Switch/Case', {
         testNode.innerHTML = "<div data-bind='switch: 0'><div data-bind='case: 0'>Value is 0<div data-bind='case: 1'>Value is 1</div></div></div>";
         try { ko.applyBindings({}, testNode); } catch (ex) { threw = true; }
         value_of(threw).should_be(true);
-    },
-
-    'Should not allow switch with boolean false value': function() {
-        var threw = false;
-        testNode.innerHTML = "<input data-bind='switch: false' />";
-        try { ko.applyBindings({}, testNode); } catch (ex) { threw = true; }
-        value_of(threw).should_be(true);
-    },
-
-
+    }
 });
 
 describe('Binding: If', {

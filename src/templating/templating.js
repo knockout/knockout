@@ -7,12 +7,18 @@
     }
 
     function invokeForEachNodeOrCommentInParent(nodeArray, parent, action) {
-        for (var i = 0; node = nodeArray[i]; i++) {
-            if (node.parentNode !== parent) // Skip anything that has been removed during binding
-                continue;
-            if ((node.nodeType === 1) || (node.nodeType === 8))
+        if (!nodeArray.length)
+            return; 
+        var node, nextInQueue = nodeArray[0],
+            endNode = ko.virtualElements.nextSibling(nodeArray[nodeArray.length-1]);
+        while ((node = nextInQueue) != endNode) {
+            nextInQueue = ko.virtualElements.nextSibling(node);
+            switch (node.nodeType) {
+            case 1: case 8:
                 action(node);
-        }        
+                break;
+            }
+        }
     }
 
     ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {

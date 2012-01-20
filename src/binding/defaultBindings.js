@@ -469,10 +469,6 @@ ko.bindingHandlers['switch'] = {
     defaultvalue: {},
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        // case treats a boolean value as the result of an expression and won't match it to the control value
-        // thus a control value of false will never match anything
-        if (value === false)
-            throw "cannot specify boolean false in switch binding";
         var node, nextInQueue = ko.virtualElements.childNodes(element)[0],
             switchSkipNextArray = [],
             switchBindings = {
@@ -510,17 +506,20 @@ ko.bindingHandlers['case'] = {
         } else {
             // Check value and determine result:
             //  If value is the special object $else, the result is always true (should always be the last case)
+            //  If the control value is boolean, the result is the matching truthiness of the value
             //  If value is boolean, the result is the value (allows expressions instead of just simple matching)
             //  If value is an array, the result is true if the control value matches (strict) an item in the array
             //  Otherwise, the result is true if value matches the control value (loose)
             var value = ko.utils.unwrapObservable(valueAccessor()), result = true;
             if (value !== bindingContext['$else']) {
                 var switchValue = ko.utils.unwrapObservable(bindingContext.$switchValueAccessor());
-                result = (typeof value == 'boolean')
-                    ? value
-                    : (value instanceof Array)
-                        ? (ko.utils.arrayIndexOf(value, switchValue) !== -1)
-                        : (value == switchValue);
+                result = (typeof switchValue == 'boolean')
+                    ? (value ? switchValue : !switchValue)
+                    : (typeof value == 'boolean')
+                        ? value
+                        : (value instanceof Array)
+                            ? (ko.utils.arrayIndexOf(value, switchValue) !== -1)
+                            : (value == switchValue);
             }
             bindingContext.$switchSkipNextArray[index](result); // skip the subsequent cases if result is true
             return result;
