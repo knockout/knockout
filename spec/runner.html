@@ -39,7 +39,7 @@
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
             JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
-            	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
+            	var actualText = 'textContent' in this.target ? this.target.textContent : this.target.innerText;
                 var cleanedActualText = actualText.replace(/\r\n/g, "\n");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
             };

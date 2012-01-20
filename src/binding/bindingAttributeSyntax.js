@@ -98,8 +98,7 @@
                                 validateThatBindingIsAllowedForVirtualElements(bindingKey);
 
                             if (binding && typeof binding["init"] == "function") {
-                                var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                                var initResult = binding["init"](node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                                 
                                 // If this binding handler claims to control descendant bindings, make a note of this
                                 if (initResult && initResult['controlsDescendantBindings']) {
@@ -117,8 +116,7 @@
                         for (var bindingKey in parsedBindings) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && typeof binding["update"] == "function") {
-                                var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
+                                binding["update"](node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                             }
                         }
                     }

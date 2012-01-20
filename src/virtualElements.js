@@ -131,13 +131,11 @@
         },
 
         nextSibling: function(node) {
-            if (!isStartComment(node)) {
-                if (node.nextSibling && isEndComment(node.nextSibling))
-                    return undefined;
-                return node.nextSibling;
-            } else {
-                return getMatchingEndComment(node).nextSibling;
-            }
+            if (isStartComment(node))
+                node = getMatchingEndComment(node);
+            if (node.nextSibling && isEndComment(node.nextSibling))
+                return undefined;
+            return node.nextSibling;
         },
 
         virtualNodeBindingValue: function(node) {
