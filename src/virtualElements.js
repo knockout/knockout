@@ -184,8 +184,8 @@
 ko.exportSymbol('virtualElements', ko.virtualElements);
 ko.exportSymbol('virtualElements.allowedBindings', ko.virtualElements.allowedBindings);
 ko.exportSymbol('virtualElements.emptyNode', ko.virtualElements.emptyNode);
-ko.exportSymbol('virtualElements.firstChild', ko.virtualElements.firstChild);
+//ko.exportSymbol('virtualElements.firstChild', ko.virtualElements.firstChild);     // firstChild is not minified
 ko.exportSymbol('virtualElements.insertAfter', ko.virtualElements.insertAfter);
-ko.exportSymbol('virtualElements.nextSibling', ko.virtualElements.nextSibling);
+//ko.exportSymbol('virtualElements.nextSibling', ko.virtualElements.nextSibling);   // nextSibling is not minified
 ko.exportSymbol('virtualElements.prepend', ko.virtualElements.prepend);
 ko.exportSymbol('virtualElements.setDomNodeChildren', ko.virtualElements.setDomNodeChildren);
