@@ -541,4 +541,3 @@ ko.bindingHandlers['foreach'] = {
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['foreach'] = true;
-ko.exportSymbol('allowedVirtualElementBindings', ko.virtualElements.allowedBindings);

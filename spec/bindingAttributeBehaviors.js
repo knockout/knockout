@@ -275,7 +275,7 @@ describe('Binding attribute syntax', {
     'Should only bind containerless binding once inside template': function() {
         ko.virtualElements.allowedBindings['test'] = true;
         
-        testNode.innerHTML = "Hello <!-- if: true --> <!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
         var initCalls = 0;
         ko.bindingHandlers.test = { init: function (element, valueAccessor) { initCalls++; } };
         ko.applyBindings(null, testNode);
