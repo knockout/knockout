@@ -27,11 +27,11 @@
 ko.templateEngine = function () { };
 
 ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    throw "Override renderTemplateSource";
+    throw new Error("Override renderTemplateSource");
 };
 
 ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script) {
-    throw "Override createJavaScriptEvaluatorBlock";
+    throw new Error("Override createJavaScriptEvaluatorBlock");
 };
 
 ko.templateEngine.prototype['makeTemplateSource'] = function(template) {

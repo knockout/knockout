@@ -2,7 +2,7 @@
     var _templateEngine;
     ko.setTemplateEngine = function (templateEngine) {
         if ((templateEngine != undefined) && !(templateEngine instanceof ko.templateEngine))
-            throw "templateEngine must inherit from ko.templateEngine";
+            throw new Error("templateEngine must inherit from ko.templateEngine");
         _templateEngine = templateEngine;
     }
 
@@ -50,7 +50,7 @@
 
         // Loosely check result is an array of DOM nodes
         if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
-            throw "Template engine must return an array of DOM nodes";
+            throw new Error("Template engine must return an array of DOM nodes");
 
         var haveAddedNodesToParent = false;
         switch (renderMode) {
@@ -79,7 +79,7 @@
     ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
         if ((options['templateEngine'] || _templateEngine) == undefined)
-            throw "Set a template engine before calling renderTemplate";
+            throw new Error("Set a template engine before calling renderTemplate");
         renderMode = renderMode || "replaceChildren";
 
         if (targetNodeOrNodeArray) {
