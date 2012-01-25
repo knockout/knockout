@@ -268,6 +268,16 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
+        wrapObservable: function (container, key, value) {
+            if(!container || !container[key])
+                return;
+            
+            if(ko.isObservable(container[key]))
+                container[key](value);
+            else
+                container[key] = value;
+        },
+
         domNodeHasCssClass: function (node, className) {
             var currentClassNames = (node.className || "").split(/\s+/);
             return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
