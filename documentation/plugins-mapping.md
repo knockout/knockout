@@ -226,7 +226,7 @@ The `include` array you specify in the mapping options is combined with the defa
 When converting your view model back to a JS object, by default the mapping plugin will create observables based on the rules explained [above](#how_things_are_mapped). If you want to force the mapping plugin to simply copy the property instead of making it observable, add its name to the "copy" array:
 
 	var mapping = {
-		'array': ["propertyToCopy"]
+		'copy': ["propertyToCopy"]
 	}
 	var viewModel = ko.mapping.fromJS(data, mapping);
 
