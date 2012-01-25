@@ -260,6 +260,20 @@ ko.observableDictionary['fn'] = {
     values: function () {
         return ko.utils.arrayMap(this(), function (item) { return item.value(); });
     },
+
+    toJSON: function () {
+        var result = {};
+        var items = ko.utils.unwrapObservable(this);
+
+        ko.utils.arrayForEach(items, function (item) {
+            var key = ko.utils.unwrapObservable(item.key);
+            var value = ko.utils.unwrapObservable(item.value);
+
+            result[key] = value;
+        });
+
+        return result;
+    },
     
     replace: function(key, newItem) {
         throw new Error("replace is not valid on an Observable Dictionary");

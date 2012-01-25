@@ -246,5 +246,9 @@ describe('Observable Dictionary', {
     'Should return 0 when you call myArray.length, and the true length when you call myArray().length': function() {
         value_of(testObservableDictionary.length).should_be(0);
         value_of(testObservableDictionary().length).should_be(3);
+    },
+    
+    'Should output JSON in object format, not Array format': function(){
+        value_of(ko.toJSON(testObservableDictionary)).should_be('{"Alpha":1,"Beta":2,"Gamma":3}');
     }
 })
