@@ -6,7 +6,7 @@ ko.observableArray = function (initialValues) {
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
         
-    var result = new ko.observable(initialValues);
+    var result = ko.observable(initialValues);
     ko.utils.extend(result, ko.observableArray['fn']);
     return result;
 }

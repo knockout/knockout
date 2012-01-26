@@ -71,7 +71,7 @@
         }
         
         var bindingHandlerThatControlsDescendantBindings;
-        new ko.dependentObservable(
+        ko.dependentObservable(
             function () {
                 // Ensure we have a nonnull binding context to work with
                 var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
