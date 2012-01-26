@@ -5,12 +5,16 @@ ko.observable = function (initialValue) {
 
     function observable() {
         if (arguments.length > 0) {
-            // Write            
+            // Write
+
+            var transform = observable['transform'] || function (value) { return value; };
+
+            var value = transform(arguments[0]);
             
             // Ignore writes if the value hasn't changed
-            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, value)) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                _latestValue = value;
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments

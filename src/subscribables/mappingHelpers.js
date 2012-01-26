@@ -22,12 +22,14 @@
     
     function mapJsObjectGraph(rootObject, mapInputCallback, visitedObjects) {
         visitedObjects = visitedObjects || new objectLookup();
-        
+   
+        var toJsonOverride = rootObject['toJSON'];
+
         rootObject = mapInputCallback(rootObject);
         var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined) && (!(rootObject instanceof Date));
         if (!canHaveProperties)
             return rootObject;
-            
+
         var outputProperties = rootObject instanceof Array ? [] : {};
         visitedObjects.save(rootObject, outputProperties);            
         
@@ -51,6 +53,9 @@
             }
         });
         
+        if(toJsonOverride)
+            outputProperties['toJSON'] = toJsonOverride;
+
         return outputProperties;
     }
     
