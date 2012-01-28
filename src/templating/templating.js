@@ -6,7 +6,7 @@
         _templateEngine = templateEngine;
     }
 
-    function invokeForEachNodeOrCommentInParent(nodeArray, parent, action) {
+    function invokeForEachNodeOrCommentInParent(nodeArray, action) {
         if (!nodeArray.length)
             return; 
         var node, nextInQueue = nodeArray[0],
@@ -29,15 +29,14 @@
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
 
         var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
-        var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
         
         // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
         // whereas a regular applyBindings won't introduce new memoized nodes
         
-        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, function(node) {
             ko.applyBindings(bindingContext, node);
         });
-        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
+        invokeForEachNodeOrCommentInParent(nodeArrayClone, function(node) {
             ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);            
         });        
     }
