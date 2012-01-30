@@ -966,21 +966,13 @@ ko.observableArray = function (initialValues) {
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
         
-    var result = new ko.observable(initialValues);
+    var result = ko.observable(initialValues);
     ko.utils.extend(result, ko.observableArray['fn']);
-    
-    ko.exportProperty(result, "remove", result.remove);
-    ko.exportProperty(result, "removeAll", result.removeAll);
-    ko.exportProperty(result, "destroy", result.destroy);
-    ko.exportProperty(result, "destroyAll", result.destroyAll);
-    ko.exportProperty(result, "indexOf", result.indexOf);
-    ko.exportProperty(result, "replace", result.replace);
-    
     return result;
 }
 
 ko.observableArray['fn'] = {
-    remove: function (valueOrPredicate) {
+    'remove': function (valueOrPredicate) {
         var underlyingArray = this();
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
@@ -1001,7 +993,7 @@ ko.observableArray['fn'] = {
         return removedValues;
     },
 
-    removeAll: function (arrayOfValues) {
+    'removeAll': function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
             var underlyingArray = this();
@@ -1014,12 +1006,12 @@ ko.observableArray['fn'] = {
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
-        return this.remove(function (value) {
+        return this['remove'](function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
     },
     
-    destroy: function (valueOrPredicate) {
+    'destroy': function (valueOrPredicate) {
         var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         this.valueWillMutate();
@@ -1031,26 +1023,26 @@ ko.observableArray['fn'] = {
         this.valueHasMutated();
     },
         
-    destroyAll: function (arrayOfValues) {
+    'destroyAll': function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
-            return this.destroy(function() { return true });
+            return this['destroy'](function() { return true });
                 
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
-        return this.destroy(function (value) {
+        return this['destroy'](function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });             
     },
 
-    indexOf: function (item) {
+    'indexOf': function (item) {
         var underlyingArray = this();
         return ko.utils.arrayIndexOf(underlyingArray, item);
     },
     
-    replace: function(oldItem, newItem) {
-        var index = this.indexOf(oldItem);
+    'replace': function(oldItem, newItem) {
+        var index = this['indexOf'](oldItem);
         if (index >= 0) {
             this.valueWillMutate();
             this()[index] = newItem;
@@ -1286,6 +1278,10 @@ ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an al
         if (rootObject instanceof Array) {
             for (var i = 0; i < rootObject.length; i++)
                 visitorCallback(i);
+            
+            // For arrays, also respect toJSON property for custom mappings (fixes #278)
+            if (typeof rootObject['toJSON'] == 'function')
+                visitorCallback('toJSON');
         } else {
             for (var propertyName in rootObject)
                 visitorCallback(propertyName);
@@ -1850,7 +1846,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         }
         
         var bindingHandlerThatControlsDescendantBindings;
-        new ko.dependentObservable(
+        ko.dependentObservable(
             function () {
                 // Ensure we have a nonnull binding context to work with
                 var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
@@ -2241,6 +2237,8 @@ ko.bindingHandlers['selectedOptions'] = {
             var node = nodes[i];
             if ((node.tagName == "OPTION") && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
+            else if (node.tagName == "OPTGROUP")
+                result = result.concat.apply(result, ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node));
         }
         return result;
     },
@@ -2830,7 +2828,7 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
             var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
             
-            return new ko.dependentObservable( // So the DOM is automatically updated when any dependency changes                
+            return ko.dependentObservable( // So the DOM is automatically updated when any dependency changes
                 function () {
                     // Ensure we've got a proper binding context to work with
                     var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
@@ -2870,7 +2868,7 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
                 options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
         };
          
-        return new ko.dependentObservable(function () {
+        return ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];

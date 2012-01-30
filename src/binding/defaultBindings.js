@@ -276,6 +276,8 @@ ko.bindingHandlers['selectedOptions'] = {
             var node = nodes[i];
             if ((node.tagName == "OPTION") && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
+            else if (node.tagName == "OPTGROUP")
+                result = result.concat.apply(result, ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node));
         }
         return result;
     },

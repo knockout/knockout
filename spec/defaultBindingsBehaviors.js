@@ -495,6 +495,28 @@ describe('Binding: Selected Options', {
         
         value_of(selection()).should_be(["A", cObject]);
         value_of(selection()[1] === cObject).should_be(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
+    },
+
+    'Should update the model when selection in the SELECT node inside an optgroup changes': function () {
+        function setMultiSelectOptionSelectionState(optionElement, state) {
+            // Workaround an IE 6 bug (http://benhollis.net/experiments/browserdemos/ie6-adding-options.html)
+            if (/MSIE 6/i.test(navigator.userAgent)) 
+                optionElement.setAttribute('selected', state);
+            else
+                optionElement.selected = state;             
+        }
+
+        var selection = new ko.observableArray([]);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><optgroup label='group'><option value='a'>a</option><option value='b'>b</option></optgroup></select>";
+        ko.applyBindings({ mySelection: selection }, testNode);
+
+        value_of(selection()).should_be([]);
+
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[0], true);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[1], false);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+
+        value_of(selection()).should_be(['a']);
     }
 });
 
