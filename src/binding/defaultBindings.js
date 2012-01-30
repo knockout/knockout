@@ -276,8 +276,10 @@ ko.bindingHandlers['selectedOptions'] = {
             var node = nodes[i];
             if ((node.tagName == "OPTION") && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
-            else if (node.tagName == "OPTGROUP")
-                result = result.concat.apply(result, ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node));
+            else if (node.tagName == "OPTGROUP") {
+                var selectedValuesFromOptGroup = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node);
+                Array.prototype.splice.apply(result, [result.length, 0].concat(selectedValuesFromOptGroup)); // Add new entries to existing 'result' instance
+            }
         }
         return result;
     },

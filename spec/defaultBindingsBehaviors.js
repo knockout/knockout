@@ -507,16 +507,17 @@ describe('Binding: Selected Options', {
         }
 
         var selection = new ko.observableArray([]);
-        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><optgroup label='group'><option value='a'>a</option><option value='b'>b</option></optgroup></select>";
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><optgroup label='group'><option value='a'>a-text</option><option value='b'>b-text</option><option value='c'>c-text</option></optgroup></select>";
         ko.applyBindings({ mySelection: selection }, testNode);
 
         value_of(selection()).should_be([]);
 
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[0], true);
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[1], false);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
-        value_of(selection()).should_be(['a']);
+        value_of(selection()).should_be(['a', 'c']);
     }
 });
 
