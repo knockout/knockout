@@ -34,23 +34,50 @@ ko.utils = new (function () {
         var inputType = element.type.toLowerCase();
         return (inputType == "checkbox") || (inputType == "radio");
     }
+
+    function nativeOrShim(proto,prop,shim) {
+        if (typeof(proto.prototype[prop])==="function") {
+            return function(obj,arg){return proto.prototype[prop].call(obj,arg);};
+        } else {
+            return shim;
+        }
+    }
     
+    var 
+        forEach = nativeOrShim(Array,"forEach",
+                function(array,action) {
+                    for (var i = 0, j = array.length; i < j; i++)
+                    action(array[i]);
+                }),
+        indexOf = nativeOrShim(Array,"indexOf",
+                function(array,item) {
+                    for (var i = 0, j = array.length; i < j; i++)
+                        if (array[i] === item) return i;
+                    return -1;
+                }),
+        map = nativeOrShim(Array,"map",
+                function(array,mapping) {
+                    array = array || [];
+                    var result = [];
+                    for (var i = 0, j = array.length; i < j; i++) result.push(mapping(array[i]));
+                    return result;
+                }),
+        filter = nativeOrShim(Array,"filter",
+                function(array,predicate) {
+                    array = array || [];
+                    var result = [];
+                    for (var i = 0, j = array.length; i < j; i++)
+                        if (predicate(array[i]))
+                            result.push(array[i]);
+                    return result;
+                });
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
         
-        arrayForEach: function (array, action) {
-            for (var i = 0, j = array.length; i < j; i++)
-                action(array[i]);
-        },
+        arrayForEach: forEach,
 
-        arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
-            for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] === item)
-                    return i;
-            return -1;
-        },
+        arrayIndexOf: indexOf,
 
         arrayFirst: function (array, predicate, predicateOwner) {
             for (var i = 0, j = array.length; i < j; i++)
@@ -75,22 +102,9 @@ ko.utils = new (function () {
             return result;
         },        
 
-        arrayMap: function (array, mapping) {
-            array = array || [];
-            var result = [];
-            for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping(array[i]));
-            return result;
-        },
+        arrayMap: map,
 
-        arrayFilter: function (array, predicate) {
-            array = array || [];
-            var result = [];
-            for (var i = 0, j = array.length; i < j; i++)
-                if (predicate(array[i]))
-                    result.push(array[i]);
-            return result;
-        },
+        arrayFilter: filter,
         
         arrayPushAll: function (array, valuesToPush) {
             if (valuesToPush instanceof Array)
