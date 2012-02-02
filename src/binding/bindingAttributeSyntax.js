@@ -180,7 +180,6 @@
     };    
     
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
-    ko.exportSymbol('bindingContext', ko.bindingContext);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);

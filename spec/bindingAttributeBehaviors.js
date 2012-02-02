@@ -281,9 +281,9 @@ describe('Binding attribute syntax', {
     },
     
     'Should be able to set and access correct context in custom containerless binding': function() {
-        var innerContext = new ko.bindingContext();
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element) {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 ko.applyBindingsToDescendants(innerContext, element, true);
                 return { 'controlsDescendantBindings': true };
             }
@@ -293,14 +293,14 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "Hello <!-- ko bindChildrenWithCustomContext: true --><div>Some text</div><!-- /ko --> Goodbye"
         ko.applyBindings(null, testNode);
 
-        value_of(ko.contextFor(testNode.childNodes[2])).should_be(innerContext);
+        value_of(ko.dataFor(testNode.childNodes[2]).myCustomData).should_be(123);
     },
     
     'Should be able to set and access correct context in nested containerless binding': function() {
-        var innerContext = new ko.bindingContext();
         delete ko.bindingHandlers.nonexistentHandler;
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element) {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 ko.applyBindingsToDescendants(innerContext, element, true);
                 return { 'controlsDescendantBindings': true };
             }
@@ -309,26 +309,27 @@ describe('Binding attribute syntax', {
         testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko nonexistentHandler: 123 --><div>Some text</div><!-- /ko --></div> Goodbye"
         ko.applyBindings(null, testNode);
 
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[0])).should_be(innerContext);
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1])).should_be(innerContext);
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[0]).myCustomData).should_be(123);
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[1]).myCustomData).should_be(123);
     },
     
     'Should be able to access custom context variables in child context': function() {
-        var innerContext = new ko.bindingContext({ myModelValue: {} });
-        innerContext.customValue = 123;
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element) {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
+                innerContext.customValue = 'xyz';
                 ko.applyBindingsToDescendants(innerContext, element, true);
                 return { 'controlsDescendantBindings': true };
             }
         };
 
-        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko with: myModelValue --><div>Some text</div><!-- /ko --></div> Goodbye"
+        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko with: myCustomData --><div>Some text</div><!-- /ko --></div> Goodbye"
         ko.applyBindings(null, testNode);
 
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[0])).should_be(innerContext);
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parent).should_be(innerContext.$data);
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parentContext.customValue).should_be(123);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[0]).customValue).should_be('xyz');
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[1])).should_be(123);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parent.myCustomData).should_be(123);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parentContext.customValue).should_be('xyz');
     },
     
     'Should not reinvoke init for notifications triggered during first evaluation': function () {
