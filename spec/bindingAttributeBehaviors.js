@@ -287,7 +287,7 @@ describe('Binding attribute syntax', {
         delete ko.bindingHandlers.nonexistentHandler;
         var initCalls = 0;
         ko.bindingHandlers.test = { init: function () { initCalls++; } };
-        testNode.innerHTML = "<div data-bind='template: {if:true}'>xxx<!-- ko nonexistentHandler: true --><span data-bind='test: true'></span><!-- /ko --></div>";
+        testNode.innerHTML = "<div data-bind='template: {\"if\":true}'>xxx<!-- ko nonexistentHandler: true --><span data-bind='test: true'></span><!-- /ko --></div>";
         ko.applyBindings({}, testNode);
         value_of(initCalls).should_be(1);
     },
