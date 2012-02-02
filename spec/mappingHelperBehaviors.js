@@ -78,5 +78,20 @@ describe('Mapping helpers', {
         value_of(parsedResult[0]).should_be('a');
         value_of(parsedResult[1]).should_be(1);
         value_of(parsedResult[2].someProp).should_be('Hey');		
+    },
+
+    'ko.toJSON should respect .toJSON functions on arrays': function() {
+        var data = {
+            a: [1, 2],
+            b: ko.observableArray([3, 4])
+        };
+        data.a.toJSON = function() { return "a-mapped" };
+        data.b().toJSON = function() { return "b-mapped" };
+        var result = ko.toJSON(data);
+        
+        // Check via parsing so the specs are independent of browser-specific JSON string formatting
+        value_of(typeof result).should_be('string');
+        var parsedResult = ko.utils.parseJson(result);
+        value_of(parsedResult).should_be({ a: "a-mapped", b: "b-mapped" });
     }
 })

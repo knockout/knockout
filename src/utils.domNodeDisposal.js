@@ -1,7 +1,9 @@
 
 ko.utils.domNodeDisposal = new (function () {
     var domDataKey = "__ko_domNodeDisposal__" + (new Date).getTime();
-    
+    var cleanableNodeTypes = { 1: true, 8: true, 9: true };       // Element, Comment, Document
+    var cleanableNodeTypesWithDescendants = { 1: true, 9: true }; // Element, Document
+
     function getDisposeCallbacksCollection(node, createIfNotFound) {
         var allDisposeCallbacks = ko.utils.domData.get(node, domDataKey);
         if ((allDisposeCallbacks === undefined) && createIfNotFound) {
@@ -21,16 +23,30 @@ ko.utils.domNodeDisposal = new (function () {
             callbacks = callbacks.slice(0); // Clone, as the array may be modified during iteration (typically, callbacks will remove themselves)
             for (var i = 0; i < callbacks.length; i++)
                 callbacks[i](node);
-        }	
+        }
         
         // Also erase the DOM data
-        ko.utils.domData.clear(node);		
+        ko.utils.domData.clear(node);
         
         // Special support for jQuery here because it's so commonly used.
         // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
         // so notify it to tear down any resources associated with the node & descendants here.
         if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
-            jQuery['cleanData']([node]);			
+            jQuery['cleanData']([node]);
+
+        // Also clear any immediate-child comment nodes, as these wouldn't have been found by
+        // node.getElementsByTagName("*") in cleanNode() (comment nodes aren't elements)
+        if (cleanableNodeTypesWithDescendants[node.nodeType])
+            cleanImmediateCommentTypeChildren(node);
+    }
+
+    function cleanImmediateCommentTypeChildren(nodeWithChildren) {
+        var child, nextChild = nodeWithChildren.firstChild;
+        while (child = nextChild) {
+            nextChild = child.nextSibling;
+            if (child.nodeType === 8)
+                cleanSingleNode(child);
+        }
     }
     
     return {
@@ -50,15 +66,19 @@ ko.utils.domNodeDisposal = new (function () {
         },
         
         cleanNode : function(node) {
-            if ((node.nodeType != 1) && (node.nodeType != 9))
-                return;
-            cleanSingleNode(node);
-            
-            // Clone the descendants list in case it changes during iteration
-            var descendants = [];
-            ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
-            for (var i = 0, j = descendants.length; i < j; i++)
-                cleanSingleNode(descendants[i]);
+            // First clean this node, where applicable
+            if (cleanableNodeTypes[node.nodeType]) {
+                cleanSingleNode(node);
+                
+                // ... then its descendants, where applicable
+                if (cleanableNodeTypesWithDescendants[node.nodeType]) {
+                    // Clone the descendants list in case it changes during iteration
+                    var descendants = [];
+                    ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
+                    for (var i = 0, j = descendants.length; i < j; i++)
+                        cleanSingleNode(descendants[i]);
+                }
+            }
         },
         
         removeNode : function(node) {

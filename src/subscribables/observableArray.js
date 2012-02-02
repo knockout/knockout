@@ -6,21 +6,13 @@ ko.observableArray = function (initialValues) {
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
         
-    var result = new ko.observable(initialValues);
+    var result = ko.observable(initialValues);
     ko.utils.extend(result, ko.observableArray['fn']);
-    
-    ko.exportProperty(result, "remove", result.remove);
-    ko.exportProperty(result, "removeAll", result.removeAll);
-    ko.exportProperty(result, "destroy", result.destroy);
-    ko.exportProperty(result, "destroyAll", result.destroyAll);
-    ko.exportProperty(result, "indexOf", result.indexOf);
-    ko.exportProperty(result, "replace", result.replace);
-    
     return result;
 }
 
 ko.observableArray['fn'] = {
-    remove: function (valueOrPredicate) {
+    'remove': function (valueOrPredicate) {
         var underlyingArray = this();
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
@@ -41,7 +33,7 @@ ko.observableArray['fn'] = {
         return removedValues;
     },
 
-    removeAll: function (arrayOfValues) {
+    'removeAll': function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
             var underlyingArray = this();
@@ -54,12 +46,12 @@ ko.observableArray['fn'] = {
         // If you passed an arg, we interpret it as an array of entries to remove
         if (!arrayOfValues)
             return [];
-        return this.remove(function (value) {
+        return this['remove'](function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
     },
     
-    destroy: function (valueOrPredicate) {
+    'destroy': function (valueOrPredicate) {
         var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         this.valueWillMutate();
@@ -71,26 +63,26 @@ ko.observableArray['fn'] = {
         this.valueHasMutated();
     },
         
-    destroyAll: function (arrayOfValues) {
+    'destroyAll': function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
-            return this.destroy(function() { return true });
+            return this['destroy'](function() { return true });
                 
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
-        return this.destroy(function (value) {
+        return this['destroy'](function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });             
     },
 
-    indexOf: function (item) {
+    'indexOf': function (item) {
         var underlyingArray = this();
         return ko.utils.arrayIndexOf(underlyingArray, item);
     },
     
-    replace: function(oldItem, newItem) {
-        var index = this.indexOf(oldItem);
+    'replace': function(oldItem, newItem) {
+        var index = this['indexOf'](oldItem);
         if (index >= 0) {
             this.valueWillMutate();
             this()[index] = newItem;
