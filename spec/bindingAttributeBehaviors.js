@@ -279,6 +279,12 @@ describe('Binding attribute syntax', {
         value_of(initCalls).should_be(1);
         value_of(testNode).should_contain_text("Hello Some text Goodbye");
     },
+
+    'Should automatically bind virtual descendants of containerless markers if no binding controlsDescendantBindings': function() {
+          testNode.innerHTML = "Hello <!-- ko dummy: false --><span data-bind='text: \"WasBound\"'>Some text</span><!-- /ko --> Goodbye";
+          ko.applyBindings(null, testNode);
+          value_of(testNode).should_contain_text("Hello WasBound Goodbye");
+    },
     
     'Should be able to set and access correct context in custom containerless binding': function() {
         ko.bindingHandlers.bindChildrenWithCustomContext = {
