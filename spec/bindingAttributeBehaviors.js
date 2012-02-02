@@ -322,7 +322,7 @@ describe('Binding attribute syntax', {
         ko.applyBindings(null, testNode);
         value_of(ko.contextFor(testNode.childNodes[1].childNodes[0])).should_be(innerContext);
         value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parent).should_be(innerContext.$data);
-        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).custom).should_be(true);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parentContext.custom).should_be(true);
     },
     
     'Should not reinvoke init for notifications triggered during first evaluation': function () {

@@ -2,17 +2,17 @@
     ko.bindingHandlers = {};
 
     ko.bindingContext = function(dataItem, parentBindingContext) {
+        this['$data'] = dataItem;
         if (parentBindingContext) {
-            // copy all properties from parent binding context
-            ko.utils.extend(this, parentBindingContext);
+            this['$parentContext'] = parentBindingContext;
             this['$parent'] = parentBindingContext['$data'];
-            this['$parents'] = (this['$parents'] || []).slice(0);
+            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
             this['$parents'].unshift(this['$parent']);
+            this['$root'] = parentBindingContext['$root'];
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;        	
         }
-        this['$data'] = dataItem;
     }
     ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
         return new ko.bindingContext(dataItem, this);
