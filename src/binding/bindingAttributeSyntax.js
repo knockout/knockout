@@ -2,27 +2,24 @@
     ko.bindingHandlers = {};
 
     ko.bindingContext = function(dataItem, parentBindingContext) {
-        if (dataItem instanceof ko.bindingContext) {
-            ko.utils.extend(this, dataItem);
+        this['$data'] = dataItem;
+        if (parentBindingContext) {
+            this['$parentContext'] = parentBindingContext;
+            this['$parent'] = parentBindingContext['$data'];
+            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
+            this['$parents'].unshift(this['$parent']);
+            this['$root'] = parentBindingContext['$root'];
+            ko.utils.extend(this, parentBindingContext, true);
         } else {
-            this['$data'] = dataItem;
-            if (parentBindingContext) {
-                this['$parentContext'] = parentBindingContext;
-                this['$parent'] = parentBindingContext['$data'];
-                this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
-                this['$parents'].unshift(this['$parent']);
-                this['$root'] = parentBindingContext['$root'];
-            } else {
-                this['$parents'] = [];
-                this['$root'] = dataItem;
-            }
+            this['$parents'] = [];
+            this['$root'] = dataItem;
         }
     }
     ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
         return new ko.bindingContext(dataItem, this);
     };
     ko.bindingContext.prototype['extend'] = function(extras) {
-        return ko.utils.extend(new ko.bindingContext(this), extras);
+        return ko.utils.extend(new ko.bindingContext(this.$data, this), extras);
     };
 
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {

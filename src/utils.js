@@ -101,9 +101,9 @@ ko.utils = new (function () {
             return array;
         },
 
-        extend: function (target, source) {
+        extend: function (target, source, dontOverwrite) {
             for(var prop in source) {
-                if(source.hasOwnProperty(prop)) {
+                if(source.hasOwnProperty(prop) && (!dontOverwrite || !(prop in target))) {
                     target[prop] = source[prop];
                 }
             }
