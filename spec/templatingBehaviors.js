@@ -92,6 +92,7 @@ dummyTemplateEngine.prototype = new ko.templateEngine();
 
 describe('Templating', {
     before_each: function () {
+        ko.setTemplateEngine(new ko.nativeTemplateEngine());
         var existingNode = document.getElementById("templatingTarget");
         if (existingNode != null)
             existingNode.parentNode.removeChild(existingNode);
@@ -349,7 +350,17 @@ describe('Templating', {
 
         ko.applyBindings({ myCollection: myArray }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
-    },    
+    },
+
+    'Data binding \'foreach\' options should only bind each group of output nodes once': function() {
+        var initCalls = 0;
+        ko.bindingHandlers.countInits = { init: function() { initCalls++ } };
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<span data-bind='countInits: true'></span>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+        ko.applyBindings({ myCollection: [1,2,3] }, testNode);
+        value_of(initCalls).should_be(3); // 3 because there were 3 items in myCollection
+    },
     
     'Data binding \'foreach\' option should accept array with "undefined" and "null" items': function () {
         var myArray = new ko.observableArray([undefined, null]);
@@ -665,5 +676,14 @@ describe('Templating', {
         testNode.innerHTML = "start <div data-bind='foreach: [1,2]'><span><!-- leading comment -->hello</span></div>";
         ko.applyBindings(null, testNode);
         value_of(testNode).should_contain_html('start <div data-bind="foreach: [1,2]"><span><!-- leading comment -->hello</span><span><!-- leading comment -->hello</span></div>');
+    },
+
+    'Should allow anonymous templates output to include top-level virtual elements, and will bind their virtual children only once': function() {
+        delete ko.bindingHandlers.nonexistentHandler;
+        var initCalls = 0;
+        ko.bindingHandlers.countInits = { init: function () { initCalls++ } };
+        testNode.innerHTML = "<div data-bind='template: {}'><!-- ko nonexistentHandler: true --><span data-bind='countInits: true'></span><!-- /ko --></div>";
+        ko.applyBindings(null, testNode);
+        value_of(initCalls).should_be(1);
     }
 })
