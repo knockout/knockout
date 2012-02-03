@@ -203,6 +203,32 @@ describe('Binding attribute syntax', {
         ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
         value_of(testNode).should_contain_text("Inner value");
     },
+
+    'Should be able to extend a binding context, adding new custom properties, without mutating the original binding context': function() {
+        ko.bindingHandlers.addCustomProperty = {
+            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
+                return { controlsDescendantBindings : true };
+            }
+        };
+        testNode.innerHTML = "<div data-bind='with: true'><div data-bind='addCustomProperty: true'><div data-bind='text: $customProp'></div></div></div>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("my value");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$customProp).should_be("my value");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$customProp).should_be(undefined); // Should not affect original binding context
+    },
+
+    'Binding contexts should inherit any custom properties from ancestor binding contexts': function() {
+        ko.bindingHandlers.addCustomProperty = {
+            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
+                return { controlsDescendantBindings : true };
+            }
+        };
+        testNode.innerHTML = "<div data-bind='addCustomProperty: true'><div data-bind='with: true'><div data-bind='text: $customProp'></div></div></div>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("my value");
+    },
     
     'Should be able to retrieve the binding context associated with any node': function() {
         testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
@@ -233,6 +259,109 @@ describe('Binding attribute syntax', {
             value_of(ex.message).should_be("The binding 'visible' cannot be used with virtual elements");
         }
         value_of(didThrow).should_be(true);
+    },
+    
+    'Should be able to set a custom binding to use containerless binding': function() {
+        var initCalls = 0;
+        ko.bindingHandlers.test = { init: function () { initCalls++ } };
+        ko.virtualElements.allowedBindings['test'] = true;
+
+        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(initCalls).should_be(1);
+        value_of(testNode).should_contain_text("Hello Some text Goodbye");
+    },
+    
+    'Should be able to access virtual children in custom containerless binding': function() {
+        var countNodes = 0;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) {
+                // Counts the number of virtual children, and overwrites the text contents of any text nodes
+                for (var node = ko.virtualElements.firstChild(element); node; node = ko.virtualElements.nextSibling(node)) {
+                    countNodes++;
+                    if (node.nodeType === 3)
+                        node.data = 'new text';
+                }
+            }
+        };
+        ko.virtualElements.allowedBindings['test'] = true;
+        
+        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(countNodes).should_be(1);
+        value_of(testNode).should_contain_text("Hello new text Goodbye");
+    },
+    
+    'Should only bind containerless binding once inside template': function() {
+        var initCalls = 0;
+        ko.bindingHandlers.test = { init: function () { initCalls++ } };
+        ko.virtualElements.allowedBindings['test'] = true;
+        
+        testNode.innerHTML = "Hello <!-- if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(initCalls).should_be(1);
+        value_of(testNode).should_contain_text("Hello Some text Goodbye");
+    },
+
+    'Should automatically bind virtual descendants of containerless markers if no binding controlsDescendantBindings': function() {
+          testNode.innerHTML = "Hello <!-- ko dummy: false --><span data-bind='text: \"WasBound\"'>Some text</span><!-- /ko --> Goodbye";
+          ko.applyBindings(null, testNode);
+          value_of(testNode).should_contain_text("Hello WasBound Goodbye");
+    },
+    
+    'Should be able to set and access correct context in custom containerless binding': function() {
+        ko.bindingHandlers.bindChildrenWithCustomContext = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
+                ko.applyBindingsToDescendants(innerContext, element, true);
+                return { 'controlsDescendantBindings': true };
+            }
+        };
+        ko.virtualElements.allowedBindings['bindChildrenWithCustomContext'] = true;
+        
+        testNode.innerHTML = "Hello <!-- ko bindChildrenWithCustomContext: true --><div>Some text</div><!-- /ko --> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(ko.dataFor(testNode.childNodes[2]).myCustomData).should_be(123);
+    },
+    
+    'Should be able to set and access correct context in nested containerless binding': function() {
+        delete ko.bindingHandlers.nonexistentHandler;
+        ko.bindingHandlers.bindChildrenWithCustomContext = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
+                ko.applyBindingsToDescendants(innerContext, element, true);
+                return { 'controlsDescendantBindings': true };
+            }
+        };
+
+        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko nonexistentHandler: 123 --><div>Some text</div><!-- /ko --></div> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[0]).myCustomData).should_be(123);
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[1]).myCustomData).should_be(123);
+    },
+    
+    'Should be able to access custom context variables in child context': function() {
+        ko.bindingHandlers.bindChildrenWithCustomContext = {
+            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
+                innerContext.customValue = 'xyz';
+                ko.applyBindingsToDescendants(innerContext, element, true);
+                return { 'controlsDescendantBindings': true };
+            }
+        };
+
+        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko with: myCustomData --><div>Some text</div><!-- /ko --></div> Goodbye"
+        ko.applyBindings(null, testNode);
+
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[0]).customValue).should_be('xyz');
+        value_of(ko.dataFor(testNode.childNodes[1].childNodes[1])).should_be(123);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parent.myCustomData).should_be(123);
+        value_of(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parentContext.customValue).should_be('xyz');
     },
     
     'Should not reinvoke init for notifications triggered during first evaluation': function () {

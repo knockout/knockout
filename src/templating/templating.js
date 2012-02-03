@@ -6,34 +6,34 @@
         _templateEngine = templateEngine;
     }
 
-    function invokeForEachNodeOrCommentInParent(nodeArray, parent, action) {
-        for (var i = 0; node = nodeArray[i]; i++) {
-            if (node.parentNode !== parent) // Skip anything that has been removed during binding
-                continue;
-            if ((node.nodeType === 1) || (node.nodeType === 8))
+    function invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, action) {
+        var node, nextInQueue = firstNode, firstOutOfRangeNode = ko.virtualElements.nextSibling(lastNode);
+        while (nextInQueue && ((node = nextInQueue) !== firstOutOfRangeNode)) {
+            nextInQueue = ko.virtualElements.nextSibling(node);
+            if (node.nodeType === 1 || node.nodeType === 8)
                 action(node);
-        }        
+        }
     }
 
-    ko.activateBindingsOnTemplateRenderedNodes = function(nodeArray, bindingContext) {
-        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element. 
-        // Safely iterates through nodeArray (being tolerant of any changes made to it during binding, e.g., 
-        // if a binding inserts siblings), and for each:
+    function activateBindingsOnContinuousNodeArray(continuousNodeArray, bindingContext) {
+        // To be used on any nodes that have been rendered by a template and have been inserted into some parent element
+        // Walks through continuousNodeArray (which *must* be continuous, i.e., an uninterrupted sequence of sibling nodes, because
+        // the algorithm for walking them relies on this), and for each top-level item in the virtual-element sense,
         // (1) Does a regular "applyBindings" to associate bindingContext with this node and to activate any non-memoized bindings
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
+        
+        if (continuousNodeArray.length) {
+            var firstNode = continuousNodeArray[0], lastNode = continuousNodeArray[continuousNodeArray.length - 1];
 
-        var nodeArrayClone = ko.utils.arrayPushAll([], nodeArray); // So we can tolerate insertions/deletions during binding
-        var commonParentElement = (nodeArray.length > 0) ? nodeArray[0].parentNode : null; // All items must be in the same parent, so this is OK
-        
-        // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
-        // whereas a regular applyBindings won't introduce new memoized nodes
-        
-        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
-            ko.applyBindings(bindingContext, node);
-        });
-        invokeForEachNodeOrCommentInParent(nodeArrayClone, commonParentElement, function(node) {
-            ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);            
-        });        
+            // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
+            // whereas a regular applyBindings won't introduce new memoized nodes
+            invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, function(node) {
+                ko.applyBindings(bindingContext, node);
+            });
+            invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, function(node) {
+                ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
+            });
+        }
     }
 
     function getFirstNodeFromPossibleArray(nodeOrNodeArray) {
@@ -68,7 +68,7 @@
         }
 
         if (haveAddedNodesToParent) {
-            ko.activateBindingsOnTemplateRenderedNodes(renderedNodesArray, bindingContext);
+            activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
             if (options['afterRender'])
                 options['afterRender'](renderedNodesArray, bindingContext['$data']);  
         }
@@ -123,7 +123,7 @@
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray) {
             var bindingContext = createInnerBindingContext(arrayValue);
-            ko.activateBindingsOnTemplateRenderedNodes(addedNodesArray, bindingContext);
+            activateBindingsOnContinuousNodeArray(addedNodesArray, bindingContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
         };
