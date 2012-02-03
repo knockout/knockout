@@ -2,20 +2,24 @@
     ko.bindingHandlers = {};
 
     ko.bindingContext = function(dataItem, parentBindingContext) {
-        this['$data'] = dataItem;
         if (parentBindingContext) {
+            ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
             this['$parentContext'] = parentBindingContext;
             this['$parent'] = parentBindingContext['$data'];
             this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
             this['$parents'].unshift(this['$parent']);
-            this['$root'] = parentBindingContext['$root'];
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;        	
         }
+        this['$data'] = dataItem;
     }
     ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
         return new ko.bindingContext(dataItem, this);
+    };
+    ko.bindingContext.prototype['extend'] = function(properties) {
+        var clone = new ko.bindingContext(this.$data, this);
+        return ko.utils.extend(clone, properties);
     };
 
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {

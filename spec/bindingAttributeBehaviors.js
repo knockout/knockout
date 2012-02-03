@@ -203,6 +203,32 @@ describe('Binding attribute syntax', {
         ko.applyBindings({ '$data': { someProp: 'Inner value'}, someProp: 'Outer value' }, testNode);
         value_of(testNode).should_contain_text("Inner value");
     },
+
+    'Should be able to extend a binding context, adding new custom properties, without mutating the original binding context': function() {
+        ko.bindingHandlers.addCustomProperty = {
+            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
+                return { controlsDescendantBindings : true };
+            }
+        };
+        testNode.innerHTML = "<div data-bind='with: true'><div data-bind='addCustomProperty: true'><div data-bind='text: $customProp'></div></div></div>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("my value");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$customProp).should_be("my value");
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$customProp).should_be(undefined); // Should not affect original binding context
+    },
+
+    'Binding contexts should inherit any custom properties from ancestor binding contexts': function() {
+        ko.bindingHandlers.addCustomProperty = {
+            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
+                return { controlsDescendantBindings : true };
+            }
+        };
+        testNode.innerHTML = "<div data-bind='addCustomProperty: true'><div data-bind='with: true'><div data-bind='text: $customProp'></div></div></div>";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("my value");
+    },
     
     'Should be able to retrieve the binding context associated with any node': function() {
         testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
