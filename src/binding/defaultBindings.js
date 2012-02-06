@@ -193,7 +193,11 @@ ko.bindingHandlers['options'] = {
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && node.tagName == "OPTION" && node.selected;
         }), function (node) {
-            return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
+			return {
+				nodeValue: ko.selectExtensions.readValue(node) || node.innerText || node.textContent,
+				nodeText: node.innerText || node.textContent
+			};
+            //return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
         var previousScrollTop = element.scrollTop;
         element.scrollTop = 0; // Workaround for a Chrome rendering bug. Note that we restore the scroll position later. (https://github.com/SteveSanderson/knockout/issues/215)
@@ -248,10 +252,12 @@ ko.bindingHandlers['options'] = {
             var newOptions = element.getElementsByTagName("OPTION");
             var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[i])) >= 0) {
-                    ko.utils.setOptionNodeSelectionState(newOptions[i], true);
-                    countSelectionsRetained++;
-                }
+				for (var k = 0, l = previousSelectedValues.length; k < l; k++) {
+					if (previousSelectedValues[k].nodeValue === ko.selectExtensions.readValue(newOptions[i]) && previousSelectedValues[k].nodeText === ko.selectExtensions.readText(newOptions[i])) {
+						ko.utils.setOptionNodeSelectionState(newOptions[i], true);
+						countSelectionsRetained++;
+					}
+				}
             }
             
             if (previousScrollTop)
