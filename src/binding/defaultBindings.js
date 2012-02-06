@@ -252,12 +252,12 @@ ko.bindingHandlers['options'] = {
             var newOptions = element.getElementsByTagName("OPTION");
             var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
-				for (var k = 0, l = previousSelectedValues.length; k < l; k++) {
-					if (previousSelectedValues[k].nodeValue === ko.selectExtensions.readValue(newOptions[i]) && previousSelectedValues[k].nodeText === ko.selectExtensions.readText(newOptions[i])) {
-						ko.utils.setOptionNodeSelectionState(newOptions[i], true);
-						countSelectionsRetained++;
-					}
-				}
+	            for (var k = 0, l = previousSelectedValues.length; k < l; k++) {
+	                if (previousSelectedValues[k].nodeValue === ko.selectExtensions.readValue(newOptions[i]) && previousSelectedValues[k].nodeText === ko.selectExtensions.readText(newOptions[i])) {
+	                    ko.utils.setOptionNodeSelectionState(newOptions[i], true);
+	                    countSelectionsRetained++;
+	                }
+	            }
             }
             
             if (previousScrollTop)
