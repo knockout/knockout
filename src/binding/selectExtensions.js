@@ -47,7 +47,14 @@
                     value = "";
                 element.value = value;
             }
-        }
+        },
+		
+		readText: function(element) {
+			if (element.tagName == 'SELECT')
+                return element.selectedIndex >= 0 ? ko.selectExtensions.readText(element.options[element.selectedIndex]) : undefined;
+			else
+                return 'innerText' in element ? element.innerText : element.textContent;
+		}
     };        
 })();
 
