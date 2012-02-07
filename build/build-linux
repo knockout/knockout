@@ -30,4 +30,7 @@ rm $OutMinFile.temp
 
 # Inject the version number string
 Version=`cat fragments/version.txt`
-sed -i "s/##VERSION##/$Version/" $OutDebugFile $OutMinFile
+sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
+
+# Delete the odd files left behind on Mac
+rm -f output/*.js~
