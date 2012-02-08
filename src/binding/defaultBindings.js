@@ -263,6 +263,9 @@ ko.bindingHandlers['options'] = {
                 // the dropdown selection state is meaningless, so we preserve the model value.
                 ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
             }
+
+            // Workaround for IE9 bug
+            ko.utils.ensureSelectElementIsRenderedCorrectly(element);
         }
     }
 };
