@@ -18,10 +18,7 @@ ko.jsonExpressionRewriting = (function () {
     function isWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
-        if (expression == 'getSetter()["set"]')
-            return true;
-        /*  if (expression.substr(expression.length - 4) === ".set")
-        return true; */
+       
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
