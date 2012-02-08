@@ -1,7 +1,7 @@
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*((\([\_$a-z0-9]*\))*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)+)*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
+    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*((\([\_$a-z0-9]*\))*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)+)*((\([\_$a-z0-9]*\))*(\[.*?\])+)*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
