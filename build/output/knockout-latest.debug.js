@@ -336,8 +336,19 @@ ko.utils = new (function () {
                                    : element.textContent = value;
                                    
             if (ieVersion >= 9) {
-                // Believe it or not, this actually fixes an IE9 rendering bug. Insane. https://github.com/SteveSanderson/knockout/issues/209
+                // Believe it or not, this actually fixes an IE9 rendering bug
+                // (See https://github.com/SteveSanderson/knockout/issues/209)
                 element.style.display = element.style.display;
+            }
+        },
+
+        ensureSelectElementIsRenderedCorrectly: function(selectElement) {
+            // Workaround for IE9 rendering bug - it doesn't reliably display all the text in dynamically-added select boxes unless you force it to re-render by updating the width.
+            // (See https://github.com/SteveSanderson/knockout/issues/312, http://stackoverflow.com/questions/5908494/select-only-shows-first-char-of-selected-option)
+            if (ieVersion >= 9) {
+                var originalWidth = selectElement.style.width;
+                selectElement.style.width = 0;
+                selectElement.style.width = originalWidth;
             }
         },
 
@@ -2251,6 +2262,9 @@ ko.bindingHandlers['options'] = {
                 // the dropdown selection state is meaningless, so we preserve the model value.
                 ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
             }
+
+            // Workaround for IE9 bug
+            ko.utils.ensureSelectElementIsRenderedCorrectly(element);
         }
     }
 };
