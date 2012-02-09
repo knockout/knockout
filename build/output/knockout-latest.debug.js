@@ -2,7 +2,7 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){ 
+(function(window,document,navigator,undefined){
 !function(factory) {
     // Support three module loading scenarios
     if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
@@ -910,15 +910,17 @@ ko.dependencyDetection = (function () {
 
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
+    var _newValue;
 
     function observable() {
         if (arguments.length > 0) {
             // Write            
+            _newValue = arguments[0];
             
             // Ignore writes if the value hasn't changed
-            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, _newValue)) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                _latestValue = _newValue;
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -931,7 +933,8 @@ ko.observable = function (initialValue) {
     }
     ko.subscribable.call(observable);
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
-    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); 
+                                               observable["notifySubscribers"]([_latestValue,_newValue], "changed");}
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
@@ -941,25 +944,26 @@ ko.observable = function (initialValue) {
 }
 
 ko.observable['fn'] = {
-    __ko_proto__: ko.observable,
-
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
         var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
     }
 };
 
+var protoProperty = ko.observable.protoProperty = "__ko_proto__";
+ko.observable['fn'][protoProperty] = ko.observable;
+
 ko.isObservable = function (instance) {
-    if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
-    if (instance.__ko_proto__ === ko.observable) return true;
-    return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
+    if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
+    if (instance[protoProperty] === ko.observable) return true;
+    return ko.isObservable(instance[protoProperty]); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
     // Observable
-    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+    if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
         return true;
     // Writeable dependent observable
-    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+    if ((typeof instance == "function") && (instance[protoProperty] === ko.dependentObservable) && (instance.hasWriteFunction))
         return true;
     // Anything else
     return false;
@@ -1222,11 +1226,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
-ko.dependentObservable['fn'] = {
-    __ko_proto__: ko.dependentObservable
-};
+var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
+ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable.__ko_proto__ = ko.observable;
+ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
@@ -3346,5 +3350,4 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);(function() {
     
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();});
-})(window,document,navigator);                  
-
+})(window,document,navigator);
