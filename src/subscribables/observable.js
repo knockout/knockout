@@ -2,15 +2,17 @@ var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string'
 
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
+    var _newValue;
 
     function observable() {
         if (arguments.length > 0) {
             // Write            
+            _newValue = arguments[0];
             
             // Ignore writes if the value hasn't changed
-            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, _newValue)) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                _latestValue = _newValue;
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -23,7 +25,8 @@ ko.observable = function (initialValue) {
     }
     ko.subscribable.call(observable);
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
-    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); 
+                                               observable["notifySubscribers"]([_latestValue,_newValue], "changed");}
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
