@@ -273,7 +273,7 @@ ko.utils = new (function () {
             var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
 
             if (shouldHaveClass && !hasClass) {
-                node.className += (currentClassNames[0].length ? " " : "") + className;
+                node.className += (currentClassNames[0] ? " " : "") + className;
             } else if (hasClass && !shouldHaveClass) {
                 var newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
