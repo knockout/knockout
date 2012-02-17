@@ -268,17 +268,13 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
-        domNodeHasCssClass: function (node, className) {
-            var currentClassNames = (node.className || "").split(/\s+/);
-            return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
-        },
-
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var hasClass = ko.utils.domNodeHasCssClass(node, className);
+            var currentClassNames = (node.className || "").split(/\s+/);
+            var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
+
             if (shouldHaveClass && !hasClass) {
-                node.className = (node.className || "") + " " + className;
+                node.className += (currentClassNames[0].length ? " " : "") + className;
             } else if (hasClass && !shouldHaveClass) {
-                var currentClassNames = (node.className || "").split(/\s+/);
                 var newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
                     if (currentClassNames[i] != className)
