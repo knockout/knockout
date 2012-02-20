@@ -6,7 +6,7 @@ title: External links and tutorials
 See these external pages for more examples of using Knockout with other technologies:
 
  * [Knock Me Out](http://www.knockmeout.net) --- Ryan Niemeyer's excellent blog containing ideas, thoughts, and discussion about KnockoutJS and related technologies
- * [PluralSight Knockout.js training course](http://www.pluralsight-training.net/microsoft/Courses/TableOfContents?courseName=knockout-mvvm --- Online videos - John Papa provides almost 5 hours of in-depth content ([more info](http://johnpapa.net/komvvm))  
+ * [PluralSight Knockout.js training course](http://www.pluralsight-training.net/microsoft/Courses/TableOfContents?courseName=knockout-mvvm) --- Online videos - John Papa provides almost 5 hours of in-depth content ([more info](http://johnpapa.net/komvvm))  
  * [Editing a variable-length list, Knockout-style](http://blog.stevensanderson.com/2010/07/12/editing-a-variable-length-list-knockout-style/) --- Steve Sanderson shows the advantages of using Knockout with ASP.NET MVC
  * [Knockout+WebSockets](http://github.com/carlhoerberg/knockout-websocket-example) --- Carl Hörberg combines Knockout, Sinatra, SQLite, and WebSockets to implement realtime forms collaboration
  * [Log4Play: Log4j Live Streaming with Play Framework, Knockout.js and WebSockets](http://geeks.aretotally.in/log4play-log4j-ui-mashed-up-with-play-framework-knockout-js-and-websockets) --- Felipe Oliveira creates a realtime server log with KO and WebSockets
