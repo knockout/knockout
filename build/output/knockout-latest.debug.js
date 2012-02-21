@@ -309,21 +309,29 @@ ko.utils = new (function () {
         },
 
         domNodeHasCssClass: function (node, className) {
-            var currentClassNames = (node.className || "").split(/\s+/);
+            var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
             return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
         },
 
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
             var hasClass = ko.utils.domNodeHasCssClass(node, className);
             if (shouldHaveClass && !hasClass) {
-                node.className = (node.className || "") + " " + className;
+                if (typeof (node.className) == "string")
+                    node.className = (node.className || "") + " " + className;
+                else {
+                    if ("baseVal" in node.className) node.className.baseVal = (node.className.baseVal || "") + " " + className;
+                }
             } else if (hasClass && !shouldHaveClass) {
-                var currentClassNames = (node.className || "").split(/\s+/);
+                var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
                 var newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
                     if (currentClassNames[i] != className)
                         newClassName += currentClassNames[i] + " ";
-                node.className = ko.utils.stringTrim(newClassName);
+                if (typeof (node.className) == "string") {
+                    node.className = ko.utils.stringTrim(newClassName);
+                } else {
+                    if ("baseVal" in node.className) node.className.baseVal = ko.utils.stringTrim(newClassName);
+                }
             }
         },
 
@@ -941,25 +949,26 @@ ko.observable = function (initialValue) {
 }
 
 ko.observable['fn'] = {
-    __ko_proto__: ko.observable,
-
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
         var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
     }
 };
 
+var protoProperty = ko.observable.protoProperty = "__ko_proto__";
+ko.observable['fn'][protoProperty] = ko.observable;
+
 ko.isObservable = function (instance) {
-    if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
-    if (instance.__ko_proto__ === ko.observable) return true;
-    return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
+    if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
+    if (instance[protoProperty] === ko.observable) return true;
+    return ko.isObservable(instance[protoProperty]); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
     // Observable
-    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+    if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
         return true;
     // Writeable dependent observable
-    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+    if ((typeof instance == "function") && (instance[protoProperty] === ko.dependentObservable) && (instance.hasWriteFunction))
         return true;
     // Anything else
     return false;
@@ -1222,11 +1231,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
-ko.dependentObservable['fn'] = {
-    __ko_proto__: ko.dependentObservable
-};
+var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
+ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable.__ko_proto__ = ko.observable;
+ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
@@ -1378,7 +1387,7 @@ ko.exportSymbol('selectExtensions.writeValue', ko.selectExtensions.writeValue);
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
+    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*((\([\_$a-z0-9]*\))*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)+)*((\([\_$a-z0-9]*\))*(\[.*?\])+)*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
@@ -1395,6 +1404,7 @@ ko.jsonExpressionRewriting = (function () {
     function isWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
+       
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
@@ -1402,7 +1412,7 @@ ko.jsonExpressionRewriting = (function () {
         var trimmedKey = ko.utils.stringTrim(key);
         switch (trimmedKey.length && trimmedKey.charAt(0)) {
             case "'":
-            case '"': 
+            case '"':
                 return key;
             default:
                 return "'" + trimmedKey + "'";
@@ -1411,8 +1421,8 @@ ko.jsonExpressionRewriting = (function () {
 
     return {
         bindingRewriteValidators: [],
-        
-        parseObjectLiteral: function(objectLiteralString) {
+
+        parseObjectLiteral: function (objectLiteralString) {
             // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
             // that is sufficient just to split an object literal string into a set of top-level key-value pairs
 
@@ -1455,14 +1465,14 @@ ko.jsonExpressionRewriting = (function () {
                 if (tokenStart === null) {
                     switch (c) {
                         case "{": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = "}";
-                                  break;
+                            tokenEndChar = "}";
+                            break;
                         case "(": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = ")";
-                                  break;
+                            tokenEndChar = ")";
+                            break;
                         case "[": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = "]";
-                                  break;
+                            tokenEndChar = "]";
+                            break;
                     }
                 }
 
@@ -1476,7 +1486,7 @@ ko.jsonExpressionRewriting = (function () {
                         var replacement = "@ko_token_" + (tokens.length - 1) + "@";
                         str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
                         position -= (token.length - replacement.length);
-                        tokenStart = null;                            
+                        tokenStart = null;
                     }
                 }
             }
@@ -1495,11 +1505,11 @@ ko.jsonExpressionRewriting = (function () {
                     result.push({ 'unknown': restoreTokens(pair, tokens) });
                 }
             }
-            return result;            
+            return result;
         },
 
         insertPropertyAccessorsIntoJson: function (objectLiteralStringOrKeyValueArray) {
-            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string" 
+            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string"
                 ? ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteralStringOrKeyValueArray)
                 : objectLiteralStringOrKeyValueArray;
             var resultStrings = [], propertyAccessorResultStrings = [];
@@ -1512,14 +1522,14 @@ ko.jsonExpressionRewriting = (function () {
                 if (keyValueEntry['key']) {
                     var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
-                    resultStrings.push(":");              
+                    resultStrings.push(":");
                     resultStrings.push(val);
 
                     if (isWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)
                             propertyAccessorResultStrings.push(", ");
                         propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
-                    }                    
+                    }
                 } else if (keyValueEntry['unknown']) {
                     resultStrings.push(keyValueEntry['unknown']);
                 }
@@ -1528,16 +1538,16 @@ ko.jsonExpressionRewriting = (function () {
             var combinedResult = resultStrings.join("");
             if (propertyAccessorResultStrings.length > 0) {
                 var allPropertyAccessors = propertyAccessorResultStrings.join("");
-                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";                
+                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
             }
 
             return combinedResult;
         },
 
-        keyValueArrayContainsKey: function(keyValueArray, key) {
+        keyValueArrayContainsKey: function (keyValueArray, key) {
             for (var i = 0; i < keyValueArray.length; i++)
                 if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
-                    return true;            
+                    return true;
             return false;
         }
     };
