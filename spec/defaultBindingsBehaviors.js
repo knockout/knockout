@@ -665,6 +665,38 @@ describe('Binding: CSS class name', {
     }
 });
 
+describe('Binding: CSS class name svg node', {
+    before_each: prepareTestNode,
+
+    'Should not raise error when binding to the class of an SVG node': function () {
+        var threw = false;
+        
+        
+        var observable1 = new ko.observable();
+        var observable2 = new ko.observable(true);
+        testNode.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg'><rect  class='unrelatedClass1 unrelatedClass2' data-bind='css: { myRule: someModelProperty, anotherRule: anotherModelProperty }'>Hallo</rect></svg>";
+        try { ko.applyBindings({ someModelProperty: observable1, anotherModelProperty: observable2 }, testNode); }
+        catch (ex) { threw = true; }
+        value_of(threw).should_be(false);       
+    },
+    'Should set class of an SVG node': function () {
+        var threw = false;
+        
+        
+        var observable1 = new ko.observable();
+        var observable2 = new ko.observable(true);
+        testNode.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg'><rect  class='unrelatedClass1 unrelatedClass2' data-bind='css: { myRule: someModelProperty, anotherRule: anotherModelProperty }'>Hallo</rect></svg>";
+         ko.applyBindings({ someModelProperty: observable1, anotherModelProperty: observable2 }, testNode); 
+        
+
+        value_of(testNode.childNodes[0].childNodes[0].className.baseVal).should_be("unrelatedClass1 unrelatedClass2 anotherRule");
+        observable1(true);
+        value_of(testNode.childNodes[0].childNodes[0].className.baseVal).should_be("unrelatedClass1 unrelatedClass2 anotherRule myRule");
+        observable2(false);
+        value_of(testNode.childNodes[0].childNodes[0].className.baseVal).should_be("unrelatedClass1 unrelatedClass2 myRule");
+    }
+});
+
 describe('Binding: CSS style', {
     before_each: prepareTestNode,
 
