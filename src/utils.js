@@ -269,21 +269,29 @@ ko.utils = new (function () {
         },
 
         domNodeHasCssClass: function (node, className) {
-            var currentClassNames = (node.className || "").split(/\s+/);
+            var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
             return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
         },
 
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
             var hasClass = ko.utils.domNodeHasCssClass(node, className);
             if (shouldHaveClass && !hasClass) {
-                node.className = (node.className || "") + " " + className;
+                if (typeof (node.className) == "string")
+                    node.className = (node.className || "") + " " + className;
+                else {
+                    if ("baseVal" in node.className) node.className.baseVal = (node.className.baseVal || "") + " " + className;
+                }
             } else if (hasClass && !shouldHaveClass) {
-                var currentClassNames = (node.className || "").split(/\s+/);
+                var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
                 var newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
                     if (currentClassNames[i] != className)
                         newClassName += currentClassNames[i] + " ";
-                node.className = ko.utils.stringTrim(newClassName);
+                if (typeof (node.className) == "string") {
+                    node.className = ko.utils.stringTrim(newClassName);
+                } else {
+                    if ("baseVal" in node.className) node.className.baseVal = ko.utils.stringTrim(newClassName);
+                }
             }
         },
 
