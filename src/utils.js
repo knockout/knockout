@@ -28,6 +28,8 @@ ko.utils = new (function () {
     var isIe6 = ieVersion === 6,
         isIe7 = ieVersion === 7;
 
+    var isChrome = /chrome/i.test(window.navigator.userAgent);
+
     function isClickOnCheckableElement(element, eventType) {
         if ((element.tagName != "INPUT") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
@@ -332,6 +334,8 @@ ko.utils = new (function () {
         isIe6 : isIe6,
         isIe7 : isIe7,
         ieVersion : ieVersion,
+
+        isChrome : isChrome,
         
         getFormFields: function(form, fieldName) {
             var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
