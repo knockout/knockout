@@ -205,8 +205,8 @@ Here's a trivial example that uses `afterRender`. It simply uses jQuery's `$.css
     <script type="text/javascript">
         ko.applyBindings({
             myItems: ko.observableArray([ 'A', 'B', 'C' ]),
-            handleAfterRender: function(elements, index, data) {
-                $(elements).css({ color: 'red' })
+            handleAfterRender: function(elements, data) {
+                $(elements).css({ color: 'red' });
             }
         });
     </script>
