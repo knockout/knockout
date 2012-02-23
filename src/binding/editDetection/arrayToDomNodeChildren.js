@@ -56,7 +56,7 @@
     
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes, indexMoveCallback) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
         // Compare the provided array against the previous one
         array = array || [];
         options = options || {};
@@ -69,7 +69,6 @@
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
-        var indicesToMove = [];
         var newMappingResultIndex = 0;
         var nodesAdded = [];
         var insertAfterNode = null;
@@ -78,10 +77,10 @@
                 case "retained":
                     // Just keep the information - don't touch the nodes
                     var dataToRetain = lastMappingResult[lastMappingResultIndex];
+                    dataToRetain.indexObservable(newMappingResultIndex);
                     newMappingResult.push(dataToRetain);
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
-                    indicesToMove.push({from: lastMappingResultIndex, to: newMappingResultIndex});
                     lastMappingResultIndex++;
                     newMappingResultIndex++;
                     break;
@@ -105,11 +104,17 @@
 
                 case "added": 
                     var valueToMap = editScript[i].value;
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, newMappingResultIndex);
+                    var indexObservable = ko.observable(newMappingResultIndex);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, indexObservable);
                     var mappedNodes = mapData.mappedNodes;
 
                     // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
+                    newMappingResult.push({
+                        arrayEntry: editScript[i].value, 
+                        domNodes: mappedNodes, 
+                        dependentObservable: mapData.dependentObservable,
+                        indexObservable: indexObservable
+                    });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
                         nodesAdded.push({
@@ -127,7 +132,7 @@
                         insertAfterNode = node;
                     } 
                     if (callbackAfterAddingNodes)
-                        callbackAfterAddingNodes(valueToMap, mappedNodes, newMappingResultIndex);
+                        callbackAfterAddingNodes(valueToMap, mappedNodes, indexObservable);
 
                     newMappingResultIndex++;
                     break;
@@ -155,13 +160,6 @@
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
-
-        // Once the state is stored, update the indices for
-        // nodes that were retained and possibly moved
-        if (indexMoveCallback)
-            ko.utils.arrayForEach(indicesToMove, function(change) {
-                indexMoveCallback(change.from, change.to);
-            });
     }
 })();
 

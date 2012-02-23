@@ -116,38 +116,10 @@
     };
 
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
-        // we need double buffers to prevent accidental overwriting
-        var contexts = {};
-        var contexts_buffer = {};
-
-        var deleteBuffer = function() {
-            contexts_buffer = null;
-        };
-
-        var copyToBuffer = function() {
-            contexts_buffer = contexts;
-            contexts = {};
-        };
-
         var createInnerBindingContext = function(arrayValue, index) {
-            if (contexts[index]) {
-                return contexts[index];
-            }
-            var result = parentBindingContext.createChildContext(ko.utils.unwrapObservable(arrayValue));
-            result['$index'] = ko.observable(index);
-            return contexts[index] = result;
-        };
-
-        var moveContext = function(old_i, new_i) {
-            // swap old placement into new spot.
-            // this essentially copies to the new buffer.
-            // anything not copied is essentially "deleted"
-            contexts[new_i] = contexts_buffer[old_i];
-            // update the index last because it can cause more template reevaluation
-            try {
-                contexts[new_i]['$index'](new_i);
-            } catch (e) {
-            }
+            var result = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            result['$index'] = index;
+            return result;
         };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
@@ -168,16 +140,12 @@
                 return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
-            // double buffering setup
-            copyToBuffer();
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue, index) {
                 // Support selecting template as a function of the data being rendered
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue, index), options);
-            }, options, activateBindingsCallback, moveContext);
-            // double buffering tear down
-            deleteBuffer();
-
+            }, options, activateBindingsCallback);
+            
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
