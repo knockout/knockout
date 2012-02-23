@@ -941,25 +941,26 @@ ko.observable = function (initialValue) {
 }
 
 ko.observable['fn'] = {
-    __ko_proto__: ko.observable,
-
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
         var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
     }
 };
 
+var protoProperty = ko.observable.protoProperty = "__ko_proto__";
+ko.observable['fn'][protoProperty] = ko.observable;
+
 ko.isObservable = function (instance) {
-    if ((instance === null) || (instance === undefined) || (instance.__ko_proto__ === undefined)) return false;
-    if (instance.__ko_proto__ === ko.observable) return true;
-    return ko.isObservable(instance.__ko_proto__); // Walk the prototype chain
+    if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
+    if (instance[protoProperty] === ko.observable) return true;
+    return ko.isObservable(instance[protoProperty]); // Walk the prototype chain
 }
 ko.isWriteableObservable = function (instance) {
     // Observable
-    if ((typeof instance == "function") && instance.__ko_proto__ === ko.observable)
+    if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
         return true;
     // Writeable dependent observable
-    if ((typeof instance == "function") && (instance.__ko_proto__ === ko.dependentObservable) && (instance.hasWriteFunction))
+    if ((typeof instance == "function") && (instance[protoProperty] === ko.dependentObservable) && (instance.hasWriteFunction))
         return true;
     // Anything else
     return false;
@@ -1222,11 +1223,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
-ko.dependentObservable['fn'] = {
-    __ko_proto__: ko.dependentObservable
-};
+var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
+ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable.__ko_proto__ = ko.observable;
+ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
@@ -2534,6 +2535,7 @@ ko.bindingHandlers['foreach'] = {
                 'afterAdd': bindingValue['afterAdd'],
                 'beforeRemove': bindingValue['beforeRemove'], 
                 'afterRender': bindingValue['afterRender'],
+				'afterAllRender': bindingValue['afterAllRender'],
                 'templateEngine': ko.nativeTemplateEngine.instance
             };
         };
@@ -2925,7 +2927,11 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
             }, options, activateBindingsCallback);
-            
+			
+			// Optional callback for after items have been added to the DOM
+            if(options['afterAllRender'])
+				options['afterAllRender']();
+				
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
