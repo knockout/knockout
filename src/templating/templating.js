@@ -143,7 +143,11 @@
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
             }, options, activateBindingsCallback);
-            
+			
+			// Optional callback for after items have been added to the DOM
+            if(options['afterAllRender'])
+				options['afterAllRender']();
+				
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
