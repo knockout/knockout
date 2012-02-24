@@ -903,6 +903,18 @@ describe('Binding: Attr', {
             model.myprop(testValue);
             value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
         });        
+    },
+
+    'Should be able to set class attribute and access it using className property': function() {
+        var model = { myprop : ko.observable("newClass") };
+        testNode.innerHTML = "<div class='oldClass' data-bind=\"attr: {'class': myprop}\"></div>";
+        value_of(testNode.childNodes[0].className).should_be("oldClass");
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].className).should_be("newClass");
+        // Should be able to clear class also
+        model.myprop(undefined);
+        value_of(testNode.childNodes[0].className).should_be("");        
+        value_of(testNode.childNodes[0].getAttribute("class")).should_be(null);        
     }  
 });
 
