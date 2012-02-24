@@ -10,6 +10,11 @@ describe('Dependent Observable', {
         value_of(ko.isObservable(instance)).should_be(true);
     },
 
+    'Should advertise that instances are computed': function () {
+        var instance = new ko.dependentObservable(function () { });
+        value_of(ko.isComputed(instance)).should_be(true);
+    },    
+
     'Should advertise that instances cannot have values written to them': function () {
         var instance = new ko.dependentObservable(function () { });
         value_of(ko.isWriteableObservable(instance)).should_be(false);

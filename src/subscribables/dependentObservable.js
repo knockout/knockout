@@ -138,6 +138,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
+ko.isComputed = function(instance) {
+    return ko.hasPrototype(instance, ko.dependentObservable);
+};
+
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
@@ -146,3 +150,4 @@ ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
+ko.exportSymbol('isComputed', ko.isComputed);
