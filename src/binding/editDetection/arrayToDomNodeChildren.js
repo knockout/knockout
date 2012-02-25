@@ -78,11 +78,10 @@
                     // Just keep the information - don't touch the nodes
                     var dataToRetain = lastMappingResult[lastMappingResultIndex];
                     dataToRetain.indexObservable(newMappingResultIndex);
-                    newMappingResult.push(dataToRetain);
+                    newMappingResultIndex = newMappingResult.push(dataToRetain);
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
                     lastMappingResultIndex++;
-                    newMappingResultIndex++;
                     break;
 
                 case "deleted":
@@ -109,9 +108,9 @@
                     var mappedNodes = mapData.mappedNodes;
 
                     // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({
-                        arrayEntry: editScript[i].value, 
-                        domNodes: mappedNodes, 
+                    newMappingResultIndex = newMappingResult.push({
+                        arrayEntry: editScript[i].value,
+                        domNodes: mappedNodes,
                         dependentObservable: mapData.dependentObservable,
                         indexObservable: indexObservable
                     });
@@ -133,8 +132,6 @@
                     } 
                     if (callbackAfterAddingNodes)
                         callbackAfterAddingNodes(valueToMap, mappedNodes, indexObservable);
-
-                    newMappingResultIndex++;
                     break;
             }
         }
@@ -153,10 +150,11 @@
                 invokedBeforeRemoveCallback = true;
             }
         }
-        if (!invokedBeforeRemoveCallback)
-            ko.utils.arrayForEach(nodesToDelete, function (node) {
-                ko.removeNode(node.element);
-            });
+        if (!invokedBeforeRemoveCallback && nodesToDelete.length) {
+            var commonParent = nodesToDelete[0].element.parentNode;
+            for (var i = 0; i < nodesToDelete.length; i++)
+                commonParent.removeChild(nodesToDelete[i].element);
+        }
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);

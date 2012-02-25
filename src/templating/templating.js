@@ -115,21 +115,27 @@
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
-        var createInnerBindingContext = function(arrayValue, index) {
-            var result = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
-            result['$index'] = index;
-            return result;
-        };
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
+        // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
+        // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
+        var arrayItemContext;
+
+        // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
+        var executeTemplateForArrayItem = function (arrayValue, index) {
+            // Support selecting template as a function of the data being rendered
+            var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
+            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            arrayItemContext['$index'] = index;
+            return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
+        }
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
-            var bindingContext = createInnerBindingContext(arrayValue, index);
-            activateBindingsOnContinuousNodeArray(addedNodesArray, bindingContext);
+            activateBindingsOnContinuousNodeArray(addedNodesArray, arrayItemContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, arrayValue);
         };
-         
+
         return ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -140,11 +146,7 @@
                 return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
-            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue, index) {
-                // Support selecting template as a function of the data being rendered
-                var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
-                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue, index), options);
-            }, options, activateBindingsCallback);
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback);
             
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };

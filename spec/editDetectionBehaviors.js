@@ -154,31 +154,39 @@ describe('Array to DOM node children mapping', {
     },
 
     'Should handle sequences of mixed insertions and deletions': function () {
-        var mappingInvocations = [];
+        var mappingInvocations = [], countCallbackInvocations = 0;
         var mapping = function (arrayItem) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
             output.innerHTML = arrayItem || "null";
             return [output];
         };
+        var callback = function(arrayItem, nodes) {
+            ++countCallbackInvocations;
+            value_of(mappingInvocations[mappingInvocations.length-1]).should_be(arrayItem);
+        }
 
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A"], mapping);
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A"], mapping, null, callback);
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["A"]);
         value_of(mappingInvocations).should_be(["A"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["B"], mapping); // Delete and replace single item
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["B"], mapping, null, callback); // Delete and replace single item
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["B"]);
         value_of(mappingInvocations).should_be(["B"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping); // Add at beginning and end
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping, null, callback); // Add at beginning and end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["A", "B", "C"]);
         value_of(mappingInvocations).should_be(["A", "C"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [1, null, "B"], mapping); // Add to beginning; delete from end
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [1, null, "B"], mapping, null, callback); // Add to beginning; delete from end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["1", "null", "B"]);
         value_of(mappingInvocations).should_be([1, null]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
     }
 });
