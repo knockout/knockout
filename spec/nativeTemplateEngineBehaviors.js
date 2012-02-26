@@ -15,6 +15,7 @@ describe('Native template engine', {
         
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
         window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");        
+        window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");        
         window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
     }, 
 
@@ -35,6 +36,13 @@ describe('Native template engine', {
         ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     }, 
+
+    'Named template can fetch template from <textarea> elements and data-bind on results': function () {
+        var prop = (typeof window.testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
+        window.testTextAreaTemplate[prop] = "name: <div data-bind='text: name'></div>";
+        ko.renderTemplate("testTextAreaTemplate", { name: 'bert' }, null, window.templateOutput);
+        value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
+    },
     
     'Anonymous template can display static content': function () {
         new ko.templateSources.anonymousTemplate(window.templateOutput).text("this is some static content");

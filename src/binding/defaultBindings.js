@@ -197,7 +197,6 @@ ko.bindingHandlers['options'] = {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
         var previousScrollTop = element.scrollTop;
-        element.scrollTop = 0; // Workaround for a Chrome rendering bug. Note that we restore the scroll position later. (https://github.com/SteveSanderson/knockout/issues/215)
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -255,8 +254,7 @@ ko.bindingHandlers['options'] = {
                 }
             }
             
-            if (previousScrollTop)
-                element.scrollTop = previousScrollTop;
+            element.scrollTop = previousScrollTop;
 
             if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
                 // Ensure consistency between model value and selected option.
@@ -426,20 +424,34 @@ ko.bindingHandlers['checked'] = {
     }
 };
 
+var attrHtmlToJavascriptMap = { 'class': 'className', 'for': 'htmlFor' };
 ko.bindingHandlers['attr'] = {
     'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
                 var attrValue = ko.utils.unwrapObservable(value[attrName]);
-                
+
                 // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
                 // when someProp is a "no value"-like value (strictly null, false, or undefined)
                 // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)                
-                if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
+                var toRemove = (attrValue === false) || (attrValue === null) || (attrValue === undefined);
+                if (toRemove)
                     element.removeAttribute(attrName);
-                else 
+
+                // In IE <= 7 and IE8 Quirks Mode, you have to use the Javascript property name instead of the 
+                // HTML attribute name for certain attributes. IE8 Standards Mode supports the correct behavior,
+                // but instead of figuring out the mode, we'll just set the attribute through the Javascript 
+                // property for IE <= 8.
+                if (ko.utils.ieVersion <= 8 && attrName in attrHtmlToJavascriptMap) {
+                    attrName = attrHtmlToJavascriptMap[attrName];
+                    if (toRemove)
+                        element.removeAttribute(attrName);
+                    else
+                        element[attrName] = attrValue;
+                } else if (!toRemove) {
                     element.setAttribute(attrName, attrValue.toString());
+                }
             }
         }
     }

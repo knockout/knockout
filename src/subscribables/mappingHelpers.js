@@ -15,9 +15,9 @@
         });
     };
 
-    ko.toJSON = function(rootObject) {
+    ko.toJSON = function(rootObject, replacer, space) {     // replacer and space are optional
         var plainJavaScriptObject = ko.toJS(rootObject);
-        return ko.utils.stringifyJson(plainJavaScriptObject);
+        return ko.utils.stringifyJson(plainJavaScriptObject, replacer, space);
     };
     
     function mapJsObjectGraph(rootObject, mapInputCallback, visitedObjects) {

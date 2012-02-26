@@ -662,6 +662,16 @@ describe('Binding: CSS class name', {
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 anotherRule myRule");
         observable2(false);
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
+    },
+    
+    'Should give the element a single CSS class without a leading space when the specified value is true': function() {
+        var observable1 = new ko.observable();
+        testNode.innerHTML = "<div data-bind='css: { myRule: someModelProperty }'>Hallo</div>";
+        ko.applyBindings({ someModelProperty: observable1 }, testNode);
+
+        value_of(testNode.childNodes[0].className).should_be("");
+        observable1(true);
+        value_of(testNode.childNodes[0].className).should_be("myRule");
     }
 });
 
@@ -903,6 +913,18 @@ describe('Binding: Attr', {
             model.myprop(testValue);
             value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be(null);        
         });        
+    },
+
+    'Should be able to set class attribute and access it using className property': function() {
+        var model = { myprop : ko.observable("newClass") };
+        testNode.innerHTML = "<div class='oldClass' data-bind=\"attr: {'class': myprop}\"></div>";
+        value_of(testNode.childNodes[0].className).should_be("oldClass");
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].className).should_be("newClass");
+        // Should be able to clear class also
+        model.myprop(undefined);
+        value_of(testNode.childNodes[0].className).should_be("");        
+        value_of(testNode.childNodes[0].getAttribute("class")).should_be(null);        
     }  
 });
 

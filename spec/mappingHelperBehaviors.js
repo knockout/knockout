@@ -93,5 +93,22 @@ describe('Mapping helpers', {
         value_of(typeof result).should_be('string');
         var parsedResult = ko.utils.parseJson(result);
         value_of(parsedResult).should_be({ a: "a-mapped", b: "b-mapped" });
+    },
+
+    'ko.toJSON should respect replacer/space options': function() {
+        var data = { a: 1 };
+
+        // Without any options
+        value_of(ko.toJSON(data)).should_be("{\"a\":1}");
+
+        // With a replacer
+        function myReplacer(x, obj) {
+            value_of(obj).should_be(data);
+            return "my replacement";
+        };
+        value_of(ko.toJSON(data, myReplacer)).should_be("\"my replacement\"");
+
+        // With spacer
+        value_of(ko.toJSON(data, undefined, "    ")).should_be("{\n    \"a\": 1\n}");
     }
 })
