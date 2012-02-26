@@ -19,11 +19,12 @@ type %AllFiles%                   >> %OutDebugFile%.temp
 type fragments\amd-post.js        >> %OutDebugFile%.temp
 
 @rem Now call Google Closure Compiler to produce a minified version
-tools\curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode js_code@%OutDebugFile%.temp "http://closure-compiler.appspot.com/compile" > %OutMinFile%.temp
+tools\curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode "js_code=/**@const*/var DEBUG=false;" --data-urlencode js_code@%OutDebugFile%.temp "http://closure-compiler.appspot.com/compile" > %OutMinFile%.temp
 
 @rem Finalise each file by prefixing with version header and surrounding in function closure
 copy /y fragments\version-header.js %OutDebugFile%
 echo (function(window,document,navigator,undefined){ >> %OutDebugFile%
+echo var DEBUG=true;                                 >> %OutDebugFile%
 type %OutDebugFile%.temp                             >> %OutDebugFile%
 echo })(window,document,navigator);                  >> %OutDebugFile%
 del %OutDebugFile%.temp
