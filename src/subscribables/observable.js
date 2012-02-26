@@ -42,10 +42,14 @@ ko.observable['fn'] = {
 var protoProperty = ko.observable.protoProperty = "__ko_proto__";
 ko.observable['fn'][protoProperty] = ko.observable;
 
-ko.isObservable = function (instance) {
+ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
-    if (instance[protoProperty] === ko.observable) return true;
-    return ko.isObservable(instance[protoProperty]); // Walk the prototype chain
+    if (instance[protoProperty] === prototype) return true;
+    return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain 
+};
+
+ko.isObservable = function (instance) {
+    return ko.hasPrototype(instance, ko.observable);
 }
 ko.isWriteableObservable = function (instance) {
     // Observable
