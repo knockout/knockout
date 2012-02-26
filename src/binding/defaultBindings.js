@@ -133,24 +133,20 @@ ko.bindingHandlers['value'] = {
             var elementValue = ko.selectExtensions.readValue(element);
             ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
         }
-        function asyncValueUpdateHandler() {
-            setTimeout(valueUpdateHandler);
-        }
-        function ieAutoCompleteHackNeeded() {
-            return ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
-                && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");            
-        }
 
-        if (ieAutoCompleteHackNeeded() && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
-            var propertyChanged = false, originalValueUpdateHandler = valueUpdateHandler;
-            valueUpdateHandler = function() {
-                if (propertyChanged) {
-                    originalValueUpdateHandler();
-                    propertyChanged = false;
+        // Workaround for https://github.com/SteveSanderson/knockout/issues/122
+        // IE doesn't fire "change" events on textboxes if the user selects a value from its autocomplete list
+        var ieAutoCompleteHackNeeded = ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
+                                       && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
+        if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
+            var propertyChangedFired = false;
+            ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
+            ko.utils.registerEventHandler(element, "blur", function() {
+                if (propertyChangedFired) {
+                    propertyChangedFired = false;
+                    valueUpdateHandler();
                 }
-            };
-            ko.utils.registerEventHandler(element, "propertychange", function () { propertyChanged = true; });
-            ko.utils.registerEventHandler(element, "blur", valueUpdateHandler);
+            });
         }
 
         ko.utils.arrayForEach(eventsToCatch, function(eventName) {
@@ -159,7 +155,7 @@ ko.bindingHandlers['value'] = {
             // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
             var handler = valueUpdateHandler;
             if (ko.utils.stringStartsWith(eventName, "after")) {
-                handler = asyncValueUpdateHandler;
+                handler = function() { setTimeout(valueUpdateHandler, 0) };
                 eventName = eventName.substring("after".length);
             }
             ko.utils.registerEventHandler(element, eventName, handler);
