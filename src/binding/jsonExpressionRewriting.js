@@ -162,6 +162,16 @@ ko.jsonExpressionRewriting = (function () {
                 if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
                     return true;            
             return false;
+        },
+
+        writeValueToProperty: function(property, allBindingsAccessor, key, value, checkIfDifferent) {
+            if (!property || !ko.isWriteableObservable(property)) {
+                var propWriters = allBindingsAccessor()['_ko_property_writers'];
+                if (propWriters && propWriters[key])
+                    propWriters[key](value);
+            } else if (!checkIfDifferent || property() !== value) {
+                property(value);
+            }
         }
     };
 })();

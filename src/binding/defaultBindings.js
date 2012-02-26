@@ -127,32 +127,42 @@ ko.bindingHandlers['value'] = {
             ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
             eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
         }
-        
+
+        var valueUpdateHandler = function() {
+            var modelValue = valueAccessor();
+            var elementValue = ko.selectExtensions.readValue(element);
+            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
+        }
+        function asyncValueUpdateHandler() {
+            setTimeout(valueUpdateHandler);
+        }
+        function ieAutoCompleteHackNeeded() {
+            return ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
+                && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");            
+        }
+
+        if (ieAutoCompleteHackNeeded() && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
+            var propertyChanged = false, originalValueUpdateHandler = valueUpdateHandler;
+            valueUpdateHandler = function() {
+                if (propertyChanged) {
+                    originalValueUpdateHandler();
+                    propertyChanged = false;
+                }
+            };
+            ko.utils.registerEventHandler(element, "propertychange", function () { propertyChanged = true; });
+            ko.utils.registerEventHandler(element, "blur", valueUpdateHandler);
+        }
+
         ko.utils.arrayForEach(eventsToCatch, function(eventName) {
             // The syntax "after<eventname>" means "run the handler asynchronously after the event"
             // This is useful, for example, to catch "keydown" events after the browser has updated the control
             // (otherwise, ko.selectExtensions.readValue(this) will receive the control's value *before* the key event)
-            var handleEventAsynchronously = false;
+            var handler = valueUpdateHandler;
             if (ko.utils.stringStartsWith(eventName, "after")) {
-                handleEventAsynchronously = true;
+                handler = asyncValueUpdateHandler;
                 eventName = eventName.substring("after".length);
             }
-            var runEventHandler = handleEventAsynchronously ? function(handler) { setTimeout(handler, 0) }
-                                                            : function(handler) { handler() };
-            
-            ko.utils.registerEventHandler(element, eventName, function () {
-                runEventHandler(function() {
-                    var modelValue = valueAccessor();
-                    var elementValue = ko.selectExtensions.readValue(element);
-                    if (ko.isWriteableObservable(modelValue))
-                        modelValue(elementValue);
-                    else {
-                        var allBindings = allBindingsAccessor();
-                        if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                            allBindings['_ko_property_writers']['value'](elementValue); 
-                    }
-                });
-            });	    	
+            ko.utils.registerEventHandler(element, eventName, handler);
         });
     },
     'update': function (element, valueAccessor) {
@@ -289,13 +299,8 @@ ko.bindingHandlers['selectedOptions'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
         ko.utils.registerEventHandler(element, "change", function () { 
             var value = valueAccessor();
-            if (ko.isWriteableObservable(value))
-                value(ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
-            else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['value'])
-                    allBindings['_ko_property_writers']['value'](ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this));
-            }
+            var valueToWrite = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this);
+            ko.jsonExpressionRewriting.writeValueToProperty(value, allBindingsAccessor, 'value', valueToWrite);
         });    	
     },
     'update': function (element, valueAccessor) {
@@ -391,15 +396,8 @@ ko.bindingHandlers['checked'] = {
                     modelValue.push(element.value);
                 else if ((!element.checked) && (existingEntryIndex >= 0))
                     modelValue.splice(existingEntryIndex, 1);
-            } else if (ko.isWriteableObservable(modelValue)) {            	
-                if (modelValue() !== valueToWrite) { // Suppress repeated events when there's nothing new to notify (some browsers raise them)
-                    modelValue(valueToWrite);
-                }
             } else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['checked']) {
-                    allBindings['_ko_property_writers']['checked'](valueToWrite);
-                }
+                ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'checked', valueToWrite, true);
             }
         };
         ko.utils.registerEventHandler(element, "click", updateHandler);
@@ -448,17 +446,7 @@ ko.bindingHandlers['hasfocus'] = {
     'init': function(element, valueAccessor, allBindingsAccessor) {
         var writeValue = function(valueToWrite) {
             var modelValue = valueAccessor();
-            if (valueToWrite == ko.utils.unwrapObservable(modelValue))
-                return;
-
-            if (ko.isWriteableObservable(modelValue))
-                modelValue(valueToWrite);
-            else {
-                var allBindings = allBindingsAccessor();
-                if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['hasfocus']) {
-                    allBindings['_ko_property_writers']['hasfocus'](valueToWrite);
-                }                
-            }
+            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', valueToWrite, true);
         };
         ko.utils.registerEventHandler(element, "focus", function() { writeValue(true) });
         ko.utils.registerEventHandler(element, "focusin", function() { writeValue(true) }); // For IE
