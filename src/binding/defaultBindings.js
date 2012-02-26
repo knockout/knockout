@@ -156,7 +156,7 @@ ko.bindingHandlers['value'] = {
         });
     },
     'update': function (element, valueAccessor) {
-        var valueIsSelectOption = element.tagName.toLowerCase() == "select";
+        var valueIsSelectOption = ko.utils.tagNameUpper(element) === "SELECT";
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
@@ -187,12 +187,12 @@ ko.bindingHandlers['value'] = {
 
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
-        if (element.tagName.toLowerCase() != "select")
+        if (ko.utils.tagNameUpper(element) !== "SELECT")
             throw new Error("options binding applies only to SELECT elements");
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
-            return node.tagName && node.tagName.toLowerCase() == "option" && node.selected;
+            return node.tagName && (ko.utils.tagNameUpper(node) === "OPTION") && node.selected;
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
@@ -308,7 +308,7 @@ ko.bindingHandlers['selectedOptions'] = {
             var nodes = element.childNodes;
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
-                if (node.tagName.toLowerCase() == "option")
+                if (ko.utils.tagNameUpper(node) === "OPTION")
                     ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
             }
         }
