@@ -358,10 +358,10 @@ ko.utils = new (function () {
             return null;
         },
 
-        stringifyJson: function (data) {
+        stringifyJson: function (data, replacer, space) {   // replacer and space are optional 
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
-            return JSON.stringify(ko.utils.unwrapObservable(data));
+            return JSON.stringify(ko.utils.unwrapObservable(data), replacer, space);
         },
 
         postJson: function (urlOrForm, data, options) {
