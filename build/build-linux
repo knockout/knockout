@@ -1,10 +1,25 @@
 #!/bin/sh
 
+# Check that all files have trailing spaces stripped
+OutTrailingSpaceListFile='output/knockout-files-to-clean.txt'
+cd ..
+grep -rl ' $' build spec src | grep -v ".exe$" > build/$OutTrailingSpaceListFile
+cd build
+if [ -s $OutTrailingSpaceListFile ]
+then
+  echo "The following files have trailing spaces that need to be cleaned up:"
+  echo ""
+  cat $OutTrailingSpaceListFile
+  echo ""
+else
+  rm $OutTrailingSpaceListFile
+fi
+
 OutDebugFile='output/knockout-latest.debug.js'
 OutMinFile='output/knockout-latest.js'
 
 # Combine the source files
-SourceFiles=`grep js < fragments/source-references.js | # Find JS references 
+SourceFiles=`grep js < fragments/source-references.js | # Find JS references
              sed "s/[ \',]//g" |                        # Strip off JSON fluff (whitespace, commas, quotes)
              sed -e 's/.*/..\/&/' |                     # Fix the paths by prefixing with ../
              tr '\n' ' '`                               # Combine into single line
