@@ -8,7 +8,7 @@ The `checked` binding links a checkable form control &mdash; i.e., a checkbox (`
 
 When the user checks the associated form control, this updates the value on your view model. Likewise, when you update the value in your view model, this checks or unchecks the form control on screen.
 
-Note: For text boxes, drop-down lists, and all non-checkable form controls, use [the `value` binding](value-binding.html) to read and write the element's value, not the `checked` binding.
+Note: For text boxes, drop-down lists, and all non-checkable form controls, use [the `value` binding](value-binding.html) to read and write the element's value, not the `checked` binding. Use the `value` binding when creating radio buttons and checkboxes dynamically.
 
 ### Example with checkbox
     <p>Send me spam: <input type="checkbox" data-bind="checked: wantsSpam" /></p>
@@ -59,6 +59,32 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
 	    // ... then later ...
 	    viewModel.spamFlavor("msg"); // Now only Monosodium Glutamate is checked
     </script>
+    
+### Example adding radio buttons dynamically
+    <p>Send me spam: <input type="checkbox" data-bind="checked: wantsSpam" /></p>
+    <div data-bind="visible: wantsSpam">
+    	Preferred flavor of spam:
+        <div data-bind="foreach: $root.availableSpamFlavors"> // See the foreach binding for explanation
+            <input type="radio" name="flavorGroup" data-bind="value: short, checked: $root.spamFlavor" />
+            <label data-bind="text: full" />
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        var viewModel = {
+            wantsSpam: ko.observable(true),
+            availableSpamFlavors: [
+                { short: "cherry", full: "Cherry" }, 
+                { short: "almond", full: "Almond" }, 
+                { short: "msg", full: "Monosodium Glutamate" }
+            ],
+            spamFlavor: ko.observable("almond") // Initially selects only the Almond radio button
+        };
+
+        // ... then later ...
+        viewModel.spamFlavor("msg"); // Now only Monosodium Glutamate is checked
+    </script>
+
 
 ### Parameters
 
