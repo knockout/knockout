@@ -29,9 +29,9 @@ ko.utils = new (function () {
         isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
-        if ((ko.utils.tagNameUpper(element) !== "INPUT") || !element.type) return false;
+        if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
-        var inputType = element.type.toLowerCase();
+        var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
     
@@ -204,10 +204,11 @@ ko.utils = new (function () {
             return ko.utils.domNodeIsContainedBy(node, document);
         },
 
-        tagNameUpper: function(element) {
-            // Possible future optimization: If we know it's an element from an HTML document (not XHTML),
-            // we don't need to do the .toUpperCase() as it will always be uppercase anyway
-            return element.tagName.toUpperCase();
+        tagNameLower: function(element) {
+            // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
+            // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
+            // we don't need to do the .toLowerCase() as it will always be lower case anyway.
+            return element.tagName.toLowerCase();
         },
 
         registerEventHandler: function (element, eventType, handler) {
@@ -371,7 +372,7 @@ ko.utils = new (function () {
             var url = urlOrForm;
             
             // If we were given a form, use its 'action' URL and pick out any requested field values 	
-            if((typeof urlOrForm == 'object') && (ko.utils.tagNameUpper(urlOrForm) === "FORM")) {
+            if((typeof urlOrForm == 'object') && (ko.utils.tagNameLower(urlOrForm) === "form")) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
                 for (var i = includeFields.length - 1; i >= 0; i--) {

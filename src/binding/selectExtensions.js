@@ -6,12 +6,12 @@
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
     ko.selectExtensions = {
         readValue : function(element) {
-            switch (ko.utils.tagNameUpper(element)) {
-                case 'OPTION':
+            switch (ko.utils.tagNameLower(element)) {
+                case 'option':
                     if (element[hasDomDataExpandoProperty] === true)
                         return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
                     return element.getAttribute("value");
-                case 'SELECT':
+                case 'select':
                     return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
                 default:
                     return element.value;
@@ -19,8 +19,8 @@
         },
         
         writeValue: function(element, value) {
-            switch (ko.utils.tagNameUpper(element)) {
-                case 'OPTION':
+            switch (ko.utils.tagNameLower(element)) {
+                case 'option':
                     switch(typeof value) {
                         case "string":
                             ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
@@ -39,7 +39,7 @@
                             break;
                     }
                     break;
-                case 'SELECT':
+                case 'select':
                     for (var i = element.options.length - 1; i >= 0; i--) {
                         if (ko.selectExtensions.readValue(element.options[i]) == value) {
                             element.selectedIndex = i;
