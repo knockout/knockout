@@ -23,18 +23,19 @@ tools\curl -d output_info=compiled_code -d output_format=text -d compilation_lev
 
 @rem Finalise each file by prefixing with version header and surrounding in function closure
 copy /y fragments\version-header.js %OutDebugFile%
-echo (function(window,document,navigator,undefined){ >> %OutDebugFile%
-echo var DEBUG=true;                                 >> %OutDebugFile%
-type %OutDebugFile%.temp                             >> %OutDebugFile%
-echo })(window,document,navigator);                  >> %OutDebugFile%
+echo (function(window,document,navigator,undefined){>> %OutDebugFile%
+echo var DEBUG=true;>> %OutDebugFile%
+type %OutDebugFile%.temp                            >> %OutDebugFile%
+echo })(window,document,navigator);>> %OutDebugFile%
 del %OutDebugFile%.temp
 
 copy /y fragments\version-header.js %OutMinFile%
-echo (function(window,document,navigator,undefined){ >> %OutMinFile%
-type %OutMinFile%.temp                               >> %OutMinFile%
-echo })(window,document,navigator);                  >> %OutMinFile%
+echo (function(window,document,navigator,undefined){>> %OutMinFile%
+type %OutMinFile%.temp                              >> %OutMinFile%
+echo })(window,document,navigator);>> %OutMinFile%
 del %OutMinFile%.temp
 
 @rem Inject the version number string
 set /p Version= <fragments\version.txt
 cscript tools\searchReplace.js "##VERSION##" %VERSION% %OutDebugFile% %OutMinFile%
+cscript tools\searchReplace.js "\r\n" "\n" %OutDebugFile%  %OutMinFile%
