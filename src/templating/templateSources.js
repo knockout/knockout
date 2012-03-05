@@ -32,9 +32,9 @@
     }
     
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
-        var tagNameLower = ko.utils.tagNameLower(this.domElement),
-            elemContentsProperty = tagNameLower === "script" ? "text"
-                                 : tagNameLower === "textarea" ? "value"
+        var elemType = getElementType(this.domElement),
+            elemContentsProperty = elemType === elementTypes_script ? "text"
+                                 : elemType === elementTypes_textarea ? "value"
                                  : "innerHTML";
 
         if (arguments.length == 0) {

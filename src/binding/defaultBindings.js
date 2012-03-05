@@ -156,7 +156,7 @@ ko.bindingHandlers['value'] = {
         });
     },
     'update': function (element, valueAccessor) {
-        var valueIsSelectOption = ko.utils.tagNameLower(element) === "select";
+        var valueIsSelectOption = getElementType(element) === elementTypes_select;
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
@@ -187,12 +187,12 @@ ko.bindingHandlers['value'] = {
 
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
-        if (ko.utils.tagNameLower(element) !== "select")
+        if (getElementType(element) !== elementTypes_select)
             throw new Error("options binding applies only to SELECT elements");
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
-            return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
+            return node.tagName && (getElementType(node) === elementTypes_option) && node.selected;
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
@@ -275,10 +275,10 @@ ko.bindingHandlers['selectedOptions'] = {
         var result = [];
         var nodes = selectNode.childNodes;
         for (var i = 0, j = nodes.length; i < j; i++) {
-            var node = nodes[i], tagName = ko.utils.tagNameLower(node);
-            if (tagName == "option" && node.selected)
+            var node = nodes[i], elemType = getElementType(node);
+            if (elemType == elementTypes_option && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
-            else if (tagName == "optgroup") {
+            else if (elemType == elementTypes_optgroup) {
                 var selectedValuesFromOptGroup = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node);
                 Array.prototype.splice.apply(result, [result.length, 0].concat(selectedValuesFromOptGroup)); // Add new entries to existing 'result' instance
             }
@@ -298,7 +298,7 @@ ko.bindingHandlers['selectedOptions'] = {
         });    	
     },
     'update': function (element, valueAccessor) {
-        if (ko.utils.tagNameLower(element) != "select")
+        if (getElementType(element) != elementTypes_select)
             throw new Error("values binding applies only to SELECT elements");
 
         var newValue = ko.utils.unwrapObservable(valueAccessor());
@@ -306,7 +306,7 @@ ko.bindingHandlers['selectedOptions'] = {
             var nodes = element.childNodes;
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
-                if (ko.utils.tagNameLower(node) === "option")
+                if (getElementType(node) === elementTypes_option)
                     ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
             }
         }
