@@ -12,6 +12,7 @@ ko.observable = function (initialValue) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
                 observable.valueHasMutated();
+                observable.afterValueHasMutated();
             }
             return this; // Permits chained assignments
         }
@@ -24,10 +25,12 @@ ko.observable = function (initialValue) {
     ko.subscribable.call(observable);
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.afterValueHasMutated = function () { observable["notifySubscribers"](_latestValue, "afterChange"); }
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
+    ko.exportProperty(observable, "afterValueHasMutated", observable.afterValueHasMutated);
     
     return observable;
 }
