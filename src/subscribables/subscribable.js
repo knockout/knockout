@@ -42,10 +42,9 @@ ko.subscribable['fn'] = {
             event = event || defaultEvent;
             if (!subscribable._subscriptions[event]) return;
             var subscriptions = subscribable._subscriptions[event].slice(0);
-            subscriptions.reverse();
-            ko.utils.arrayForEach(subscriptions, function(subscription) {
-                stack.push([subscription, value]);
-            });
+            while (subscriptions.length > 0) {
+                stack.push([subscriptions.pop(), value]);
+            }
         }
         pushSubscriptions(this, valueToNotify, event);
         while (stack.length > 0) {
