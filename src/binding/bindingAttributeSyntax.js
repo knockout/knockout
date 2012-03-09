@@ -18,7 +18,7 @@
         return new ko.bindingContext(dataItem, this);
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
-        var clone = new ko.bindingContext(this.$data, this);
+        var clone = new ko.bindingContext(this['$data'], this);
         return ko.utils.extend(clone, properties);
     };
 

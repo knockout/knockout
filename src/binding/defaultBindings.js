@@ -156,6 +156,7 @@ ko.bindingHandlers['value'] = {
         });
     },
     'update': function (element, valueAccessor) {
+        var valueIsSelectOption = ko.utils.tagNameLower(element) === "select";
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
@@ -172,31 +173,30 @@ ko.bindingHandlers['value'] = {
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
             // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
             // to apply the value as well.
-            var alsoApplyAsynchronously = element.tagName == "SELECT";
+            var alsoApplyAsynchronously = valueIsSelectOption;
             if (alsoApplyAsynchronously)
                 setTimeout(applyValueAction, 0);
         }
         
         // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
         // because you're not allowed to have a model value that disagrees with a visible UI selection.
-        if ((element.tagName == "SELECT") && (element.length > 0))
+        if (valueIsSelectOption && (element.length > 0))
             ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
 
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
-        if (element.tagName != "SELECT")
+        if (ko.utils.tagNameLower(element) !== "select")
             throw new Error("options binding applies only to SELECT elements");
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
-            return node.tagName && node.tagName == "OPTION" && node.selected;
+            return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
         var previousScrollTop = element.scrollTop;
-        element.scrollTop = 0; // Workaround for a Chrome rendering bug. Note that we restore the scroll position later. (https://github.com/SteveSanderson/knockout/issues/215)
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -213,13 +213,13 @@ ko.bindingHandlers['options'] = {
             if (typeof value.length != "number")
                 value = [value];
             if (allBindings['optionsCaption']) {
-                var option = document.createElement("OPTION");
+                var option = document.createElement("option");
                 ko.utils.setHtml(option, allBindings['optionsCaption']);
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
             for (var i = 0, j = value.length; i < j; i++) {
-                var option = document.createElement("OPTION");
+                var option = document.createElement("option");
                 
                 // Apply a value to the option element
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
@@ -245,7 +245,7 @@ ko.bindingHandlers['options'] = {
 
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
-            var newOptions = element.getElementsByTagName("OPTION");
+            var newOptions = element.getElementsByTagName("option");
             var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
                 if (ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[i])) >= 0) {
@@ -254,8 +254,7 @@ ko.bindingHandlers['options'] = {
                 }
             }
             
-            if (previousScrollTop)
-                element.scrollTop = previousScrollTop;
+            element.scrollTop = previousScrollTop;
 
             if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
                 // Ensure consistency between model value and selected option.
@@ -276,10 +275,10 @@ ko.bindingHandlers['selectedOptions'] = {
         var result = [];
         var nodes = selectNode.childNodes;
         for (var i = 0, j = nodes.length; i < j; i++) {
-            var node = nodes[i];
-            if ((node.tagName == "OPTION") && node.selected)
+            var node = nodes[i], tagName = ko.utils.tagNameLower(node);
+            if (tagName == "option" && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
-            else if (node.tagName == "OPTGROUP") {
+            else if (tagName == "optgroup") {
                 var selectedValuesFromOptGroup = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node);
                 Array.prototype.splice.apply(result, [result.length, 0].concat(selectedValuesFromOptGroup)); // Add new entries to existing 'result' instance
             }
@@ -299,7 +298,7 @@ ko.bindingHandlers['selectedOptions'] = {
         });    	
     },
     'update': function (element, valueAccessor) {
-        if (element.tagName != "SELECT")
+        if (ko.utils.tagNameLower(element) != "select")
             throw new Error("values binding applies only to SELECT elements");
 
         var newValue = ko.utils.unwrapObservable(valueAccessor());
@@ -307,7 +306,7 @@ ko.bindingHandlers['selectedOptions'] = {
             var nodes = element.childNodes;
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
-                if (node.tagName == "OPTION")
+                if (ko.utils.tagNameLower(node) === "option")
                     ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
             }
         }
@@ -425,20 +424,34 @@ ko.bindingHandlers['checked'] = {
     }
 };
 
+var attrHtmlToJavascriptMap = { 'class': 'className', 'for': 'htmlFor' };
 ko.bindingHandlers['attr'] = {
     'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
                 var attrValue = ko.utils.unwrapObservable(value[attrName]);
-                
+
                 // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
                 // when someProp is a "no value"-like value (strictly null, false, or undefined)
                 // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)                
-                if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
+                var toRemove = (attrValue === false) || (attrValue === null) || (attrValue === undefined);
+                if (toRemove)
                     element.removeAttribute(attrName);
-                else 
+
+                // In IE <= 7 and IE8 Quirks Mode, you have to use the Javascript property name instead of the 
+                // HTML attribute name for certain attributes. IE8 Standards Mode supports the correct behavior,
+                // but instead of figuring out the mode, we'll just set the attribute through the Javascript 
+                // property for IE <= 8.
+                if (ko.utils.ieVersion <= 8 && attrName in attrHtmlToJavascriptMap) {
+                    attrName = attrHtmlToJavascriptMap[attrName];
+                    if (toRemove)
+                        element.removeAttribute(attrName);
+                    else
+                        element[attrName] = attrValue;
+                } else if (!toRemove) {
                     element.setAttribute(attrName, attrValue.toString());
+                }
             }
         }
     }

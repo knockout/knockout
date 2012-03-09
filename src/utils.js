@@ -29,9 +29,9 @@ ko.utils = new (function () {
         isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
-        if ((element.tagName != "INPUT") || !element.type) return false;
+        if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
-        var inputType = element.type.toLowerCase();
+        var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
     
@@ -204,6 +204,13 @@ ko.utils = new (function () {
             return ko.utils.domNodeIsContainedBy(node, document);
         },
 
+        tagNameLower: function(element) {
+            // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
+            // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
+            // we don't need to do the .toLowerCase() as it will always be lower case anyway.
+            return element.tagName.toLowerCase();
+        },
+
         registerEventHandler: function (element, eventType, handler) {
             if (typeof jQuery != "undefined") {
                 if (isClickOnCheckableElement(element, eventType)) {
@@ -254,10 +261,8 @@ ko.utils = new (function () {
             } else if (typeof element.fireEvent != "undefined") {
                 // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
                 // so to make it consistent, we'll do it manually here
-                if (eventType == "click") {
-                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
-                        element.checked = element.checked !== true;
-                }
+                if (isClickOnCheckableElement(element, eventType))
+                    element.checked = element.checked !== true;
                 element.fireEvent("on" + eventType);
             }
             else
@@ -268,13 +273,33 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
-        domNodeHasCssClass: function (node, className) {
+        toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
             var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
-            return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
+            var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
+            if (shouldHaveClass && !hasClass) {
+                if (typeof (node.className) == "string")
+                     node.className += (currentClassNames[0] ? " " : "") + className;
+                else {
+                    if ("baseVal" in node.className) node.baseVal.className += (currentClassNames[0] ? " " : "") + className;
+                }
+            } else if (hasClass && !shouldHaveClass) {
+                var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
+                var newClassName = "";
+                for (var i = 0; i < currentClassNames.length; i++)
+                    if (currentClassNames[i] != className)
+                        newClassName += currentClassNames[i] + " ";
+                if (typeof (node.className) == "string") {
+                    node.className = ko.utils.stringTrim(newClassName);
+                } else {
+                    if ("baseVal" in node.className) node.className.baseVal = ko.utils.stringTrim(newClassName);
+                }
+            }
         },
 
-        toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var hasClass = ko.utils.domNodeHasCssClass(node, className);
+   
+  
+
+    
             if (shouldHaveClass && !hasClass) {
                 if (typeof (node.className) == "string")
                     node.className = (node.className || "") + " " + className;
@@ -292,8 +317,6 @@ ko.utils = new (function () {
                 } else {
                     if ("baseVal" in node.className) node.className.baseVal = ko.utils.stringTrim(newClassName);
                 }
-            }
-        },
 
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
@@ -340,9 +363,9 @@ ko.utils = new (function () {
         isIe6 : isIe6,
         isIe7 : isIe7,
         ieVersion : ieVersion,
-        
+
         getFormFields: function(form, fieldName) {
-            var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+            var fields = ko.utils.makeArray(form.getElementsByTagName("input")).concat(ko.utils.makeArray(form.getElementsByTagName("textarea")));
             var isMatchingField = (typeof fieldName == 'string') 
                 ? function(field) { return field.name === fieldName }
                 : function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
@@ -366,10 +389,10 @@ ko.utils = new (function () {
             return null;
         },
 
-        stringifyJson: function (data) {
+        stringifyJson: function (data, replacer, space) {   // replacer and space are optional 
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
-            return JSON.stringify(ko.utils.unwrapObservable(data));
+            return JSON.stringify(ko.utils.unwrapObservable(data), replacer, space);
         },
 
         postJson: function (urlOrForm, data, options) {
@@ -379,7 +402,7 @@ ko.utils = new (function () {
             var url = urlOrForm;
             
             // If we were given a form, use its 'action' URL and pick out any requested field values 	
-            if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+            if((typeof urlOrForm == 'object') && (ko.utils.tagNameLower(urlOrForm) === "form")) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
                 for (var i = includeFields.length - 1; i >= 0; i--) {
@@ -390,18 +413,18 @@ ko.utils = new (function () {
             }        	
             
             data = ko.utils.unwrapObservable(data);
-            var form = document.createElement("FORM");
+            var form = document.createElement("form");
             form.style.display = "none";
             form.action = url;
             form.method = "post";
             for (var key in data) {
-                var input = document.createElement("INPUT");
+                var input = document.createElement("input");
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
             for (var key in params) {
-                var input = document.createElement("INPUT");
+                var input = document.createElement("input");
                 input.name = key;
                 input.value = params[key];
                 form.appendChild(input);
