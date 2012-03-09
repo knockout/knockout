@@ -2,7 +2,8 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){ 
+(function(window,document,navigator,undefined){
+var DEBUG=true;
 !function(factory) {
     // Support three module loading scenarios
     if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
@@ -69,9 +70,9 @@ ko.utils = new (function () {
         isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
-        if ((element.tagName != "INPUT") || !element.type) return false;
+        if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
-        var inputType = element.type.toLowerCase();
+        var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
     
@@ -244,6 +245,13 @@ ko.utils = new (function () {
             return ko.utils.domNodeIsContainedBy(node, document);
         },
 
+        tagNameLower: function(element) {
+            // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
+            // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
+            // we don't need to do the .toLowerCase() as it will always be lower case anyway.
+            return element.tagName.toLowerCase();
+        },
+
         registerEventHandler: function (element, eventType, handler) {
             if (typeof jQuery != "undefined") {
                 if (isClickOnCheckableElement(element, eventType)) {
@@ -294,10 +302,8 @@ ko.utils = new (function () {
             } else if (typeof element.fireEvent != "undefined") {
                 // Unlike other browsers, IE doesn't change the checked state of checkboxes/radiobuttons when you trigger their "click" event
                 // so to make it consistent, we'll do it manually here
-                if (eventType == "click") {
-                    if ((element.tagName == "INPUT") && ((element.type.toLowerCase() == "checkbox") || (element.type.toLowerCase() == "radio")))
-                        element.checked = element.checked !== true;
-                }
+                if (isClickOnCheckableElement(element, eventType))
+                    element.checked = element.checked !== true;
                 element.fireEvent("on" + eventType);
             }
             else
@@ -308,18 +314,14 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
-        domNodeHasCssClass: function (node, className) {
-            var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
-            return ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
-        },
-
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var hasClass = ko.utils.domNodeHasCssClass(node, className);
+            var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
+            var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
             if (shouldHaveClass && !hasClass) {
                 if (typeof (node.className) == "string")
-                    node.className = (node.className || "") + " " + className;
+                     node.className += (currentClassNames[0] ? " " : "") + className;
                 else {
-                    if ("baseVal" in node.className) node.className.baseVal = (node.className.baseVal || "") + " " + className;
+                    if ("baseVal" in node.className) node.baseVal.className += (currentClassNames[0] ? " " : "") + className;
                 }
             } else if (hasClass && !shouldHaveClass) {
                 var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
@@ -335,6 +337,8 @@ ko.utils = new (function () {
             }
         },
 
+    
+        
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))
@@ -380,9 +384,9 @@ ko.utils = new (function () {
         isIe6 : isIe6,
         isIe7 : isIe7,
         ieVersion : ieVersion,
-        
+
         getFormFields: function(form, fieldName) {
-            var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
+            var fields = ko.utils.makeArray(form.getElementsByTagName("input")).concat(ko.utils.makeArray(form.getElementsByTagName("textarea")));
             var isMatchingField = (typeof fieldName == 'string') 
                 ? function(field) { return field.name === fieldName }
                 : function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
@@ -406,10 +410,10 @@ ko.utils = new (function () {
             return null;
         },
 
-        stringifyJson: function (data) {
+        stringifyJson: function (data, replacer, space) {   // replacer and space are optional 
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
-            return JSON.stringify(ko.utils.unwrapObservable(data));
+            return JSON.stringify(ko.utils.unwrapObservable(data), replacer, space);
         },
 
         postJson: function (urlOrForm, data, options) {
@@ -419,7 +423,7 @@ ko.utils = new (function () {
             var url = urlOrForm;
             
             // If we were given a form, use its 'action' URL and pick out any requested field values 	
-            if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
+            if((typeof urlOrForm == 'object') && (ko.utils.tagNameLower(urlOrForm) === "form")) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
                 for (var i = includeFields.length - 1; i >= 0; i--) {
@@ -430,18 +434,18 @@ ko.utils = new (function () {
             }        	
             
             data = ko.utils.unwrapObservable(data);
-            var form = document.createElement("FORM");
+            var form = document.createElement("form");
             form.style.display = "none";
             form.action = url;
             form.method = "post";
             for (var key in data) {
-                var input = document.createElement("INPUT");
+                var input = document.createElement("input");
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
             for (var key in params) {
-                var input = document.createElement("INPUT");
+                var input = document.createElement("input");
                 input.name = key;
                 input.value = params[key];
                 form.appendChild(input);
@@ -927,6 +931,7 @@ ko.observable = function (initialValue) {
             if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
+                if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -937,6 +942,7 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
+    if (DEBUG) observable._latestValue = _latestValue;
     ko.subscribable.call(observable);
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
@@ -958,10 +964,14 @@ ko.observable['fn'] = {
 var protoProperty = ko.observable.protoProperty = "__ko_proto__";
 ko.observable['fn'][protoProperty] = ko.observable;
 
-ko.isObservable = function (instance) {
+ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
-    if (instance[protoProperty] === ko.observable) return true;
-    return ko.isObservable(instance[protoProperty]); // Walk the prototype chain
+    if (instance[protoProperty] === prototype) return true;
+    return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain 
+};
+
+ko.isObservable = function (instance) {
+    return ko.hasPrototype(instance, ko.observable);
 }
 ko.isWriteableObservable = function (instance) {
     // Observable
@@ -1182,6 +1192,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
+            if (DEBUG) dependentObservable._latestValue = _latestValue;
         } finally {
             ko.dependencyDetection.end();
         }
@@ -1231,6 +1242,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
+ko.isComputed = function(instance) {
+    return ko.hasPrototype(instance, ko.dependentObservable);
+};
+
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
@@ -1239,6 +1254,8 @@ ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
+ko.exportSymbol('isComputed', ko.isComputed);
+
 (function() {    
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
     
@@ -1255,9 +1272,9 @@ ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an al
         });
     };
 
-    ko.toJSON = function(rootObject) {
+    ko.toJSON = function(rootObject, replacer, space) {     // replacer and space are optional
         var plainJavaScriptObject = ko.toJS(rootObject);
-        return ko.utils.stringifyJson(plainJavaScriptObject);
+        return ko.utils.stringifyJson(plainJavaScriptObject, replacer, space);
     };
     
     function mapJsObjectGraph(rootObject, mapInputCallback, visitedObjects) {
@@ -1336,46 +1353,52 @@ ko.exportSymbol('toJSON', ko.toJSON);(function () {
     // that are arbitrary objects. This is very convenient when implementing things like cascading dropdowns.
     ko.selectExtensions = {
         readValue : function(element) {
-            if (element.tagName == 'OPTION') {
-                if (element[hasDomDataExpandoProperty] === true)
-                    return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
-                return element.getAttribute("value");
-            } else if (element.tagName == 'SELECT')
-                return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
-            else
-                return element.value;
+            switch (ko.utils.tagNameLower(element)) {
+                case 'option':
+                    if (element[hasDomDataExpandoProperty] === true)
+                        return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
+                    return element.getAttribute("value");
+                case 'select':
+                    return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+                default:
+                    return element.value;
+            }
         },
         
         writeValue: function(element, value) {
-            if (element.tagName == 'OPTION') {
-                switch(typeof value) {
-                    case "string":
-                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
-                        if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
-                            delete element[hasDomDataExpandoProperty];
-                        }
-                        element.value = value;                                   
-                        break;
-                    default:
-                        // Store arbitrary object using DomData
-                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                        element[hasDomDataExpandoProperty] = true;
+            switch (ko.utils.tagNameLower(element)) {
+                case 'option':
+                    switch(typeof value) {
+                        case "string":
+                            ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
+                            if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                                delete element[hasDomDataExpandoProperty];
+                            }
+                            element.value = value;
+                            break;
+                        default:
+                            // Store arbitrary object using DomData
+                            ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
+                            element[hasDomDataExpandoProperty] = true;
 
-                        // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
-                        element.value = typeof value === "number" ? value : "";
-                        break;
-                }			
-            } else if (element.tagName == 'SELECT') {
-                for (var i = element.options.length - 1; i >= 0; i--) {
-                    if (ko.selectExtensions.readValue(element.options[i]) == value) {
-                        element.selectedIndex = i;
-                        break;
+                            // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
+                            element.value = typeof value === "number" ? value : "";
+                            break;
                     }
-                }
-            } else {
-                if ((value === null) || (value === undefined))
-                    value = "";
-                element.value = value;
+                    break;
+                case 'select':
+                    for (var i = element.options.length - 1; i >= 0; i--) {
+                        if (ko.selectExtensions.readValue(element.options[i]) == value) {
+                            element.selectedIndex = i;
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    if ((value === null) || (value === undefined))
+                        value = "";
+                    element.value = value;
+                    break;
             }
         }
     };        
@@ -1714,7 +1737,7 @@ ko.exportSymbol('jsonExpressionRewriting.insertPropertyAccessorsIntoJson', ko.js
             // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
             // that are direct descendants of <ul> into the preceding <li>)
-            if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
+            if (!htmlTagsWithOptionallyClosingChildren[ko.utils.tagNameLower(elementVerified)])
                 return;
             
             // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags
@@ -1828,7 +1851,7 @@ ko.exportSymbol('bindingProvider', ko.bindingProvider);
         return new ko.bindingContext(dataItem, this);
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
-        var clone = new ko.bindingContext(this.$data, this);
+        var clone = new ko.bindingContext(this['$data'], this);
         return ko.utils.extend(clone, properties);
     };
 
@@ -2165,6 +2188,7 @@ ko.bindingHandlers['value'] = {
         });
     },
     'update': function (element, valueAccessor) {
+        var valueIsSelectOption = ko.utils.tagNameLower(element) === "select";
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
@@ -2181,31 +2205,30 @@ ko.bindingHandlers['value'] = {
             // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
             // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
             // to apply the value as well.
-            var alsoApplyAsynchronously = element.tagName == "SELECT";
+            var alsoApplyAsynchronously = valueIsSelectOption;
             if (alsoApplyAsynchronously)
                 setTimeout(applyValueAction, 0);
         }
         
         // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
         // because you're not allowed to have a model value that disagrees with a visible UI selection.
-        if ((element.tagName == "SELECT") && (element.length > 0))
+        if (valueIsSelectOption && (element.length > 0))
             ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
 
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
-        if (element.tagName != "SELECT")
+        if (ko.utils.tagNameLower(element) !== "select")
             throw new Error("options binding applies only to SELECT elements");
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
-            return node.tagName && node.tagName == "OPTION" && node.selected;
+            return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
         }), function (node) {
             return ko.selectExtensions.readValue(node) || node.innerText || node.textContent;
         });
         var previousScrollTop = element.scrollTop;
-        element.scrollTop = 0; // Workaround for a Chrome rendering bug. Note that we restore the scroll position later. (https://github.com/SteveSanderson/knockout/issues/215)
 
         var value = ko.utils.unwrapObservable(valueAccessor());
         var selectedValue = element.value;
@@ -2222,13 +2245,13 @@ ko.bindingHandlers['options'] = {
             if (typeof value.length != "number")
                 value = [value];
             if (allBindings['optionsCaption']) {
-                var option = document.createElement("OPTION");
+                var option = document.createElement("option");
                 ko.utils.setHtml(option, allBindings['optionsCaption']);
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
             for (var i = 0, j = value.length; i < j; i++) {
-                var option = document.createElement("OPTION");
+                var option = document.createElement("option");
                 
                 // Apply a value to the option element
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
@@ -2254,7 +2277,7 @@ ko.bindingHandlers['options'] = {
 
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
-            var newOptions = element.getElementsByTagName("OPTION");
+            var newOptions = element.getElementsByTagName("option");
             var countSelectionsRetained = 0;
             for (var i = 0, j = newOptions.length; i < j; i++) {
                 if (ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[i])) >= 0) {
@@ -2263,8 +2286,7 @@ ko.bindingHandlers['options'] = {
                 }
             }
             
-            if (previousScrollTop)
-                element.scrollTop = previousScrollTop;
+            element.scrollTop = previousScrollTop;
 
             if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
                 // Ensure consistency between model value and selected option.
@@ -2285,10 +2307,10 @@ ko.bindingHandlers['selectedOptions'] = {
         var result = [];
         var nodes = selectNode.childNodes;
         for (var i = 0, j = nodes.length; i < j; i++) {
-            var node = nodes[i];
-            if ((node.tagName == "OPTION") && node.selected)
+            var node = nodes[i], tagName = ko.utils.tagNameLower(node);
+            if (tagName == "option" && node.selected)
                 result.push(ko.selectExtensions.readValue(node));
-            else if (node.tagName == "OPTGROUP") {
+            else if (tagName == "optgroup") {
                 var selectedValuesFromOptGroup = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node);
                 Array.prototype.splice.apply(result, [result.length, 0].concat(selectedValuesFromOptGroup)); // Add new entries to existing 'result' instance
             }
@@ -2308,7 +2330,7 @@ ko.bindingHandlers['selectedOptions'] = {
         });    	
     },
     'update': function (element, valueAccessor) {
-        if (element.tagName != "SELECT")
+        if (ko.utils.tagNameLower(element) != "select")
             throw new Error("values binding applies only to SELECT elements");
 
         var newValue = ko.utils.unwrapObservable(valueAccessor());
@@ -2316,7 +2338,7 @@ ko.bindingHandlers['selectedOptions'] = {
             var nodes = element.childNodes;
             for (var i = 0, j = nodes.length; i < j; i++) {
                 var node = nodes[i];
-                if (node.tagName == "OPTION")
+                if (ko.utils.tagNameLower(node) === "option")
                     ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
             }
         }
@@ -2434,20 +2456,34 @@ ko.bindingHandlers['checked'] = {
     }
 };
 
+var attrHtmlToJavascriptMap = { 'class': 'className', 'for': 'htmlFor' };
 ko.bindingHandlers['attr'] = {
     'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         for (var attrName in value) {
             if (typeof attrName == "string") {
                 var attrValue = ko.utils.unwrapObservable(value[attrName]);
-                
+
                 // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely 
                 // when someProp is a "no value"-like value (strictly null, false, or undefined)
                 // (because the absence of the "checked" attr is how to mark an element as not checked, etc.)                
-                if ((attrValue === false) || (attrValue === null) || (attrValue === undefined))
+                var toRemove = (attrValue === false) || (attrValue === null) || (attrValue === undefined);
+                if (toRemove)
                     element.removeAttribute(attrName);
-                else 
+
+                // In IE <= 7 and IE8 Quirks Mode, you have to use the Javascript property name instead of the 
+                // HTML attribute name for certain attributes. IE8 Standards Mode supports the correct behavior,
+                // but instead of figuring out the mode, we'll just set the attribute through the Javascript 
+                // property for IE <= 8.
+                if (ko.utils.ieVersion <= 8 && attrName in attrHtmlToJavascriptMap) {
+                    attrName = attrHtmlToJavascriptMap[attrName];
+                    if (toRemove)
+                        element.removeAttribute(attrName);
+                    else
+                        element[attrName] = attrValue;
+                } else if (!toRemove) {
                     element.setAttribute(attrName, attrValue.toString());
+                }
             }
         }
     }
@@ -2737,14 +2773,19 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
     }
     
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
+        var tagNameLower = ko.utils.tagNameLower(this.domElement),
+            elemContentsProperty = tagNameLower === "script" ? "text"
+                                 : tagNameLower === "textarea" ? "value"
+                                 : "innerHTML";
+
         if (arguments.length == 0) {
-            return this.domElement.tagName.toLowerCase() == "script" ? this.domElement.text : this.domElement.innerHTML;
+            return this.domElement[elemContentsProperty];
         } else {
             var valueToWrite = arguments[0];
-            if (this.domElement.tagName.toLowerCase() == "script")
-                this.domElement.text = valueToWrite;
-            else
+            if (elemContentsProperty === "innerHTML")
                 ko.utils.setHtml(this.domElement, valueToWrite);
+            else
+                this.domElement[elemContentsProperty] = valueToWrite;
         }
     };
     
@@ -3356,5 +3397,4 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);(function() {
     
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();});
-})(window,document,navigator);                  
-
+})(window,document,navigator);
