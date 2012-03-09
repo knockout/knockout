@@ -155,7 +155,7 @@
             // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
             // that are direct descendants of <ul> into the preceding <li>)
-            if (!htmlTagsWithOptionallyClosingChildren[ko.utils.tagNameLower(elementVerified)])
+            if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
                 return;
             
             // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags

@@ -29,12 +29,12 @@ ko.utils = new (function () {
         isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
-        if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
+        if ((getElementType(element) !== elementTypes_input) || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
         var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
-    
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
         
@@ -204,13 +204,6 @@ ko.utils = new (function () {
             return ko.utils.domNodeIsContainedBy(node, document);
         },
 
-        tagNameLower: function(element) {
-            // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
-            // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
-            // we don't need to do the .toLowerCase() as it will always be lower case anyway.
-            return element.tagName.toLowerCase();
-        },
-
         registerEventHandler: function (element, eventType, handler) {
             if (typeof jQuery != "undefined") {
                 if (isClickOnCheckableElement(element, eventType)) {
@@ -372,7 +365,7 @@ ko.utils = new (function () {
             var url = urlOrForm;
             
             // If we were given a form, use its 'action' URL and pick out any requested field values 	
-            if((typeof urlOrForm == 'object') && (ko.utils.tagNameLower(urlOrForm) === "form")) {
+            if((typeof urlOrForm == 'object') && (getElementType(urlOrForm) === elementTypes_form)) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
                 for (var i = includeFields.length - 1; i >= 0; i--) {
@@ -427,6 +420,27 @@ ko.exportSymbol('utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
 ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 
+var getElementType = function(element) {
+    return element.tagName
+}; 
+if (document.documentElement.tagName === 'HTML') {
+    var elementTypes_input = "INPUT",
+        elementTypes_form = "FORM",
+        elementTypes_select = "SELECT",
+        elementTypes_option = "OPTION",
+        elementTypes_optgroup = "OPTGROUP",
+        elementTypes_script = "SCRIPT",
+        elementTypes_textarea = "TEXTAREA";
+} else {
+    var elementTypes_input = "input",
+        elementTypes_form = "form",
+        elementTypes_select = "select",
+        elementTypes_option = "option",
+        elementTypes_optgroup = "optgroup",
+        elementTypes_script = "script",
+        elementTypes_textarea = "textarea";
+}
+    
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)
     // In case the browser doesn't implement it natively, provide a JavaScript implementation. This implementation is based on the one in prototype.js
