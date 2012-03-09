@@ -131,7 +131,7 @@ ko.bindingHandlers['value'] = {
         var valueUpdateHandler = function() {
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
-            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
+            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue, /* checkIfDifferent: */ true);
         }
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122
