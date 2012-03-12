@@ -274,20 +274,30 @@ ko.utils = new (function () {
         },
 
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var currentClassNames = (node.className || "").split(/\s+/);
+            var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
             var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
-
             if (shouldHaveClass && !hasClass) {
-                node.className += (currentClassNames[0] ? " " : "") + className;
+                if (typeof (node.className) == "string")
+                     node.className += (currentClassNames[0] ? " " : "") + className;
+                else {
+                    if ("baseVal" in node.className) node.className.baseVal += (currentClassNames[0] ? " " : "") + className;
+                }
             } else if (hasClass && !shouldHaveClass) {
+                var currentClassNames = typeof (node.className) == "string" ? (node.className || "").split(/\s+/) : (node.className.baseVal || "").split(/\s+/);
                 var newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
                     if (currentClassNames[i] != className)
                         newClassName += currentClassNames[i] + " ";
-                node.className = ko.utils.stringTrim(newClassName);
+                if (typeof (node.className) == "string") {
+                    node.className = ko.utils.stringTrim(newClassName);
+                } else {
+                    if ("baseVal" in node.className) node.className.baseVal = ko.utils.stringTrim(newClassName);
+                }
             }
         },
 
+    
+        
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))

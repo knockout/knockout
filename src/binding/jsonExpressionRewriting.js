@@ -1,7 +1,7 @@
 
 ko.jsonExpressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
+    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*((\([\_$a-z0-9]*\))*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)+)*((\([\_$a-z0-9]*\))*(\[.*?\])+)*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
 
     function restoreTokens(string, tokens) {
@@ -18,6 +18,7 @@ ko.jsonExpressionRewriting = (function () {
     function isWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
+       
         return expression.match(javaScriptAssignmentTarget) !== null;
     }
 
@@ -25,7 +26,7 @@ ko.jsonExpressionRewriting = (function () {
         var trimmedKey = ko.utils.stringTrim(key);
         switch (trimmedKey.length && trimmedKey.charAt(0)) {
             case "'":
-            case '"': 
+            case '"':
                 return key;
             default:
                 return "'" + trimmedKey + "'";
@@ -34,8 +35,8 @@ ko.jsonExpressionRewriting = (function () {
 
     return {
         bindingRewriteValidators: [],
-        
-        parseObjectLiteral: function(objectLiteralString) {
+
+        parseObjectLiteral: function (objectLiteralString) {
             // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
             // that is sufficient just to split an object literal string into a set of top-level key-value pairs
 
@@ -78,14 +79,14 @@ ko.jsonExpressionRewriting = (function () {
                 if (tokenStart === null) {
                     switch (c) {
                         case "{": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = "}";
-                                  break;
+                            tokenEndChar = "}";
+                            break;
                         case "(": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = ")";
-                                  break;
+                            tokenEndChar = ")";
+                            break;
                         case "[": tokenStart = position; tokenStartChar = c;
-                                  tokenEndChar = "]";
-                                  break;
+                            tokenEndChar = "]";
+                            break;
                     }
                 }
 
@@ -99,7 +100,7 @@ ko.jsonExpressionRewriting = (function () {
                         var replacement = "@ko_token_" + (tokens.length - 1) + "@";
                         str = str.substring(0, tokenStart) + replacement + str.substring(position + 1);
                         position -= (token.length - replacement.length);
-                        tokenStart = null;                            
+                        tokenStart = null;
                     }
                 }
             }
@@ -118,11 +119,11 @@ ko.jsonExpressionRewriting = (function () {
                     result.push({ 'unknown': restoreTokens(pair, tokens) });
                 }
             }
-            return result;            
+            return result;
         },
 
         insertPropertyAccessorsIntoJson: function (objectLiteralStringOrKeyValueArray) {
-            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string" 
+            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string"
                 ? ko.jsonExpressionRewriting.parseObjectLiteral(objectLiteralStringOrKeyValueArray)
                 : objectLiteralStringOrKeyValueArray;
             var resultStrings = [], propertyAccessorResultStrings = [];
@@ -135,14 +136,14 @@ ko.jsonExpressionRewriting = (function () {
                 if (keyValueEntry['key']) {
                     var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
-                    resultStrings.push(":");              
+                    resultStrings.push(":");
                     resultStrings.push(val);
 
                     if (isWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)
                             propertyAccessorResultStrings.push(", ");
                         propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
-                    }                    
+                    }
                 } else if (keyValueEntry['unknown']) {
                     resultStrings.push(keyValueEntry['unknown']);
                 }
@@ -151,16 +152,16 @@ ko.jsonExpressionRewriting = (function () {
             var combinedResult = resultStrings.join("");
             if (propertyAccessorResultStrings.length > 0) {
                 var allPropertyAccessors = propertyAccessorResultStrings.join("");
-                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";                
+                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
             }
 
             return combinedResult;
         },
 
-        keyValueArrayContainsKey: function(keyValueArray, key) {
+        keyValueArrayContainsKey: function (keyValueArray, key) {
             for (var i = 0; i < keyValueArray.length; i++)
                 if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
-                    return true;            
+                    return true;
             return false;
         },
 
