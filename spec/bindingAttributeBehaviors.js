@@ -211,11 +211,16 @@ describe('Binding attribute syntax', {
                 return { controlsDescendantBindings : true };
             }
         };
-        testNode.innerHTML = "<div data-bind='with: true'><div data-bind='addCustomProperty: true'><div data-bind='text: $customProp'></div></div></div>";
-        ko.applyBindings(null, testNode);
+        testNode.innerHTML = "<div data-bind='with: sub'><div data-bind='addCustomProperty: true'><div data-bind='text: $customProp'></div></div></div>";
+        var vm = { sub: {} };
+        ko.applyBindings(vm, testNode);
         value_of(testNode).should_contain_text("my value");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$customProp).should_be("my value");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[0]).$customProp).should_be(undefined); // Should not affect original binding context
+
+        // vale of $data and $parent should be unchanged in extended context
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$data).should_be(vm.sub);
+        value_of(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$parent).should_be(vm);
     },
 
     'Binding contexts should inherit any custom properties from ancestor binding contexts': function() {
