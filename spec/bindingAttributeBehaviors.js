@@ -304,7 +304,7 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.test = { init: function () { initCalls++ } };
         ko.virtualElements.allowedBindings['test'] = true;
         
-        testNode.innerHTML = "Hello <!-- if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
         ko.applyBindings(null, testNode);
 
         value_of(initCalls).should_be(1);
