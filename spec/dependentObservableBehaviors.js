@@ -226,5 +226,16 @@ describe('Dependent Observable', {
         value_of(timesEvaluated).should_be(0);
         value_of(instance()).should_be(123);
         value_of(timesEvaluated).should_be(1);
+    },
+
+    'Should prevent recursive calling of read function': function() {
+        var observable = ko.observable(0),
+            computed = ko.dependentObservable(function() {
+                // this both reads and writes to the observable
+                // will result in errors like "Maximum call stack size exceeded" (chrome) 
+                // or "Out of stack space" (IE) or "too much recursion" (Firefox) if recursion
+                // isn't prevented 
+                observable(observable() + 1);
+            });
      }    
 })
