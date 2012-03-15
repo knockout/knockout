@@ -321,7 +321,7 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.bindChildrenWithCustomContext = {
             init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
-                ko.applyBindingsToDescendants(innerContext, element, true);
+                ko.applyBindingsToDescendants(innerContext, element);
                 return { 'controlsDescendantBindings': true };
             }
         };
@@ -338,7 +338,7 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.bindChildrenWithCustomContext = {
             init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
-                ko.applyBindingsToDescendants(innerContext, element, true);
+                ko.applyBindingsToDescendants(innerContext, element);
                 return { 'controlsDescendantBindings': true };
             }
         };
@@ -355,7 +355,7 @@ describe('Binding attribute syntax', {
             init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 innerContext.customValue = 'xyz';
-                ko.applyBindingsToDescendants(innerContext, element, true);
+                ko.applyBindingsToDescendants(innerContext, element);
                 return { 'controlsDescendantBindings': true };
             }
         };
