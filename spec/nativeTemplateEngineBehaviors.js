@@ -10,7 +10,12 @@ describe('Native template engine', {
             resultNode.id = id;
             resultNode.setAttribute("type", "text/html");
             document.body.appendChild(resultNode);  
-            return resultNode;  		
+            return resultNode;
+        },
+        function ensureNodeDoesNotExist(id) {
+            var existingNode = document.getElementById(id);
+            if (existingNode != null)
+                existingNode.parentNode.removeChild(existingNode);            
         }
         
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
@@ -18,6 +23,12 @@ describe('Native template engine', {
         window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");        
         window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
     }, 
+    after_each : function () {          
+        ensureNodeExist("testDivTemplate");
+        ensureNodeExist("testScriptTemplate");        
+        ensureNodeExist("testTextAreaTemplate");        
+        ensureNodeExist("templateOutput");
+    }
 
     'Named template can display static content from regular DOM element': function () {
         window.testDivTemplate.innerHTML = "this is some static content";
