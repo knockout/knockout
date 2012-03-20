@@ -92,13 +92,13 @@ In some scenarios, you may need to access the DOM event object associated with y
 
 If you need to pass more parameters, one way to do it is by wrapping your handler in a function literal that takes in a parameter, as in this example:
 
-    <button data-bind="click: function(data, event) { myFunction(data, event, 'param1', 'param2') }">
+    <button data-bind="click: function(data, event) { myFunction('param1', 'param2', data, event) }">
         Click me
     </button>
 
 Now, KO will pass the data and event objects to your function literal, which are then available to be passed to your handler.
 
-Alternatively, if you prefer to avoid the function literal in your view, you can use the `bind` function, which attaches specific parameter values to a function reference:
+Alternatively, if you prefer to avoid the function literal in your view, you can use the [bind](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind) function, which attaches specific parameter values to a function reference:
 
     <button data-bind="click: myFunction.bind($data, 'param1', 'param2')">
         Click me
