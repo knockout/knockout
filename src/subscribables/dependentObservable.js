@@ -54,10 +54,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             clearTimeout(evaluationTimeoutInstance);
             evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
         } else
-            evaluateImmediate();
+            return evaluateImmediate(true);
     }
 
-    function evaluateImmediate() {
+    function evaluateImmediate(notifyOutOfLine) {
         // Don't dispose on first evaluation, because the "disposeWhen" callback might
         // e.g., dispose when the associated DOM element isn't in the doc, and it's not
         // going to be in the doc until *after* the first evaluation
@@ -94,8 +94,12 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             ko.dependencyDetection.end();
         }
 
-        dependentObservable["notifySubscribers"](_latestValue);
         _hasBeenEvaluated = true;
+        if (notifyOutOfLine) {
+            return [[dependentObservable, _latestValue]];
+        } else {
+            dependentObservable["notifySubscribers"](_latestValue);
+        }
     }
 
     function dependentObservable() {

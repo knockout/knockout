@@ -37,14 +37,27 @@ ko.subscribable['fn'] = {
     },
 
     "notifySubscribers": function (valueToNotify, event) {
-        event = event || defaultEvent;
-        if (this._subscriptions[event]) {
-            ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
-                // In case a subscription was disposed during the arrayForEach cycle, check
-                // for isDisposed on each subscription before invoking its callback
-                if (subscription && (subscription.isDisposed !== true))
-                    subscription.callback(valueToNotify);
-            });
+        var stack = [];
+        function pushSubscriptions(subscribable, value, event) {
+            event = event || defaultEvent;
+            if (!subscribable._subscriptions[event]) return;
+            var subscriptions = subscribable._subscriptions[event].slice(0);
+            while (subscriptions.length > 0) {
+                stack.push([subscriptions.pop(), value]);
+            }
+        }
+        pushSubscriptions(this, valueToNotify, event);
+        while (stack.length > 0) {
+            var stackEntry = stack.pop();
+            var subscription = stackEntry[0],
+                value = stackEntry[1];
+            // In case a subscription was disposed while delivering other callbacks,
+            // check for isDisposed on each subscription before invoking its callback.
+            if (subscription && (subscription.isDisposed !== true)) {
+                var ret = subscription.callback(value);
+                if (ret)
+                    ko.utils.arrayForEach(ret, function(arr) { pushSubscriptions(arr[0], arr[1], arr[2]); });
+            }
         }
     },
 
@@ -56,7 +69,7 @@ ko.subscribable['fn'] = {
         }
         return total;
     },
-    
+
     extend: applyExtenders
 };
 
