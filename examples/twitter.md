@@ -46,7 +46,7 @@ This is a sophisticated example showing how many different features in Knockout 
         <tr>
             <td><img data-bind='attr: { src: profile_image_url }' /></td>
             <td>
-                <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user, text: from_user }' href='http://twitter.com/${ from_user }' > </a>
+                <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>
                 <span data-bind="text: text"> </span>
                 <div class='tweetInfo' data-bind='text: created_at'> </div>
             </td>
