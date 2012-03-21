@@ -6,7 +6,7 @@ title: Twitter client example
 This is a sophisticated example showing how many different features in Knockout can be combined to make a rich user interface.
 
  * The user data is stored as a JavaScript model and rendered based on the selected list. This means we can cleanly retain information about which Twitter users are in each of the user lists without having to hide it in the DOM anywhere.
- * Buttons become enabled and disabled according to whether they are applicable. For example, we have a `computed` proeprty called `hasUnsavedChanges` that controls whether the "Save" button is enabled.
+ * Buttons become enabled and disabled according to whether they are applicable. For example, we have a `computed` property called `hasUnsavedChanges` that controls whether the "Save" button is enabled.
  * It's convenient to pull in data from external JSON services and integrate it into the view model, at which point it becomes displayed on screen.
 
 <link rel="Stylesheet" href="resources/twitterExample.css" />
