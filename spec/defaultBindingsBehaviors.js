@@ -455,6 +455,30 @@ describe('Binding: Options', {
         value_of(displayedText).should_be(["bob (manager)", "frank (coder & tester)"]);
     },
 
+    'Should accept optionsDisabled param to set the disabled subproperty of the model values': function () {
+        var modelValues = new ko.observableArray([
+            { name: 'bob', id: ko.observable(6), disabled: ko.observable(true) },
+            { name: ko.observable('frank'), id: 13, disabled: true },
+            { name: ko.observable('jill'), id: 24, disabled: false }
+        ]);
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\", optionsDisabled: \"disabled\"'><option>should be deleted</option></select>";
+        ko.applyBindings({ myValues: modelValues }, testNode);
+        var disabledValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes,
+            function (node) {
+                var _disabled = node.getAttribute('disabled');
+                if (_disabled === 'disabled')
+                    return node.value;
+            });
+        var enabledValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes,
+            function (node) {
+                var _disabled = node.getAttribute('disabled');
+                if (_disabled === undefined || _disabled === null)
+                    return node.value;
+            });
+        value_of(disabledValues).should_be([6, 13, undefined]);
+        value_of(enabledValues).should_be([undefined, undefined, 24]);
+    },
+
     'Should update the SELECT node\'s options if the model changes': function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
