@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.1.0pre
+// Knockout JavaScript library v2.1.0beta
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -36,7 +36,7 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
-ko.version = "2.1.0pre";
+ko.version = "2.1.0beta";
 
 ko.exportSymbol('version', ko.version);
 ko.utils = new (function () {
@@ -2952,19 +2952,27 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
-        var createInnerBindingContext = function(arrayValue) {
-            return parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
-        };
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
+        // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
+        // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
+        var arrayItemContext;
+
+        // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
+        var executeTemplateForArrayItem = function (arrayValue, index) {
+            // Support selecting template as a function of the data being rendered
+            var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
+            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            arrayItemContext['$index'] = index;
+            return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
+        }
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
-        var activateBindingsCallback = function(arrayValue, addedNodesArray) {
-            var bindingContext = createInnerBindingContext(arrayValue);
-            activateBindingsOnContinuousNodeArray(addedNodesArray, bindingContext);
+        var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
+            activateBindingsOnContinuousNodeArray(addedNodesArray, arrayItemContext);
             if (options['afterRender'])
-                options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
+                options['afterRender'](addedNodesArray, arrayValue);
         };
-         
+
         return ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -2975,11 +2983,7 @@ ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templ
                 return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
-            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, function (arrayValue) {
-                // Support selecting template as a function of the data being rendered
-                var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
-                return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
-            }, options, activateBindingsCallback);
+            ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback);
             
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
@@ -3177,11 +3181,11 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
         }
     }
 
-    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes, index) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         var dependentObservable = ko.dependentObservable(function() {
-            var newMappedNodes = mapping(valueToMap) || [];
+            var newMappedNodes = mapping(valueToMap, index) || [];
             
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
@@ -3214,6 +3218,7 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
+        var newMappingResultIndex = 0;
         var nodesAdded = [];
         var insertAfterNode = null;
         for (var i = 0, j = editScript.length; i < j; i++) {
@@ -3221,7 +3226,8 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
                 case "retained":
                     // Just keep the information - don't touch the nodes
                     var dataToRetain = lastMappingResult[lastMappingResultIndex];
-                    newMappingResult.push(dataToRetain);
+                    dataToRetain.indexObservable(newMappingResultIndex);
+                    newMappingResultIndex = newMappingResult.push(dataToRetain);
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
                     lastMappingResultIndex++;
@@ -3246,11 +3252,17 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
 
                 case "added": 
                     var valueToMap = editScript[i].value;
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
+                    var indexObservable = ko.observable(newMappingResultIndex);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, indexObservable);
                     var mappedNodes = mapData.mappedNodes;
-                    
+
                     // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
+                    newMappingResultIndex = newMappingResult.push({
+                        arrayEntry: editScript[i].value,
+                        domNodes: mappedNodes,
+                        dependentObservable: mapData.dependentObservable,
+                        indexObservable: indexObservable
+                    });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
                         nodesAdded.push({
@@ -3268,7 +3280,7 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
                         insertAfterNode = node;
                     } 
                     if (callbackAfterAddingNodes)
-                        callbackAfterAddingNodes(valueToMap, mappedNodes);
+                        callbackAfterAddingNodes(valueToMap, mappedNodes, indexObservable);
                     break;
             }
         }
@@ -3287,10 +3299,11 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
                 invokedBeforeRemoveCallback = true;
             }
         }
-        if (!invokedBeforeRemoveCallback)
-            ko.utils.arrayForEach(nodesToDelete, function (node) {
-                ko.removeNode(node.element);
-            });
+        if (!invokedBeforeRemoveCallback && nodesToDelete.length) {
+            var commonParent = nodesToDelete[0].element.parentNode;
+            for (var i = 0; i < nodesToDelete.length; i++)
+                commonParent.removeChild(nodesToDelete[i].element);
+        }
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
