@@ -44,7 +44,7 @@
 
     function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options) {
         var firstTargetNode = targetNodeOrNodeArray && getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-        options = ko.utils.extend({ document: firstTargetNode && firstTargetNode.ownerDocument }, options);
+        options = ko.utils.extend({ 'document': firstTargetNode && firstTargetNode.ownerDocument }, options);
         var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse, options);
         var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options);
