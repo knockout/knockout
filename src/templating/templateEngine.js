@@ -80,19 +80,24 @@ ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCal
 
 // Records which templates, in each document, are rewritten
 // Underlying storage is on the doc, to avoid leaking memory by holding references to docs
-var isKnownRewrittenDomDataKey = "__ko_knownrewritten__";
-function isKnownRewrittenTemplate(templateEngine, templateName, doc, value) { // Call with 2 args to read, 3 args to write
+var isKnownRewrittenDomDataKey = "__ko_knownrewritten__", templateEngineLastUniqueId = 0;
+function isKnownRewrittenTemplate(templateEngine, templateName, doc, value) { // Call with 3 args to read, 4 args to write
+    // Give unique serializable ID so we can give it a named entry in the cache
+    var templateEngineId = templateEngine.instanceId;
+    if (!templateEngineId)
+        templateEngineId = templateEngine.instanceId = ++templateEngineLastUniqueId;
+
     doc = doc || document;
     var knownRewrittenCacheForDoc = ko.utils.domData.get(doc, isKnownRewrittenDomDataKey);
     if (!knownRewrittenCacheForDoc) {
         knownRewrittenCacheForDoc = {};
         ko.utils.domData.set(doc, isKnownRewrittenDomDataKey, knownRewrittenCacheForDoc);
     }
-    knownRewrittenCacheForDoc[templateEngine] = knownRewrittenCacheForDoc[templateEngine] || {};
+    knownRewrittenCacheForDoc[templateEngineId] = knownRewrittenCacheForDoc[templateEngineId] || {};
 
-    if (arguments.length > 2)
-        knownRewrittenCacheForDoc[templateEngine][templateName] = value;
-    return knownRewrittenCacheForDoc[templateEngine][templateName];
+    if (arguments.length > 3)
+        knownRewrittenCacheForDoc[templateEngineId][templateName] = value;
+    return knownRewrittenCacheForDoc[templateEngineId][templateName];
 }
 
 ko.exportSymbol('templateEngine', ko.templateEngine);
