@@ -34,10 +34,11 @@ ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script
     throw new Error("Override createJavaScriptEvaluatorBlock");
 };
 
-ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
+ko.templateEngine.prototype['makeTemplateSource'] = function(template, options) {
     // Named template
     if (typeof template == "string") {
-        var elem = document.getElementById(template);
+        var doc = (options && options['document']) || document;
+        var elem = doc.getElementById(template);
         if (!elem)
             throw new Error("Cannot find template with ID " + template);
         return new ko.templateSources.domElement(elem);
@@ -49,34 +50,49 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
 };
 
 ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options) {
-    var templateSource = this['makeTemplateSource'](template);
+    var templateSource = this['makeTemplateSource'](template, options);
     return this['renderTemplateSource'](templateSource, bindingContext, options);
 };
 
-ko.templateEngine.prototype['isTemplateRewritten'] = function (template) {
+ko.templateEngine.prototype['isTemplateRewritten'] = function (template, options) {
     // Skip rewriting if requested
     if (this['allowTemplateRewriting'] === false)
         return true;
     
     // Perf optimisation - see below
-    if (this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
+    if (isKnownRewrittenTemplate(this, template, options && options['document']))
         return true;
     
-    return this['makeTemplateSource'](template)['data']("isRewritten");
+    return this['makeTemplateSource'](template, options)['data']("isRewritten");
 };
 
-ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback) {
-    var templateSource = this['makeTemplateSource'](template);          
+ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback, options) {
+    var templateSource = this['makeTemplateSource'](template, options);
     var rewritten = rewriterCallback(templateSource['text']());
     templateSource['text'](rewritten);
     templateSource['data']("isRewritten", true);
     
     // Perf optimisation - for named templates, track which ones have been rewritten so we can
     // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
-    if (typeof template == "string") {
-        this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
-        this.knownRewrittenTemplates[template] = true;            
-    }
+    if (typeof template == "string")
+        isKnownRewrittenTemplate(this, template, options && options['document'], true);
 };
+
+// Records which templates, in each document, are rewritten
+// Underlying storage is on the doc, to avoid leaking memory by holding references to docs
+var isKnownRewrittenDomDataKey = "__ko_knownrewritten__";
+function isKnownRewrittenTemplate(templateEngine, templateName, doc, value) { // Call with 2 args to read, 3 args to write
+    doc = doc || document;
+    var knownRewrittenCacheForDoc = ko.utils.domData.get(doc, isKnownRewrittenDomDataKey);
+    if (!knownRewrittenCacheForDoc) {
+        knownRewrittenCacheForDoc = {};
+        ko.utils.domData.set(doc, isKnownRewrittenDomDataKey, knownRewrittenCacheForDoc);
+    }
+    knownRewrittenCacheForDoc[templateEngine] = knownRewrittenCacheForDoc[templateEngine] || {};
+
+    if (arguments.length > 2)
+        knownRewrittenCacheForDoc[templateEngine][templateName] = value;
+    return knownRewrittenCacheForDoc[templateEngine][templateName];
+}
 
 ko.exportSymbol('templateEngine', ko.templateEngine);
