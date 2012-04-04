@@ -201,7 +201,7 @@ ko.utils = new (function () {
         },
 
         domNodeIsAttachedToDocument: function (node) {
-            return ko.utils.domNodeIsContainedBy(node, document);
+            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument);
         },
 
         tagNameLower: function(element) {

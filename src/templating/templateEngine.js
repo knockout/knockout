@@ -37,7 +37,8 @@ ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script
 ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
     // Named template
     if (typeof template == "string") {
-        var elem = document.getElementById(template);
+        var templateDocument = this['templateDocument'] || document;
+        var elem = templateDocument.getElementById(template);
         if (!elem)
             throw new Error("Cannot find template with ID " + template);
         return new ko.templateSources.domElement(elem);
