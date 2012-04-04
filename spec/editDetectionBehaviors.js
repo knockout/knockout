@@ -158,6 +158,30 @@ describe('Array to DOM node children mapping', {
         value_of(mappingInvocations).should_be([]);
     },
 
+    'Should tolerate DOM nodes being removed manually, before the corresponding array entry is removed': function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/413
+        // Ideally, people wouldn't be mutating the generated DOM manually. But this didn't error in v2.0, so we should try to avoid introducing a break.
+        var mappingInvocations = [];
+        var mapping = function (arrayItem) {
+            mappingInvocations.push(arrayItem);
+            var output = document.createElement("DIV");
+            output.innerHTML = arrayItem;
+            return [output];
+        };
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping);
+        value_of(testNode).should_contain_text("ABC");
+
+        // Now kill the middle DIV manually, even though people shouldn't really do this
+        var elemToRemove = testNode.childNodes[1];
+        value_of(elemToRemove.innerHTML).should_be("B"); // Be sure it's the right one
+        elemToRemove.parentNode.removeChild(elemToRemove);
+
+        // Now remove the corresponding array entry. This shouldn't cause an exception.
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "C"], mapping);
+        value_of(testNode).should_contain_text("AC");
+    },
+
     'Should handle sequences of mixed insertions and deletions': function () {
         var mappingInvocations = [], countCallbackInvocations = 0;
         var mapping = function (arrayItem) {
