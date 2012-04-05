@@ -417,5 +417,33 @@ describe('Binding attribute syntax', {
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(hasUpdatedSecondBinding).should_be(true);
-    }
+    },
+	
+	'Should be able to make custom binding context property available more than one level below binding': function () {
+		var fooIsBar = false;
+		ko.bindingHandlers.test1 = {
+			init: function () {
+				return {
+					extendedBindingContextProperties: {
+						'$foo': 'bar'
+					}
+				};
+			}
+		};
+		
+		ko.bindingHandlers.test2 = {
+			init: function () {
+			}
+		};
+		
+		ko.bindingHandlers.test3 = {
+			init: function (element, valueAccessor) {
+				fooIsBar = valueAccessor() === 'bar';
+			}
+		};
+		
+		testNode.innerHTML = "<div data-bind='test1: true'><div data-bind='test2: true'><div data-bind='test3: $foo'></div></div></div>";
+		ko.applyBindings();
+		value_of(fooIsBar).should_be(true);
+	}
 });

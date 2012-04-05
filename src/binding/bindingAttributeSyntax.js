@@ -53,13 +53,14 @@
         var shouldApplyBindings = (isElement && bindingContextMayDifferFromDomParentElement)             // Case (1)
                                || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings) {
-            var applyResult = applyBindingsToNodeInternal(nodeVerified, null, viewModel, bindingContextMayDifferFromDomParentElement);
+			var applyResult = applyBindingsToNodeInternal(nodeVerified, null, viewModel, bindingContextMayDifferFromDomParentElement);
 			shouldBindDescendants = applyResult.shouldBindDescendants;
-			
-			// if the initialization added binding context properties, extend them to child notes and descendants
-			if (applyResult.extendedBindingContextProperties)
+            
+			// If the binding handler init added binding context properties, extend them to child notes and descendants
+			if (applyResult && applyResult.extendedBindingContextProperties)
 				viewModel = new ko.bindingContext(viewModel, applyResult.extendedBindingContextProperties);
 		}
+			
         if (shouldBindDescendants) {
             // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
             //  * For children of a *real* element, the binding context is certainly the same as on their DOM .parentNode,
@@ -90,7 +91,7 @@
         }
         
         var bindingHandlerThatControlsDescendantBindings,
-			extendedBindingContextProperties = {}; // we might want to add properties to the binding context
+			extendedBindingContextProperties; // We might want to add properties to the binding context
         ko.dependentObservable(
             function () {
                 // Ensure we have a nonnull binding context to work with
@@ -121,8 +122,8 @@
                             if (binding && typeof binding["init"] == "function") {
                                 var handlerInitFn = binding["init"];
                                 var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                                
-                                if (initResult) {
+								
+								if (initResult) {
 									// If this binding handler claims to control descendant bindings, make a note of this
 									// else we might want to extend the binding context with custom properties
 									if (initResult['controlsDescendantBindings']) {
@@ -134,11 +135,20 @@
 									
 									var extendedBindingContext = initResult['extendedBindingContextProperties'];
 									if (extendedBindingContext) {
-										// update the binding context for any sibling nodes
+										extendedBindingContextProperties = {};
+										
+										// Don't let any core binding context properties be overwritten
+										delete extendedBindingContext.$data;
+										delete extendedBindingContext.$parent;
+										delete extendedBindingContext.$parents;
+										delete extendedBindingContext.$root;
+										delete extendedBindingContext.$index;
+									
+										// Update the binding context for any sibling nodes
 										ko.utils.extend(bindingContextInstance, extendedBindingContext)
 										
-										// extend binding context for descendants
-										ko.utils.extend(extendedBindingContextProperties, initResult['extendedBindingContextProperties']);
+										// Extend binding context for descendants
+										ko.utils.extend(extendedBindingContextProperties, extendedBindingContext);
 									}
                                 }
                             }
