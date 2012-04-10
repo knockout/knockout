@@ -102,9 +102,11 @@ ko.utils = new (function () {
         },
 
         extend: function (target, source) {
-            for(var prop in source) {
-                if(source.hasOwnProperty(prop)) {
-                    target[prop] = source[prop];
+            if (source) {
+                for(var prop in source) {
+                    if(source.hasOwnProperty(prop)) {
+                        target[prop] = source[prop];
+                    }
                 }
             }
             return target;
@@ -201,7 +203,7 @@ ko.utils = new (function () {
         },
 
         domNodeIsAttachedToDocument: function (node) {
-            return ko.utils.domNodeIsContainedBy(node, document);
+            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument);
         },
 
         tagNameLower: function(element) {

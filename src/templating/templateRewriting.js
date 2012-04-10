@@ -36,11 +36,11 @@ ko.templateRewriting = (function () {
     }
 
     return {
-        ensureTemplateIsRewritten: function (template, templateEngine) {
-            if (!templateEngine['isTemplateRewritten'](template))
+        ensureTemplateIsRewritten: function (template, templateEngine, templateDocument) {
+            if (!templateEngine['isTemplateRewritten'](template, templateDocument))
                 templateEngine['rewriteTemplate'](template, function (htmlString) {
                     return ko.templateRewriting.memoizeBindingAttributeSyntax(htmlString, templateEngine);
-                });
+                }, templateDocument);
         },
 
         memoizeBindingAttributeSyntax: function (htmlString, templateEngine) {
