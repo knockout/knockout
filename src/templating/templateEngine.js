@@ -60,7 +60,7 @@ ko.templateEngine.prototype['isTemplateRewritten'] = function (template, templat
         return true;
     
     // Perf optimisation - see below
-    if (!(templateDocument && templateDocument == document) && this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
+    if (!(templateDocument && templateDocument != document) && this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
         return true;
     
     return this['makeTemplateSource'](template, templateDocument)['data']("isRewritten");
@@ -74,7 +74,7 @@ ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCal
     
     // Perf optimisation - for named templates, track which ones have been rewritten so we can
     // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
-    if (!(templateDocument && templateDocument == document) && typeof template == "string") {
+    if (!(templateDocument && templateDocument != document) && typeof template == "string") {
         this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
         this.knownRewrittenTemplates[template] = true;
     }            
