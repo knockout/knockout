@@ -124,8 +124,10 @@ ko.utils = new (function () {
             var nodesArray = ko.utils.makeArray(nodes);
 
             var container = document.createElement('div');
-            for (var i = 0, j = nodesArray.length; i < j; i++)
+            for (var i = 0, j = nodesArray.length; i < j; i++) {
+                ko.cleanNode(nodesArray[i]);
                 container.appendChild(nodesArray[i]);
+            }
             return container;
         },
 
