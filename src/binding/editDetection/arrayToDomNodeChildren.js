@@ -152,8 +152,10 @@
         }
         if (!invokedBeforeRemoveCallback && nodesToDelete.length) {
             var commonParent = nodesToDelete[0].element.parentNode;
-            for (var i = 0; i < nodesToDelete.length; i++)
-                commonParent.removeChild(nodesToDelete[i].element);
+            if (commonParent) {
+                for (var i = 0; i < nodesToDelete.length; i++)
+                    commonParent.removeChild(nodesToDelete[i].element);
+            }
         }
 
         // Store a copy of the array items we just considered so we can difference it next time

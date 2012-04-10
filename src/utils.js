@@ -210,7 +210,7 @@ ko.utils = new (function () {
             // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
             // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
             // we don't need to do the .toLowerCase() as it will always be lower case anyway.
-            return element.tagName.toLowerCase();
+            return element && element.tagName && element.tagName.toLowerCase();
         },
 
         registerEventHandler: function (element, eventType, handler) {
