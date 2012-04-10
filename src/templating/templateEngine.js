@@ -60,7 +60,8 @@ ko.templateEngine.prototype['isTemplateRewritten'] = function (template, templat
         return true;
     
     // Perf optimisation - see below
-    if (!(templateDocument && templateDocument != document) && this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
+    var templateIsInExternalDocument = templateDocument && templateDocument != document;
+    if (!templateIsInExternalDocument && this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
         return true;
     
     return this['makeTemplateSource'](template, templateDocument)['data']("isRewritten");
@@ -74,7 +75,13 @@ ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCal
     
     // Perf optimisation - for named templates, track which ones have been rewritten so we can
     // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
-    if (!(templateDocument && templateDocument != document) && typeof template == "string") {
+    //
+    // Note that we only cache the status for templates in the main document, because caching on a per-doc
+    // basis complicates the implementation excessively. In a future version of KO, we will likely remove
+    // this 'isRewritten' cache entirely anyway, because the benefit is extremely minor and only applies
+    // to rewritable templates, which are pretty much deprecated since KO 2.0.
+    var templateIsInExternalDocument = templateDocument && templateDocument != document;
+    if (!templateIsInExternalDocument && typeof template == "string") {
         this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
         this.knownRewrittenTemplates[template] = true;
     }            
