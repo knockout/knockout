@@ -2,6 +2,8 @@ knockoutDebugCallback([
     'src/namespace.js',
     'src/google-closure-compiler-utils.js',
     'src/version.js',
+    'src/adapters/adapter.js',
+    'src/adapters/jquery.adapter.js',
     'src/utils.js',
     'src/utils.domData.js',
     'src/utils.domNodeDisposal.js',
@@ -14,6 +16,7 @@ knockoutDebugCallback([
     'src/subscribables/observableArray.js',
     'src/subscribables/dependentObservable.js',
     'src/subscribables/mappingHelpers.js',
+    'src/subscribables/dirtyFlag.js',
     'src/binding/selectExtensions.js',
     'src/binding/jsonExpressionRewriting.js',
     'src/virtualElements.js',
@@ -27,5 +30,6 @@ knockoutDebugCallback([
     'src/binding/editDetection/compareArrays.js',
     'src/binding/editDetection/arrayToDomNodeChildren.js',
     'src/templating/native/nativeTemplateEngine.js',
-    'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'
+    'src/mapping.js'
+ //   'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'
 ]);
