@@ -231,7 +231,14 @@ ko.bindingHandlers['options'] = {
                 var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
                 optionValue = ko.utils.unwrapObservable(optionValue);
                 ko.selectExtensions.writeValue(option, optionValue);
-                
+
+                if (allBindings['optionsDisabled']) {
+                    var disabledValue = typeof allBindings['optionsDisabled'] == "string" ? value[i][allBindings['optionsDisabled']] : allBindings['optionsDisabled'];
+                    disabledValue = ko.utils.unwrapObservable(disabledValue);
+                    if (disabledValue)
+                        option.setAttribute('disabled', 'disabled');
+                }
+
                 // Apply some text to the option element
                 var optionsTextValue = allBindings['optionsText'];
                 var optionText;
