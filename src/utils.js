@@ -118,7 +118,7 @@ ko.utils = new (function () {
             }
         },
 
-        moveNodesToContainerElement: function(nodes) {
+        moveCleanedNodesToContainerElement: function(nodes) {
             // Ensure it's a real array, as we're about to reparent the nodes and
             // we don't want the underlying collection to change while we're doing that.
             var nodesArray = ko.utils.makeArray(nodes);
