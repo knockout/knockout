@@ -11,3 +11,9 @@ desktop.ini
 .eprj
 perf/*
 *.orig
+
+knockout.csproj
+Properties/AssemblyInfo.cs
+Web.config
+Web.Debug.config
+Web.Release.config
