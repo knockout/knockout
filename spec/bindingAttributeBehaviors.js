@@ -417,5 +417,98 @@ describe('Binding attribute syntax', {
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(hasUpdatedSecondBinding).should_be(true);
-    }
+    },
+	
+	'Should be able to make custom binding context property available more than one level below binding': function () {
+		var fooIsBar = false;
+		ko.bindingHandlers.test1 = {
+			init: function () {
+				return {
+					extendedBindingContextProperties: {
+						'$foo': 'bar'
+					}
+				};
+			}
+		};
+		
+		ko.bindingHandlers.test2 = {
+			init: function () {
+			}
+		};
+		
+		ko.bindingHandlers.test3 = {
+			init: function (element, valueAccessor) {
+				fooIsBar = valueAccessor() === 'bar';
+			}
+		};
+		
+		testNode.innerHTML = "<div data-bind='test1: true'><div data-bind='test2: true'><div data-bind='test3: $foo'></div></div></div>";
+		ko.applyBindings();
+		value_of(fooIsBar).should_be(true);
+	},
+	
+	'Should not be able to overwrite core binding context properties when writing custom binding context properties': function () {
+		var data = 'data';
+		var root = 'root';
+		var parent = 'parent';
+		var parents = 'parents';
+		var index = 'index';
+		
+		var rootIsOverwritten = false;
+		
+		ko.bindingHandlers.test1 = {
+			init: function () {
+				return {
+					extendedBindingContextProperties: {
+						'$data': 'data',
+						'$root': 'root',
+						'$parent': 'parent',
+						'$parents': 'parents',
+						'$index': 'index'
+					}
+				};
+			}
+		};
+		
+		ko.bindingHandlers.test2 = {
+			init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+				data = bindingContext.$data;
+				root = bindingContext.$root;
+				parent = bindingContext.$parent;
+				parents = bindingContext.$parents;
+				index = bindingContext.$index;
+			}
+		};
+		
+		testNode.innerHTML = "<div data-bind='test1: true'><div data-bind='test2: true'></div></div>";
+		ko.applyBindings();
+		value_of(data === 'data').should_be(false);
+		value_of(root === 'root').should_be(false);
+		value_of(parent === 'parent').should_be(false);
+		value_of(parents === 'parents').should_be(false);
+		value_of(index === 'index').should_be(false);
+	},
+	
+	'Should be able to make custom binding context property available with controlled descendent bindings': function () {
+		var fooIsBar = false;
+		ko.bindingHandlers.test1 = {
+			init: function () {
+				return {
+					extendedBindingContextProperties: {
+						'$foo': 'bar'
+					}
+				};
+			}
+		};
+		
+		ko.bindingHandlers.test2 = {
+			init: function (element, valueAccessor) {
+				fooIsBar = valueAccessor() === 'bar';
+			}
+		};
+		
+		testNode.innerHTML = "<div data-bind='test1: true'><div data-bind='template: \"testTemplate\"'></div></div><script id='testTemplate' type='text/javascript'><div data-bind='test2: $foo'></div></script>";
+		ko.applyBindings();
+		value_of(fooIsBar).should_be(true);
+	}
 });
