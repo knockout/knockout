@@ -1,3 +1,52 @@
+ko.evaluateImmediateDepth = 0;
+ko.evaluateImmediateQueue = {};
+ko.beforeChanging = function() {
+    ko.evaluateImmediateDepth += 1;
+};
+ko.afterChanging = function() {
+    ko.evaluateImmediateDepth -= 1;
+    if (ko.evaluateImmediateDepth < 0) {
+        // This is not an error. Client code is allowed to call observable.valueHasMutated to
+        // "bump the television" and cause changes to propogate. =/
+        ko.evaluateImmediateDepth = 0;
+    }
+    if (ko.evaluateImmediateDepth == 0) {
+        ko.flushEvaluateImmediateQueue();
+    }
+};
+ko.propogateChanges = function(func) {
+    var original = ko.evaluateImmediateDepth;
+    ko.beforeChanging();
+    try {
+        return func();
+    } finally {
+        ko.afterChanging();
+        if (ko.evaluateImmediateDepth != original) {
+            throw new Error("Integrity check failed. Probably some call to valueHasMutated is not matched by a call to valueWillMutate.");
+        }
+    }
+};
+ko.flushEvaluateImmediateQueue = (function() {
+    var evaluateImmediateCompleted = {}; // prevent computeds from triggering their own re-evaluation
+    return function() {
+        var empty;
+        do {
+            empty = true;
+            var copy = {};
+            ko.utils.extend(copy, ko.evaluateImmediateQueue);
+            for (var k in copy) {
+                if (ko.evaluateImmediateQueue[k] && !evaluateImmediateCompleted[k]) {
+                    empty = false;
+                    ko.evaluateImmediateQueue[k](); // calls evaluateImmediate, which removes the key from the queue
+                    evaluateImmediateCompleted[k] = true;
+                }
+            }
+        // Have to loop in case extra subscribers were added to ko.evaluateImmediateQueue
+        } while (!empty);
+        evaluateImmediateCompleted = {};
+    };
+})();
+
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
         _hasBeenEvaluated = false,
@@ -27,6 +76,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         for (var identity in _subscriptionsToDependencies)
             _subscriptionsToDependencies[identity].dispose();
         _subscriptionsToDependencies = {};
+        delete ko.evaluateImmediateQueue[dependentObservable.identity];
     }
     var dispose = disposeAllSubscriptionsToDependencies;
 
@@ -54,7 +104,12 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             clearTimeout(evaluationTimeoutInstance);
             evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
         } else
-            evaluateImmediate();
+            evaluateEventually();
+    }
+
+    // Doesn't evaluate immediately, but does evaluate before returning to code outside of the library.
+    function evaluateEventually() {
+        ko.evaluateImmediateQueue[dependentObservable.identity] = evaluateImmediate;
     }
 
     function evaluateImmediate() {
@@ -103,6 +158,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
+            delete ko.evaluateImmediateQueue[dependentObservable.identity];
         } finally {
             ko.dependencyDetection.end();
         }
@@ -123,18 +179,23 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     function set() {
         if (typeof writeFunction === "function") {
             // Writing a value
-            writeFunction.apply(evaluatorFunctionTarget, arguments);
+            var args = arguments;
+            return ko.propogateChanges(function() {
+                return writeFunction.apply(evaluatorFunctionTarget, args);
+            });
         } else {
             throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
         }
     }
 
     function get() {
-        // Reading the value
-        if (!_hasBeenEvaluated)
-            evaluateImmediate();
-        ko.dependencyDetection.registerDependency(dependentObservable);
-        return _latestValue;
+        return ko.propogateChanges(function() {
+            // Reading the value
+            if (!_hasBeenEvaluated || ko.evaluateImmediateQueue[dependentObservable.identity])
+                evaluateImmediate();
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
+        });
     }
 
     dependentObservable.getDependenciesCount = function () {
