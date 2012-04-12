@@ -10,14 +10,19 @@ ko.subscription.prototype.dispose = function () {
     this.disposeCallback();
 };
 
-ko.subscribable = function () {
+ko.subscribable = (function() {
+    var nonce = 0;
+
+return (function () {
     this._subscriptions = {};
+    nonce += 1;
+    this.identity = nonce;
 
     ko.utils.extend(this, ko.subscribable['fn']);
     ko.exportProperty(this, 'subscribe', this.subscribe);
     ko.exportProperty(this, 'extend', this.extend);
     ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
-}
+});})();
 
 var defaultEvent = "change";
 
