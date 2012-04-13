@@ -10,7 +10,7 @@
             this['$parents'].unshift(this['$parent']);
         } else {
             this['$parents'] = [];
-            this['$root'] = dataItem;        	
+            this['$root'] = dataItem;
         }
         this['$data'] = dataItem;
     }
@@ -34,7 +34,7 @@
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
             applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, bindingContextsMayDifferFromDomParentElement);
-        }        
+        }
     }
     
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, bindingContextMayDifferFromDomParentElement) {
@@ -62,7 +62,7 @@
             //    hence bindingContextsMayDifferFromDomParentElement is true
             applyBindingsToDescendantsInternal(viewModel, nodeVerified, /* bindingContextsMayDifferFromDomParentElement: */ !isElement);
         }
-    }    
+    }
 
     function applyBindingsToNodeInternal (node, bindings, viewModelOrBindingContext, bindingContextMayDifferFromDomParentElement) {
         // Need to be sure that inits are only run once, and updates never run until all the inits have been run
@@ -141,7 +141,7 @@
             { 'disposeWhenNodeIsRemoved' : node }
         );
         
-        return { 
+        return {
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
     };
@@ -156,7 +156,7 @@
 
     ko.applyBindingsToNode = function (node, bindings, viewModel) {
         if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
-            ko.virtualElements.normaliseVirtualElementDomStructure(node);        
+            ko.virtualElements.normaliseVirtualElementDomStructure(node);
         return applyBindingsToNodeInternal(node, bindings, viewModel, true);
     };
 
@@ -189,7 +189,7 @@
     ko.dataFor = function(node) {
         var context = ko.contextFor(node);
         return context ? context['$data'] : undefined;
-    };    
+    };
     
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('applyBindings', ko.applyBindings);

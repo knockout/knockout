@@ -9,15 +9,15 @@ describe('Native template engine', {
             var resultNode = document.createElement(tagName || "div");
             resultNode.id = id;
             resultNode.setAttribute("type", "text/html");
-            document.body.appendChild(resultNode);  
-            return resultNode;  		
+            document.body.appendChild(resultNode);
+            return resultNode;
         }
         
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
-        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");        
-        window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");        
+        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");
+        window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");
         window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
-    }, 
+    },
 
     'Named template can display static content from regular DOM element': function () {
         window.testDivTemplate.innerHTML = "this is some static content";
@@ -35,7 +35,7 @@ describe('Native template engine', {
         window.testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
         ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
-    }, 
+    },
 
     'Named template can fetch template from <textarea> elements and data-bind on results': function () {
         var prop = (typeof window.testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
@@ -63,7 +63,7 @@ describe('Native template engine', {
         
         var viewModel = {
             someItem: { val: 'abc' }
-        };        
+        };
         ko.applyBindings(viewModel, window.testDivTemplate);
         
         value_of(window.testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
@@ -82,12 +82,12 @@ describe('Native template engine', {
         myItems.push({ itemProp: 'Pushed' });
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
-        value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");        
+        value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");
         value_of(window.testDivTemplate.childNodes[0].childNodes[3]).should_contain_text("Item: Pushed");
         
         myItems.splice(1, 1);
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
-        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Gamma");        
+        value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Gamma");
         value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Pushed");
     },
 
@@ -96,14 +96,14 @@ describe('Native template engine', {
                                        + "<div data-bind='template: { foreach: children }'>"
                                            + "(Val: <span data-bind='text: $data'></span>, Invocations: <span data-bind='text: $root.invocationCount()'></span>, Parents: <span data-bind='text: $parents.length'></span>)"
                                        + "</div>"
-                                  + "</div>";  
+                                  + "</div>";
         var viewModel = {
-            invocations: 0, // Verifying # invocations to be sure we're not rendering anything multiple times and discarding the results  
+            invocations: 0, // Verifying # invocations to be sure we're not rendering anything multiple times and discarding the results
             items: ko.observableArray([
                 { children: ko.observableArray(['A1', 'A2', 'A3']) },
                 { children: ko.observableArray(['B1', 'B2']) }
             ])
-        };        
+        };
         viewModel.invocationCount = function() { return ++this.invocations }.bind(viewModel);
         ko.applyBindings(viewModel, window.testDivTemplate);
 
@@ -114,7 +114,7 @@ describe('Native template engine', {
         viewModel.items()[1].children.unshift('ANew');
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
-    },   
+    },
 
     'Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value': function() {
         window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>"
@@ -136,7 +136,7 @@ describe('Native template engine', {
                                                + "root: <span data-bind='text: $root.val'></span>"
                                            + ")</div>"
                                        + "</div>"
-                                  + "</div>";   
+                                  + "</div>";
                            
         ko.applyBindings({
             val: "ROOT",
@@ -149,5 +149,5 @@ describe('Native template engine', {
             }
         }, window.testDivTemplate);
         value_of(window.testDivTemplate.childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
-    }        
+    }
 });

@@ -97,5 +97,5 @@ describe('Subscribable', {
         value_of(interceptedNotifications.length).should_be(1);
         value_of(interceptedNotifications[0].eventName).should_be("myEvent");
         value_of(interceptedNotifications[0].value).should_be(123);
-    }    
+    }
 });

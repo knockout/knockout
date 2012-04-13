@@ -26,7 +26,7 @@
                 newContiguousSet.push(current);
             }
 
-            // ... then mutate the input array to match this. 
+            // ... then mutate the input array to match this.
             // (The following line replaces the contents of contiguousNodeArray with newContiguousSet)
             Array.prototype.splice.apply(contiguousNodeArray, [0, contiguousNodeArray.length].concat(newContiguousSet));
         }
@@ -99,7 +99,7 @@
                     lastMappingResultIndex++;
                     break;
 
-                case "added": 
+                case "added":
                     var valueToMap = editScript[i].value;
                     var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
                     var mappedNodes = mapData.mappedNodes;
@@ -121,7 +121,7 @@
                             ko.virtualElements.insertAfter(domNode, node, insertAfterNode);
                         }
                         insertAfterNode = node;
-                    } 
+                    }
                     if (callbackAfterAddingNodes)
                         callbackAfterAddingNodes(valueToMap, mappedNodes);
                     break;

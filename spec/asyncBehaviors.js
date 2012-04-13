@@ -104,6 +104,6 @@ asyncTest("Should run evaluator only once when dependencies stop updating for th
 			start();
 			equal(evaluationCount, 2); // Finally, it's evaluated
 			equal(asyncDepObs(), "D");
-		}, 110);		
+		}, 110);
 	}, 10);
 });

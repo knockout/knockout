@@ -5,7 +5,7 @@ ko.utils = new (function () {
     var knownEvents = {}, knownEventTypesByEventName = {};
     var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
     knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
-    knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];        
+    knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
     for (var eventType in knownEvents) {
         var knownEventsForType = knownEvents[eventType];
         if (knownEventsForType.length) {
@@ -22,8 +22,8 @@ ko.utils = new (function () {
         while (
             div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
             iElems[0]
-        );        
-        return version > 4 ? version : undefined;        
+        );
+        return version > 4 ? version : undefined;
     }());
     var isIe6 = ieVersion === 6,
         isIe7 = ieVersion === 7;
@@ -73,7 +73,7 @@ ko.utils = new (function () {
                     result.push(array[i]);
             }
             return result;
-        },        
+        },
 
         arrayMap: function (array, mapping) {
             array = array || [];
@@ -96,8 +96,8 @@ ko.utils = new (function () {
             if (valuesToPush instanceof Array)
                 array.push.apply(array, valuesToPush);
             else
-                for (var i = 0, j = valuesToPush.length; i < j; i++) 
-                    array.push(valuesToPush[i]);	
+                for (var i = 0, j = valuesToPush.length; i < j; i++)
+                    array.push(valuesToPush[i]);
             return array;
         },
 
@@ -171,7 +171,7 @@ ko.utils = new (function () {
             return result;
         },
         
-        stringStartsWith: function (string, startsWith) {        	
+        stringStartsWith: function (string, startsWith) {
             string = string || "";
             if (startsWith.length > string.length)
                 return false;
@@ -209,8 +209,8 @@ ko.utils = new (function () {
                 if (isClickOnCheckableElement(element, eventType)) {
                     // For click events on checkboxes, jQuery interferes with the event handling in an awkward way:
                     // it toggles the element checked state *after* the click event handlers run, whereas native
-                    // click events toggle the checked state *before* the event handler. 
-                    // Fix this by intecepting the handler and applying the correct checkedness before it runs.            	
+                    // click events toggle the checked state *before* the event handler.
+                    // Fix this by intecepting the handler and applying the correct checkedness before it runs.
                     var originalHandler = handler;
                     handler = function(event, eventData) {
                         var jQuerySuppliedCheckedState = this.checked;
@@ -218,7 +218,7 @@ ko.utils = new (function () {
                             this.checked = eventData.checkedStateBeforeEvent !== true;
                         originalHandler.call(this, event);
                         this.checked = jQuerySuppliedCheckedState; // Restore the state jQuery applied
-                    };                	
+                    };
                 }
                 jQuery(element)['bind'](eventType, handler);
             } else if (typeof element.addEventListener == "function")
@@ -331,7 +331,7 @@ ko.utils = new (function () {
 
         getFormFields: function(form, fieldName) {
             var fields = ko.utils.makeArray(form.getElementsByTagName("INPUT")).concat(ko.utils.makeArray(form.getElementsByTagName("TEXTAREA")));
-            var isMatchingField = (typeof fieldName == 'string') 
+            var isMatchingField = (typeof fieldName == 'string')
                 ? function(field) { return field.name === fieldName }
                 : function(field) { return fieldName.test(field.name) }; // Treat fieldName as regex or object containing predicate
             var matches = [];
@@ -350,11 +350,11 @@ ko.utils = new (function () {
                         return window.JSON.parse(jsonString);
                     return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
                 }
-            }	
+            }
             return null;
         },
 
-        stringifyJson: function (data, replacer, space) {   // replacer and space are optional 
+        stringifyJson: function (data, replacer, space) {   // replacer and space are optional
             if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
             return JSON.stringify(ko.utils.unwrapObservable(data), replacer, space);
@@ -366,16 +366,16 @@ ko.utils = new (function () {
             var includeFields = options['includeFields'] || this.fieldsIncludedWithJsonPost;
             var url = urlOrForm;
             
-            // If we were given a form, use its 'action' URL and pick out any requested field values 	
+            // If we were given a form, use its 'action' URL and pick out any requested field values
             if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
                 for (var i = includeFields.length - 1; i >= 0; i--) {
                     var fields = ko.utils.getFormFields(originalForm, includeFields[i]);
-                    for (var j = fields.length - 1; j >= 0; j--)        				
+                    for (var j = fields.length - 1; j >= 0; j--)
                         params[fields[j].name] = fields[j].value;
                 }
-            }        	
+            }
             
             data = ko.utils.unwrapObservable(data);
             var form = document.createElement("FORM");
@@ -393,7 +393,7 @@ ko.utils = new (function () {
                 input.name = key;
                 input.value = params[key];
                 form.appendChild(input);
-            }            
+            }
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
@@ -429,6 +429,6 @@ if (!Function.prototype['bind']) {
         var originalFunction = this, args = Array.prototype.slice.call(arguments), object = args.shift();
         return function () {
             return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));
-        }; 
+        };
     };
 }

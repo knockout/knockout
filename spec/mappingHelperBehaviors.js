@@ -1,9 +1,9 @@
 
-describe('Mapping helpers', {    
+describe('Mapping helpers', {
     'ko.toJS should require a parameter': function() {
         var didThrow = false;
         try { ko.toJS() }
-        catch(ex) { didThow = true }    	
+        catch(ex) { didThow = true }
         value_of(didThow).should_be(true);
     },
     
@@ -68,7 +68,7 @@ describe('Mapping helpers', {
     },
     
     'ko.toJSON should unwrap everything and then stringify': function() {
-        var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);	
+        var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);
         var result = ko.toJSON(data);
         
         // Check via parsing so the specs are independent of browser-specific JSON string formatting
@@ -77,7 +77,7 @@ describe('Mapping helpers', {
         value_of(parsedResult.length).should_be(3);
         value_of(parsedResult[0]).should_be('a');
         value_of(parsedResult[1]).should_be(1);
-        value_of(parsedResult[2].someProp).should_be('Hey');		
+        value_of(parsedResult[2].someProp).should_be('Hey');
     },
 
     'ko.toJSON should respect .toJSON functions on arrays': function() {

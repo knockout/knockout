@@ -22,7 +22,7 @@ describe('Binding attribute syntax', {
         value_of(didInit).should_be(true);
 
         // Just to avoid interfering with other specs:
-        ko.utils.domData.clear(document.body);        
+        ko.utils.domData.clear(document.body);
     },
 
     'applyBindings should accept one parameter and then act on document.body with parameter as model': function() {
@@ -59,7 +59,7 @@ describe('Binding attribute syntax', {
         document.body.appendChild(shouldNotMatchNode);
         try {
             ko.applyBindings(suppliedViewModel, testNode);
-            value_of(didInit).should_be(true);    	
+            value_of(didInit).should_be(true);
         } finally {
             shouldNotMatchNode.parentNode.removeChild(shouldNotMatchNode);
         }
@@ -78,7 +78,7 @@ describe('Binding attribute syntax', {
     'Should tolerate wacky IE conditional comments': function() {
         // Represents issue https://github.com/SteveSanderson/knockout/issues/186. Would fail on IE9, but work on earlier IE versions.
         testNode.innerHTML = "<div><!--[if IE]><!-->Hello<!--<![endif]--></div>";
-        ko.applyBindings(null, testNode); // No exception means success          
+        ko.applyBindings(null, testNode); // No exception means success
     },
 
     'Should invoke registered handlers\' init() then update() methods passing binding data': function () {
@@ -172,7 +172,7 @@ describe('Binding attribute syntax', {
     },
     
     'Bindings can signal that they control descendant bindings by returning a flag from their init function': function() {
-        ko.bindingHandlers.test = {  
+        ko.bindingHandlers.test = {
             init: function() { return { controlsDescendantBindings : true } }
         };
         testNode.innerHTML = "<div data-bind='test: true'>"
@@ -186,7 +186,7 @@ describe('Binding attribute syntax', {
     },
     
     'Should not be allowed to have multiple bindings on the same element that claim to control descendant bindings': function() {
-        ko.bindingHandlers.test1 = {  
+        ko.bindingHandlers.test1 = {
             init: function() { return { controlsDescendantBindings : true } }
         };
         ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
@@ -395,7 +395,7 @@ describe('Binding attribute syntax', {
                 // This logic probably wouldn't be in init but might be indirectly invoked by init
                 var value = valueAccessor();
                 value();
-                value('B');                   
+                value('B');
             }
         }
         ko.bindingHandlers.test2 = {

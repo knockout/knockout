@@ -1,12 +1,12 @@
 // If you want to make a custom template engine,
-// 
+//
 // [1] Inherit from this class (like ko.nativeTemplateEngine does)
 // [2] Override 'renderTemplateSource', supplying a function with this signature:
 //
 //        function (templateSource, bindingContext, options) {
 //            // - templateSource.text() is the text of the template you should render
 //            // - bindingContext.$data is the data you should pass into the template
-//            //   - you might also want to make bindingContext.$parent, bindingContext.$parents, 
+//            //   - you might also want to make bindingContext.$parent, bindingContext.$parents,
 //            //     and bindingContext.$root available in the template too
 //            // - options gives you access to any other properties set on "data-bind: { template: options }"
 //            //
@@ -17,7 +17,7 @@
 //
 //        function (script) {
 //            // Return value: Whatever syntax means "Evaluate the JavaScript statement 'script' and output the result"
-//            //               For example, the jquery.tmpl template engine converts 'someScript' to '${ someScript }' 
+//            //               For example, the jquery.tmpl template engine converts 'someScript' to '${ someScript }'
 //        }
 //
 //     This is only necessary if you want to allow data-bind attributes to reference arbitrary template variables.
@@ -66,7 +66,7 @@ ko.templateEngine.prototype['isTemplateRewritten'] = function (template) {
 };
 
 ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback) {
-    var templateSource = this['makeTemplateSource'](template);          
+    var templateSource = this['makeTemplateSource'](template);
     var rewritten = rewriterCallback(templateSource['text']());
     templateSource['text'](rewritten);
     templateSource['data']("isRewritten", true);
@@ -75,7 +75,7 @@ ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCal
     // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
     if (typeof template == "string") {
         this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
-        this.knownRewrittenTemplates[template] = true;            
+        this.knownRewrittenTemplates[template] = true;
     }
 };
 

@@ -24,7 +24,7 @@
                         if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
                             delete element[hasDomDataExpandoProperty];
                         }
-                        element.value = value;                                   
+                        element.value = value;
                         break;
                     default:
                         // Store arbitrary object using DomData
@@ -34,7 +34,7 @@
                         // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
                         element.value = typeof value === "number" ? value : "";
                         break;
-                }			
+                }
             } else if (element.tagName == 'SELECT') {
                 for (var i = element.options.length - 1; i >= 0; i--) {
                     if (ko.selectExtensions.readValue(element.options[i]) == value) {
@@ -48,7 +48,7 @@
                 element.value = value;
             }
         }
-    };        
+    };
 })();
 
 ko.exportSymbol('selectExtensions', ko.selectExtensions);

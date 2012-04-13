@@ -1,5 +1,5 @@
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
-    var _latestValue, 
+    var _latestValue,
         _hasBeenEvaluated = false,
         readFunction = evaluatorFunctionOrOptions;
 
@@ -36,7 +36,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     var disposeWhenNodeIsRemoved = (typeof options["disposeWhenNodeIsRemoved"] == "object") ? options["disposeWhenNodeIsRemoved"] : null;
     var disposeWhen = options["disposeWhen"] || function() { return false; };
     if (disposeWhenNodeIsRemoved) {
-        dispose = function() { 
+        dispose = function() {
             ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, arguments.callee);
             disposeAllSubscriptionsToDependencies();
         };
@@ -44,7 +44,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         var existingDisposeWhenFunction = disposeWhen;
         disposeWhen = function () {
             return !ko.utils.domNodeIsAttachedToDocument(disposeWhenNodeIsRemoved) || existingDisposeWhenFunction();
-        }    	
+        }
     }
     
     var evaluationTimeoutInstance = null;
@@ -67,7 +67,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
 
         try {
-            // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal). 
+            // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
             // Then, during evaluation, we cross off any that are in fact still being used.
             var disposalCandidates = ko.utils.arrayMap(_subscriptionsToDependencies, function(item) {return item.target;});
 
@@ -102,7 +102,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             set.apply(dependentObservable, arguments);
         } else {
-            return get();             
+            return get();
         }
     }
     

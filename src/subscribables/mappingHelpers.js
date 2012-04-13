@@ -1,5 +1,5 @@
 
-(function() {    
+(function() {
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
     
     ko.toJS = function(rootObject) {
@@ -29,7 +29,7 @@
             return rootObject;
             
         var outputProperties = rootObject instanceof Array ? [] : {};
-        visitedObjects.save(rootObject, outputProperties);            
+        visitedObjects.save(rootObject, outputProperties);
         
         visitPropertiesOrArrayEntries(rootObject, function(indexer) {
             var propertyValue = mapInputCallback(rootObject[indexer]);
@@ -42,12 +42,12 @@
                     outputProperties[indexer] = propertyValue;
                     break;
                 case "object":
-                case "undefined":				
+                case "undefined":
                     var previouslyMappedValue = visitedObjects.get(propertyValue);
                     outputProperties[indexer] = (previouslyMappedValue !== undefined)
                         ? previouslyMappedValue
                         : mapJsObjectGraph(propertyValue, mapInputCallback, visitedObjects);
-                    break;							
+                    break;
             }
         });
         
@@ -66,7 +66,7 @@
             for (var propertyName in rootObject)
                 visitorCallback(propertyName);
         }
-    };    
+    };
     
     function objectLookup() {
         var keys = [];
@@ -77,8 +77,8 @@
                 values[existingIndex] = value;
             else {
                 keys.push(key);
-                values.push(value);	
-            }				
+                values.push(value);
+            }
         };
         this.get = function(key) {
             var existingIndex = ko.utils.arrayIndexOf(keys, key);

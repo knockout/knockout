@@ -1,9 +1,9 @@
 (function() {
     // "Virtual elements" is an abstraction on top of the usual DOM API which understands the notion that comment nodes
-    // may be used to represent hierarchy (in addition to the DOM's natural hierarchy). 
-    // If you call the DOM-manipulating functions on ko.virtualElements, you will be able to read and write the state 
+    // may be used to represent hierarchy (in addition to the DOM's natural hierarchy).
+    // If you call the DOM-manipulating functions on ko.virtualElements, you will be able to read and write the state
     // of that virtual hierarchy
-    // 
+    //
     // The point of all this is to support containerless templates (e.g., <!-- ko foreach:someCollection -->blah<!-- /ko -->)
     // without having to scatter special cases all over the binding and templating code.
 
@@ -110,7 +110,7 @@
                 if (containerNode.firstChild)
                     containerNode.insertBefore(nodeToPrepend, containerNode.firstChild);
                 else
-                    containerNode.appendChild(nodeToPrepend);                           
+                    containerNode.appendChild(nodeToPrepend);
             } else {
                 // Start comments must always have a parent and at least one following sibling (the end comment)
                 containerNode.parentNode.insertBefore(nodeToPrepend, containerNode.nextSibling);
@@ -123,11 +123,11 @@
                 if (insertAfterNode.nextSibling)
                     containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
                 else
-                    containerNode.appendChild(nodeToInsert);    
+                    containerNode.appendChild(nodeToInsert);
             } else {
                 // Children of start comments must always have a parent and at least one following sibling (the end comment)
                 containerNode.parentNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
-            }                           
+            }
         },
 
         firstChild: function(node) {
@@ -148,11 +148,11 @@
 
         virtualNodeBindingValue: function(node) {
             var regexMatch = isStartComment(node);
-            return regexMatch ? regexMatch[1] : null;               
+            return regexMatch ? regexMatch[1] : null;
         },
 
         normaliseVirtualElementDomStructure: function(elementVerified) {
-            // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
+            // Workaround for https://github.com/SteveSanderson/knockout/issues/155
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
             // that are direct descendants of <ul> into the preceding <li>)
             if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
@@ -178,8 +178,8 @@
                     }
                 } while (childNode = childNode.nextSibling);
             }
-        }  
-    };  
+        }
+    };
 })();
 ko.exportSymbol('virtualElements', ko.virtualElements);
 ko.exportSymbol('virtualElements.allowedBindings', ko.virtualElements.allowedBindings);

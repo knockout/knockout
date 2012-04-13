@@ -77,7 +77,7 @@
             var editDistanceMatrix = calculateEditDistanceMatrix(oldArray, newArray, maxEditsToConsider);
             return findEditScriptFromEditDistanceMatrix(editDistanceMatrix, oldArray, newArray);
         }
-    };    
+    };
 })();
 
 ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);

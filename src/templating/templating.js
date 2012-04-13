@@ -54,23 +54,23 @@
 
         var haveAddedNodesToParent = false;
         switch (renderMode) {
-            case "replaceChildren": 
-                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray); 
+            case "replaceChildren":
+                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray);
                 haveAddedNodesToParent = true;
                 break;
-            case "replaceNode": 
-                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray); 
+            case "replaceNode":
+                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray);
                 haveAddedNodesToParent = true;
                 break;
             case "ignoreTargetNode": break;
-            default: 
+            default:
                 throw new Error("Unknown renderMode: " + renderMode);
         }
 
         if (haveAddedNodesToParent) {
             activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](renderedNodesArray, bindingContext['$data']);  
+                options['afterRender'](renderedNodesArray, bindingContext['$data']);
         }
 
         return renderedNodesArray;
@@ -96,7 +96,7 @@
                         : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
                     // Support selecting template as a function of the data being rendered
-                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template; 
+                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data']) : template;
 
                     var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
                     if (renderMode == "replaceNode") {
@@ -115,7 +115,7 @@
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {   
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         var createInnerBindingContext = function(arrayValue) {
             return parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
         };
@@ -125,7 +125,7 @@
             var bindingContext = createInnerBindingContext(arrayValue);
             activateBindingsOnContinuousNodeArray(addedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](addedNodesArray, bindingContext['$data']);                                                
+                options['afterRender'](addedNodesArray, bindingContext['$data']);
         };
          
         return ko.dependentObservable(function () {
@@ -169,7 +169,7 @@
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            var templateName; 
+            var templateName;
             var shouldDisplay = true;
             
             if (typeof bindingValue == "string") {
@@ -182,7 +182,7 @@
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
-            }    
+            }
             
             var templateSubscription = null;
             

@@ -1092,7 +1092,7 @@ JSSpec.StringEqualityMatcher.prototype.explain = function() {
 	var sb = [];
 
 	sb.push(JSSpec.EqualityMatcher.basicExplain(this.expected, this.actual));
-	sb.push(JSSpec.EqualityMatcher.diffExplain(this.expected, this.actual));	
+	sb.push(JSSpec.EqualityMatcher.diffExplain(this.expected, this.actual));
 	return sb.join("");
 };
 

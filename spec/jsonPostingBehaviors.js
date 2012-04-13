@@ -3,7 +3,7 @@ describe('JSON posting', {
     	var submittedForm;
         ko.utils.postJson('http://example.com/some/url', {myModel : {a : 1}}, { submitter : function(x) { submittedForm = x } });
         
-        value_of(submittedForm.action).should_be('http://example.com/some/url');        
+        value_of(submittedForm.action).should_be('http://example.com/some/url');
         var input = submittedForm.childNodes[0];
         value_of(input.tagName).should_be('INPUT');
         value_of(input.name).should_be('myModel');
@@ -17,7 +17,7 @@ describe('JSON posting', {
     	var submittedForm;
         ko.utils.postJson(existingForm, {myModel : {a : 1}}, { submitter : function(x) { submittedForm = x } });
         
-        value_of(submittedForm.action).should_be('http://example.com/blah');            	
+        value_of(submittedForm.action).should_be('http://example.com/blah');
     },
     
     'Given an existing form, should include any requested field values from that form': function() {
@@ -42,6 +42,6 @@ describe('JSON posting', {
         
         value_of(ko.utils.getFormFields(submittedForm, '__RequestVerificationToken_Lr4e')[0].value).should_be('wantedval1');
         value_of(ko.utils.getFormFields(submittedForm, '__RequestVe').length).should_be(0);
-        value_of(ko.utils.getFormFields(submittedForm, 'authenticity_token')[0].value).should_be('wantedval2');		
+        value_of(ko.utils.getFormFields(submittedForm, 'authenticity_token')[0].value).should_be('wantedval2');
 	}
 });

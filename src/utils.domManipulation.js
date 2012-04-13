@@ -76,8 +76,8 @@
                 var parsedNodes = ko.utils.parseHtmlFragment(html);
                 for (var i = 0; i < parsedNodes.length; i++)
                     node.appendChild(parsedNodes[i]);
-            }            
-        }    	
+            }
+        }
     };
 })();
 

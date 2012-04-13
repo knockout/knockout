@@ -13,7 +13,7 @@ describe('Dependent Observable', {
     'Should advertise that instances are computed': function () {
         var instance = new ko.dependentObservable(function () { });
         value_of(ko.isComputed(instance)).should_be(true);
-    },    
+    },
 
     'Should advertise that instances cannot have values written to them': function () {
         var instance = new ko.dependentObservable(function () { });
@@ -45,7 +45,7 @@ describe('Dependent Observable', {
     
     'Should invoke the "write" callback, where present, if you attempt to write a value to it': function() {
         var invokedWriteWithValue, invokedWriteWithThis;
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function(value) { invokedWriteWithValue = value; invokedWriteWithThis = this; }
         });
@@ -59,7 +59,7 @@ describe('Dependent Observable', {
     'Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters': function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function() { invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
             owner: someOwner
@@ -90,7 +90,7 @@ describe('Dependent Observable', {
         var instance = new ko.dependentObservable({
             read: function () { return 123; }
         });
-        value_of(instance()).should_be(123);    		
+        value_of(instance()).should_be(123);
     },
 
     'Should cache result of evaluator function and not call it again until dependencies change': function () {
@@ -210,21 +210,21 @@ describe('Dependent Observable', {
     },
     
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function() {}
         });
-        value_of(ko.isWriteableObservable(instance)).should_be(true);    	
+        value_of(ko.isWriteableObservable(instance)).should_be(true);
     },
     
     'Should allow deferring of evaluation (and hence dependency detection)': function () {
         var timesEvaluated = 0;
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function () { timesEvaluated++; return 123 },
-            deferEvaluation: true 
+            deferEvaluation: true
         });
         value_of(timesEvaluated).should_be(0);
         value_of(instance()).should_be(123);
         value_of(timesEvaluated).should_be(1);
-     }    
+     }
 })

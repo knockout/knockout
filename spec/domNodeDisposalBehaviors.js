@@ -24,7 +24,7 @@ describe('DOM node disposal', {
         value_of(didRun).should_be(false);
         ko.cleanNode(testNode);
         value_of(didRun).should_be(true);
-    },    
+    },
     
     'Should run registered disposal callbacks and detach from DOM when a node is removed': function () {
         var didRun = false;
@@ -47,6 +47,6 @@ describe('DOM node disposal', {
         value_of(didRun).should_be(false);
         ko.utils.domNodeDisposal.removeDisposeCallback(testNode, callback);
         ko.cleanNode(testNode);
-        value_of(didRun).should_be(false); // Didn't run only because we removed it    		
+        value_of(didRun).should_be(false); // Didn't run only because we removed it
     }
 });
