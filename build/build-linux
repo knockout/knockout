@@ -1,6 +1,11 @@
 #!/bin/sh
 
-tools/check-trailing-space-linux
+handle_fail() {
+    echo; echo "Build failed"
+    exit 1
+}
+
+tools/check-trailing-space-linux || handle_fail
 
 OutDebugFile='output/knockout-latest.debug.js'
 OutMinFile='output/knockout-latest.js'
@@ -37,3 +42,4 @@ sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
 
 # Delete the odd files left behind on Mac
 rm -f output/*.js~
+echo; echo "Build succeeded"

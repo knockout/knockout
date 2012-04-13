@@ -13,6 +13,7 @@ goto :TrailingSpaceOkay
 echo The following files have trailing spaces that need to be cleaned up:
 echo.
 type %OutTrailingSpaceListFile%
-echo.
+del %OutTrailingSpaceListFile%
+exit /b 1
 
 :TrailingSpaceOkay

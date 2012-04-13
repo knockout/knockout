@@ -1,6 +1,7 @@
 @echo off
 
 call tools/check-trailing-space-windows.bat
+if %errorlevel% NEQ 0 goto Fail
 
 set OutDebugFile=output\knockout-latest.debug.js
 set OutMinFile=output\knockout-latest.js
@@ -42,3 +43,11 @@ del %OutMinFile%.temp
 set /p Version= <fragments\version.txt
 cscript tools\searchReplace.js "##VERSION##" %VERSION% %OutDebugFile% %OutMinFile% >nul
 cscript tools\searchReplace.js "\r\n" "\n" %OutDebugFile%  %OutMinFile% >nul
+
+echo.
+echo Build succeeded
+exit /b 0
+
+:Fail
+echo.
+echo Build failed

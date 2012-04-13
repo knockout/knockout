@@ -10,7 +10,7 @@ then
   echo "The following files have trailing spaces that need to be cleaned up:"
   echo ""
   cat $OutTrailingSpaceListFile
-  echo ""
-else
   rm $OutTrailingSpaceListFile
+  exit 1
 fi
+rm $OutTrailingSpaceListFile
