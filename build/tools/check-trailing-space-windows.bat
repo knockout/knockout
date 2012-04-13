@@ -6,7 +6,7 @@ cd ..
 findstr -rsm -c:" $" * |findstr -rv "^.git" |findstr -rv ".exe$" > build\%OutTrailingSpaceListFile%
 cd build
 for %%R in (%OutTrailingSpaceListFile%) do if %%~zR gtr 0 goto :NeedFixTrailingSpace
-rm %OutTrailingSpaceListFile%
+del %OutTrailingSpaceListFile%
 goto :TrailingSpaceOkay
 
 :NeedFixTrailingSpace

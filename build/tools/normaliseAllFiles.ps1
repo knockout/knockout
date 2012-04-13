@@ -1,6 +1,6 @@
 # If needed, first run: Set-ExecutionPolicy Unrestricted
 
-$allFiles = (Get-ChildItem -Path ..\..\ -Include *.js,*.css,*.bat -Recurse)
+$allFiles = (Get-ChildItem -Path ..\..\ -Include *.js,*.css,*.bat,*.html -Recurse)
 
 $allFiles | %{
     # Read file, remove trailing spaces/tabs, output back to file in CP1252 format (default for Git on Windows)
