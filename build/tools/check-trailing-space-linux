@@ -3,7 +3,7 @@
 # Check that all files have trailing spaces stripped
 OutTrailingSpaceListFile='output/knockout-files-to-clean.txt'
 cd ..
-grep -rl ' $' build spec src | grep -v ".exe$" > build/$OutTrailingSpaceListFile
+grep -nrI '[^ ][ ]\+$' * | grep -rv "^build/output/" > build/$OutTrailingSpaceListFile
 cd build
 if [ -s $OutTrailingSpaceListFile ]
 then
