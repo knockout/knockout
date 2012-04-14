@@ -87,7 +87,7 @@ describe('Binding: Text', {
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
     },
-    
+
     'Should assign an empty string as value if the model value is undefined': function () {
         testNode.innerHTML = "<span data-bind='text:undefined' ></span>";
         ko.applyBindings(null, testNode);
@@ -112,13 +112,13 @@ describe('Binding: HTML', {
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
     },
-    
+
     'Should assign an empty string as value if the model value is undefined': function () {
         testNode.innerHTML = "<span data-bind='html:undefined' ></span>";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("");
     },
-    
+
     'Should be able to write arbitrary HTML, even if it is not semantically correct': function() {
         // Represents issue #98 (https://github.com/SteveSanderson/knockout/issues/98)
         // IE 8 and earlier is excessively strict about the use of .innerHTML - it throws
@@ -128,7 +128,7 @@ describe('Binding: HTML', {
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0]).should_contain_html(model.textProp);
     },
-    
+
     'Should be able to write arbitrary HTML, including <tr> elements into tables': function() {
         // Some HTML elements are awkward, because the browser implicitly adds surrounding
         // elements, or won't allow those elements to be direct children of others.
@@ -136,7 +136,7 @@ describe('Binding: HTML', {
         var model = { textProp: "<tr><td>hello</td></tr>" };
         testNode.innerHTML = "<table data-bind='html:textProp'></table>";
         ko.applyBindings(model, testNode);
-        
+
         // Accept either of the following outcomes - there may or may not be an implicitly added <tbody>.
         var tr = testNode.childNodes[0].childNodes[0];
         if (tr.tagName == 'TBODY')
@@ -158,7 +158,7 @@ describe('Binding: Value', {
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].value).should_be(123);
     },
-    
+
     'Should treat null values as empty strings': function () {
         testNode.innerHTML = "<input data-bind='value:myProp' />";
         ko.applyBindings({ myProp: ko.observable(0) }, testNode);
@@ -205,22 +205,22 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(model.modelProperty123).should_be(789);
     },
-    
+
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
         // This spec represents https://github.com/SteveSanderson/knockout/issues#issue/13
         var originalSubproperty = ko.observable("original value");
         var newSubproperty = ko.observable();
         var model = { myprop: ko.observable({ subproperty : originalSubproperty }) };
-        
+
         // Set up a text box whose value is linked to the subproperty of the observable's current value
         testNode.innerHTML = "<input data-bind='value: myprop().subproperty' />";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].value).should_be("original value");
-        
+
         model.myprop({ subproperty : newSubproperty }); // Note that myprop (and hence its subproperty) is changed *after* the bindings are applied
         testNode.childNodes[0].value = "Some new value";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        
+
         // Verify that the change was written to the *new* subproperty, not the one referenced when the bindings were first established
         value_of(newSubproperty()).should_be("Some new value");
         value_of(originalSubproperty()).should_be("original value");
@@ -246,7 +246,7 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(notifiedValues.length).should_be(2);
     },
-    
+
     'Should be able to catch updates after specific events (e.g., keyup) instead of onchange': function () {
         var myobservable = new ko.observable(123);
         testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"keyup\"' />";
@@ -255,7 +255,7 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
         value_of(myobservable()).should_be("some user-entered value");
     },
-    
+
     'Should catch updates on change as well as the nominated valueUpdate event': function () {
         // Represents issue #102 (https://github.com/SteveSanderson/knockout/issues/102)
         var myobservable = new ko.observable(123);
@@ -265,7 +265,7 @@ describe('Binding: Value', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(myobservable()).should_be("some user-entered value");
     },
-    
+
     'For select boxes, should update selectedIndex when the model changes (options specified before value)': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
@@ -289,7 +289,7 @@ describe('Binding: Value', {
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
         value_of(observable()).should_be('A');
     },
-    
+
     'For select boxes, should display the caption when the model value changes to undefined': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
@@ -298,13 +298,13 @@ describe('Binding: Value', {
         observable(undefined);
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
     },
-    
+
     'For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)': function () {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         var dropdown = testNode.childNodes[0];
-        
+
         dropdown.selectedIndex = 1;
         ko.utils.triggerEvent(dropdown, "change");
         value_of(observable()).should_be("A");
@@ -320,20 +320,20 @@ describe('Binding: Value', {
         testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
         var dropdown = testNode.childNodes[0];
         ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
-        
+
         // Check the UI displays the entry corresponding to the chosen value
         value_of(dropdown.selectedIndex).should_be(1);
-                
+
         // Check that when we change the model value, the UI is updated
         selectedValue(x);
         value_of(dropdown.selectedIndex).should_be(0);
-        
+
         // Check that when we change the UI, this changes the model value
         dropdown.selectedIndex = 1;
         ko.utils.triggerEvent(dropdown, "change");
         value_of(selectedValue()).should_be(y);
     },
-    
+
     'For select boxes, should automatically initialize the model property to match the first option value if no option value matches the current model property value': function() {
         // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
         //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
@@ -353,13 +353,13 @@ describe('Binding: Value', {
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(observable()).should_be("A");
     },
-    
+
     'For nonempty select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI': function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(testNode.childNodes[0].selectedIndex).should_be(1);
-        
+
         observable('D'); // This change should be rejected, as there's no corresponding option in the UI
         value_of(observable()).should_not_be('D');
     },
@@ -400,7 +400,7 @@ describe('Binding: Options', {
         var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         value_of(displayedOptions).should_be(["A", "B", "C"]);
     },
-    
+
     'Should accept optionsText and optionsValue params to display subproperties of the model values': function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', id: ko.observable(6) }, // Note that subproperties can be observable
@@ -440,7 +440,7 @@ describe('Binding: Options', {
         ko.applyBindings({ myValues: observable }, testNode);
         value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B"]);
     },
-    
+
     'Should place a caption at the top of the options list and display it when the model value is undefined': function() {
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: \"Select one...\"'></select>";
         ko.applyBindings({}, testNode);
@@ -480,7 +480,7 @@ describe('Binding: Selected Options', {
             else
                 optionElement.selected = state;
         }
-        
+
         var cObject = {};
         var values = new ko.observableArray(["A", "B", cObject]);
         var selection = new ko.observableArray(["B"]);
@@ -492,7 +492,7 @@ describe('Binding: Selected Options', {
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[1], false);
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        
+
         value_of(selection()).should_be(["A", cObject]);
         value_of(selection()[1] === cObject).should_be(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     },
@@ -577,7 +577,7 @@ describe('Binding: Event', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         // Assuming we haven't been redirected to http://www.example.com/, this spec has now passed
     },
-    
+
     'Should let bubblable events bubble to parent elements by default': function() {
         var model = {
             innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
@@ -589,7 +589,7 @@ describe('Binding: Event', {
         value_of(model.innerWasCalled).should_be(true);
         value_of(model.outerWasCalled).should_be(true);
     },
-    
+
     'Should be able to prevent bubbling of bubblable events using the (eventname)Bubble:false option': function() {
         var model = {
             innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
@@ -663,7 +663,7 @@ describe('Binding: CSS class name', {
         observable2(false);
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
     },
-    
+
     'Should give the element a single CSS class without a leading space when the specified value is true': function() {
         var observable1 = new ko.observable();
         testNode.innerHTML = "<div data-bind='css: { myRule: someModelProperty }'>Hallo</div>";
@@ -720,7 +720,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(testNode.childNodes[0].checked).should_be(true);
         value_of(clickHandlerFireCount).should_be(1);
-        
+
         expectedCheckedStateInHandler = false;
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(testNode.childNodes[0].checked).should_be(false);
@@ -746,7 +746,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(myobservable()).should_be(true);
     },
-    
+
     'Should only notify observable properties on the underlying model *once* even if the checkbox change events fire multiple times': function () {
         var myobservable = new ko.observable();
         var timesNotified = 0;
@@ -759,7 +759,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
-        
+
         // ... until the checkbox value actually changes
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
@@ -788,7 +788,7 @@ describe('Binding: Checked', {
         var model = { someProp: false };
         testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
         ko.applyBindings(model, testNode);
-        
+
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be(true);
     },
@@ -813,7 +813,7 @@ describe('Binding: Checked', {
         testNode.childNodes[0].click();
         value_of(myobservable()).should_be("this radio button value");
     },
-    
+
     'Should only notify observable properties on the underlying model *once* even if the radio button change/click events fire multiple times': function () {
         var myobservable = new ko.observable("original value");
         var timesNotified = 0;
@@ -827,7 +827,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(timesNotified).should_be(1);
-        
+
         // ... until you click something with a different value
         ko.utils.triggerEvent(testNode.childNodes[1], "click");
         ko.utils.triggerEvent(testNode.childNodes[1], "change");
@@ -842,7 +842,7 @@ describe('Binding: Checked', {
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.someProp).should_be("this radio button value");
     },
-    
+
     'When a checkbox is bound to an array, the checkbox should control whether its value is in that array': function() {
         var model = { myArray: ["Existing value", "Unrelated value"] };
         testNode.innerHTML = "<input type='checkbox' value='Existing value' data-bind='checked:myArray' />"
@@ -863,14 +863,14 @@ describe('Binding: Checked', {
         value_of(testNode.childNodes[1].checked).should_be(false);
         value_of(model.myArray).should_be(["Existing value", "Unrelated value"]);
     },
-    
+
     'When a checkbox is bound to an observable array, the checkbox checked state responds to changes in the array': function() {
         var model = { myObservableArray: ko.observableArray(["Unrelated value"]) };
         testNode.innerHTML = "<input type='checkbox' value='My value' data-bind='checked:myObservableArray' />";
         ko.applyBindings(model, testNode);
 
         value_of(testNode.childNodes[0].checked).should_be(false);
-        
+
         // Put the value in the array; observe the checkbox reflect this
         model.myObservableArray.push("My value");
         value_of(testNode.childNodes[0].checked).should_be(true);
@@ -883,7 +883,7 @@ describe('Binding: Checked', {
 
 describe('Binding: Attr', {
     before_each: prepareTestNode,
-  
+
     'Should be able to set arbitrary attribute values': function() {
         var model = { myValue: "first value" };
         testNode.innerHTML = "<div data-bind='attr: {firstAttribute: myValue, \"second-attribute\": true}'></div>";
@@ -891,18 +891,18 @@ describe('Binding: Attr', {
         value_of(testNode.childNodes[0].getAttribute("firstAttribute")).should_be("first value");
         value_of(testNode.childNodes[0].getAttribute("second-attribute")).should_be("true");
     },
-    
+
     'Should respond to changes in an observable value': function() {
         var model = { myprop : ko.observable("initial value") };
         testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
-        
+
         // Change the observable; observe it reflected in the DOM
         model.myprop("new value");
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
     },
-    
+
     'Should remove the attribute if the value is strictly false, null, or undefined': function() {
         var model = { myprop : ko.observable() };
         testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
@@ -955,7 +955,7 @@ describe('Binding: Hasfocus', {
 
         // Need to raise "focusin" and "focusout" manually, because simply calling ".focus()" and ".blur()"
         // in IE doesn't reliably trigger the "focus" and "blur" events synchronously
-        
+
         ko.utils.triggerEvent(testNode.childNodes[0], "focusin");
         value_of(model.myVal()).should_be(true);
 
@@ -987,7 +987,7 @@ describe('Binding: If', {
         ko.applyBindings({ someItem: null }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
-    
+
     'Should leave descendant nodes in the document (and bind them) if the value is truey, independently of the active template engine': function() {
         ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
         testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem.existentChildProp'></span></div>";
@@ -996,20 +996,20 @@ describe('Binding: If', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
     },
-    
+
     'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value': function() {
         var someItem = ko.observable(undefined);
         testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem().occasionallyExistentChildProp'></span></div>";
         ko.applyBindings({ someItem: someItem }, testNode);
-        
+
         // First it's not there
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-        
+
         // Then it's there
         someItem({ occasionallyExistentChildProp: 'Child prop value' });
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
-        
+
         // Then it's gone again
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
@@ -1021,15 +1021,15 @@ describe('Binding: If', {
         value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
     },
-    
+
     'Should be able to define an \"if\" region using a containerless template': function() {
         var someitem = ko.observable(undefined);
         testNode.innerHTML = "hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
         ko.applyBindings({ someitem: someitem }, testNode);
-        
+
         // First it's not there
         value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
-        
+
         // Then it's there
         someitem({ occasionallyexistentchildprop: 'child prop value' });
         value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
@@ -1038,7 +1038,7 @@ describe('Binding: If', {
         someitem(null);
         value_of(testNode).should_contain_html("hello <!-- ko if: someitem --><!-- /ko --> goodbye");
     },
-    
+
     'Should be able to nest \"if\" regions defined by containerless templates': function() {
         var condition1 = ko.observable(false);
         var condition2 = ko.observable(false);
@@ -1067,7 +1067,7 @@ describe('Binding: Ifnot', {
         ko.applyBindings({ someItem: null, condition: true }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
-    
+
     'Should leave descendant nodes in the document (and bind them) if the value is falsey, independently of the active template engine': function() {
         ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
         testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem.existentChildProp'></span></div>";
@@ -1076,22 +1076,22 @@ describe('Binding: Ifnot', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
     },
-    
+
     'Should toggle the presence and bindedness of descendant nodes according to the falsiness of the value': function() {
         var someItem = ko.observable(undefined);
         var condition = ko.observable(true);
         testNode.innerHTML = "<div data-bind='ifnot: condition'><span data-bind='text: someItem().occasionallyExistentChildProp'></span></div>";
         ko.applyBindings({ someItem: someItem, condition: condition }, testNode);
-        
+
         // First it's not there
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-        
+
         // Then it's there
         someItem({ occasionallyExistentChildProp: 'Child prop value' });
         condition(false);
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
-        
+
         // Then it's gone again
         condition(true);
         someItem(null);
@@ -1115,7 +1115,7 @@ describe('Binding: With', {
         ko.applyBindings({ someItem: null }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
-    
+
     'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truey': function() {
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: existentChildProp'></span></div>";
         value_of(testNode.childNodes.length).should_be(1);
@@ -1123,57 +1123,57 @@ describe('Binding: With', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
     },
-    
+
     'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value, performing binding in the context of the value': function() {
         var someItem = ko.observable(undefined);
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: occasionallyExistentChildProp'></span></div>";
         ko.applyBindings({ someItem: someItem }, testNode);
-        
+
         // First it's not there
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
-        
+
         // Then it's there
         someItem({ occasionallyExistentChildProp: 'Child prop value' });
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
-        
+
         // Then it's gone again
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
-    
+
     'Should not bind the same elements more than once even if the supplied value notifies a change': function() {
         var countedClicks = 0;
         var someItem = ko.observable({
             childProp: ko.observable('Hello'),
             handleClick: function() { countedClicks++ }
         });
-        
+
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp, click: handleClick'></span></div>";
         ko.applyBindings({ someItem: someItem }, testNode);
-        
+
         // Initial state is one subscriber, one click handler
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Hello");
         value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
         value_of(countedClicks).should_be(1);
-        
+
         // Force "update" binding handler to fire, then check we still have one subscriber...
         someItem.valueHasMutated();
         value_of(someItem().childProp.getSubscriptionsCount()).should_be(1);
-        
+
         // ... and one click handler
         countedClicks = 0;
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
         value_of(countedClicks).should_be(1);
     },
-    
+
     'Should be able to access parent binding context via $parent': function() {
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: $parent.parentProp'></span></div>";
         ko.applyBindings({ someItem: { }, parentProp: 'Parent prop value' }, testNode);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Parent prop value");
     },
-    
+
     'Should be able to access all parent binding contexts via $parents, and root context via $root': function() {
         testNode.innerHTML = "<div data-bind='with: topItem'>" +
                                 "<div data-bind='with: middleItem'>" +
@@ -1217,15 +1217,15 @@ describe('Binding: With', {
         value_of(ko.contextFor(firstSpan).$root.name).should_be("outer");
         value_of(ko.contextFor(firstSpan).$parents[1].name).should_be("top");
     },
-    
+
     'Should be able to define an \"with\" region using a containerless template': function() {
         var someitem = ko.observable(undefined);
         testNode.innerHTML = "hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
         ko.applyBindings({ someitem: someitem }, testNode);
-        
+
         // First it's not there
         value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
-        
+
         // Then it's there
         someitem({ occasionallyexistentchildprop: 'child prop value' });
         value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\">child prop value</span><!-- /ko --> goodbye");
@@ -1234,7 +1234,7 @@ describe('Binding: With', {
         someitem(null);
         value_of(testNode).should_contain_html("hello <!-- ko with: someitem --><!-- /ko --> goodbye");
     },
-    
+
     'Should be able to nest \"with\" regions defined by containerless templates': function() {
         testNode.innerHTML = "hello <!-- ko with: topitem -->"
                                + "Got top: <span data-bind=\"text: topprop\"></span>"
@@ -1278,7 +1278,7 @@ describe('Binding: Foreach', {
         ko.applyBindings({ someItem: undefined }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
-    
+
     'Should duplicate descendant nodes for each value in the array value (and bind them in the context of that supplied value)': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
         var someItems = [
@@ -1288,15 +1288,15 @@ describe('Binding: Foreach', {
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     },
-    
+
     'Should be able to use $data to reference each array item being bound': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
         var someItems = ['alpha', 'beta'];
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: $data">alpha</span><span data-bind="text: $data">beta</span>');
     },
-    
-    
+
+
     'Should add and remove nodes to match changes in the bound array': function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
         var someItems = ko.observableArray([
@@ -1309,27 +1309,27 @@ describe('Binding: Foreach', {
         // Add items at the beginning...
         someItems.unshift({ childProp: 'zeroth child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
-        
+
         // ... middle
         someItems.splice(2, 0, { childProp: 'middle child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span>');
-        
+
         // ... and end
         someItems.push({ childProp: 'last child' });
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">zeroth child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
-        
+
         // Also remove from beginning...
         someItems.shift();
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
-        
+
         // ... and middle
         someItems.splice(1, 1);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
-        
+
         // ... and end
         someItems.pop();
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
-        
+
         // Also, marking as "destroy" should eliminate the item from display
         someItems.destroy(someItems()[0]);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">second child</span>');
@@ -1367,7 +1367,7 @@ describe('Binding: Foreach', {
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     },
-    
+
     'Should be able to supply afterAdd and beforeRemove callbacks': function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: childprop'></span></div>";
         var someItems = ko.observableArray([{ childprop: 'first child' }]);
@@ -1377,9 +1377,9 @@ describe('Binding: Foreach', {
             myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
             myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
         }, testNode);
-        
+
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span>');
-        
+
         // Try adding
         someItems.push({ childprop: 'added child'});
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
@@ -1441,7 +1441,7 @@ describe('Binding: Foreach', {
         value_of(ko.dataFor(testNode.childNodes[3]).childprop).should_be("second child");
         value_of(ko.contextFor(testNode.childNodes[3]).$parent.someitems.length).should_be(2);
     },
-    
+
     'Should be able to nest \'foreach\' regions defined using containerless templates' : function() {
         var innerContents = document.createElement("DIV");
         testNode.innerHTML = "";

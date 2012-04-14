@@ -36,7 +36,7 @@
             applyBindingsToNodeAndDescendantsInternal(viewModel, currentChild, bindingContextsMayDifferFromDomParentElement);
         }
     }
-    
+
     function applyBindingsToNodeAndDescendantsInternal (viewModel, nodeVerified, bindingContextMayDifferFromDomParentElement) {
         var shouldBindDescendants = true;
 
@@ -52,7 +52,7 @@
                                || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings)
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, viewModel, bindingContextMayDifferFromDomParentElement).shouldBindDescendants;
-            
+
         if (shouldBindDescendants) {
             // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
             //  * For children of a *real* element, the binding context is certainly the same as on their DOM .parentNode,
@@ -81,7 +81,7 @@
         function parsedBindingsAccessor() {
             return parsedBindings;
         }
-        
+
         var bindingHandlerThatControlsDescendantBindings;
         ko.dependentObservable(
             function () {
@@ -113,7 +113,7 @@
                             if (binding && typeof binding["init"] == "function") {
                                 var handlerInitFn = binding["init"];
                                 var initResult = handlerInitFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
-                                
+
                                 // If this binding handler claims to control descendant bindings, make a note of this
                                 if (initResult && initResult['controlsDescendantBindings']) {
                                     if (bindingHandlerThatControlsDescendantBindings !== undefined)
@@ -124,7 +124,7 @@
                         }
                         initPhase = 2;
                     }
-                    
+
                     // ... then run all the updates, which might trigger changes even on the first evaluation
                     if (initPhase === 2) {
                         for (var bindingKey in parsedBindings) {
@@ -140,7 +140,7 @@
             null,
             { 'disposeWhenNodeIsRemoved' : node }
         );
-        
+
         return {
             shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
         };
@@ -190,7 +190,7 @@
         var context = ko.contextFor(node);
         return context ? context['$data'] : undefined;
     };
-    
+
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);

@@ -1,7 +1,7 @@
 describe('Native template engine', {
     before_each: function () {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
-        
+
         function ensureNodeExistsAndIsEmpty(id, tagName) {
             var existingNode = document.getElementById(id);
             if (existingNode != null)
@@ -12,7 +12,7 @@ describe('Native template engine', {
             document.body.appendChild(resultNode);
             return resultNode;
         }
-        
+
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
         window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");
         window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");
@@ -24,13 +24,13 @@ describe('Native template engine', {
         ko.renderTemplate("testDivTemplate", null, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("this is some static content");
     },
-    
+
     'Named template can fetch template from regular DOM element and data-bind on results': function () {
         window.testDivTemplate.innerHTML = "name: <div data-bind='text: name'></div>";
         ko.renderTemplate("testDivTemplate", { name: 'bert' }, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     },
-    
+
     'Named template can fetch template from <script> elements and data-bind on results': function () {
         window.testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
         ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, window.templateOutput);
@@ -43,14 +43,14 @@ describe('Native template engine', {
         ko.renderTemplate("testTextAreaTemplate", { name: 'bert' }, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("name: <div data-bind=\"text: name\">bert</div>");
     },
-    
+
     'Anonymous template can display static content': function () {
         new ko.templateSources.anonymousTemplate(window.templateOutput).text("this is some static content");
         window.templateOutput.innerHTML = "irrelevant initial content";
         ko.renderTemplate(window.templateOutput, null, null, window.templateOutput);
         value_of(window.templateOutput).should_contain_html("this is some static content");
     },
-    
+
     'Anonymous template can data-bind on results': function () {
         new ko.templateSources.anonymousTemplate(window.templateOutput).text("name: <div data-bind='text: name'></div>");
         window.templateOutput.innerHTML = "irrelevant initial content";
@@ -60,31 +60,31 @@ describe('Native template engine', {
 
     'Anonymous templates can be supplied by not giving a template name': function() {
         window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>Value: <span data-bind='text: val'></span></div>"
-        
+
         var viewModel = {
             someItem: { val: 'abc' }
         };
         ko.applyBindings(viewModel, window.testDivTemplate);
-        
+
         value_of(window.testDivTemplate.childNodes[0]).should_contain_text("Value: abc");
     },
-    
+
     'Anonymous templates work in conjunction with foreach': function() {
         window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
         var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
         ko.applyBindings({ myItems: myItems }, window.testDivTemplate);
-        
+
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
         value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");
-        
+
         // Can cause re-rendering
         myItems.push({ itemProp: 'Pushed' });
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Beta");
         value_of(window.testDivTemplate.childNodes[0].childNodes[2]).should_contain_text("Item: Gamma");
         value_of(window.testDivTemplate.childNodes[0].childNodes[3]).should_contain_text("Item: Pushed");
-        
+
         myItems.splice(1, 1);
         value_of(window.testDivTemplate.childNodes[0].childNodes[0]).should_contain_text("Item: Alpha");
         value_of(window.testDivTemplate.childNodes[0].childNodes[1]).should_contain_text("Item: Gamma");
@@ -137,7 +137,7 @@ describe('Native template engine', {
                                            + ")</div>"
                                        + "</div>"
                                   + "</div>";
-                           
+
         ko.applyBindings({
             val: "ROOT",
             outerItem: {

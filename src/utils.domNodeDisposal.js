@@ -15,7 +15,7 @@ ko.utils.domNodeDisposal = new (function () {
     function destroyCallbacksCollection(node) {
         ko.utils.domData.set(node, domDataKey, undefined);
     }
-    
+
     function cleanSingleNode(node) {
         // Run all the dispose callbacks
         var callbacks = getDisposeCallbacksCollection(node, false);
@@ -24,10 +24,10 @@ ko.utils.domNodeDisposal = new (function () {
             for (var i = 0; i < callbacks.length; i++)
                 callbacks[i](node);
         }
-        
+
         // Also erase the DOM data
         ko.utils.domData.clear(node);
-        
+
         // Special support for jQuery here because it's so commonly used.
         // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
         // so notify it to tear down any resources associated with the node & descendants here.
@@ -48,14 +48,14 @@ ko.utils.domNodeDisposal = new (function () {
                 cleanSingleNode(child);
         }
     }
-    
+
     return {
         addDisposeCallback : function(node, callback) {
             if (typeof callback != "function")
                 throw new Error("Callback must be a function");
             getDisposeCallbacksCollection(node, true).push(callback);
         },
-        
+
         removeDisposeCallback : function(node, callback) {
             var callbacksCollection = getDisposeCallbacksCollection(node, false);
             if (callbacksCollection) {
@@ -64,12 +64,12 @@ ko.utils.domNodeDisposal = new (function () {
                     destroyCallbacksCollection(node);
             }
         },
-        
+
         cleanNode : function(node) {
             // First clean this node, where applicable
             if (cleanableNodeTypes[node.nodeType]) {
                 cleanSingleNode(node);
-                
+
                 // ... then its descendants, where applicable
                 if (cleanableNodeTypesWithDescendants[node.nodeType]) {
                     // Clone the descendants list in case it changes during iteration
@@ -80,7 +80,7 @@ ko.utils.domNodeDisposal = new (function () {
                 }
             }
         },
-        
+
         removeNode : function(node) {
             ko.cleanNode(node);
             if (node.parentNode)

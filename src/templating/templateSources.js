@@ -22,15 +22,15 @@
     //
     // Once you've implemented a templateSource, make your template engine use it by subclassing whatever template engine you were
     // using and overriding "makeTemplateSource" to return an instance of your custom template source.
-    
+
     ko.templateSources = {};
-    
+
     // ---- ko.templateSources.domElement -----
-    
+
     ko.templateSources.domElement = function(element) {
         this.domElement = element;
     }
-    
+
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
         var tagName = this.domElement.tagName.toLowerCase(),
             elemProp = tagName == "script" ? "text" : tagName == "textarea" ? "value" : "innerHTML";
@@ -44,7 +44,7 @@
                 ko.utils.setHtml(this.domElement, valueToWrite);
         }
     };
-    
+
     ko.templateSources.domElement.prototype['data'] = function(key /*, valueToWrite */) {
         if (arguments.length === 1) {
             return ko.utils.domData.get(this.domElement, "templateSourceData_" + key);
@@ -52,7 +52,7 @@
             ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
         }
     };
-    
+
     // ---- ko.templateSources.anonymousTemplate -----
     // Anonymous templates are normally saved/retrieved as DOM nodes through "nodes".
     // For compatibility, you can also read "text"; it will be serialized from the nodes on demand.

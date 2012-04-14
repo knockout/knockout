@@ -1,6 +1,6 @@
 ko.utils = new (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-    
+
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
     var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
@@ -17,7 +17,7 @@ ko.utils = new (function () {
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     var ieVersion = (function() {
         var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
-        
+
         // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
         while (
             div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
@@ -34,10 +34,10 @@ ko.utils = new (function () {
         var inputType = element.type.toLowerCase();
         return (inputType == "checkbox") || (inputType == "radio");
     }
-    
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
-        
+
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
@@ -91,7 +91,7 @@ ko.utils = new (function () {
                     result.push(array[i]);
             return result;
         },
-        
+
         arrayPushAll: function (array, valuesToPush) {
             if (valuesToPush instanceof Array)
                 array.push.apply(array, valuesToPush);
@@ -155,7 +155,7 @@ ko.utils = new (function () {
             else
                 optionNode.selected = isSelected;
         },
-        
+
         stringTrim: function (string) {
             return (string || "").replace(stringTrimRegex, "");
         },
@@ -170,7 +170,7 @@ ko.utils = new (function () {
             }
             return result;
         },
-        
+
         stringStartsWith: function (string, startsWith) {
             string = string || "";
             if (startsWith.length > string.length)
@@ -290,7 +290,7 @@ ko.utils = new (function () {
 
             'innerText' in element ? element.innerText = value
                                    : element.textContent = value;
-                                   
+
             if (ieVersion >= 9) {
                 // Believe it or not, this actually fixes an IE9 rendering bug
                 // (See https://github.com/SteveSanderson/knockout/issues/209)
@@ -316,7 +316,7 @@ ko.utils = new (function () {
                 result.push(i);
             return result;
         },
-        
+
         makeArray: function(arrayLikeObject) {
             var result = [];
             for (var i = 0, j = arrayLikeObject.length; i < j; i++) {
@@ -324,7 +324,7 @@ ko.utils = new (function () {
             };
             return result;
         },
-        
+
         isIe6 : isIe6,
         isIe7 : isIe7,
         ieVersion : ieVersion,
@@ -341,7 +341,7 @@ ko.utils = new (function () {
             };
             return matches;
         },
-        
+
         parseJson: function (jsonString) {
             if (typeof jsonString == "string") {
                 jsonString = ko.utils.stringTrim(jsonString);
@@ -365,7 +365,7 @@ ko.utils = new (function () {
             var params = options['params'] || {};
             var includeFields = options['includeFields'] || this.fieldsIncludedWithJsonPost;
             var url = urlOrForm;
-            
+
             // If we were given a form, use its 'action' URL and pick out any requested field values
             if((typeof urlOrForm == 'object') && (urlOrForm.tagName == "FORM")) {
                 var originalForm = urlOrForm;
@@ -376,7 +376,7 @@ ko.utils = new (function () {
                         params[fields[j].name] = fields[j].value;
                 }
             }
-            
+
             data = ko.utils.unwrapObservable(data);
             var form = document.createElement("FORM");
             form.style.display = "none";

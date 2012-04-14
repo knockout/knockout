@@ -42,7 +42,7 @@ describe('Dependent Observable', {
         value_of(instance()).should_be(123);
         value_of(threw).should_be(true);
     },
-    
+
     'Should invoke the "write" callback, where present, if you attempt to write a value to it': function() {
         var invokedWriteWithValue, invokedWriteWithThis;
         var instance = new ko.dependentObservable({
@@ -85,7 +85,7 @@ describe('Dependent Observable', {
         value_of(actualReadThis).should_be(expectedThis);
         value_of(actualWriteThis).should_be(expectedThis);
     },
-    
+
     'Should be able to pass evaluator function using "options" parameter called "read"': function() {
         var instance = new ko.dependentObservable({
             read: function () { return 123; }
@@ -208,7 +208,7 @@ describe('Dependent Observable', {
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
     },
-    
+
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
         var instance = new ko.dependentObservable({
             read: function() {},
@@ -216,7 +216,7 @@ describe('Dependent Observable', {
         });
         value_of(ko.isWriteableObservable(instance)).should_be(true);
     },
-    
+
     'Should allow deferring of evaluation (and hence dependency detection)': function () {
         var timesEvaluated = 0;
         var instance = new ko.dependentObservable({

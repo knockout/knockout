@@ -1,7 +1,7 @@
 // Google Closure Compiler helpers (used only to make the minified file smaller)
 ko.exportSymbol = function(koPath, object) {
 	var tokens = koPath.split(".");
-	
+
 	// In the future, "ko" may become distinct from "koExports" (so that non-exported objects are not reachable)
 	// At that point, "target" would be set to: (typeof koExports !== "undefined" ? koExports : ko)
 	var target = ko;

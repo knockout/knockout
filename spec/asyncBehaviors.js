@@ -13,7 +13,7 @@ asyncTest("Should notify subscribers asynchronously after writes stop for the sp
 	observable('C');
 	observable('D');
 	equal(notifiedValues.length, 0, "Should not notify synchronously");
-	
+
 	// Wait
 	stop();
 	setTimeout(function() {

@@ -56,7 +56,7 @@ ko.subscribable['fn'] = {
         }
         return total;
     },
-    
+
     extend: applyExtenders
 };
 

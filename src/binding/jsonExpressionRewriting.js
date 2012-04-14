@@ -34,7 +34,7 @@ ko.jsonExpressionRewriting = (function () {
 
     return {
         bindingRewriteValidators: [],
-        
+
         parseObjectLiteral: function(objectLiteralString) {
             // A full tokeniser+lexer would add too much weight to this library, so here's a simple parser
             // that is sufficient just to split an object literal string into a set of top-level key-value pairs

@@ -157,7 +157,7 @@
             // that are direct descendants of <ul> into the preceding <li>)
             if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
                 return;
-            
+
             // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags
             // must be intended to appear *after* that child, so move them there.
             var childNode = elementVerified.firstChild;

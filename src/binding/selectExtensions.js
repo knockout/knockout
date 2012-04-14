@@ -15,7 +15,7 @@
             else
                 return element.value;
         },
-        
+
         writeValue: function(element, value) {
             if (element.tagName == 'OPTION') {
                 switch(typeof value) {

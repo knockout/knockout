@@ -21,7 +21,7 @@
         // the algorithm for walking them relies on this), and for each top-level item in the virtual-element sense,
         // (1) Does a regular "applyBindings" to associate bindingContext with this node and to activate any non-memoized bindings
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
-        
+
         if (continuousNodeArray.length) {
             var firstNode = continuousNodeArray[0], lastNode = continuousNodeArray[continuousNodeArray.length - 1];
 
@@ -84,10 +84,10 @@
 
         if (targetNodeOrNodeArray) {
             var firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-            
+
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
             var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
-            
+
             return ko.dependentObservable( // So the DOM is automatically updated when any dependency changes
                 function () {
                     // Ensure we've got a proper binding context to work with
@@ -127,7 +127,7 @@
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, bindingContext['$data']);
         };
-         
+
         return ko.dependentObservable(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
@@ -143,7 +143,7 @@
                 var templateName = typeof(template) == 'function' ? template(arrayValue) : template;
                 return executeTemplate(null, "ignoreTargetNode", templateName, createInnerBindingContext(arrayValue), options);
             }, options, activateBindingsCallback);
-            
+
         }, null, { 'disposeWhenNodeIsRemoved': targetNode });
     };
 
@@ -154,7 +154,7 @@
             oldSubscription.dispose();
         ko.utils.domData.set(element, templateSubscriptionDomDataKey, newSubscription);
     }
-    
+
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
@@ -171,21 +171,21 @@
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
             var templateName;
             var shouldDisplay = true;
-            
+
             if (typeof bindingValue == "string") {
                 templateName = bindingValue;
             } else {
                 templateName = bindingValue['name'];
-                
+
                 // Support "if"/"ifnot" conditions
                 if ('if' in bindingValue)
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
             }
-            
+
             var templateSubscription = null;
-            
+
             if ((typeof bindingValue === 'object') && ('foreach' in bindingValue)) { // Note: can't use 'in' operator on strings
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
@@ -200,7 +200,7 @@
                 } else
                     ko.virtualElements.emptyNode(element);
             }
-            
+
             // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
             disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
         }
