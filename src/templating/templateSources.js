@@ -1,10 +1,10 @@
-(function() { 
+(function() {
     // A template source represents a read/write way of accessing a template. This is to eliminate the need for template loading/saving
     // logic to be duplicated in every template engine (and means they can all work with anonymous templates, etc.)
     //
     // Two are provided by default:
     //  1. ko.templateSources.domElement       - reads/writes the text content of an arbitrary DOM element
-    //  2. ko.templateSources.anonymousElement - uses ko.utils.domData to read/write text *associated* with the DOM element, but 
+    //  2. ko.templateSources.anonymousElement - uses ko.utils.domData to read/write text *associated* with the DOM element, but
     //                                           without reading/writing the actual element text content, since it will be overwritten
     //                                           with the rendered template output.
     // You can implement your own template source if you want to fetch/store templates somewhere other than in DOM elements.
@@ -22,15 +22,15 @@
     //
     // Once you've implemented a templateSource, make your template engine use it by subclassing whatever template engine you were
     // using and overriding "makeTemplateSource" to return an instance of your custom template source.
-    
+
     ko.templateSources = {};
-    
+
     // ---- ko.templateSources.domElement -----
-    
+
     ko.templateSources.domElement = function(element) {
         this.domElement = element;
     }
-    
+
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
         var tagNameLower = ko.utils.tagNameLower(this.domElement),
             elemContentsProperty = tagNameLower === "script" ? "text"
@@ -47,7 +47,7 @@
                 this.domElement[elemContentsProperty] = valueToWrite;
         }
     };
-    
+
     ko.templateSources.domElement.prototype['data'] = function(key /*, valueToWrite */) {
         if (arguments.length === 1) {
             return ko.utils.domData.get(this.domElement, "templateSourceData_" + key);
@@ -55,14 +55,14 @@
             ko.utils.domData.set(this.domElement, "templateSourceData_" + key, arguments[1]);
         }
     };
-    
+
     // ---- ko.templateSources.anonymousTemplate -----
     // Anonymous templates are normally saved/retrieved as DOM nodes through "nodes".
     // For compatibility, you can also read "text"; it will be serialized from the nodes on demand.
     // Writing to "text" is still supported, but then the template data will not be available as DOM nodes.
 
     var anonymousTemplatesDomDataKey = "__ko_anon_template__";
-    ko.templateSources.anonymousTemplate = function(element) {		
+    ko.templateSources.anonymousTemplate = function(element) {
         this.domElement = element;
     }
     ko.templateSources.anonymousTemplate.prototype = new ko.templateSources.domElement();

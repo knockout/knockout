@@ -15,13 +15,13 @@ ko.extenders = {
                 clearTimeout(writeTimeoutInstance);
                 writeTimeoutInstance = setTimeout(function() {
                     target(value);
-                }, timeout);                
+                }, timeout);
             }
         });
     },
 
     'notify': function(target, notifyWhen) {
-        target["equalityComparer"] = notifyWhen == "always" 
+        target["equalityComparer"] = notifyWhen == "always"
             ? function() { return false } // Treat all values as not equal
             : ko.observable["fn"]["equalityComparer"];
         return target;

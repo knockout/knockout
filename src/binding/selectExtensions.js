@@ -17,7 +17,7 @@
                     return element.value;
             }
         },
-        
+
         writeValue: function(element, value) {
             switch (ko.utils.tagNameLower(element)) {
                 case 'option':
@@ -54,7 +54,7 @@
                     break;
             }
         }
-    };        
+    };
 })();
 
 ko.exportSymbol('selectExtensions', ko.selectExtensions);

@@ -31,7 +31,7 @@ describe('Subscribable', {
         instance.subscribe(model.myCallback, model);
         instance.notifySubscribers('notifiedValue');
     },
-    
+
     'Should not notify subscribers after unsubscription, even if the unsubscription occurs midway through a notification cycle': function() {
         // This spec represents the unusual case where during notification, subscription1's callback causes subscription2 to be disposed.
         // Since subscription2 was still active at the start of the cycle, it is scheduled to be notified. This spec verifies that
@@ -44,7 +44,7 @@ describe('Subscribable', {
         var subscription2 = instance.subscribe(function() {
             subscription2wasNotified = true;
         });
-        
+
         instance.notifySubscribers('ignored');
         value_of(subscription2wasNotified).should_be(false);
     },
@@ -56,7 +56,7 @@ describe('Subscribable', {
 
         instance.notifySubscribers(123, "unrelatedEvent");
         value_of(notifiedValue).should_be(undefined);
-        
+
         instance.notifySubscribers(456, "myEvent");
         value_of(notifiedValue).should_be(456);
     },
@@ -97,5 +97,5 @@ describe('Subscribable', {
         value_of(interceptedNotifications.length).should_be(1);
         value_of(interceptedNotifications[0].eventName).should_be("myEvent");
         value_of(interceptedNotifications[0].value).should_be(123);
-    }    
+    }
 });

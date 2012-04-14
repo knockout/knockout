@@ -13,7 +13,7 @@ asyncTest("Should notify subscribers asynchronously after writes stop for the sp
 	observable('C');
 	observable('D');
 	equal(notifiedValues.length, 0, "Should not notify synchronously");
-	
+
 	// Wait
 	stop();
 	setTimeout(function() {
@@ -104,6 +104,6 @@ asyncTest("Should run evaluator only once when dependencies stop updating for th
 			start();
 			equal(evaluationCount, 2); // Finally, it's evaluated
 			equal(asyncDepObs(), "D");
-		}, 110);		
+		}, 110);
 	}, 10);
 });

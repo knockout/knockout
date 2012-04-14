@@ -5,8 +5,8 @@ ko.observable = function (initialValue) {
 
     function observable() {
         if (arguments.length > 0) {
-            // Write            
-            
+            // Write
+
             // Ignore writes if the value hasn't changed
             if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
@@ -30,7 +30,7 @@ ko.observable = function (initialValue) {
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
-    
+
     return observable;
 }
 
@@ -47,7 +47,7 @@ ko.observable['fn'][protoProperty] = ko.observable;
 ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
     if (instance[protoProperty] === prototype) return true;
-    return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain 
+    return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain
 };
 
 ko.isObservable = function (instance) {

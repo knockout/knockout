@@ -5,7 +5,7 @@ ko.observableArray = function (initialValues) {
     }
     if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
-        
+
     var result = ko.observable(initialValues);
     ko.utils.extend(result, ko.observableArray['fn']);
     return result;
@@ -50,7 +50,7 @@ ko.observableArray['fn'] = {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
         });
     },
-    
+
     'destroy': function (valueOrPredicate) {
         var underlyingArray = this();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
@@ -62,25 +62,25 @@ ko.observableArray['fn'] = {
         }
         this.valueHasMutated();
     },
-        
+
     'destroyAll': function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
             return this['destroy'](function() { return true });
-                
+
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
             return [];
         return this['destroy'](function (value) {
             return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
-        });             
+        });
     },
 
     'indexOf': function (item) {
         var underlyingArray = this();
         return ko.utils.arrayIndexOf(underlyingArray, item);
     },
-    
+
     'replace': function(oldItem, newItem) {
         var index = this['indexOf'](oldItem);
         if (index >= 0) {
@@ -88,12 +88,12 @@ ko.observableArray['fn'] = {
             this()[index] = newItem;
             this.valueHasMutated();
         }
-    }    
+    }
 }
 
 // Populate ko.observableArray.fn with read/write functions from native arrays
 ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
-    ko.observableArray['fn'][methodName] = function () { 
+    ko.observableArray['fn'][methodName] = function () {
         var underlyingArray = this();
         this.valueWillMutate();
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);

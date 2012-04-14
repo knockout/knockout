@@ -21,7 +21,7 @@ body, #jsspec_container {
   padding: 0;
   margin: 0;
   position: absolute;
-  top: 0px;    
+  top: 0px;
   left: 0px;
   width: 100%;
   height: 40px;
@@ -31,19 +31,19 @@ body, #jsspec_container {
 #list {
   padding: 0;
   margin: 0;
-  position: absolute;    
+  position: absolute;
   top: 40px;
   left: 0px;
   bottom: 0px;
-  overflow: auto;    
-  width: 250px;    
+  overflow: auto;
+  width: 250px;
   _height:expression(document.body.clientHeight-40);
 }
 
 #log {
   padding: 0;
   margin: 0;
-  position: absolute;    
+  position: absolute;
   top: 40px;
   left: 250px;
   right: 0px;

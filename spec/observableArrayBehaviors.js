@@ -15,10 +15,10 @@ describe('Observable Array', {
     'Should be observable': function () {
         value_of(ko.isObservable(testObservableArray)).should_be(true);
     },
-    
+
     'Should initialize to empty array if you pass no args to constructor' : function() {
         var instance = new ko.observableArray();
-        value_of(instance().length).should_be(0);       
+        value_of(instance().length).should_be(0);
     },
 
     'Should require constructor arg, if given, to be array-like or null or undefined' : function() {
@@ -28,7 +28,7 @@ describe('Observable Array', {
         value_of(threw).should_be(true);
         try { threw = false; new ko.observableArray({}); } catch(ex) { threw = true }
         value_of(threw).should_be(true);
-        
+
         // Try allowed args
         value_of((new ko.observableArray([1,2,3]))().length).should_be(3);
         value_of((new ko.observableArray(null))()).should_be(null);
@@ -41,7 +41,7 @@ describe('Observable Array', {
         value_of(notifiedValues[0][0]).should_be('X');
         value_of(notifiedValues[0][1]).should_be('Y');
     },
-    
+
     'Should be able to mark single items as destroyed' : function() {
         var x = {}, y = {};
         testObservableArray([x, y]);
@@ -50,14 +50,14 @@ describe('Observable Array', {
         value_of(x._destroy).should_be(undefined);
         value_of(y._destroy).should_be(true);
     },
-    
+
     'Should be able to mark multiple items as destroyed' : function() {
         var x = {}, y = {}, z = {};
         testObservableArray([x, y, z]);
         testObservableArray.destroyAll([x, z]);
         value_of(testObservableArray().length).should_be(3);
         value_of(x._destroy).should_be(true);
-        value_of(y._destroy).should_be(undefined);      
+        value_of(y._destroy).should_be(undefined);
         value_of(z._destroy).should_be(true);
     },
 
@@ -67,7 +67,7 @@ describe('Observable Array', {
         testObservableArray.destroyAll();
         value_of(testObservableArray().length).should_be(3);
         value_of(x._destroy).should_be(true);
-        value_of(y._destroy).should_be(true);       
+        value_of(y._destroy).should_be(true);
         value_of(z._destroy).should_be(true);
     },
 
@@ -136,7 +136,7 @@ describe('Observable Array', {
         value_of(removed).should_be(["Alpha", "Beta", "Gamma"]);
         value_of(notifiedValues).should_be([[]]);
     },
-    
+
     'Should notify "beforeChange" subscribers before remove': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         beforeNotifiedValues = [];
@@ -182,15 +182,15 @@ describe('Observable Array', {
         notifiedValues = [];
         testObservableArray.replace("Beta", "Delta");
         value_of(notifiedValues).should_be([["Alpha", "Delta", "Gamma"]]);
-    },    
-    
+    },
+
     'Should notify "beforeChange" subscribers before replace': function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         beforeNotifiedValues = [];
         testObservableArray.replace("Beta", "Delta");
         value_of(beforeNotifiedValues).should_be([["Alpha", "Beta", "Gamma"]]);
-    },    
-    
+    },
+
     'Should notify subscribers after marking items as destroyed': function () {
         var x = {}, y = {}, didNotify = false;
         testObservableArray([x, y]);
@@ -222,7 +222,7 @@ describe('Observable Array', {
         value_of(testObservableArray.indexOf("Alpha")).should_be(0);
         value_of(testObservableArray.indexOf("fake")).should_be(-1);
     },
-    
+
     'Should return 0 when you call myArray.length, and the true length when you call myArray().length': function() {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         value_of(testObservableArray.length).should_be(0); // Because JavaScript won't let us override "length" directly
