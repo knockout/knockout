@@ -18,7 +18,7 @@
             }
         },
 
-        writeValue: function(element, value) {
+        writeValue: function(element, value, stringValue) {
             switch (ko.utils.tagNameLower(element)) {
                 case 'option':
                     switch(typeof value) {
@@ -35,7 +35,7 @@
                             element[hasDomDataExpandoProperty] = true;
 
                             // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
-                            element.value = typeof value === "number" ? value : "";
+                            element.value = typeof value === "number"  ? value : typeof stringValue=="string"?stringValue:"";
                             break;
                     }
                     break;
