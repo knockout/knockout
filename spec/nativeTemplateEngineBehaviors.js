@@ -2,19 +2,20 @@ describe('Native template engine', {
     before_each: function () {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
 
-        function ensureNodeExistsAndIsEmpty(id, tagName) {
+        function ensureNodeExistsAndIsEmpty(id, tagName, type) {
             var existingNode = document.getElementById(id);
             if (existingNode != null)
                 existingNode.parentNode.removeChild(existingNode);
             var resultNode = document.createElement(tagName || "div");
             resultNode.id = id;
-            resultNode.setAttribute("type", "text/html");
+            if (type)
+                resultNode.setAttribute("type", type);
             document.body.appendChild(resultNode);
             return resultNode;
         }
 
         window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
-        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script");
+        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script", "text/html");
         window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");
         window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
     },
