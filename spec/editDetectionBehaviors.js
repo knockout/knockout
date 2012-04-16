@@ -170,7 +170,7 @@ describe('Array to DOM node children mapping', {
         };
 
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping);
-        value_of(testNode).should_contain_text("ABC");
+        value_of(testNode).should_contain_html("<div>a</div><div>b</div><div>c</div>");
 
         // Now kill the middle DIV manually, even though people shouldn't really do this
         var elemToRemove = testNode.childNodes[1];
@@ -179,7 +179,7 @@ describe('Array to DOM node children mapping', {
 
         // Now remove the corresponding array entry. This shouldn't cause an exception.
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "C"], mapping);
-        value_of(testNode).should_contain_text("AC");
+        value_of(testNode).should_contain_html("<div>a</div><div>c</div>");
     },
 
     'Should handle sequences of mixed insertions and deletions': function () {
