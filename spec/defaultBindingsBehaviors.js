@@ -1628,11 +1628,11 @@ describe('Binding: Foreach', {
 
     'Should be able to output HTML5 elements within container-less templates (same as above)': function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/194
-        ko.utils.setHtml(testNode, "<!-- ko foreach:someitems --><div><section data-bind='text: $data'></section></div><!-- /ko -->");
+        ko.utils.setHtml(testNode, "xxx<!-- ko foreach:someitems --><div><section data-bind='text: $data'></section></div><!-- /ko -->");
         var viewModel = {
             someitems: [ 'Alpha', 'Beta' ]
         };
         ko.applyBindings(viewModel, testNode);
-        value_of(testNode).should_contain_html('<!-- ko foreach:someitems --><div><section data-bind="text: $data">alpha</section></div><div><section data-bind="text: $data">beta</section></div><!-- /ko -->');
+        value_of(testNode).should_contain_html('xxx<!-- ko foreach:someitems --><div><section data-bind="text: $data">alpha</section></div><div><section data-bind="text: $data">beta</section></div><!-- /ko -->');
     }
 });
