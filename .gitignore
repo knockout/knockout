@@ -1,4 +1,5 @@
 *.suo
+*.swp
 *.csproj.user
 bin
 obj
@@ -9,3 +10,4 @@ _ReSharper*
 desktop.ini
 .eprj
 perf/*
+*.orig

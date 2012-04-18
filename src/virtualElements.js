@@ -1,9 +1,9 @@
 (function() {
     // "Virtual elements" is an abstraction on top of the usual DOM API which understands the notion that comment nodes
-    // may be used to represent hierarchy (in addition to the DOM's natural hierarchy). 
-    // If you call the DOM-manipulating functions on ko.virtualElements, you will be able to read and write the state 
+    // may be used to represent hierarchy (in addition to the DOM's natural hierarchy).
+    // If you call the DOM-manipulating functions on ko.virtualElements, you will be able to read and write the state
     // of that virtual hierarchy
-    // 
+    //
     // The point of all this is to support containerless templates (e.g., <!-- ko foreach:someCollection -->blah<!-- /ko -->)
     // without having to scatter special cases all over the binding and templating code.
 
@@ -54,16 +54,6 @@
         } else
             return null; // Must have no matching end comment, and allowUnbalanced is true
     }
-
-    function nodeArrayToText(nodeArray, cleanNodes) {
-        var texts = [];
-        for (var i = 0, j = nodeArray.length; i < j; i++) {
-            if (cleanNodes)
-                ko.utils.domNodeDisposal.cleanNode(nodeArray[i]);
-            texts.push(ko.utils.outerHTML(nodeArray[i]));
-        }
-        return String.prototype.concat.apply("", texts);
-    }   
 
     function getUnbalancedChildTags(node) {
         // e.g., from <div>OK</div><!-- ko blah --><span>Another</span>, returns: <!-- ko blah --><span>Another</span>
@@ -120,7 +110,7 @@
                 if (containerNode.firstChild)
                     containerNode.insertBefore(nodeToPrepend, containerNode.firstChild);
                 else
-                    containerNode.appendChild(nodeToPrepend);                           
+                    containerNode.appendChild(nodeToPrepend);
             } else {
                 // Start comments must always have a parent and at least one following sibling (the end comment)
                 containerNode.parentNode.insertBefore(nodeToPrepend, containerNode.nextSibling);
@@ -133,45 +123,41 @@
                 if (insertAfterNode.nextSibling)
                     containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
                 else
-                    containerNode.appendChild(nodeToInsert);    
+                    containerNode.appendChild(nodeToInsert);
             } else {
                 // Children of start comments must always have a parent and at least one following sibling (the end comment)
                 containerNode.parentNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
-            }                           
+            }
+        },
+
+        firstChild: function(node) {
+            if (!isStartComment(node))
+                return node.firstChild;
+            if (!node.nextSibling || isEndComment(node.nextSibling))
+                return null;
+            return node.nextSibling;
         },
 
         nextSibling: function(node) {
-            if (!isStartComment(node)) {
-                if (node.nextSibling && isEndComment(node.nextSibling))
-                    return undefined;
-                return node.nextSibling;
-            } else {
-                return getMatchingEndComment(node).nextSibling;
-            }
+            if (isStartComment(node))
+                node = getMatchingEndComment(node);
+            if (node.nextSibling && isEndComment(node.nextSibling))
+                return null;
+            return node.nextSibling;
         },
 
         virtualNodeBindingValue: function(node) {
             var regexMatch = isStartComment(node);
-            return regexMatch ? regexMatch[1] : null;               
+            return regexMatch ? regexMatch[1] : null;
         },
 
-        extractAnonymousTemplateIfVirtualElement: function(node) {
-            if (ko.virtualElements.virtualNodeBindingValue(node)) {
-                // Empty out the virtual children, and associate "node" with an anonymous template matching its previous virtual children
-                var virtualChildren = ko.virtualElements.childNodes(node);
-                var anonymousTemplateText = nodeArrayToText(virtualChildren, true);
-                ko.virtualElements.emptyNode(node);
-                new ko.templateSources.anonymousTemplate(node).text(anonymousTemplateText);
-            }
-        },
-        
         normaliseVirtualElementDomStructure: function(elementVerified) {
-            // Workaround for https://github.com/SteveSanderson/knockout/issues/155 
+            // Workaround for https://github.com/SteveSanderson/knockout/issues/155
             // (IE <= 8 or IE 9 quirks mode parses your HTML weirdly, treating closing </li> tags as if they don't exist, thereby moving comment nodes
             // that are direct descendants of <ul> into the preceding <li>)
-            if (!htmlTagsWithOptionallyClosingChildren[elementVerified.tagName.toLowerCase()])
+            if (!htmlTagsWithOptionallyClosingChildren[ko.utils.tagNameLower(elementVerified)])
                 return;
-            
+
             // Scan immediate children to see if they contain unbalanced comment tags. If they do, those comment tags
             // must be intended to appear *after* that child, so move them there.
             var childNode = elementVerified.firstChild;
@@ -192,6 +178,14 @@
                     }
                 } while (childNode = childNode.nextSibling);
             }
-        }  
-    };  
+        }
+    };
 })();
+ko.exportSymbol('virtualElements', ko.virtualElements);
+ko.exportSymbol('virtualElements.allowedBindings', ko.virtualElements.allowedBindings);
+ko.exportSymbol('virtualElements.emptyNode', ko.virtualElements.emptyNode);
+//ko.exportSymbol('virtualElements.firstChild', ko.virtualElements.firstChild);     // firstChild is not minified
+ko.exportSymbol('virtualElements.insertAfter', ko.virtualElements.insertAfter);
+//ko.exportSymbol('virtualElements.nextSibling', ko.virtualElements.nextSibling);   // nextSibling is not minified
+ko.exportSymbol('virtualElements.prepend', ko.virtualElements.prepend);
+ko.exportSymbol('virtualElements.setDomNodeChildren', ko.virtualElements.setDomNodeChildren);

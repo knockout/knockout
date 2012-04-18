@@ -10,6 +10,11 @@ describe('Dependent Observable', {
         value_of(ko.isObservable(instance)).should_be(true);
     },
 
+    'Should advertise that instances are computed': function () {
+        var instance = new ko.dependentObservable(function () { });
+        value_of(ko.isComputed(instance)).should_be(true);
+    },
+
     'Should advertise that instances cannot have values written to them': function () {
         var instance = new ko.dependentObservable(function () { });
         value_of(ko.isWriteableObservable(instance)).should_be(false);
@@ -37,10 +42,10 @@ describe('Dependent Observable', {
         value_of(instance()).should_be(123);
         value_of(threw).should_be(true);
     },
-    
+
     'Should invoke the "write" callback, where present, if you attempt to write a value to it': function() {
         var invokedWriteWithValue, invokedWriteWithThis;
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function(value) { invokedWriteWithValue = value; invokedWriteWithThis = this; }
         });
@@ -54,7 +59,7 @@ describe('Dependent Observable', {
     'Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters': function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function() { invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
             owner: someOwner
@@ -80,12 +85,12 @@ describe('Dependent Observable', {
         value_of(actualReadThis).should_be(expectedThis);
         value_of(actualWriteThis).should_be(expectedThis);
     },
-    
+
     'Should be able to pass evaluator function using "options" parameter called "read"': function() {
         var instance = new ko.dependentObservable({
             read: function () { return 123; }
         });
-        value_of(instance()).should_be(123);    		
+        value_of(instance()).should_be(123);
     },
 
     'Should cache result of evaluator function and not call it again until dependencies change': function () {
@@ -203,23 +208,34 @@ describe('Dependent Observable', {
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
     },
-    
+
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function() {},
             write: function() {}
         });
-        value_of(ko.isWriteableObservable(instance)).should_be(true);    	
+        value_of(ko.isWriteableObservable(instance)).should_be(true);
     },
-    
+
     'Should allow deferring of evaluation (and hence dependency detection)': function () {
         var timesEvaluated = 0;
-        var instance = new ko.dependentObservable({ 
+        var instance = new ko.dependentObservable({
             read: function () { timesEvaluated++; return 123 },
-            deferEvaluation: true 
+            deferEvaluation: true
         });
         value_of(timesEvaluated).should_be(0);
         value_of(instance()).should_be(123);
         value_of(timesEvaluated).should_be(1);
-     }    
+    },
+
+    'Should prevent recursive calling of read function': function() {
+        var observable = ko.observable(0),
+            computed = ko.dependentObservable(function() {
+                // this both reads and writes to the observable
+                // will result in errors like "Maximum call stack size exceeded" (chrome)
+                // or "Out of stack space" (IE) or "too much recursion" (Firefox) if recursion
+                // isn't prevented
+                observable(observable() + 1);
+            });
+     }
 })

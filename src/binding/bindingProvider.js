@@ -1,7 +1,9 @@
 (function() {
     var defaultBindingAttributeName = "data-bind";
 
-    ko.bindingProvider = function() { };
+    ko.bindingProvider = function() {
+        this.bindingCache = {};
+    };
 
     ko.utils.extend(ko.bindingProvider.prototype, {
         'nodeHasBindings': function(node) {
@@ -31,16 +33,28 @@
         // It's not part of the interface definition for a general binding provider.
         'parseBindingsString': function(bindingsString, bindingContext) {
             try {
-                var viewModel = bindingContext['$data'];
-                var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
-                return ko.utils.evalWithinScope(rewrittenBindings, viewModel === null ? window : viewModel, bindingContext);
+                var viewModel = bindingContext['$data'],
+                    scopes = (typeof viewModel == 'object' && viewModel != null) ? [viewModel, bindingContext] : [bindingContext],
+                    bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, scopes.length, this.bindingCache);
+                return bindingFunction(scopes);
             } catch (ex) {
                 throw new Error("Unable to parse bindings.\nMessage: " + ex + ";\nBindings value: " + bindingsString);
-            }           
+            }
         }
     });
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
+
+    function createBindingsStringEvaluatorViaCache(bindingsString, scopesCount, cache) {
+        var cacheKey = scopesCount + '_' + bindingsString;
+        return cache[cacheKey]
+            || (cache[cacheKey] = createBindingsStringEvaluator(bindingsString, scopesCount));
+    }
+
+    function createBindingsStringEvaluator(bindingsString, scopesCount) {
+        var rewrittenBindings = " { " + ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(bindingsString) + " } ";
+        return ko.utils.buildEvalWithinScopeFunction(rewrittenBindings, scopesCount);
+    }
 })();
 
-ko.exportSymbol('ko.bindingProvider', ko.bindingProvider);
+ko.exportSymbol('bindingProvider', ko.bindingProvider);

@@ -1,7 +1,7 @@
 
 ko.dependencyDetection = (function () {
     var _frames = [];
-    
+
     return {
         begin: function (callback) {
             _frames.push({ callback: callback, distinctDependencies:{} });
@@ -13,7 +13,7 @@ ko.dependencyDetection = (function () {
 
         registerDependency: function (subscribable) {
             if (!ko.isSubscribable(subscribable))
-                throw "Only subscribable things can act as dependencies";
+                throw new Error("Only subscribable things can act as dependencies");
             if (_frames.length > 0) {
                 var topFrame = _frames[_frames.length - 1];
                 if (topFrame.distinctDependencies[subscribable.id()])

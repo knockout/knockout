@@ -26,18 +26,18 @@
                 newContiguousSet.push(current);
             }
 
-            // ... then mutate the input array to match this. 
+            // ... then mutate the input array to match this.
             // (The following line replaces the contents of contiguousNodeArray with newContiguousSet)
             Array.prototype.splice.apply(contiguousNodeArray, [0, contiguousNodeArray.length].concat(newContiguousSet));
         }
     }
 
-    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes) {
+    function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes, index) {
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         var dependentObservable = ko.dependentObservable(function() {
-            var newMappedNodes = mapping(valueToMap) || [];
-            
+            var newMappedNodes = mapping(valueToMap, index) || [];
+
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
                 fixUpVirtualElements(mappedNodes);
@@ -45,7 +45,7 @@
                 if (callbackAfterAddingNodes)
                     callbackAfterAddingNodes(valueToMap, newMappedNodes);
             }
-            
+
             // Replace the contents of the mappedNodes array, thereby updating the record
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
@@ -53,7 +53,7 @@
         }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
         return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
     }
-    
+
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
@@ -69,6 +69,7 @@
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
         var nodesToDelete = [];
+        var newMappingResultIndex = 0;
         var nodesAdded = [];
         var insertAfterNode = null;
         for (var i = 0, j = editScript.length; i < j; i++) {
@@ -76,7 +77,8 @@
                 case "retained":
                     // Just keep the information - don't touch the nodes
                     var dataToRetain = lastMappingResult[lastMappingResultIndex];
-                    newMappingResult.push(dataToRetain);
+                    dataToRetain.indexObservable(newMappingResultIndex);
+                    newMappingResultIndex = newMappingResult.push(dataToRetain);
                     if (dataToRetain.domNodes.length > 0)
                         insertAfterNode = dataToRetain.domNodes[dataToRetain.domNodes.length - 1];
                     lastMappingResultIndex++;
@@ -85,7 +87,7 @@
                 case "deleted":
                     // Stop tracking changes to the mapping for these nodes
                     lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
-                
+
                     // Queue these nodes for later removal
                     fixUpVirtualElements(lastMappingResult[lastMappingResultIndex].domNodes);
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
@@ -99,13 +101,19 @@
                     lastMappingResultIndex++;
                     break;
 
-                case "added": 
+                case "added":
                     var valueToMap = editScript[i].value;
-                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes);
+                    var indexObservable = ko.observable(newMappingResultIndex);
+                    var mapData = mapNodeAndRefreshWhenChanged(domNode, mapping, valueToMap, callbackAfterAddingNodes, indexObservable);
                     var mappedNodes = mapData.mappedNodes;
-                    
+
                     // On the first evaluation, insert the nodes at the current insertion point
-                    newMappingResult.push({ arrayEntry: editScript[i].value, domNodes: mappedNodes, dependentObservable: mapData.dependentObservable });
+                    newMappingResultIndex = newMappingResult.push({
+                        arrayEntry: editScript[i].value,
+                        domNodes: mappedNodes,
+                        dependentObservable: mapData.dependentObservable,
+                        indexObservable: indexObservable
+                    });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
                         var node = mappedNodes[nodeIndex];
                         nodesAdded.push({
@@ -121,13 +129,13 @@
                             ko.virtualElements.insertAfter(domNode, node, insertAfterNode);
                         }
                         insertAfterNode = node;
-                    } 
+                    }
                     if (callbackAfterAddingNodes)
-                        callbackAfterAddingNodes(valueToMap, mappedNodes);
+                        callbackAfterAddingNodes(valueToMap, mappedNodes, indexObservable);
                     break;
             }
         }
-        
+
         ko.utils.arrayForEach(nodesToDelete, function (node) { ko.cleanNode(node.element) });
 
         var invokedBeforeRemoveCallback = false;
@@ -142,14 +150,17 @@
                 invokedBeforeRemoveCallback = true;
             }
         }
-        if (!invokedBeforeRemoveCallback)
-            ko.utils.arrayForEach(nodesToDelete, function (node) {
-                ko.removeNode(node.element);
-            });
+        if (!invokedBeforeRemoveCallback && nodesToDelete.length) {
+            var commonParent = nodesToDelete[0].element.parentNode;
+            if (commonParent) {
+                for (var i = 0; i < nodesToDelete.length; i++)
+                    commonParent.removeChild(nodesToDelete[i].element);
+            }
+        }
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
     }
 })();
 
-ko.exportSymbol('ko.utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);
+ko.exportSymbol('utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);

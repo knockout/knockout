@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>JSSpec results</title>
@@ -9,10 +9,10 @@
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.js"></script>
         <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-1.7-development-only.js"></script>
         -->
-        
+
         <script type="text/javascript" src="lib/innershiv.js"></script>
         <script type="text/javascript" src="lib/diff_match_patch.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.js"></script>        
+        <script type="text/javascript" src="lib/JSSpec.js"></script>
         <script type="text/javascript">
             JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
                 for (var i = 0; i < expectedPossibilities.length; i++) {
@@ -28,7 +28,7 @@
                     return;
                 JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
                 throw JSSpec._assertionFailure;
-            };            
+            };
             JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
                 var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
                 // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
@@ -39,15 +39,15 @@
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
             };
             JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
-            	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
+                var actualText = 'textContent' in this.target ? this.target.textContent : this.target.innerText;
                 var cleanedActualText = actualText.replace(/\r\n/g, "\n");
                 JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
             };
-            
+
         </script>
         <script type="text/javascript" src="lib/json2.js"></script>
         <script type="text/javascript" src="../build/knockout-raw.js"></script>
-        
+
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
         <script type="text/javascript" src="subscribableBehaviors.js"></script>
         <script type="text/javascript" src="observableBehaviors.js"></script>

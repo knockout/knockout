@@ -62,7 +62,12 @@ describe('Compare Arrays', {
 
 describe('Array to DOM node children mapping', {
     before_each: function () {
+        var existingNode = document.getElementById("testNode");
+        if (existingNode != null)
+            existingNode.parentNode.removeChild(existingNode);
         testNode = document.createElement("div");
+        testNode.id = "testNode";
+        document.body.appendChild(testNode);
     },
 
     'Should populate the DOM node by mapping array elements': function () {
@@ -153,32 +158,71 @@ describe('Array to DOM node children mapping', {
         value_of(mappingInvocations).should_be([]);
     },
 
-    'Should handle sequences of mixed insertions and deletions': function () {
+    'Should tolerate DOM nodes being removed manually, before the corresponding array entry is removed': function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/413
+        // Ideally, people wouldn't be mutating the generated DOM manually. But this didn't error in v2.0, so we should try to avoid introducing a break.
         var mappingInvocations = [];
         var mapping = function (arrayItem) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
-            output.innerHTML = arrayItem || "null";
+            output.innerHTML = arrayItem;
             return [output];
         };
 
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A"], mapping);
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping);
+        value_of(testNode).should_contain_html("<div>a</div><div>b</div><div>c</div>");
+
+        // Now kill the middle DIV manually, even though people shouldn't really do this
+        var elemToRemove = testNode.childNodes[1];
+        value_of(elemToRemove.innerHTML).should_be("B"); // Be sure it's the right one
+        elemToRemove.parentNode.removeChild(elemToRemove);
+
+        // Now remove the corresponding array entry. This shouldn't cause an exception.
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "C"], mapping);
+        value_of(testNode).should_contain_html("<div>a</div><div>c</div>");
+    },
+
+    'Should handle sequences of mixed insertions and deletions': function () {
+        var mappingInvocations = [], countCallbackInvocations = 0;
+        var mapping = function (arrayItem) {
+            mappingInvocations.push(arrayItem);
+            var output = document.createElement("DIV");
+            output.innerHTML = ko.utils.unwrapObservable(arrayItem) || "null";
+            return [output];
+        };
+        var callback = function(arrayItem, nodes) {
+            ++countCallbackInvocations;
+            value_of(mappingInvocations[mappingInvocations.length-1]).should_be(arrayItem);
+        }
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A"], mapping, null, callback);
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["A"]);
         value_of(mappingInvocations).should_be(["A"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["B"], mapping); // Delete and replace single item
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["B"], mapping, null, callback); // Delete and replace single item
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["B"]);
         value_of(mappingInvocations).should_be(["B"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping); // Add at beginning and end
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping, null, callback); // Add at beginning and end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["A", "B", "C"]);
         value_of(mappingInvocations).should_be(["A", "C"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
-        mappingInvocations = [];
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [1, null, "B"], mapping); // Add to beginning; delete from end
+        mappingInvocations = [], countCallbackInvocations = 0;
+        var observable = ko.observable(1);
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [observable, null, "B"], mapping, null, callback); // Add to beginning; delete from end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["1", "null", "B"]);
-        value_of(mappingInvocations).should_be([1, null]);
+        value_of(mappingInvocations).should_be([observable, null]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
+
+        mappingInvocations = [], countCallbackInvocations = 0;
+        observable(2);      // Change the value of the observable
+        value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["2", "null", "B"]);
+        value_of(mappingInvocations).should_be([observable]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
     }
 });

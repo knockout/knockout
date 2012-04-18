@@ -1,12 +1,12 @@
 // If you want to make a custom template engine,
-// 
+//
 // [1] Inherit from this class (like ko.nativeTemplateEngine does)
 // [2] Override 'renderTemplateSource', supplying a function with this signature:
 //
 //        function (templateSource, bindingContext, options) {
 //            // - templateSource.text() is the text of the template you should render
 //            // - bindingContext.$data is the data you should pass into the template
-//            //   - you might also want to make bindingContext.$parent, bindingContext.$parents, 
+//            //   - you might also want to make bindingContext.$parent, bindingContext.$parents,
 //            //     and bindingContext.$root available in the template too
 //            // - options gives you access to any other properties set on "data-bind: { template: options }"
 //            //
@@ -17,7 +17,7 @@
 //
 //        function (script) {
 //            // Return value: Whatever syntax means "Evaluate the JavaScript statement 'script' and output the result"
-//            //               For example, the jquery.tmpl template engine converts 'someScript' to '${ someScript }' 
+//            //               For example, the jquery.tmpl template engine converts 'someScript' to '${ someScript }'
 //        }
 //
 //     This is only necessary if you want to allow data-bind attributes to reference arbitrary template variables.
@@ -27,17 +27,18 @@
 ko.templateEngine = function () { };
 
 ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
-    throw "Override renderTemplateSource";
+    throw new Error("Override renderTemplateSource");
 };
 
 ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script) {
-    throw "Override createJavaScriptEvaluatorBlock";
+    throw new Error("Override createJavaScriptEvaluatorBlock");
 };
 
-ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
+ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateDocument) {
     // Named template
     if (typeof template == "string") {
-        var elem = document.getElementById(template);
+        templateDocument = templateDocument || document;
+        var elem = templateDocument.getElementById(template);
         if (!elem)
             throw new Error("Cannot find template with ID " + template);
         return new ko.templateSources.domElement(elem);
@@ -48,35 +49,42 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template) {
         throw new Error("Unknown template type: " + template);
 };
 
-ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options) {
-    var templateSource = this['makeTemplateSource'](template);
+ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options, templateDocument) {
+    var templateSource = this['makeTemplateSource'](template, templateDocument);
     return this['renderTemplateSource'](templateSource, bindingContext, options);
 };
 
-ko.templateEngine.prototype['isTemplateRewritten'] = function (template) {
+ko.templateEngine.prototype['isTemplateRewritten'] = function (template, templateDocument) {
     // Skip rewriting if requested
     if (this['allowTemplateRewriting'] === false)
         return true;
-    
+
     // Perf optimisation - see below
-    if (this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
+    var templateIsInExternalDocument = templateDocument && templateDocument != document;
+    if (!templateIsInExternalDocument && this.knownRewrittenTemplates && this.knownRewrittenTemplates[template])
         return true;
-    
-    return this['makeTemplateSource'](template)['data']("isRewritten");
+
+    return this['makeTemplateSource'](template, templateDocument)['data']("isRewritten");
 };
 
-ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback) {
-    var templateSource = this['makeTemplateSource'](template);          
+ko.templateEngine.prototype['rewriteTemplate'] = function (template, rewriterCallback, templateDocument) {
+    var templateSource = this['makeTemplateSource'](template, templateDocument);
     var rewritten = rewriterCallback(templateSource['text']());
     templateSource['text'](rewritten);
     templateSource['data']("isRewritten", true);
-    
+
     // Perf optimisation - for named templates, track which ones have been rewritten so we can
     // answer 'isTemplateRewritten' *without* having to use getElementById (which is slow on IE < 8)
-    if (typeof template == "string") {
+    //
+    // Note that we only cache the status for templates in the main document, because caching on a per-doc
+    // basis complicates the implementation excessively. In a future version of KO, we will likely remove
+    // this 'isRewritten' cache entirely anyway, because the benefit is extremely minor and only applies
+    // to rewritable templates, which are pretty much deprecated since KO 2.0.
+    var templateIsInExternalDocument = templateDocument && templateDocument != document;
+    if (!templateIsInExternalDocument && typeof template == "string") {
         this.knownRewrittenTemplates = this.knownRewrittenTemplates || {};
-        this.knownRewrittenTemplates[template] = true;            
+        this.knownRewrittenTemplates[template] = true;
     }
 };
 
-ko.exportSymbol('ko.templateEngine', ko.templateEngine);
+ko.exportSymbol('templateEngine', ko.templateEngine);

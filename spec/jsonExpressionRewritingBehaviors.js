@@ -7,18 +7,18 @@ describe('JSON Expression Rewriting', {
         value_of(result[0].key).should_be("a");
         value_of(result[0].value).should_be(" 1");
         value_of(result[1].key).should_be(" b");
-        value_of(result[1].value).should_be(" 2");  
+        value_of(result[1].value).should_be(" 2");
         value_of(result[2].key).should_be(" \"quotedKey\"");
-        value_of(result[2].value).should_be(" 3");   
+        value_of(result[2].value).should_be(" 3");
         value_of(result[3].key).should_be(" 'aposQuotedKey'");
-        value_of(result[3].value).should_be(" 4");                         
+        value_of(result[3].value).should_be(" 4");
     },
 
     'Should ignore any outer braces': function() {
         var result = ko.jsonExpressionRewriting.parseObjectLiteral("{a: 1}");
         value_of(result.length).should_be(1);
         value_of(result[0].key).should_be("a");
-        value_of(result[0].value).should_be(" 1");        
+        value_of(result[0].value).should_be(" 1");
     },
 
     'Should be able to parse object literals containing string literals': function() {
@@ -27,8 +27,8 @@ describe('JSON Expression Rewriting', {
         value_of(result[0].key).should_be("a");
         value_of(result[0].value).should_be(" \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
         value_of(result[1].key).should_be(" b");
-        value_of(result[1].value).should_be(" 'escapedApos\\\' brace} bracket] quot\"'");        
-    },    
+        value_of(result[1].value).should_be(" 'escapedApos\\\' brace} bracket] quot\"'");
+    },
 
     'Should be able to parse object literals containing child objects, arrays, function literals, and newlines': function() {
         var result = ko.jsonExpressionRewriting.parseObjectLiteral(
