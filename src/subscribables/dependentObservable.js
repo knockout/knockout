@@ -159,9 +159,9 @@ var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
 ko.dependentObservable['fn'] = {
-  cachedId: undefined,
+  'cachedId': undefined,
 
-  id: function() {
+  'id': function() {
       if (!this.cachedId)
         this.cachedId = ko.utils.generateUniqueId();
 

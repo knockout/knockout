@@ -90,9 +90,9 @@ ko.observableArray['fn'] = {
         }
     },
 
-    cachedId: undefined,
+    'cachedId': undefined,
 
-    id: function() {
+    'id': function() {
         if (!this.cachedId)
           this.cachedId = ko.utils.generateUniqueId();
 
