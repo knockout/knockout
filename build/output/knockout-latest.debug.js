@@ -76,8 +76,14 @@ ko.utils = new (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
 
+    var idCounter = 0;
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+
+        generateUniqueId: function() {
+            return idCounter++;
+        },
 
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
@@ -895,7 +901,7 @@ ko.dependencyDetection = (function () {
 
     return {
         begin: function (callback) {
-            _frames.push({ callback: callback, distinctDependencies:[] });
+            _frames.push({ callback: callback, distinctDependencies:{} });
         },
 
         end: function () {
@@ -907,9 +913,9 @@ ko.dependencyDetection = (function () {
                 throw new Error("Only subscribable things can act as dependencies");
             if (_frames.length > 0) {
                 var topFrame = _frames[_frames.length - 1];
-                if (ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
+                if (topFrame.distinctDependencies[subscribable.id()])
                     return;
-                topFrame.distinctDependencies.push(subscribable);
+                topFrame.distinctDependencies[subscribable.id()] = subscribable;
                 topFrame.callback(subscribable);
             }
         }
@@ -955,6 +961,15 @@ ko.observable['fn'] = {
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
         var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
+    },
+
+    "cachedId": undefined,
+
+    "id": function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
     }
 };
 
@@ -1075,6 +1090,15 @@ ko.observableArray['fn'] = {
             this()[index] = newItem;
             this.valueHasMutated();
         }
+    },
+
+    'cachedId': undefined,
+
+    'id': function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
     }
 }
 
@@ -1258,7 +1282,16 @@ ko.isComputed = function(instance) {
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'] = {
+  'cachedId': undefined,
+
+  'id': function() {
+      if (!this.cachedId)
+        this.cachedId = ko.utils.generateUniqueId();
+
+      return this.cachedId;
+  }
+};
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
