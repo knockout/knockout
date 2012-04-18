@@ -35,10 +35,16 @@ ko.utils = new (function () {
         var inputType = element.type.toLowerCase();
         return (inputType == "checkbox") || (inputType == "radio");
     }
-    
+
+    var idCounter = 0;
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
-        
+
+        generateUniqueId: function() {
+            return idCounter++;
+        },
+
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i]);
