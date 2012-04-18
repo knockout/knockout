@@ -96,7 +96,16 @@ ko.observableArray['fn'] = {
             this()[index] = newItem;
             this.valueHasMutated();
         }
-    }    
+    },
+
+    cachedId: undefined,
+
+    id: function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
+    }
 }
 
 // Populate ko.observableArray.fn with read/write functions from native arrays

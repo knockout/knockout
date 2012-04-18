@@ -119,7 +119,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 };
 
 ko.dependentObservable['fn'] = {
-    __ko_proto__: ko.dependentObservable
+    __ko_proto__: ko.dependentObservable,
+
+    cachedId: undefined,
+
+    id: function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
+    }
 };
 
 ko.dependentObservable.__ko_proto__ = ko.observable;
