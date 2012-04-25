@@ -88,6 +88,15 @@ ko.observableArray['fn'] = {
             this()[index] = newItem;
             this.valueHasMutated();
         }
+    },
+
+    'cachedId': undefined,
+
+    'id': function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
     }
 }
 

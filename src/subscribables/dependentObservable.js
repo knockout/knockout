@@ -158,7 +158,16 @@ ko.isComputed = function(instance) {
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'] = {
+  'cachedId': undefined,
+
+  'id': function() {
+      if (!this.cachedId)
+        this.cachedId = ko.utils.generateUniqueId();
+
+      return this.cachedId;
+  }
+};
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);

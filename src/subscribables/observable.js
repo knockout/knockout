@@ -38,6 +38,15 @@ ko.observable['fn'] = {
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
         var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
+    },
+
+    "cachedId": undefined,
+
+    "id": function() {
+        if (!this.cachedId)
+          this.cachedId = ko.utils.generateUniqueId();
+
+        return this.cachedId;
     }
 };
 
