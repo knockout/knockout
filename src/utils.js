@@ -13,6 +13,7 @@ ko.utils = new (function () {
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
     }
+    var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     var ieVersion = (function() {
@@ -216,7 +217,8 @@ ko.utils = new (function () {
         },
 
         registerEventHandler: function (element, eventType, handler) {
-            if (typeof jQuery != "undefined") {
+            var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
+            if (!mustUseAttachEvent && typeof jQuery != "undefined") {
                 if (isClickOnCheckableElement(element, eventType)) {
                     // For click events on checkboxes, jQuery interferes with the event handling in an awkward way:
                     // it toggles the element checked state *after* the click event handlers run, whereas native
@@ -232,7 +234,7 @@ ko.utils = new (function () {
                     };
                 }
                 jQuery(element)['bind'](eventType, handler);
-            } else if (typeof element.addEventListener == "function")
+            } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
             else if (typeof element.attachEvent != "undefined")
                 element.attachEvent("on" + eventType, function (event) {
