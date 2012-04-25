@@ -151,10 +151,10 @@
             }
         }
         if (!invokedBeforeRemoveCallback && nodesToDelete.length) {
-            var commonParent = nodesToDelete[0].element.parentNode;
-            if (commonParent) {
-                for (var i = 0; i < nodesToDelete.length; i++)
-                    commonParent.removeChild(nodesToDelete[i].element);
+            for (var i = 0; i < nodesToDelete.length; i++) {
+                var element = nodesToDelete[i].element;
+                if (element.parentNode)
+                    element.parentNode.removeChild(element);
             }
         }
 
