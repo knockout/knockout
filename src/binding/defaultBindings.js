@@ -442,9 +442,10 @@ ko.bindingHandlers['attr'] = {
                     if (toRemove)
                         element.removeAttribute(attrName);
                     else
-                        element[attrName] = attrValue;
+                        if( element[attrName] != attrValue ) element[attrName] = attrValue;
                 } else if (!toRemove) {
-                    element.setAttribute(attrName, attrValue.toString());
+                    attrValue = attrValue.toString();
+                    if( element.getAttribute(attrName) != attrValue ) element.setAttribute(attrName, attrValue);
                 }
             }
         }
