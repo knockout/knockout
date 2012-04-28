@@ -280,17 +280,24 @@ ko.utils = new (function () {
         },
 
         toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var currentClassNames = (node.className || "").split(/\s+/);
+            var classList = node.className['baseVal'] || node.className || "";
+            var currentClassNames = classList.split(/\s+/);
             var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
 
+            var newClassName = null;
             if (shouldHaveClass && !hasClass) {
-                node.className += (currentClassNames[0] ? " " : "") + className;
+                newClassName = classList + (currentClassNames[0] ? " " : "") + className;
             } else if (hasClass && !shouldHaveClass) {
-                var newClassName = "";
+                newClassName = "";
                 for (var i = 0; i < currentClassNames.length; i++)
                     if (currentClassNames[i] != className)
                         newClassName += currentClassNames[i] + " ";
                 node.className = ko.utils.stringTrim(newClassName);
+            }
+            if (newClassName) {
+                node.className['baseVal'] ?
+                    node.className['baseVal'] = newClassName :
+                    node.className = newClassName;
             }
         },
 
