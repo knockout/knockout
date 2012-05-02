@@ -46,7 +46,7 @@ ko.extenders.numeric = function(target, precision) {
         write: function(newValue) {
             var current = target(),
                 roundingMultiplier = Math.pow(10, precision),
-                newValueAsNum = isNaN(newValue) ? 0 : parseFloat(newValue),
+                newValueAsNum = isNaN(newValue) ? 0 : parseFloat(+newValue),
                 valueToWrite = Math.round(newValueAsNum * roundingMultiplier) / roundingMultiplier;
 
             //only write if it changed
@@ -54,7 +54,7 @@ ko.extenders.numeric = function(target, precision) {
                 target(valueToWrite);
             } else {
                 //if the rounded value is the same, but a different value was written, force a notification for the current field
-                if (newValue != current) {
+                if (newValue !== current) {
                     target.notifySubscribers(valueToWrite);
                 }
             }
