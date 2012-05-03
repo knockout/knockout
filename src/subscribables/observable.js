@@ -26,6 +26,27 @@ ko.observable = function (initialValue) {
     ko.subscribable.call(observable);
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+	
+	/* ********************************************
+     * Justin Ohms -  2012.05.01
+     * raw allows us access around the bindings
+     *********************************************/
+    //allows us to get to the raw value
+    observable.raw = function(){
+        if(arguments.length > 0){
+            console.log('set raw value')
+            //Write: we can change it, WITHOUT triggering bindings
+            _latestValue = arguments[0];
+            return this;
+        }else{
+            console.log('read raw value')
+            //Read : we can read it, WITHOUT subscribing
+            return  _latestValue
+        }
+    }
+    /* *********************************************/   
+	
+	
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
