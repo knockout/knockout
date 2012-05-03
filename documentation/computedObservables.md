@@ -186,6 +186,22 @@ So, KO doesn't just detect your dependencies the first time your evaluator runs 
 
 The other neat trick is that declarative bindings are simply implemented as computed observables. So, if a binding reads the value of an observable, that binding becomes dependent on that observable, which causes that binding to be re-evaluated if the observable changes.
 
+# Determining if a property is a computed observable
+
+In some scenarios, it is useful to programmatically determine if you are dealing with a computed observable. Knockout provides a utility function, `ko.isComputed` to help with this situation. For example, you might want to exclude computed observables from data that you are sending back to the server.
+
+    for (var prop in myObject) {
+      if (myObject.hasOwnProperty(prop) && !ko.isComputed(myObject[prop])) {
+          result[prop] = myObject[prop];
+      }
+    }
+
+Additionally, Knockout provides similar functions that can operate on observables and computed observables:
+
+* `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
+* `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
+
+
 # What happened to dependent observables?
 
 Prior to Knockout 2.0, computed observables were known as *dependent observables*. With version 2.0, we decided to rename `ko.dependentObservable` to `ko.computed` because it is easier to explain, say, and type. But don't worry: this won't break any existing code. At runtime, `ko.dependentObservable` refers to the same function instance as `ko.computed` --- the two are equivalent.
