@@ -34,12 +34,10 @@ ko.observable = function (initialValue) {
     //allows us to get to the raw value
     observable.raw = function(){
         if(arguments.length > 0){
-            console.log('set raw value')
             //Write: we can change it, WITHOUT triggering bindings
             _latestValue = arguments[0];
             return this;
         }else{
-            console.log('read raw value')
             //Read : we can read it, WITHOUT subscribing
             return  _latestValue
         }
