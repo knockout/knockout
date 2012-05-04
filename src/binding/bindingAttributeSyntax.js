@@ -14,8 +14,10 @@
         }
         this['$data'] = dataItem;
     }
-    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
-        return new ko.bindingContext(dataItem, this);
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem, bindingAlias) {
+        var child = new ko.bindingContext(dataItem, this);
+        if (bindingAlias) child[bindingAlias] = dataItem; // also bind $data as bindingAlias.
+        return child;
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
         var clone = ko.utils.extend(new ko.bindingContext(), this);
