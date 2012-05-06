@@ -136,3 +136,11 @@ Now you can both read and write the "focusedness" of an element by binding it to
         };
         ko.applyBindings(viewModel);
     </script>
+
+### Note: Supporting virtual elements
+
+If you want a custom binding to be usable with Knockout's *virtual elements* syntax, e.g.:
+
+    <!-- ko mybinding: somedata --> ... <!-- /ko -->
+
+... then see [the documentation for virtual elements](custom-bindings-for-virtual-elements.html).
