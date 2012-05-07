@@ -486,8 +486,22 @@ ko.virtualElements.allowedBindings['with'] = true;
 
 // "if: someExpression" is equivalent to "template: { if: someExpression }"
 ko.bindingHandlers['if'] = {
+    //makeTemplateValueAccessor: function(valueAccessor) {
+    //    return function() { return { 'if': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
+    //},
     makeTemplateValueAccessor: function(valueAccessor) {
-        return function() { return { 'if': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
+        return function() {
+            var bindingValue = valueAccessor();
+            if (bindingValue == null || typeof bindingValue.data === "undefined") {
+                return { 'if': bindingValue, 'templateEngine': ko.nativeTemplateEngine.instance };
+            } else {
+                return {
+                    'if': bindingValue['data'],
+                    'afterRender': bindingValue['afterRender'],
+                    'templateEngine': ko.nativeTemplateEngine.instance
+                };
+            }
+        };
     },
     'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor));

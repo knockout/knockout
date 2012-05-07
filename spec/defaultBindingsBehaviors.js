@@ -1085,6 +1085,27 @@ describe('Binding: If', {
         // Make inner appear
         condition2(true);
         value_of(testNode).should_contain_html("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
+    },
+
+    'Should be able to supply afterRender callback': function() {
+        var afterRenderCalled = false;
+        var passedElement;
+        var passedData;
+        var viewModel = {
+            active: true,
+            myAfterRender: function(renderedElements, data) {
+                afterRenderCalled = true;
+                passedElement = renderedElements[0];
+                passedData = data;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='if: { data: active, afterRender: myAfterRender }'>Hello there</div>";
+        ko.applyBindings(viewModel, testNode);
+
+        value_of(afterRenderCalled).should_be(true);
+        value_of(passedElement.data).should_be("Hello there");
+        value_of(passedData).should_be(viewModel);
     }
 });
 
