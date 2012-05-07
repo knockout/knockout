@@ -11,7 +11,7 @@ The `click` binding adds an event handler so that your chosen JavaScript functio
         You've clicked <span data-bind="text: numberOfClicks"></span> times
         <button data-bind="click: incrementClickCounter">Click me</button>
     </div>
-    
+
     <script type="text/javascript">
         var viewModel = {
             numberOfClicks : ko.observable(0),
@@ -27,12 +27,12 @@ Each time you click the button, this will invoke `incrementClickCounter()` on th
 ### Parameters
 
  * Main parameter
-   
-   The function you want to bind to the element's `click` event. 
-   
-   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `click: someObject.someFunction`. 
-      
- * Additional parameters 
+
+   The function you want to bind to the element's `click` event.
+
+   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `click: someObject.someFunction`.
+
+ * Additional parameters
 
    * None
 
@@ -47,7 +47,7 @@ some UI for each item in a collection, and you need to know which item's UI was 
             <button data-bind="click: $parent.removePlace">Remove</button>
         </li>
     </ul>
-    
+
      <script type="text/javascript">
          function MyViewModel() {
              var self = this;
@@ -59,13 +59,13 @@ some UI for each item in a collection, and you need to know which item's UI was 
              }
          }
          ko.applyBindings(new MyViewModel());
-    </script> 
+    </script>
 
 Two points to note about this example:
 
- * If you're inside a nested binding context, for example if you're inside a `foreach` or a `with` block, but your handler function
-   is on the root viewmodel or some other parent context, you'll need to use a prefix such as `$parent` or `$root` to locate the 
-   handler function. For more information about `$parent`, `$root`, and binding contexts, see the documentation about [`foreach`](foreach-binding.html).
+ * If you're inside a nested [binding context](binding-context.html), for example if you're inside a `foreach` or a `with` block, but your handler function
+   is on the root viewmodel or some other parent context, you'll need to use a prefix such as `$parent` or `$root` to locate the
+   handler function.
  * In your viewmodel, it's often useful to declare `self` (or some other variable) as an alias for `this`. Doing so avoids any problems
    with `this` being redefined to mean something else in event handlers or Ajax request callbacks.
 
@@ -76,7 +76,7 @@ In some scenarios, you may need to access the DOM event object associated with y
     <button data-bind="click: myFunction">
         Click me
     </button>
-    
+
      <script type="text/javascript">
         var viewModel = {
             myFunction: function(data, event) {
@@ -88,7 +88,7 @@ In some scenarios, you may need to access the DOM event object associated with y
             }
         };
         ko.applyBindings(viewModel);
-    </script>   
+    </script>
 
 If you need to pass more parameters, one way to do it is by wrapping your handler in a function literal that takes in a parameter, as in this example:
 
@@ -103,12 +103,12 @@ Alternatively, if you prefer to avoid the function literal in your view, you can
     <button data-bind="click: myFunction.bind($data, 'param1', 'param2')">
         Click me
     </button>
-  
+
 ### Note 3: Allowing the default click action
 
 By default, Knockout will prevent the click event from taking any default action. This means that if you use the `click` binding on an `a` tag (a link), for example, the browser will only call your handler function and will *not* navigate to the link's `href`. This is a useful default because when you use the `click` binding, it's normally because you're using the link as part of a UI that manipulates your view model, not as a regular hyperlink to another web page.
 
-However, if you *do* want to let the default click action proceed, just return `true` from your `click` handler function. 
+However, if you *do* want to let the default click action proceed, just return `true` from your `click` handler function.
 
 ### Note 4: Preventing the event from bubbling
 

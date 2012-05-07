@@ -35,7 +35,7 @@ To see this take effect, here's a sample usage:
 
 ### Example: Supplying additional values to descendant bindings
 
-Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem, true)` to apply the descendant bindings against some modified binding context. For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
+Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem, true)` to apply the descendant bindings against some modified [binding context](binding-context.html). For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
 
     ko.bindingHandlers.withProperties = {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {

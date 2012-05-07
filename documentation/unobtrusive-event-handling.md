@@ -12,15 +12,7 @@ In most cases, data-bind attributes provide a clean and succinct way to bind to 
 As an alternative, Knockout provides two helper functions that allow you to identify the data associated with a DOM element:
 
  * `ko.dataFor(element)` - returns the data that was available for binding against the element
- * `ko.contextFor(element)` - returns the entire binding context that was available to the DOM element. The binding context contains the following variables:
-   * `$data` --- is the current data item (same as the result of `ko.dataFor`)
-   * `$parent` --- is the data item from the parent binding context
-   * `$parents` --- is an array that includes all of the parent binding contexts.
-     * `$parents[0]` is the item from the parent control-flow scope (i.e., it’s the same as $parent)
-     * `$parents[1]` is the item from the grandparent control-flow scope
-     * `$parents[2]` is the item from the great-grandparent control-flow scope
-     * … and so on
-   * `$root` --- is the top level binding context (your main view model)
+ * `ko.contextFor(element)` - returns the entire [binding context](binding-context.html) that was available to the DOM element.
 
 These helper functions can be used in event handlers that are attached unobtrusively using something like jQuery's `bind` or `click`. The above function could be attached to each link with a `remove` class like:
 
@@ -109,10 +101,10 @@ $("#people").delegate(".add", "click", function() {
     var context = ko.contextFor(this),
         childName = context.$data.name() + " child",
         parentArray = context.$data.people || context.$data.children;
-        
+
     //add a child to the appropriate parent, calling a method off of the main view model (context.$root)
     context.$root.addChild(childName, parentArray);
-    
+
     return false;
 });
 
