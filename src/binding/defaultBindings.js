@@ -486,9 +486,6 @@ ko.virtualElements.allowedBindings['with'] = true;
 
 // "if: someExpression" is equivalent to "template: { if: someExpression }"
 ko.bindingHandlers['if'] = {
-    //makeTemplateValueAccessor: function(valueAccessor) {
-    //    return function() { return { 'if': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
-    //},
     makeTemplateValueAccessor: function(valueAccessor) {
         return function() {
             var bindingValue = valueAccessor();
