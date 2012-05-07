@@ -7,7 +7,7 @@ title: Creating custom bindings that control descendant bindings
 
 By default, bindings only affect the element to which they are applied. But what if you want to affect all descendant elements too? This is possible. Your binding can tell Knockout *not* to bind descendants at all, and then your custom binding can do whatever it likes to bind them in a different way.
 
-To do this, simply return `{ 'controlsDescendantBindings': true }` from your binding's `init` function.
+To do this, simply return `{ controlsDescendantBindings: true }` from your binding's `init` function.
 
 ### Example: Controlling whether or not descendant bindings are applied
 
@@ -17,7 +17,7 @@ For a very simple example, here's a custom binding called `allowBindings` that a
         init: function(elem, valueAccessor) {
             // Let bindings proceed as normal *only if* my value is false
             var shouldAllowBindings = ko.utils.unwrapObservable(valueAccessor());
-            return { 'controlsDescendantBindings': !shouldAllowBindings };
+            return { controlsDescendantBindings: !shouldAllowBindings };
         }
     };
 
@@ -35,17 +35,17 @@ To see this take effect, here's a sample usage:
 
 ### Example: Supplying additional values to descendant bindings
 
-Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem)` to apply the descendant bindings against some modified binding context. For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
+Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem, true)` to apply the descendant bindings against some modified binding context. For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
 
     ko.bindingHandlers.withProperties = {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var newProperties = valueAccessor(),
                 innerBindingContext = bindingContext.extend(newProperties);
-            ko.applyBindingsToDescendants(innerBindingContext, element);
+            ko.applyBindingsToDescendants(innerBindingContext, element, true);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
-            return { 'controlsDescendantBindings': true };
+            return { controlsDescendantBindings: true };
         }
     };
 
@@ -72,10 +72,10 @@ If you want to do this in custom bindings, then instead of using `bindingContext
             var newProperties = valueAccessor(),
                 childBindingContext = bindingContext.createChildContext(viewModel);
             ko.utils.extend(childBindingContext, newProperties);
-            ko.applyBindingsToDescendants(childBindingContext, element);
+            ko.applyBindingsToDescendants(childBindingContext, element, true);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
-            return { 'controlsDescendantBindings': true };
+            return { controlsDescendantBindings: true };
         }
     };
 
