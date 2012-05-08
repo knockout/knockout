@@ -35,14 +35,14 @@ To see this take effect, here's a sample usage:
 
 ### Example: Supplying additional values to descendant bindings
 
-Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem, true)` to apply the descendant bindings against some modified [binding context](binding-context.html). For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
+Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, elem)` to apply the descendant bindings against some modified [binding context](binding-context.html). For example, you could have a binding called `withProperties` that attaches a some extra properties to the binding context that will then be available to all descendant bindings:
 
     ko.bindingHandlers.withProperties = {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var newProperties = valueAccessor(),
                 innerBindingContext = bindingContext.extend(newProperties);
-            ko.applyBindingsToDescendants(innerBindingContext, element, true);
+            ko.applyBindingsToDescendants(innerBindingContext, element);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
             return { controlsDescendantBindings: true };
@@ -72,7 +72,7 @@ If you want to do this in custom bindings, then instead of using `bindingContext
             var newProperties = valueAccessor(),
                 childBindingContext = bindingContext.createChildContext(viewModel);
             ko.utils.extend(childBindingContext, newProperties);
-            ko.applyBindingsToDescendants(childBindingContext, element, true);
+            ko.applyBindingsToDescendants(childBindingContext, element);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
             return { controlsDescendantBindings: true };
