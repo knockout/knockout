@@ -15,7 +15,7 @@ The `event` binding allows you to add an event handler for a specified event so 
             Details
         </div>
     </div>
-    
+
     <script type="text/javascript">
         var viewModel = {
             detailsEnabled: ko.observable(false),
@@ -29,17 +29,17 @@ The `event` binding allows you to add an event handler for a specified event so 
         ko.applyBindings(viewModel);
     </script>
 
-Now, moving your mouse pointer on or off of the first element will invoke methods on the view model to toggle the `detailsEnabled` observable.  The second element reacts to changes to the value of `detailsEnabled` by either showing or hiding itself. 
+Now, moving your mouse pointer on or off of the first element will invoke methods on the view model to toggle the `detailsEnabled` observable.  The second element reacts to changes to the value of `detailsEnabled` by either showing or hiding itself.
 
 ### Parameters
 
  * Main parameter
-   
+
    You should pass a JavaScript object in which the property names correspond to event names, and the values correspond to the function that you want to bind to the event.
-   
-   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `event { mouseover: someObject.someFunction }`. 
-   
- * Additional parameters 
+
+   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `event { mouseover: someObject.someFunction }`.
+
+ * Additional parameters
 
    * None
 
@@ -52,7 +52,7 @@ some UI for each item in a collection, and you need to know which item the event
         <li data-bind="text: $data, event: { mouseover: $parent.logMouseOver }"> </li>
     </ul>
     <p>You seem to be interested in: <span data-bind="text: lastInterest"> </span></p>
-    
+
      <script type="text/javascript">
          function MyViewModel() {
              var self = this;
@@ -65,13 +65,13 @@ some UI for each item in a collection, and you need to know which item the event
              }
          }
          ko.applyBindings(new MyViewModel());
-    </script> 
+    </script>
 
 Two points to note about this example:
 
- * If you're inside a nested binding context, for example if you're inside a `foreach` or a `with` block, but your handler function
-   is on the root viewmodel or some other parent context, you'll need to use a prefix such as `$parent` or `$root` to locate the 
-   handler function. For more information about `$parent`, `$root`, and binding contexts, see the documentation about [`foreach`](foreach-binding.html).
+ * If you're inside a nested [binding context](binding-context.html), for example if you're inside a `foreach` or a `with` block, but your handler function
+   is on the root viewmodel or some other parent context, you'll need to use a prefix such as `$parent` or `$root` to locate the
+   handler function.
  * In your viewmodel, it's often useful to declare `self` (or some other variable) as an alias for `this`. Doing so avoids any problems
    with `this` being redefined to mean something else in event handlers or Ajax request callbacks.
 
@@ -82,7 +82,7 @@ In some scenarios, you may need to access the DOM event object associated with y
     <div data-bind="event: { mouseover: myFunction }">
         Mouse over me
     </div>
-    
+
      <script type="text/javascript">
         var viewModel = {
             myFunction: function(data, event) {
@@ -94,17 +94,17 @@ In some scenarios, you may need to access the DOM event object associated with y
             }
         };
         ko.applyBindings(viewModel);
-    </script>   
+    </script>
 
 If you need to pass more parameters, one way to do it is by wrapping your handler in a function literal that takes in a parameter, as in this example:
 
-    <div data-bind="event: { mouseover: function(data, event) { myFunction(data, event, 'param1', 'param2') } }">
+    <div data-bind="event: { mouseover: function(data, event) { myFunction('param1', 'param2', data, event) } }">
         Mouse over me
     </div>
 
-Now, KO will pass the event to your function literal, which is then available to be passed to your handler.    
+Now, KO will pass the event to your function literal, which is then available to be passed to your handler.
 
-Alternatively, if you prefer to avoid the function literal in your view, you can use the `bind` function, which attaches specific parameter values to a function reference:
+Alternatively, if you prefer to avoid the function literal in your view, you can use the [bind](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind) function, which attaches specific parameter values to a function reference:
 
     <button data-bind="event: { mouseover: myFunction.bind($data, 'param1', 'param2') }">
         Click me
@@ -114,7 +114,7 @@ Alternatively, if you prefer to avoid the function literal in your view, you can
 
 By default, Knockout will prevent the event from taking any default action. For example if you use the `event` binding to capture the `keypress` event of an `input` tag, the browser will only call your handler function and will *not* add the value of the key to the `input` element's value. A more common example is using [the click binding](click-binding.html), which internally uses this binding, where your handler function will be called, but the browser will *not* navigate to the link's `href`. This is a useful default because when you use the `click` binding, it's normally because you're using the link as part of a UI that manipulates your view model, not as a regular hyperlink to another web page.
 
-However, if you *do* want to let the default action proceed, just return `true` from your `event` handler function. 
+However, if you *do* want to let the default action proceed, just return `true` from your `event` handler function.
 
 ### Note 4: Preventing the event from bubbling
 

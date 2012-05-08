@@ -5,13 +5,13 @@ title: The "with" binding
 <script type="text/javascript" src="../examples/resources/twitterApi.js"> </script>
 
 ### Purpose
-The `with` binding creates a new binding context, so that descendant elements are bound in the context of a specified object. 
+The `with` binding creates a new [binding context](binding-context.html), so that descendant elements are bound in the context of a specified object.
 
 Of course, you can arbitrarily nest `with` bindings along with the other control-flow bindings such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html).
 
 ### Example 1
 
-Here is a very basic example of switching the binding context to a child object. Notice that in the `data-bind` attributes, it is *not* necessary to prefix `latitude` or `longitude` with `coords.`, because the binding context is switched to `coords`. 
+Here is a very basic example of switching the binding context to a child object. Notice that in the `data-bind` attributes, it is *not* necessary to prefix `latitude` or `longitude` with `coords.`, because the binding context is switched to `coords`.
 
     <h1 data-bind="text: city"> </h1>
     <p data-bind="with: coords">
@@ -34,7 +34,7 @@ Here is a very basic example of switching the binding context to a child object.
 This interactive example demonstrates that:
 
  * The `with` binding will dynamically add or remove descendant elements depending on whether the associated value is `null`/`undefined` or not
- * If you want to access data/functions from parent binding contexts, you can use pseudo variables such as `$parent`. You'll find more information about these pseudovariables below.
+ * If you want to access data/functions from parent binding contexts, you can use [special context properties such as `$parent` and `root`](binding-context.html).
 
 Try it out:
 
@@ -83,14 +83,14 @@ ko.applyBindings(new AppViewModel());
 ### Parameters
 
  * Main parameter
- 
+
    The object that you want to use as the context for binding descendant elements.
 
    If the expression you supply evaluates to `null` or `undefined`, descendant elements will *not* be bound at all, but will instead be removed from the document.
 
    If the expression you supply involves any observable values, the expression will be re-evaluated whenever any of those observables change. Then, descendant elements will be cleared out, and a new copy of the markup will be added to your document and bound in the context of the new evaluation result.
- 
- * Additional parameters 
+
+ * Additional parameters
 
    * None
 
@@ -107,24 +107,10 @@ Example:
         <!-- /ko -->
         <!-- ko with: inboundFlight -->
             ...
-        <!-- /ko -->        
+        <!-- /ko -->
     </ul>
 
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
-
-### Note 2: Referring to parent binding contexts using $parent, $parents, and $root
-
-When you're nesting control-flow bindings, it's often desirable to reach back up the hierarchy and access data or functions from parent contexts. You can use the following pseudovariables:
-
- * `$parent` --- is the data item outside the current `with` block
- * `$parents` --- is an array representing data items from all outer control-flow scopes.
-   * `$parents[0]` is the item from the parent control-flow scope (i.e., it's the same as `$parent`)
-   * `$parents[1]` is the item from the grandparent control-flow scope
-   * `$parents[2]` is the item from the great-grandparent control-flow scope
-   * ... and so on 
- * `$root` is the item from the outer-most control-flow scope. Typically this is your top-level viewmodel object. This is the same as `$parents[$parents.length-1]`.
-
-For example, see the use of `$parent` in [Example 2](#example_2).
 
 ### Dependencies
 

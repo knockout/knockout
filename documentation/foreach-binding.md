@@ -4,7 +4,7 @@ title: The "foreach" binding
 ---
 
 ### Purpose
-The `foreach` binding duplicates a section of markup for each entry in an array, and binds each copy of that markup to the corresponding array item. This is especially useful for rendering lists or tables. 
+The `foreach` binding duplicates a section of markup for each entry in an array, and binds each copy of that markup to the corresponding array item. This is especially useful for rendering lists or tables.
 
 Assuming your array is an [observable array](observableArrays.html), whenever you later add or remove array entries, the binding will efficiently update the UI to match - inserting or removing more copies of the markup, without affecting any other DOM elements.
 
@@ -21,7 +21,7 @@ This example uses `foreach` to produce a read-only table with a row for each arr
         <tbody data-bind="foreach: people">
             <tr>
                 <td data-bind="text: firstName"></td>
-                <td data-bind="text: lastName"></td>            
+                <td data-bind="text: lastName"></td>
             </tr>
         </tbody>
     </table>
@@ -44,7 +44,8 @@ The following example show that, if your array is observable, then the UI will b
 <h4>People</h4>
 <ul data-bind="foreach: people">
     <li>
-        Name: <span data-bind="text: name"> </span>
+        Name at position <span data-bind="text: $index"> </span>:
+        <span data-bind="text: name"> </span>
         <a href="#" data-bind="click: $parent.removePerson">Remove</a>
     </li>
 </ul>
@@ -54,17 +55,17 @@ The following example show that, if your array is observable, then the UI will b
 {% capture live_example_viewmodel %}
 function AppViewModel() {
     var self = this;
-    
+
     self.people = ko.observableArray([
         { name: 'Bert' },
         { name: 'Charles' },
         { name: 'Denise' }
     ]);
-    
+
     self.addPerson = function() {
         self.people.push({ name: "New at " + new Date() });
     };
-    
+
     self.removePerson = function() {
         self.people.remove(this);
     }
@@ -78,7 +79,7 @@ ko.applyBindings(new AppViewModel());
 ### Parameters
 
  * Main parameter
- 
+
    Pass the array that you wish to iterate over. The binding will output a section of markup for each entry.
 
    Alternatively, pass a JavaScript object literal with a property called `data` which is the array you wish to iterate over. The object
@@ -87,8 +88,8 @@ ko.applyBindings(new AppViewModel());
 
    If the array you supply is observable, the `foreach` binding will respond to any future changes in the array's contents by adding or
    removing corresponding sections of markup in the DOM.
-     
- * Additional parameters 
+
+ * Additional parameters
 
    * None
 
@@ -96,7 +97,7 @@ ko.applyBindings(new AppViewModel());
 
 As shown in the above examples, bindings within the `foreach` block can refer to properties on the array entries. For example, [Example 1](#example_1_iterating_over_an_array) referenced the `firstName` and `lastName` properties on each array entry.
 
-But what if you want to refer to the array entry itself (not just one of its properties)? In that case, you can use the pseudovariable `$data`. Within a `foreach` block, it means "the current item". For example,
+But what if you want to refer to the array entry itself (not just one of its properties)? In that case, you can use the [special context property](binding-context.html) `$data`. Within a `foreach` block, it means "the current item". For example,
 
     <ul data-bind="foreach: months">
         <li>
@@ -117,20 +118,20 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 ... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway.
 
 
-### Note 2: Referring to parent binding contexts using $parent, $parents, and $root
+### Note 2: Using $index, $parent, and other context properties
 
-When you're nesting control-flow bindings, it's often desirable to reach back up the hierarchy and access data or functions from parent contexts. You can use the following pseudovariables:
+As you can see from Example 2 above, it's possible to use `$index` to refer to the zero-based index of the current array item. `$index` is an observable and is updated whenever the index of the item changes (e.g., if items are added to or removed from the array).
 
- * `$parent` --- is the data item outside the current `foreach` block
- * `$parents` --- is an array representing data items from all outer control-flow scopes.
-   * `$parents[0]` is the item from the parent control-flow scope (i.e., it's the same as `$parent`)
-   * `$parents[1]` is the item from the grandparent control-flow scope
-   * `$parents[2]` is the item from the great-grandparent control-flow scope
-   * ... and so on 
- * `$root` is the item from the outer-most control-flow scope. Typically this is your top-level viewmodel object. This is the same as `$parents[$parents.length-1]`.
+Similarly, you can use `$parent` to refer to data from outside the `foreach`, e.g.:
 
-For example, see the use of `$parent` in [Example 2](#example_2_live_example_with_addremove).
+    <h1 data-bind="text: blogPostTitle"></h1>
+    <ul data-bind="foreach: likes">
+        <li>
+            <b data-bind="text: name"></b> likes the blog post <b data-bind="text: $parent.blogPostTitle"></b>
+        </li>
+    </ul>
 
+For more information about `$index` and other context properties such as `$parent`, see documentation for [binding context properties](binding-context.html).
 
 ### Note 3: Using foreach without a container element
 
@@ -144,7 +145,7 @@ In some cases, you might want to duplicate a section of markup, but you don't ha
         <li>Item C</li>
     </ul>
 
-In this example, there isn't anywhere to put a normal `foreach` binding. You can't put it on the `<ul>` (because the you'd be duplicating the header item), nor can you put a further container inside the `<ul>` (because only `<li>` elements are allowed inside `<ul>`s).
+In this example, there isn't anywhere to put a normal `foreach` binding. You can't put it on the `<ul>` (because then you'd be duplicating the header item), nor can you put a further container inside the `<ul>` (because only `<li>` elements are allowed inside `<ul>`s).
 
 To handle this, you can use the *containerless control flow syntax*, which is based on comment tags. For example,
 
@@ -164,7 +165,7 @@ To handle this, you can use the *containerless control flow syntax*, which is ba
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
 
 
-### Note 4: Destroyed entries are hidden by default 
+### Note 4: Destroyed entries are hidden by default
 
 Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy_and_destroyall_note_usually_relevant_to_ruby_on_rails_developers_only).
 

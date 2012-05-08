@@ -68,6 +68,10 @@ Or, if you just want the plain JavaScript object graph *before* serialization, u
     //      hasALotOfPets: true
     //   }
 
+Note that `ko.toJSON` accepts the same arguments as [JSON.stringify](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/JSON/stringify). For example, it can be useful to have a "live" representation of your view model data when debugging a Knockout application. To generate a nicely formatted display for this purpose, you can pass the *spaces* argument into `ko.toJSON` and bind against your view model like:
+
+    <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
+
 
 ### Updating View Model Data using JSON 
 

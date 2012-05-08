@@ -186,6 +186,28 @@ So, KO doesn't just detect your dependencies the first time your evaluator runs 
 
 The other neat trick is that declarative bindings are simply implemented as computed observables. So, if a binding reads the value of an observable, that binding becomes dependent on that observable, which causes that binding to be re-evaluated if the observable changes.
 
+### Note: Why circular dependencies aren't meaningful
+
+Computed observables are supposed to map a set of observable inputs into a single observable output. As such, it doesn't make sense to include cycles in your dependency chains. Cycles would *not* be analogous to recursion; they would be analogous to having two spreadsheet cells that are computed as functions of each other. It would lead to an infinite evaluation loop.
+
+So what does Knockout do if you have got a cycle in your dependency graph? It avoids infinite loops by enforcing the following rule: **a computed observable cannot trigger its own re-evaluation**. This is very unlikely to affect your code. It's relevant only if you have a `ko.computed` (call it `A`) whose evaluator writes to another observable (call it `B`) that (directly or via a dependency chain) affects the value of `A`. In that case, KO will not restart evaluation of `A` while it is already evaluating, so the resulting value of `A` will respect only the original value of `B`, ignoring any update made to `B` while `A`'s evaluator is running.
+
+# Determining if a property is a computed observable
+
+In some scenarios, it is useful to programmatically determine if you are dealing with a computed observable. Knockout provides a utility function, `ko.isComputed` to help with this situation. For example, you might want to exclude computed observables from data that you are sending back to the server.
+
+    for (var prop in myObject) {
+      if (myObject.hasOwnProperty(prop) && !ko.isComputed(myObject[prop])) {
+          result[prop] = myObject[prop];
+      }
+    }
+
+Additionally, Knockout provides similar functions that can operate on observables and computed observables:
+
+* `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
+* `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
+
+
 # What happened to dependent observables?
 
 Prior to Knockout 2.0, computed observables were known as *dependent observables*. With version 2.0, we decided to rename `ko.dependentObservable` to `ko.computed` because it is easier to explain, say, and type. But don't worry: this won't break any existing code. At runtime, `ko.dependentObservable` refers to the same function instance as `ko.computed` --- the two are equivalent.
