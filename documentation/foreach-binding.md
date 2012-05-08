@@ -44,7 +44,8 @@ The following example show that, if your array is observable, then the UI will b
 <h4>People</h4>
 <ul data-bind="foreach: people">
     <li>
-        Name: <span data-bind="text: name"> </span>
+        Name at position <span data-bind="text: $index"> </span>:
+        <span data-bind="text: name"> </span>
         <a href="#" data-bind="click: $parent.removePerson">Remove</a>
     </li>
 </ul>
@@ -117,10 +118,20 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 ... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway.
 
 
-### Note 2: Accessing the index of the current item using $index
+### Note 2: Using $index, $parent, and other context properties
 
-The `foreach` binding makes the index (zero-based) of the current array item available through the [special binding property](binding-context.html) `$index`. `$index` is an observable and is updated whenever the index of the item changes (if items are added to or removed from the array).
+As you can see from Example 2 above, it's possible to use `$index` to refer to the zero-based index of the current array item. `$index` is an observable and is updated whenever the index of the item changes (e.g., if items are added to or removed from the array).
 
+Similarly, you can use `$parent` to refer to data from outside the `foreach`, e.g.:
+
+    <h1 data-bind="text: blogPostTitle"></h1>
+    <ul data-bind="foreach: likes">
+        <li>
+            <b data-bind="text: name"></b> likes the blog post <b data-bind="text: $parent.blogPostTitle"></b>
+        </li>
+    </ul>
+
+For more information about `$index` and other context properties such as `$parent`, see documentation for [binding context properties](binding-context.html).
 
 ### Note 3: Using foreach without a container element
 
