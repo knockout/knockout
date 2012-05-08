@@ -1,3 +1,42 @@
+ko.groupedSetTimeout = (function() {
+    var minimum = undefined;
+    var asyncQueue = [];
+    var asyncTimeoutInstance = null;
+
+    function processAsync() {
+        var now = new Date().getTime();
+        var ops = [];
+        var newQueue = [];
+        minimum = undefined;
+        ko.utils.arrayForEach(asyncQueue, function(item) {
+            if (item.time <= now) {
+                ops.push(item.op);
+            } else {
+                enableAsyncProcessing(item.time);
+                newQueue.push(item);
+            }
+        });
+        asyncQueue = newQueue;
+        ko.propogateChanges(function() {
+            ko.utils.arrayForEach(ops, function(op) { op(); });
+        });
+    }
+
+    function enableAsyncProcessing(timestamp) {
+        clearTimeout(asyncTimeoutInstance);
+        if (minimum == undefined || minimum > timestamp)
+            minimum = timestamp;
+        var remaining = minimum - new Date().getTime();
+        asyncTimeoutInstance = setTimeout(processAsync, remaining < 0 ? 0 : remaining);
+    }
+
+    return function(action, timeout) {
+        var target = timeout + new Date().getTime();
+        asyncQueue.push({ time: target, op: action});
+        enableAsyncProcessing(target);
+    };
+})();
+
 ko.evaluateImmediateDepth = 0;
 ko.evaluateImmediateQueue = {};
 ko.beforeChanging = function() {
@@ -97,12 +136,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         }
     }
 
-    var evaluationTimeoutInstance = null;
     function evaluatePossiblyAsync() {
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
-            clearTimeout(evaluationTimeoutInstance);
-            evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
+            ko.groupedSetTimeout(evaluateImmediate, throttleEvaluationTimeout);
         } else
             evaluateEventually();
     }
