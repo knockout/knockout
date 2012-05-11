@@ -13,7 +13,7 @@
     var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
 
     var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko\s+(.*\:.*)\s*-->$/ : /^\s*ko\s+(.*\:.*)\s*$/;
-    var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko\s*-->$/ : /^\s*\/ko\s*$/;
+    var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko(?:\s+.*)?\s*-->$/ : /^\s*\/ko(?:\s+.*)?\s*$/;
     var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 
     function isStartComment(node) {
