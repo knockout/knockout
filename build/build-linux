@@ -15,25 +15,25 @@ SourceFiles=`grep js < fragments/source-references.js | # Find JS references
              sed "s/[ \',]//g" |                        # Strip off JSON fluff (whitespace, commas, quotes)
              sed -e 's/.*/..\/&/' |                     # Fix the paths by prefixing with ../
              tr '\n' ' '`                               # Combine into single line
-cat fragments/amd-pre.js            > $OutDebugFile.temp
+cat fragments/extern-pre.js         > $OutDebugFile.temp
+cat fragments/amd-pre.js            >> $OutDebugFile.temp
 cat $SourceFiles                    >> $OutDebugFile.temp
 cat fragments/amd-post.js           >> $OutDebugFile.temp
+cat fragments/extern-post.js        >> $OutDebugFile.temp
 
 # Now call Google Closure Compiler to produce a minified version
-curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode "js_code=/**@const*/var DEBUG=false;" --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
+curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode output_wrapper="(function() {%output%})();" --data-urlencode "js_code=/**@const*/var DEBUG=false;" --data-urlencode js_code@$OutDebugFile.temp "http://closure-compiler.appspot.com/compile" > $OutMinFile.temp
 
 # Finalise each file by prefixing with version header and surrounding in function closure
 cp fragments/version-header.js $OutDebugFile
-echo "(function(window,document,navigator,undefined){" >> $OutDebugFile
-echo "var DEBUG=true;"                                 >> $OutDebugFile
-cat $OutDebugFile.temp                                 >> $OutDebugFile
-echo "})(window,document,navigator);"                  >> $OutDebugFile
+echo "(function(){"                 >> $OutDebugFile
+echo "var DEBUG=true;"              >> $OutDebugFile
+cat $OutDebugFile.temp              >> $OutDebugFile
+echo "})();"                        >> $OutDebugFile
 rm $OutDebugFile.temp
 
 cp fragments/version-header.js $OutMinFile
-echo "(function(window,document,navigator,undefined){" >> $OutMinFile
-cat $OutMinFile.temp                                   >> $OutMinFile
-echo "})(window,document,navigator);"                  >> $OutMinFile
+cat $OutMinFile.temp                >> $OutMinFile
 rm $OutMinFile.temp
 
 # Inject the version number string
