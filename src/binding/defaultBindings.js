@@ -320,6 +320,12 @@ ko.bindingHandlers['text'] = {
     }
 };
 
+ko.bindingHandlers['name'] = {
+    'update': function (element, valueAccessor) {
+        element.name = valueAccessor();
+    }
+};
+
 ko.bindingHandlers['html'] = {
     'init': function() {
         // Prevent binding on the dynamically-injected HTML (as developers are unlikely to expect that, and it has security implications)
