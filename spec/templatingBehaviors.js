@@ -365,6 +365,24 @@ describe('Templating', {
         value_of(initCalls).should_be(3); // 3 because there were 3 items in myCollection
     },
 
+    'Data binding \'foreach\' should handle templates in which the very first node has a binding': function() {
+        // Represents https://github.com/SteveSanderson/knockout/pull/440
+        // Previously, the rewriting (which introduces a comment node before the bound node) was interfering
+        // with the array-to-DOM-node mapping state tracking
+        ko.setTemplateEngine(new dummyTemplateEngine({ mytemplate: "<div data-bind='text: $data'></div>" }));
+        testNode.innerHTML = "<div data-bind=\"template: { name: 'mytemplate', foreach: items }\"></div>";
+
+        // Bind against initial array containing one entry. UI just shows "original"
+        var myArray = ko.observableArray(["original"]); 
+        ko.applyBindings({ items: myArray });
+        value_of(testNode.childNodes[0]).should_contain_html("<div>original</div>");
+
+        // Now replace the entire array contents with one different entry.
+        // UI just shows "new" (previously with bug, showed "original" AND "new")
+        myArray(["new"]);
+        value_of(testNode.childNodes[0]).should_contain_html("<div>new</div>");
+    },
+
     'Data binding \'foreach\' option should apply bindings with an $index in the context': function () {
         var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item # is <span data-bind='text: $index'></span>" }));
