@@ -77,7 +77,7 @@ var dummyTemplateEngine = function (templates) {
             node.removeChild(node.lastChild);
 
             // Convert the nodelist to an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-            var renderedNodesArray = ko.utils.makeArray(node.childNodes);
+            var renderedNodesArray = ko.utils.arrayPushAll([], node.childNodes);
 
             return renderedNodesArray;
         }
@@ -224,7 +224,7 @@ describe('Templating', {
         }));
         testNode.innerHTML = "<div data-bind='template:\"outerTemplate\"'></div>";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("outer template output, inner template output");
+        value_of(testNode.childNodes[0]).should_contain_html("outer template output, inner template output <span>123</span>");
     },
 
     'Should rerender chained templates when their dependencies change, without rerendering parent templates': function () {
@@ -352,7 +352,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is <span>bob</span></div><div>the item is <span>frank</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item is <span>bob</span>the item is <span>frank</span>");
     },
 
     'Data binding \'foreach\' options should only bind each group of output nodes once': function() {
@@ -371,7 +371,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item # is <span>0</span></div><div>the item # is <span>1</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item # is <span>0</span>the item # is <span>1</span>");
     },
 
     'Data binding \'foreach\' option should update bindings that reference an $index if the list changes': function () {
@@ -380,13 +380,13 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item <span>bob</span>is <span>0</span></div><div>the item <span>frank</span>is <span>1</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item <span>bob</span>is <span>0</span>the item <span>frank</span>is <span>1</span>");
 
         var frank = myArray.pop(); // remove frank
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item <span>bob</span>is <span>0</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item <span>bob</span>is <span>0</span>");
 
         myArray.unshift(frank); // put frank in the front
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item <span>frank</span>is <span>0</span></div><div>the item <span>bob</span>is <span>1</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item <span>frank</span>is <span>0</span>the item <span>bob</span>is <span>1</span>");
 
     },
 
@@ -396,7 +396,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
 
         ko.applyBindings({ myCollection: myArray }, testNode);
-        value_of(testNode.childNodes[0]).should_contain_html("<div>the item is <span>undefined</span></div><div>the item is <span>null</span></div>");
+        value_of(testNode.childNodes[0]).should_contain_html("the item is <span>undefined</span>the item is <span>null</span>");
     },
 
     'Data binding \'foreach\' option should update DOM nodes when a dependency of their mapping function changes': function() {
@@ -525,9 +525,9 @@ describe('Templating', {
 
         var viewModel = { myProp: ko.observable({ childProp: 'abc' }) };
         ko.applyBindings(viewModel, testNode);
-        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Value: abc");
-        value_of(testNode.childNodes[0].childNodes[1]).should_contain_text("Value: abc");
-        value_of(testNode.childNodes[0].childNodes[2]).should_contain_text("Value: abc");
+        value_of(testNode.childNodes[0].childNodes[0].nodeValue).should_be("Value: abc");
+        value_of(testNode.childNodes[0].childNodes[1].nodeValue).should_be("Value: abc");
+        value_of(testNode.childNodes[0].childNodes[2].nodeValue).should_be("Value: abc");
 
         // Causing the condition to become false causes the output to be removed
         viewModel.myProp(null);
@@ -535,9 +535,9 @@ describe('Templating', {
 
         // Causing the condition to become true causes the output to reappear
         viewModel.myProp({ childProp: 'def' });
-        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Value: def");
-        value_of(testNode.childNodes[0].childNodes[1]).should_contain_text("Value: def");
-        value_of(testNode.childNodes[0].childNodes[2]).should_contain_text("Value: def");
+        value_of(testNode.childNodes[0].childNodes[0].nodeValue).should_be("Value: def");
+        value_of(testNode.childNodes[0].childNodes[1].nodeValue).should_be("Value: def");
+        value_of(testNode.childNodes[0].childNodes[2].nodeValue).should_be("Value: def");
     },
 
     'Should be able to populate checkboxes from inside templates, despite IE6 limitations': function () {
@@ -643,7 +643,7 @@ describe('Templating', {
                 }
             }
         }, testNode);
-        value_of(testNode.childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0]).should_contain_text("(Data:INNER, Parent:MIDDLE, Grandparent:OUTER, Root:ROOT, Depth:3)");
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("(Data:INNER, Parent:MIDDLE, Grandparent:OUTER, Root:ROOT, Depth:3)");
     },
 
     'Should not be allowed to rewrite templates that embed anonymous templates': function() {
@@ -694,7 +694,7 @@ describe('Templating', {
         ko.setTemplateEngine(new dummyTemplateEngine());
         testNode.innerHTML = "Start <!-- ko template: { data: someData } -->Childprop: [js: childProp]<!-- /ko --> End";
         ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
-        value_of(testNode).should_contain_html("start <!-- ko template: { data: somedata } --><div>childprop: abc</div><!-- /ko -->end");
+        value_of(testNode).should_contain_html("start <!-- ko template: { data: somedata } -->childprop: abc<!-- /ko -->end");
     },
 
     'Should be able to use anonymous templates that contain first-child comment nodes': function() {
