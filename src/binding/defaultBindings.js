@@ -333,12 +333,16 @@ ko.bindingHandlers['html'] = {
 
 ko.bindingHandlers['css'] = {
     'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor() || {});
-        for (var className in value) {
-            if (typeof className == "string") {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if (typeof value == "object") {
+            for (var className in value) {
                 var shouldHaveClass = ko.utils.unwrapObservable(value[className]);
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
             }
+        } else {
+            ko.utils.toggleDomNodeCssClass(element, element['__ko__cssValue'], false);
+            element['__ko__cssValue'] = value;
+            ko.utils.toggleDomNodeCssClass(element, value, true);
         }
     }
 };

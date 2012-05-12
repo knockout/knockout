@@ -279,18 +279,20 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
-        toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var currentClassNames = (node.className || "").split(/\s+/);
-            var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
-
-            if (shouldHaveClass && !hasClass) {
-                node.className += (currentClassNames[0] ? " " : "") + className;
-            } else if (hasClass && !shouldHaveClass) {
-                var newClassName = "";
-                for (var i = 0; i < currentClassNames.length; i++)
-                    if (currentClassNames[i] != className)
-                        newClassName += currentClassNames[i] + " ";
-                node.className = ko.utils.stringTrim(newClassName);
+        toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
+            if (classNames) {
+                var currentClassNames = node.className.match(/[\w\d-]+/g) || [];
+                ko.utils.arrayForEach(classNames.match(/[\w\d-]+/g), function(className) {
+                    var indexOfClass = ko.utils.arrayIndexOf(currentClassNames, className);
+                    if (indexOfClass >= 0) {
+                        if (!shouldHaveClass)
+                            currentClassNames.splice(indexOfClass, 1);
+                    } else {
+                        if (shouldHaveClass)
+                            currentClassNames.push(className);
+                    }
+                });
+                node.className = currentClassNames.join(" ");
             }
         },
 
