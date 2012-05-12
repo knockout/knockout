@@ -16,11 +16,22 @@ ko.dependencyDetection = (function () {
                 throw new Error("Only subscribable things can act as dependencies");
             if (_frames.length > 0) {
                 var topFrame = _frames[_frames.length - 1];
-                if (ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
+                if (!topFrame || ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
                     return;
                 topFrame.distinctDependencies.push(subscribable);
                 topFrame.callback(subscribable);
             }
+        },
+
+        ignore: function(callback, object, args) {
+            try {
+                _frames.push(null);
+                return callback.apply(object, args || []);
+            } finally {
+                _frames.pop();
+            }
         }
     };
 })();
+
+ko.exportSymbol('ignoreDependencies', ko.ignoreDependencies = ko.dependencyDetection.ignore);
