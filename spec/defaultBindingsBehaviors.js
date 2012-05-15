@@ -379,6 +379,33 @@ describe('Binding: Value', {
         value_of(observable()).should_be(20);
     },
 
+    'For select boxes with values attributes, should always use value (and not text)': function() {
+        var observable = new ko.observable('A');
+        testNode.innerHTML = "<select data-bind='value:myObservable'><option value=''>A</option><option value='A'>B</option></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        var dropdown = testNode.childNodes[0];
+        value_of(dropdown.selectedIndex).should_be(1);
+
+        dropdown.selectedIndex = 0;
+        ko.utils.triggerEvent(dropdown, "change");
+        value_of(observable()).should_be("");
+    },
+
+    'For select boxes with text values but no value property, should use text value': function() {
+        var observable = new ko.observable('B');
+        testNode.innerHTML = "<select data-bind='value:myObservable'><option>A</option><option>B</option><option>C</option></select>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        var dropdown = testNode.childNodes[0];
+        value_of(dropdown.selectedIndex).should_be(1);
+
+        dropdown.selectedIndex = 0;
+        ko.utils.triggerEvent(dropdown, "change");
+        value_of(observable()).should_be("A");
+
+        observable('C');
+        value_of(dropdown.selectedIndex).should_be(2);
+    },
+
     'On IE, should respond exactly once to "propertychange" followed by "blur" or "change" or both': function() {
         var isIE = navigator.userAgent.indexOf("MSIE") >= 0;
 
