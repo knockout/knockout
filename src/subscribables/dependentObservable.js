@@ -113,6 +113,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     function dependentObservable() {
         if (arguments.length > 0) {
             set.apply(dependentObservable, arguments);
+            return this; // Permits chained assignments
         } else {
             return get();
         }
