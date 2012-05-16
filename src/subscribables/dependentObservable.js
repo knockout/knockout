@@ -118,6 +118,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             } else {
                 throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
             }
+            return this; // Permits chained assignments
         } else {
             // Reading the value
             if (!_hasBeenEvaluated)
