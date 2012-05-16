@@ -286,7 +286,7 @@ JSSpec.Spec.prototype.extractOutSpecialEntries = function(entries) {
 JSSpec.Spec.prototype.makeExamplesFromEntries = function(entries) {
 	var examples = [];
 	for(name in entries) if(entries.hasOwnProperty(name)) {
-		examples.push(new JSSpec.Example(name, entries[name], this.beforeEach, this.afterEach));
+		examples.push(new JSSpec.Example(name, entries[name], this.beforeEach, this.afterEach, this.context));
 	}
 	return examples;
 };
@@ -331,12 +331,13 @@ JSSpec.Spec.prototype.getExecutor = function() {
 /**
  * Example
  */
-JSSpec.Example = function(name, target, before, after) {
+JSSpec.Example = function(name, target, before, after, context) {
 	this.id = JSSpec.Example.id++;
 	this.name = name;
 	this.target = target;
 	this.before = before;
 	this.after = after;
+	this.context = context;
 };
 
 JSSpec.Example.id = 0;
@@ -559,6 +560,14 @@ JSSpec.Logger.prototype.onRunnerEnd = function() {
 		var title2 = "Success";
 	}
 	this.blinkTitle(times,title1,title2);
+
+	var totalCount = JSSpec.runner.totalExamples,
+		failCount = JSSpec.runner.getTotalFailures(),
+		errorCount = JSSpec.runner.getTotalErrors(),
+		successCount = totalCount - failCount - errorCount,
+		durationSeconds = document.getElementById("total_elapsed").innerHTML,
+		message = durationSeconds + " seconds, " + totalCount + " examples (" + successCount + " succeeded, " + failCount + " failed, " + errorCount + " errored)";
+	console.log("Finished: " + message);
 };
 
 JSSpec.Logger.prototype.blinkTitle = function(times, title1, title2) {
@@ -631,6 +640,17 @@ JSSpec.Logger.prototype.onExampleEnd = function(example) {
 	document.getElementById("total_elapsed").innerHTML = (new Date().getTime() - this.startedAt.getTime()) / 1000;
 
 	document.title = progress + "%: " + this._title;
+
+	// Also log to console, so we can pick this up in PhantomJS
+	var logResult = {
+		error: !!example.isError(),
+		failure: !!example.isFailure(),
+		ok: !(example.isError() || example.isFailure()),
+		context: example.context,
+		name: example.name,
+		exception: example.exception && { message: example.exception.message, file: example.exception.fileName, line: example.exception.lineNumber }
+	}
+	console.log("Result: " + JSON.stringify(logResult));
 };
 
 /**
