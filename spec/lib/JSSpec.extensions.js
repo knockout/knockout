@@ -32,6 +32,7 @@ JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
 };
 
 JSSpec.addScriptReference = function(scriptUrl) {
-    console.log("Loading " + scriptUrl + "...");
+    if (window.console)
+        console.log("Loading " + scriptUrl + "...");
     document.write("<scr" + "ipt type='text/javascript' src='" + scriptUrl + "'></sc" + "ript>");
 };
