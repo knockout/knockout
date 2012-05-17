@@ -1,0 +1,8 @@
+language: node_js
+before_script:
+  - "cd build; rm output/*.*"
+  - "./build-linux"
+  - "cd .."
+script:
+  - "phantomjs spec/runner.phantom.js"
+
