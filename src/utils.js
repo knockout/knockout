@@ -281,8 +281,9 @@ ko.utils = new (function () {
 
         toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
             if (classNames) {
-                var currentClassNames = node.className.match(/[\w\d-]+/g) || [];
-                ko.utils.arrayForEach(classNames.match(/[\w\d-]+/g), function(className) {
+                var cssClassNameRegex = /[\w-]+/g,
+                    currentClassNames = node.className.match(cssClassNameRegex) || [];
+                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
                     var indexOfClass = ko.utils.arrayIndexOf(currentClassNames, className);
                     if (indexOfClass >= 0) {
                         if (!shouldHaveClass)

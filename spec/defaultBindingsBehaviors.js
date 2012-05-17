@@ -706,12 +706,12 @@ describe('Binding: CSS class name', {
 
     'Should toggle multiple CSS classes if specified as a single string separated by spaces': function() {
         var observable1 = new ko.observable();
-        testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: { \"myRule anotherRule\": someModelProperty }'>Hallo</div>";
+        testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: { \"myRule _another-Rule123\": someModelProperty }'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
         observable1(true);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 myRule anotherRule");
+        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 myRule _another-Rule123");
         observable1(false);
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
     },
