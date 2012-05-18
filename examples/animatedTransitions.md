@@ -100,3 +100,5 @@ This example shows two ways to animate transitions:
     ko.applyBindings(new PlanetsModel());
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/8k8V5/)

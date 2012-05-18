@@ -109,3 +109,5 @@ This example also demonstrates a simple way to create cascading dropdowns.
     ko.applyBindings(new Cart());
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/adNuR/)

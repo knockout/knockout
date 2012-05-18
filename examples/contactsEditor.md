@@ -105,3 +105,5 @@ This examples shows a fairly typical way to edit a nested data structure. Check 
     ko.applyBindings(new ContactsModel(initialData));
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/gZC5k/)

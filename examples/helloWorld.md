@@ -29,3 +29,5 @@ Edit either text box to see the "full name" display update. See the HTML source 
 {% endcapture %}
 
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/LkqTU/)

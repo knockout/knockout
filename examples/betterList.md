@@ -47,3 +47,5 @@ Check out the HTML source code to see how little code all this takes. This examp
     ko.applyBindings(new BetterListModel());
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/aDahT/)

@@ -59,3 +59,5 @@ The contents of an element using the `foreach` binding are repeated for each ite
     ko.applyBindings(viewModel);
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/GSvnh/)

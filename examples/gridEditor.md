@@ -73,3 +73,5 @@ ko.applyBindings(viewModel);
 $("form").validate({ submitHandler: viewModel.save });
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/7RDc3/)
