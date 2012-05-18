@@ -96,11 +96,11 @@ dummyTemplateEngine.prototype = new ko.templateEngine();
 describe('Templating', {
     before_each: function () {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
-        var existingNode = document.getElementById("templatingTarget");
+        var existingNode = document.getElementById("testNode");
         if (existingNode != null)
             existingNode.parentNode.removeChild(existingNode);
         testNode = document.createElement("div");
-        testNode.id = "templatingTarget";
+        testNode.id = "testNode";
         document.body.appendChild(testNode);
     },
 
