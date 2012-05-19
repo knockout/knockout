@@ -373,7 +373,7 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind=\"template: { name: 'mytemplate', foreach: items }\"></div>";
 
         // Bind against initial array containing one entry. UI just shows "original"
-        var myArray = ko.observableArray(["original"]); 
+        var myArray = ko.observableArray(["original"]);
         ko.applyBindings({ items: myArray });
         value_of(testNode.childNodes[0]).should_contain_html("<div>original</div>");
 
@@ -381,6 +381,24 @@ describe('Templating', {
         // UI just shows "new" (previously with bug, showed "original" AND "new")
         myArray(["new"]);
         value_of(testNode.childNodes[0]).should_contain_html("<div>new</div>");
+    },
+
+    'Data binding \'foreach\' should handle chained templates in which the very first node has a binding': function() {
+        // See https://github.com/SteveSanderson/knockout/pull/440 and https://github.com/SteveSanderson/knockout/pull/144
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            outerTemplate: "<div data-bind='text: $data'></div>[renderTemplate:innerTemplate]x", // [renderTemplate:...] is special syntax supported by dummy template engine
+            innerTemplate: "inner <span data-bind='text: 123'></span>"
+        }));
+        testNode.innerHTML = "<div data-bind=\"template: { name: 'outerTemplate', foreach: items }\"></div>";
+
+        // Bind against initial array containing one entry.
+        var myArray = ko.observableArray(["original"]);
+        ko.applyBindings({ items: myArray });
+        value_of(testNode.childNodes[0]).should_contain_html("<div>original</div>inner <span>123</span>x");
+
+        // Now replace the entire array contents with one different entry.
+        myArray(["new"]);
+        value_of(testNode.childNodes[0]).should_contain_html("<div>new</div>inner <span>123</span>x");
     },
 
     'Data binding \'foreach\' option should apply bindings with an $index in the context': function () {

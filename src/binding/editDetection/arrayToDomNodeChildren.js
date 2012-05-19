@@ -11,7 +11,9 @@
     // You can use this, for example, to activate bindings on those nodes.
 
     function fixUpVirtualElements(contiguousNodeArray) {
-        // Remove any initial nodes that aren't in the document
+        // Re-written templates insert comments into the node list during memoization and then remove them during un-memoization.
+        // If the first node in the list is one of those comments, we need to remove it from the list and get the actual first node.
+        // See https://github.com/SteveSanderson/knockout/pull/440
         while (contiguousNodeArray.length && !ko.utils.domNodeIsAttachedToDocument(contiguousNodeArray[0]))
             contiguousNodeArray.splice(0, 1);
 
@@ -20,7 +22,7 @@
         // their virtual children changed when binding was applied to them).
         // This is needed so that we can reliably remove or update the nodes corresponding to a given array item
 
-        if (contiguousNodeArray.length > 2) {
+        if (contiguousNodeArray.length > 1) {
             // Build up the actual new contiguous node set
             var current = contiguousNodeArray[0], last = contiguousNodeArray[contiguousNodeArray.length - 1], newContiguousSet = [current];
             while (current !== last) {
