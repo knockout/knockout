@@ -77,6 +77,7 @@ For more details about these `observableArray` functions, see the equivalent doc
  * `myObservableArray.remove(someItem)` removes all values that equal `someItem` and returns them as an array
  * `myObservableArray.remove(function(item) { return item.age < 18 })` removes all values whose `age` property is less than 18, and returns them as an array
  * `myObservableArray.removeAll(['Chad', 132, undefined])` removes all values that equal `'Chad'`, `123`, or `undefined` and returns them as an array
+ * `myObservableArray.removeAll()` removes all values and returns them as an array
 
 ### destroy and destroyAll (Note: Usually relevant to Ruby on Rails developers only)
 
@@ -85,6 +86,7 @@ The `destroy` and `destroyAll` functions are mainly intended as a convenience fo
  * `myObservableArray.destroy(someItem)` finds any objects in the array that equal `someItem` and gives them a special property called `_destroy` with value `true`
  * `myObservableArray.destroy(function(someItem) { return someItem.age < 18 })` finds any objects in the array whose `age` property is less than 18, and gives those objects a special property called `_destroy` with value `true`
  * `myObservableArray.destroyAll(['Chad', 132, undefined])` finds any objects in the array that equal `'Chad'`, `123`, or `undefined` and gives them a special property called `_destroy` with value `true`
+ * `myObservableArray.destroyAll()` gives a special property called `_destroy` with value `true` to all objects in the array
  
 So, what's this `_destroy` thing all about? As I mentioned, it's only really interesting to Rails developers. The convention in Rails is that, when you pass into an action a JSON object graph, the framework can automatically convert it to an ActiveRecord object graph and then save it to your database. It knows which of the objects are already in your database, and issues the correct INSERT or UPDATE statements. To tell the framework to DELETE a record, you just mark it with `_destroy` set to `true`. 
 
