@@ -233,6 +233,12 @@ describe('Array to DOM node children mapping', {
         value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
         mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["C", "B", "A"], mapping, null, callback); // Move items
+        value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["C", "B", "A"]);
+        value_of(mappingInvocations).should_be([]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
+
+        mappingInvocations = [], countCallbackInvocations = 0;
         var observable = ko.observable(1);
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [observable, null, "B"], mapping, null, callback); // Add to beginning; delete from end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["1", "null", "B"]);
