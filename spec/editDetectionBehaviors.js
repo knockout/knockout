@@ -24,10 +24,10 @@ describe('Compare Arrays', {
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
             { status: "retained", value: "A" },
-            { status: "added", value: "A2" },
-            { status: "added", value: "A3" },
+            { status: "added", value: "A2", idx: 1 },
+            { status: "added", value: "A3", idx: 2 },
             { status: "retained", value: "B" },
-            { status: "added", value: "B2" }
+            { status: "added", value: "B2", idx: 4 }
         ]);
     },
 
@@ -36,10 +36,10 @@ describe('Compare Arrays', {
         var newArray = ["B", "C", "E"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
-            { status: "deleted", value: "A" },
+            { status: "deleted", value: "A", idx: 0 },
             { status: "retained", value: "B" },
             { status: "retained", value: "C" },
-            { status: "deleted", value: "D" },
+            { status: "deleted", value: "D", idx: 3 },
             { status: "retained", value: "E" }
         ]);
     },
@@ -49,13 +49,33 @@ describe('Compare Arrays', {
         var newArray = [123, "A", "E", "C", "D"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
-            { status: "added", value: 123 },
+            { status: "added", value: 123, idx: 0 },
             { status: "retained", value: "A" },
-            { status: "deleted", value: "B" },
-            { status: "added", value: "E" },
+            { status: "deleted", value: "B", idx: 1 },
+            { status: "added", value: "E", idx: 2, moved: 4 },
             { status: "retained", value: "C" },
             { status: "retained", value: "D" },
-            { status: "deleted", value: "E" }
+            { status: "deleted", value: "E", idx: 4, moved: 2 }
+        ]);
+    },
+
+    'Should recognize replaced array': function () {
+        var oldArray = ["A", "B", "C", "D", "E"];
+        var newArray = ["F", "G", "H", "I", "J"];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray);
+        // the order of added and deleted doesn't really matter
+        compareResult.sort(function(a, b) { return a.status.localeCompare(b.status) });
+        value_of(compareResult).should_be([
+            { status: "added", value: "F", idx: 0},
+            { status: "added", value: "G", idx: 1},
+            { status: "added", value: "H", idx: 2},
+            { status: "added", value: "I", idx: 3},
+            { status: "added", value: "J", idx: 4},
+            { status: "deleted", value: "A", idx: 0},
+            { status: "deleted", value: "B", idx: 1},
+            { status: "deleted", value: "C", idx: 2},
+            { status: "deleted", value: "D", idx: 3},
+            { status: "deleted", value: "E", idx: 4}
         ]);
     }
 });

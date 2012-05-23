@@ -44,17 +44,19 @@ ko.utils.compareArrays = (function () {
             }
         }
 
-        var editScript = [], meMinusOne;
+        var editScript = [], meMinusOne, notInSml = [], notInBig = [];
         for (smlIndex = smlIndexMax, bigIndex = bigIndexMax; smlIndex || bigIndex;) {
             meMinusOne = editDistanceMatrix[smlIndex][bigIndex] - 1;
             if (bigIndex && meMinusOne === editDistanceMatrix[smlIndex][bigIndex-1]) {
-                editScript[editScript.length] = {     // added
+                notInSml.push(editScript[editScript.length] = {     // added
                     'status': statusNotInSml,
-                    'value': bigArray[--bigIndex] };
+                    'value': bigArray[--bigIndex],
+                    'idx': bigIndex });
             } else if (smlIndex && meMinusOne === editDistanceMatrix[smlIndex - 1][bigIndex]) {
-                editScript[editScript.length] = {     // deleted
+                notInBig.push(editScript[editScript.length] = {     // deleted
                     'status': statusNotInBig,
-                    'value': smlArray[--smlIndex] };
+                    'value': smlArray[--smlIndex],
+                    'idx': smlIndex });
             } else {
                 editScript.push({
                     'status': "retained",
@@ -63,6 +65,20 @@ ko.utils.compareArrays = (function () {
             }
         }
 
+        if (notInSml.length && notInBig.length) {
+            // Go through the items that have been added and deleted and try to find matches between them.
+            var a, d, notInSmlItem, notInBigItem;
+            for (a = 0; notInSmlItem = notInSml[a]; a++) {
+                for (d = 0; notInBigItem = notInBig[d]; d++) {
+                    if (notInSmlItem['value'] === notInBigItem['value']) {
+                        notInSmlItem['moved'] = notInBigItem['idx'];
+                        notInBigItem['moved'] = notInSmlItem['idx'];
+                        notInBig.splice(d,1);        // This item is marked as moved; so remove it from notInBig list
+                        break;
+                    }
+                }
+            }
+        }
         return editScript.reverse();
     }
 
