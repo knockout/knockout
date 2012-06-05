@@ -291,6 +291,17 @@ ko.bindingHandlers['selectedOptions'] = {
         }
         return result;
     },
+    setSelectedValuesInSelectNode : function (selectNode, newValue) {
+        var nodes = selectNode.childNodes;
+        for (var i = 0, j = nodes.length; i < j; i++) {
+            var node = nodes[i], tagName = ko.utils.tagNameLower(node);
+            if (tagName == "option")
+                ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
+            else if (tagName == "optgroup") {
+                ko.bindingHandlers['selectedOptions'].setSelectedValuesInSelectNode(node, newValue);
+            }
+        }
+    },
     'init': function (element, valueAccessor, allBindingsAccessor) {
         ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor();
@@ -304,12 +315,7 @@ ko.bindingHandlers['selectedOptions'] = {
 
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         if (newValue && typeof newValue.length == "number") {
-            var nodes = element.childNodes;
-            for (var i = 0, j = nodes.length; i < j; i++) {
-                var node = nodes[i];
-                if (ko.utils.tagNameLower(node) === "option")
-                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
-            }
+            ko.bindingHandlers['selectedOptions'].setSelectedValuesInSelectNode(element, newValue);
         }
     }
 };
