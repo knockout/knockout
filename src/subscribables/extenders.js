@@ -13,8 +13,9 @@ ko.extenders = {
             'read': target,
             'write': function(value) {
                 clearTimeout(writeTimeoutInstance);
+                var args = [].splice.call(arguments, 0);
                 writeTimeoutInstance = setTimeout(function() {
-                    target(value);
+                    target.apply(target, args);
                 }, timeout);
             }
         });
