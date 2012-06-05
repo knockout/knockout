@@ -551,3 +551,41 @@ ko.bindingHandlers['foreach'] = {
 };
 ko.jsonExpressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['foreach'] = true;
+
+// checkedInArray - allow checkebox element to have object / viewmodel bind to it instead of just id string
+// checkbox will be checked if it is in the obseravable array of objects/view models and unchecked if otherwise
+ko.bindingHandlers['checkedInArray'] = {
+    'init': function (element, valueAccessor, allBindingsAccessor) {
+        var updateHandler = function() {
+            var modelValue = valueAccessor(),
+            checked    = ko.utils.unwrapObservable(modelValue.checked()),
+            value      = (ko.isObservable(modelValue.value)) ? ko.utils.unwrapObservable(modelValue.value) : modelValue.value,
+            isOn       = element.checked;
+
+            var existingEntryIndex = ko.utils.arrayIndexOf(checked, value);
+            var enabled = existingEntryIndex >= 0;
+
+            if (!enabled && isOn) {
+                modelValue.checked.push(value);
+            } else if (enabled && !isOn) {
+                modelValue.checked.splice(existingEntryIndex, 1);
+            }
+
+        };
+
+        ko.utils.registerEventHandler(element, "click", updateHandler);
+    },
+    'update': function (element, valueAccessor) {
+        var modelValue = valueAccessor(),
+        checked    = ko.utils.unwrapObservable(modelValue.checked()),
+        value      = (ko.isObservable(modelValue.value)) ? ko.utils.unwrapObservable(modelValue.value) : modelValue.value;
+
+        var existingEntryIndex = ko.utils.arrayIndexOf(checked, value);
+        var enabled = existingEntryIndex >= 0;
+
+        if (enabled)
+            element.checked = true;
+        else
+            element.checked = false;
+    }
+};
