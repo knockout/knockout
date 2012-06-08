@@ -10,7 +10,7 @@ ko.observable = function (initialValue) {
             // Ignore writes if the value hasn't changed
             if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                _latestValue = ko.utils.unwrapObservable(arguments[0]);
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }
