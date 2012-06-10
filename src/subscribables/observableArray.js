@@ -14,6 +14,7 @@ ko.observableArray = function (initialValues) {
 ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = 0; i < underlyingArray.length; i++) {
@@ -28,7 +29,7 @@ ko.observableArray['fn'] = {
             }
         }
         if (removedValues.length) {
-            this.valueHasMutated();
+            this.valueHasMutated(previousValue);
         }
         return removedValues;
     },
@@ -37,10 +38,11 @@ ko.observableArray['fn'] = {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
             var underlyingArray = this();
+			var previousValue = underlyingArray.slice(0);
             var allValues = underlyingArray.slice(0);
             this.valueWillMutate();
             underlyingArray.splice(0, underlyingArray.length);
-            this.valueHasMutated();
+            this.valueHasMutated(previousValue);
             return allValues;
         }
         // If you passed an arg, we interpret it as an array of entries to remove
@@ -53,6 +55,7 @@ ko.observableArray['fn'] = {
 
     'destroy': function (valueOrPredicate) {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         this.valueWillMutate();
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
@@ -60,7 +63,7 @@ ko.observableArray['fn'] = {
             if (predicate(value))
                 underlyingArray[i]["_destroy"] = true;
         }
-        this.valueHasMutated();
+        this.valueHasMutated(previousValue);
     },
 
     'destroyAll': function (arrayOfValues) {
@@ -82,11 +85,13 @@ ko.observableArray['fn'] = {
     },
 
     'replace': function(oldItem, newItem) {
+		var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var index = this['indexOf'](oldItem);
         if (index >= 0) {
             this.valueWillMutate();
-            this()[index] = newItem;
-            this.valueHasMutated();
+            underlyingArray[index] = newItem;
+            this.valueHasMutated(previousValue);
         }
     }
 }
@@ -95,9 +100,10 @@ ko.observableArray['fn'] = {
 ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
     ko.observableArray['fn'][methodName] = function () {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         this.valueWillMutate();
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
-        this.valueHasMutated();
+        this.valueHasMutated(previousValue);
         return methodCallResult;
     };
 });

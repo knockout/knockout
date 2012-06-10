@@ -10,9 +10,10 @@ ko.observable = function (initialValue) {
             // Ignore writes if the value hasn't changed
             if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
+				var previousValue = _latestValue;
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
-                observable.valueHasMutated();
+                observable.valueHasMutated(previousValue);
             }
             return this; // Permits chained assignments
         }
@@ -24,7 +25,7 @@ ko.observable = function (initialValue) {
     }
     if (DEBUG) observable._latestValue = _latestValue;
     ko.subscribable.call(observable);
-    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
+    observable.valueHasMutated = function (previousValue) { observable["notifySubscribers"](_latestValue, undefined, previousValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
     ko.utils.extend(observable, ko.observable['fn']);
 

@@ -227,5 +227,53 @@ describe('Observable Array', {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         value_of(testObservableArray.length).should_be(0); // Because JavaScript won't let us override "length" directly
         value_of(testObservableArray().length).should_be(3);
+    },
+    
+    'Should notify subscriber of old value on push': function() {
+        testObservableArray(["A", "B", "C"]);
+        var notifiedValues = [];
+        testObservableArray.subscribe(function(newValue, oldValue) {
+            notifiedValues.push({ oldValue: oldValue, newValue: newValue.slice(0) });
+        });
+        
+        testObservableArray.push("D");
+        testObservableArray.push("E");
+        
+        value_of(notifiedValues[0].oldValue).should_be(["A", "B", "C"]);
+        value_of(notifiedValues[0].newValue).should_be(["A", "B", "C", "D"]);
+        value_of(notifiedValues[1].oldValue).should_be(["A", "B", "C", "D"]);
+        value_of(notifiedValues[1].newValue).should_be(["A", "B", "C", "D", "E"]);
+        
+    },
+    
+    'Should notify subscriber of old value on remove': function() {
+        testObservableArray(["A", "B", "C", "D", "E"]);
+        var notifiedValues = [];
+        testObservableArray.subscribe(function(newValue, oldValue) {
+            notifiedValues.push({ oldValue: oldValue, newValue: newValue.slice(0) });
+        });
+        
+        testObservableArray.remove("E");
+        testObservableArray.remove("D");
+        
+        value_of(notifiedValues[0].oldValue).should_be(["A", "B", "C", "D", "E"]);
+        value_of(notifiedValues[0].newValue).should_be(["A", "B", "C", "D"]);
+        value_of(notifiedValues[1].oldValue).should_be(["A", "B", "C", "D"]);
+        value_of(notifiedValues[1].newValue).should_be(["A", "B", "C"]);
+        
+    },
+    
+    'Should notify subscriber of old value on removeAll': function() {
+        testObservableArray(["A", "B", "C"]);
+        var notifiedValues = [];
+        testObservableArray.subscribe(function(newValue, oldValue) {
+            notifiedValues.push({ oldValue: oldValue, newValue: newValue.slice(0) });
+        });
+        
+        testObservableArray.removeAll();
+        
+        value_of(notifiedValues[0].oldValue).should_be(["A", "B", "C"]);
+        value_of(notifiedValues[0].newValue).should_be([]);
+        
     }
 })

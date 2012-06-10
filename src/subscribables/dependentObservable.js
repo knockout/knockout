@@ -74,7 +74,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             dispose();
             return;
         }
-
+		
+		var previousValue;
+		
         _isBeingEvaluated = true;
         try {
             // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
@@ -99,13 +101,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _hasBeenEvaluated = true;
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+			previousValue = _latestValue;
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         } finally {
             ko.dependencyDetection.end();
         }
 
-        dependentObservable["notifySubscribers"](_latestValue);
+        dependentObservable["notifySubscribers"](_latestValue, undefined, previousValue);
         _isBeingEvaluated = false;
 
     }

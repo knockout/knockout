@@ -2,8 +2,9 @@
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
-(function(window,document,navigator,undefined){
+(function(){
 var DEBUG=true;
+(function(window,document,navigator,jQuery,undefined){
 !function(factory) {
     // Support three module loading scenarios
     if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
@@ -320,18 +321,21 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
-        toggleDomNodeCssClass: function (node, className, shouldHaveClass) {
-            var currentClassNames = (node.className || "").split(/\s+/);
-            var hasClass = ko.utils.arrayIndexOf(currentClassNames, className) >= 0;
-
-            if (shouldHaveClass && !hasClass) {
-                node.className += (currentClassNames[0] ? " " : "") + className;
-            } else if (hasClass && !shouldHaveClass) {
-                var newClassName = "";
-                for (var i = 0; i < currentClassNames.length; i++)
-                    if (currentClassNames[i] != className)
-                        newClassName += currentClassNames[i] + " ";
-                node.className = ko.utils.stringTrim(newClassName);
+        toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
+            if (classNames) {
+                var cssClassNameRegex = /[\w-]+/g,
+                    currentClassNames = node.className.match(cssClassNameRegex) || [];
+                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                    var indexOfClass = ko.utils.arrayIndexOf(currentClassNames, className);
+                    if (indexOfClass >= 0) {
+                        if (!shouldHaveClass)
+                            currentClassNames.splice(indexOfClass, 1);
+                    } else {
+                        if (shouldHaveClass)
+                            currentClassNames.push(className);
+                    }
+                });
+                node.className = currentClassNames.join(" ");
             }
         },
 
@@ -860,14 +864,14 @@ ko.subscribable['fn'] = {
         return subscription;
     },
 
-    "notifySubscribers": function (valueToNotify, event) {
+    "notifySubscribers": function (valueToNotify, event, previousValue) {
         event = event || defaultEvent;
         if (this._subscriptions[event]) {
             ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
                 // In case a subscription was disposed during the arrayForEach cycle, check
                 // for isDisposed on each subscription before invoking its callback
                 if (subscription && (subscription.isDisposed !== true))
-                    subscription.callback(valueToNotify);
+					subscription.callback(valueToNotify, previousValue);
             });
         }
     },
@@ -929,9 +933,10 @@ ko.observable = function (initialValue) {
             // Ignore writes if the value hasn't changed
             if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
+				var previousValue = _latestValue;
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
-                observable.valueHasMutated();
+                observable.valueHasMutated(previousValue);
             }
             return this; // Permits chained assignments
         }
@@ -943,7 +948,7 @@ ko.observable = function (initialValue) {
     }
     if (DEBUG) observable._latestValue = _latestValue;
     ko.subscribable.call(observable);
-    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
+    observable.valueHasMutated = function (previousValue) { observable["notifySubscribers"](_latestValue, undefined, previousValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
     ko.utils.extend(observable, ko.observable['fn']);
 
@@ -1003,6 +1008,7 @@ ko.observableArray = function (initialValues) {
 ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = 0; i < underlyingArray.length; i++) {
@@ -1017,7 +1023,7 @@ ko.observableArray['fn'] = {
             }
         }
         if (removedValues.length) {
-            this.valueHasMutated();
+            this.valueHasMutated(previousValue);
         }
         return removedValues;
     },
@@ -1026,10 +1032,11 @@ ko.observableArray['fn'] = {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
             var underlyingArray = this();
+			var previousValue = underlyingArray.slice(0);
             var allValues = underlyingArray.slice(0);
             this.valueWillMutate();
             underlyingArray.splice(0, underlyingArray.length);
-            this.valueHasMutated();
+            this.valueHasMutated(previousValue);
             return allValues;
         }
         // If you passed an arg, we interpret it as an array of entries to remove
@@ -1042,6 +1049,7 @@ ko.observableArray['fn'] = {
 
     'destroy': function (valueOrPredicate) {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         this.valueWillMutate();
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
@@ -1049,7 +1057,7 @@ ko.observableArray['fn'] = {
             if (predicate(value))
                 underlyingArray[i]["_destroy"] = true;
         }
-        this.valueHasMutated();
+        this.valueHasMutated(previousValue);
     },
 
     'destroyAll': function (arrayOfValues) {
@@ -1071,11 +1079,13 @@ ko.observableArray['fn'] = {
     },
 
     'replace': function(oldItem, newItem) {
+		var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         var index = this['indexOf'](oldItem);
         if (index >= 0) {
             this.valueWillMutate();
-            this()[index] = newItem;
-            this.valueHasMutated();
+            underlyingArray[index] = newItem;
+            this.valueHasMutated(previousValue);
         }
     }
 }
@@ -1084,9 +1094,10 @@ ko.observableArray['fn'] = {
 ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
     ko.observableArray['fn'][methodName] = function () {
         var underlyingArray = this();
+		var previousValue = underlyingArray.slice(0);
         this.valueWillMutate();
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
-        this.valueHasMutated();
+        this.valueHasMutated(previousValue);
         return methodCallResult;
     };
 });
@@ -1176,7 +1187,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             dispose();
             return;
         }
-
+		
+		var previousValue;
+		
         _isBeingEvaluated = true;
         try {
             // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
@@ -1201,13 +1214,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _hasBeenEvaluated = true;
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+			previousValue = _latestValue;
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         } finally {
             ko.dependencyDetection.end();
         }
 
-        dependentObservable["notifySubscribers"](_latestValue);
+        dependentObservable["notifySubscribers"](_latestValue, undefined, previousValue);
         _isBeingEvaluated = false;
 
     }
@@ -1369,7 +1383,9 @@ ko.exportSymbol('toJSON', ko.toJSON);
                 case 'option':
                     if (element[hasDomDataExpandoProperty] === true)
                         return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
-                    return element.getAttribute("value");
+                    return ko.utils.ieVersion <= 7
+                        ? (element.getAttributeNode('value').specified ? element.value : element.text)
+                        : element.value;
                 case 'select':
                     return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
                 default:
@@ -2394,14 +2410,20 @@ ko.bindingHandlers['html'] = {
     }
 };
 
+var classesWrittenByBindingKey = '__ko__cssValue';
 ko.bindingHandlers['css'] = {
     'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor() || {});
-        for (var className in value) {
-            if (typeof className == "string") {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        if (typeof value == "object") {
+            for (var className in value) {
                 var shouldHaveClass = ko.utils.unwrapObservable(value[className]);
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
             }
+        } else {
+            value = String(value || ''); // Make sure we don't try to store or set a non-string value
+            ko.utils.toggleDomNodeCssClass(element, element[classesWrittenByBindingKey], false);
+            element[classesWrittenByBindingKey] = value;
+            ko.utils.toggleDomNodeCssClass(element, value, true);
         }
     }
 };
@@ -2729,9 +2751,8 @@ ko.templateRewriting = (function () {
         // For no obvious reason, Opera fails to evaluate rewrittenDataBindAttributeValue unless it's wrapped in an additional
         // anonymous function, even though Opera's built-in debugger can evaluate it anyway. No other browser requires this
         // extra indirection.
-        var applyBindingsToNextSiblingScript = "ko.templateRewriting.applyMemoizedBindingsToNextSibling(function() { \
-            return (function() { return { " + rewrittenDataBindAttributeValue + " } })() \
-        })";
+        var applyBindingsToNextSiblingScript =
+            "ko.__tr_ambtns(function(){return(function(){return{" + rewrittenDataBindAttributeValue + "} })()})";
         return templateEngine['createJavaScriptEvaluatorBlock'](applyBindingsToNextSiblingScript) + tagToRetain;
     }
 
@@ -2760,8 +2781,9 @@ ko.templateRewriting = (function () {
     }
 })();
 
-ko.exportSymbol('templateRewriting', ko.templateRewriting);
-ko.exportSymbol('templateRewriting.applyMemoizedBindingsToNextSibling', ko.templateRewriting.applyMemoizedBindingsToNextSibling); // Exported only because it has to be referenced by string lookup from within rewritten template
+
+// Exported only because it has to be referenced by string lookup from within rewritten template
+ko.exportSymbol('__tr_ambtns', ko.templateRewriting.applyMemoizedBindingsToNextSibling);
 (function() {
     // A template source represents a read/write way of accessing a template. This is to eliminate the need for template loading/saving
     // logic to be duplicated in every template engine (and means they can all work with anonymous templates, etc.)
@@ -3181,13 +3203,26 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
     // "callbackAfterAddingNodes" will be invoked after any "mapping"-generated nodes are inserted into the container node
     // You can use this, for example, to activate bindings on those nodes.
 
-    function fixUpVirtualElements(contiguousNodeArray) {
-        // Ensures that contiguousNodeArray really *is* an array of contiguous siblings, even if some of the interior
-        // ones have changed since your array was first built (e.g., because your array contains virtual elements, and
-        // their virtual children changed when binding was applied to them).
-        // This is needed so that we can reliably remove or update the nodes corresponding to a given array item
+    function fixUpNodesToBeRemoved(contiguousNodeArray) {
+        // Before deleting or replacing a set of nodes that were previously outputted by the "map" function, we have to reconcile
+        // them against what is in the DOM right now. It may be that some of the nodes have already been removed from the document,
+        // or that new nodes might have been inserted in the middle, for example by a binding. Also, there may previously have been
+        // leading comment nodes (created by rewritten string-based templates) that have since been removed during binding.
+        // So, this function translates the old "map" output array into its best guess of what set of current DOM nodes should be removed.
+        //
+        // Rules:
+        //   [A] Any leading nodes that aren't in the document any more should be ignored
+        //       These most likely correspond to memoization nodes that were already removed during binding
+        //       See https://github.com/SteveSanderson/knockout/pull/440
+        //   [B] We want to output a contiguous series of nodes that are still in the document. So, ignore any nodes that
+        //       have already been removed, and include any nodes that have been inserted among the previous collection
 
-        if (contiguousNodeArray.length > 2) {
+        // Rule [A]
+        while (contiguousNodeArray.length && !ko.utils.domNodeIsAttachedToDocument(contiguousNodeArray[0]))
+            contiguousNodeArray.splice(0, 1);
+
+        // Rule [B]
+        if (contiguousNodeArray.length > 1) {
             // Build up the actual new contiguous node set
             var current = contiguousNodeArray[0], last = contiguousNodeArray[contiguousNodeArray.length - 1], newContiguousSet = [current];
             while (current !== last) {
@@ -3211,7 +3246,7 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
 
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
             if (mappedNodes.length > 0) {
-                fixUpVirtualElements(mappedNodes);
+                fixUpNodesToBeRemoved(mappedNodes);
                 ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
                 if (callbackAfterAddingNodes)
                     callbackAfterAddingNodes(valueToMap, newMappedNodes);
@@ -3260,7 +3295,7 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
                     lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
 
                     // Queue these nodes for later removal
-                    fixUpVirtualElements(lastMappingResult[lastMappingResultIndex].domNodes);
+                    fixUpNodesToBeRemoved(lastMappingResult[lastMappingResultIndex].domNodes);
                     ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
                         nodesToDelete.push({
                           element: node,
@@ -3440,4 +3475,5 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();
 });
-})(window,document,navigator);
+})(window,document,navigator,window["jQuery"]);
+})();
