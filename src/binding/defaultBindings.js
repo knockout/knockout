@@ -227,36 +227,22 @@ ko.bindingHandlers['options'] = {
             for (var i = 0, j = value.length; i < j; i++) {
                 var option = document.createElement("option");
 
-                // Apply a value to the option element
-                //var optionValue = typeof allBindings['optionsValue'] == "string" ? value[i][allBindings['optionsValue']] : value[i];
-                
-                var optionsValueValue = allBindings['optionsValue'];
-                if ( typeof optionsValueValue == "function" ) {
-                	optionValue = optionsValueValue(value[i]);
-                } else if ( typeof optionsValueValue == "string" ) {
-                	optionValue = value[i][optionsValueValue];
-                } else {
-                	optionValue = value[i];
+                function applyToObject(object, predicate, defaultValue) {
+                    var predicateType = typeof predicate;
+                    if (predicateType == "function")    // Given a function; run it against the data value
+                        return predicate(object);
+                    else if (predicateType == "string") // Given a string; treat it as a property name on the data value
+                        return object[predicate];
+                    else                                // Given no optionsText arg; use the data value itself
+                        return defaultValue;
                 }
-                
-                
-                
-                // Pick some text to appear in the drop-down list for this data value
-                optionValue = ko.utils.unwrapObservable(optionValue);
-                ko.selectExtensions.writeValue(option, optionValue);
+
+                // Apply a value to the option element
+                var optionValue = applyToObject(value[i], allBindings['optionsValue'], value[i]);
+                ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionsTextValue = allBindings['optionsText'];
-                var optionText;
-                if (typeof optionsTextValue == "function")
-                    optionText = optionsTextValue(value[i]); // Given a function; run it against the data value
-                else if (typeof optionsTextValue == "string")
-                    optionText = value[i][optionsTextValue]; // Given a string; treat it as a property name on the data value
-                else
-                    optionText = optionValue;				 // Given no optionsText arg; use the data value itself
-                if ((optionText === null) || (optionText === undefined))
-                    optionText = "";
-
+                var optionText = applyToObject(value[i], allBindings['optionsText'], optionValue);
                 ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
