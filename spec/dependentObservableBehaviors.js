@@ -110,6 +110,26 @@ describe('Dependent Observable', {
         value_of(depedentObservable()).should_be(51);
     },
 
+    'Should be able to use \'peek\' on an observable to avoid a dependency': function() {
+        var observable = ko.observable(1),
+            computed = ko.dependentObservable(function () { return observable.peek() + 1; });
+        value_of(computed()).should_be(2);
+
+        observable(50);
+        value_of(computed()).should_be(2);    // value wasn't changed
+    },
+
+    'Should be able to use \'ko.ignoreDependencies\' within a computed to avoid dependencies': function() {
+        var observable = ko.observable(1),
+            computed = ko.dependentObservable(function () {
+                return ko.ignoreDependencies(function() { return observable() + 1 } );
+            });
+        value_of(computed()).should_be(2);
+
+        observable(50);
+        value_of(computed()).should_be(2);    // value wasn't changed
+    },
+
     'Should unsubscribe from previous dependencies each time a dependency changes': function () {
         var observableA = new ko.observable("A");
         var observableB = new ko.observable("B");
@@ -181,6 +201,16 @@ describe('Dependent Observable', {
         value_of(dependent2()).should_be(13);
     },
 
+    'Should be able to use \'peek\' on a computed observable to avoid a dependency': function () {
+        var underlyingObservable = new ko.observable(1);
+        var computed1 = new ko.dependentObservable(function () { return underlyingObservable() + 1; });
+        var computed2 = new ko.dependentObservable(function () { return computed1.peek() + 1; });
+        value_of(computed2()).should_be(3);
+
+        underlyingObservable(11);
+        value_of(computed2()).should_be(3);    // value wasn't changed
+    },
+
     'Should accept "owner" parameter to define the object on which the evaluator function should be called': function () {
         var model = new (function () {
             this.greeting = "hello";
@@ -237,5 +267,5 @@ describe('Dependent Observable', {
                 // isn't prevented
                 observable(observable() + 1);
             });
-     }
+    }
 })
