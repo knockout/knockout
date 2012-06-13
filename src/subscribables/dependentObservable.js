@@ -112,26 +112,24 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     function dependentObservable() {
         if (arguments.length > 0) {
-            set.apply(dependentObservable, arguments);
+            if (typeof writeFunction === "function") {
+                // Writing a value
+                writeFunction.apply(evaluatorFunctionTarget, arguments);
+            } else {
+                throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
+            }
         } else {
-            return get();
+            // Reading the value
+            if (!_hasBeenEvaluated)
+                evaluateImmediate();
+            ko.dependencyDetection.registerDependency(dependentObservable);
+            return _latestValue;
         }
     }
 
-    function set() {
-        if (typeof writeFunction === "function") {
-            // Writing a value
-            writeFunction.apply(evaluatorFunctionTarget, arguments);
-        } else {
-            throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
-        }
-    }
-
-    function get() {
-        // Reading the value
+    dependentObservable.peek = function () {
         if (!_hasBeenEvaluated)
             evaluateImmediate();
-        ko.dependencyDetection.registerDependency(dependentObservable);
         return _latestValue;
     }
 
@@ -145,6 +143,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     if (options['deferEvaluation'] !== true)
         evaluateImmediate();
 
+    ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
 
