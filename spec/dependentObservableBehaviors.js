@@ -256,5 +256,70 @@ describe('Dependent Observable', {
                 // isn't prevented
                 observable(observable() + 1);
             });
+    },
+
+    'Should not subscribe to observables accessed through change notifications of a computed': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            computed = ko.computed(function() { return observableDependent() });
+
+        // initially there is only one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // create a change subscription that also accesses an observable
+        computed.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of the computed by updating its dependency
+        observableDependent(1);
+        // there should still only be one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // also test with a beforeChange subscription
+        computed.subscribe(function() { observableIndependent() }, null, 'beforeChange');
+        observableDependent(2);
+        value_of(computed.getDependenciesCount()).should_be(1);
+    },
+
+    'Should not subscribe to observables accessed through change notifications of a modified observable': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            observableModified = ko.observable(),
+            computed = ko.computed(function() { observableModified(observableDependent()) });
+
+        // initially there is only one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // create a change subscription that also accesses an observable
+        observableModified.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of the computed by updating its dependency
+        observableDependent(1);
+        // there should still only be one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // also test with a beforeChange subscription
+        observableModified.subscribe(function() { observableIndependent() }, null, 'beforeChange');
+        observableDependent(2);
+        value_of(computed.getDependenciesCount()).should_be(1);
+    },
+
+    'Should not subscribe to observables accessed through change notifications of an accessed computed': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            computedInner = ko.computed({read: function() { return observableDependent() }, deferEvaluation: true}),
+            computedOuter = ko.computed({read: function() { return computedInner() }, deferEvaluation: true});
+
+        // initially there are no dependencies (because they haven't been evaluated)
+        value_of(computedInner.getDependenciesCount()).should_be(0);
+        value_of(computedOuter.getDependenciesCount()).should_be(0);
+
+        // create a change subscription on the inner computed that also accesses an observable
+        computedInner.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of both computeds by accessing the outer one
+        computedOuter();
+        // there should be only one dependency for each
+        value_of(computedInner.getDependenciesCount()).should_be(1);
+        value_of(computedOuter.getDependenciesCount()).should_be(1);
     }
 })
