@@ -302,13 +302,31 @@ ko.utils = new (function () {
             if ((value === null) || (value === undefined))
                 value = "";
 
-            'innerText' in element ? element.innerText = value
-                                   : element.textContent = value;
+            if (element.nodeType == 8) {
+                // For virtual elements, we need there to be exactly one virtual child: a text node.
+                // If there are no virtual children, more than one, or if it's not a text node, we'll clear everything out first.
+                var innerTextNode = ko.virtualElements.firstChild(element);
+                if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
+                    innerTextNode = document.createTextNode("");
+                    ko.virtualElements.setDomNodeChildren(element, [innerTextNode]);
+                }
+                innerTextNode.data = value;
+            } else {
+                // Even though the above code path would technically work for regular elements too, the following is faster
+                'innerText' in element ? element.innerText = value
+                                       : element.textContent = value;
+            }
 
+            ko.utils.forceRefresh(element);
+        },
+
+        forceRefresh: function(node) {
+            // Workaround for an IE9 rendering bug - https://github.com/SteveSanderson/knockout/issues/209
             if (ieVersion >= 9) {
-                // Believe it or not, this actually fixes an IE9 rendering bug
-                // (See https://github.com/SteveSanderson/knockout/issues/209)
-                element.style.display = element.style.display;
+                // For text nodes and comment nodes (most likely virtual elements), we will have to refresh the container
+                var elem = node.nodeType == 1 ? node : node.parentNode;
+                if (elem.style)
+                    elem.style.display = elem.style.display;
             }
         },
 
