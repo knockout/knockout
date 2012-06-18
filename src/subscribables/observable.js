@@ -14,7 +14,7 @@ ko.observable = function (initialValue) {
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }
-            return this; // Permits chained assignments
+            return observable; // Permits chained assignments
         }
         else {
             // Read
