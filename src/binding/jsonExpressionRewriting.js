@@ -136,6 +136,9 @@ ko.jsonExpressionRewriting = (function () {
                     var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
                     resultStrings.push(quotedKey);
                     resultStrings.push(":");
+                    // Special case for 'as': automatically quote the new binding name.
+                    if (quotedKey === "'as'")
+                        val = ensureQuoted(val);
                     resultStrings.push(val);
 
                     if (isWriteableValue(ko.utils.stringTrim(val))) {

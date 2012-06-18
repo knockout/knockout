@@ -537,7 +537,8 @@ ko.bindingHandlers['foreach'] = {
                 'afterAdd': bindingValue['afterAdd'],
                 'beforeRemove': bindingValue['beforeRemove'],
                 'afterRender': bindingValue['afterRender'],
-                'templateEngine': ko.nativeTemplateEngine.instance
+                'templateEngine': ko.nativeTemplateEngine.instance,
+                'as': bindingValue['as']
             };
         };
     },

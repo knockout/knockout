@@ -1355,6 +1355,12 @@ describe('Binding: With', {
         // Make top disappear
         viewModel.topitem(null);
         value_of(testNode).should_contain_html("hello <!-- ko with: topitem --><!-- /ko -->");
+    },
+
+    'Should be able to bind $data to an alias and use it within \"with\"': function() {
+        testNode.innerHTML = "<div data-bind='with: topitem, as: item'><span data-bind='text: item.name'></span></div>";
+        ko.applyBindings({ topitem: { name: 'alpha' } }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: item.name">alpha</span>');
     }
 });
 
@@ -1719,5 +1725,40 @@ describe('Binding: Foreach', {
         };
         ko.applyBindings(viewModel, testNode);
         value_of(testNode).should_contain_html('xxx<!-- ko foreach:someitems --><div><section data-bind="text: $data">alpha</section></div><div><section data-bind="text: $data">beta</section></div><!-- /ko -->');
+    },
+
+    'Should be able to bind $data to an alias and use it within a loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems, as: item'><span data-bind='text: item'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: item">alpha</span><span data-bind="text: item">beta</span>');
+    },
+
+    'Should be able to bind $data to an alias and use it within an object literal foreach (alias must be quoted)': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: item">alpha</span><span data-bind="text: item">beta</span>');
+    },
+
+    'Should be able to bind $data to an alias and use it within a nested loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems, as: item'><span data-bind='foreach: sub'><span data-bind='text: item.name+$data'></span></span></div>";
+        var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c'] }];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="foreach: sub"><span data-bind="text: item.name+$data">alphaa</span><span data-bind="text: item.name+$data">alphab</span></span><span data-bind="foreach: sub"><span data-bind="text: item.name+$data">betac</span></span>');
+    },
+
+    'Should be able to use a $data alias from inside an \'if\' in a loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems, as: item'><span data-bind='if: item.length'><span data-bind='text: item'></span></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="if: item.length"><span data-bind="text: item">alpha</span></span><span data-bind="if: item.length"><span data-bind="text: item">beta</span></span>');
+    },
+
+    'Should be able to use a $data alias from inside a containerless \'if\' in a loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems, as: item'>x<!-- ko if: item.length --><span data-bind='text: item'></span>x<!-- /ko --></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('x<!-- ko if: item.length --><span data-bind="text: item">alpha</span>x<!-- /ko -->x<!-- ko if: item.length --><span data-bind="text: item">beta</span>x<!-- /ko -->');
     }
 });
