@@ -115,6 +115,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             if (typeof writeFunction === "function") {
                 // Writing a value
                 writeFunction.apply(evaluatorFunctionTarget, arguments);
+
+                return dependantObservable; // allow chained assignments
             } else {
                 throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
             }
