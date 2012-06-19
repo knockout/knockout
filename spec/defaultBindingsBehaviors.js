@@ -613,6 +613,21 @@ describe('Binding: Selected Options', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
         value_of(selection()).should_be(['a', 'c']);
+    },
+
+    'Should set selection in the SELECT node inside an optgroup to match the model': function () {
+        var selection = new ko.observableArray(['a']);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><optgroup label='group'><option value='a'>a-text</option><option value='b'>b-text</option><option value='c'>c-text</option></optgroup><optgroup label='group2'><option value='d'>d-text</option></optgroup></select>";
+        ko.applyBindings({ mySelection: selection }, testNode);
+
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be([]);
+        selection.push('c');
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a', 'c']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be([]);
+        selection.push('d');
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a', 'c']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be(['d']);
     }
 });
 
