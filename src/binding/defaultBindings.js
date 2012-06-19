@@ -318,6 +318,7 @@ ko.bindingHandlers['text'] = {
         ko.utils.setTextContent(element, valueAccessor());
     }
 };
+ko.virtualElements.allowedBindings['text'] = true;
 
 ko.bindingHandlers['html'] = {
     'init': function() {

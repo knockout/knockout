@@ -93,6 +93,31 @@ describe('Binding: Text', {
         ko.applyBindings(null, testNode);
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
+    },
+
+    'Should work with virtual elements, adding a text node between the comments': function () {
+        var observable = ko.observable("Some text");
+        testNode.innerHTML = "xxx <!-- ko text: textProp --><!-- /ko -->";
+        ko.applyBindings({textProp: observable}, testNode);
+        value_of(testNode).should_contain_text("xxx Some text");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop -->some text<!-- /ko -->");
+
+        // update observable; should update text
+        observable("New text");
+        value_of(testNode).should_contain_text("xxx New text");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop -->new text<!-- /ko -->");
+
+        // clear observable; should remove text
+        observable(undefined);
+        value_of(testNode).should_contain_text("xxx ");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop --><!-- /ko -->");
+    },
+
+    'Should work with virtual elements, removing any existing stuff between the comments': function () {
+        testNode.innerHTML = "xxx <!--ko text: undefined-->some random thing<span> that won't be here later</span><!--/ko-->";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("xxx ");
+        value_of(testNode).should_contain_html("xxx <!--ko text: undefined--><!--/ko-->");
     }
 });
 
