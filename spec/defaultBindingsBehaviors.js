@@ -93,6 +93,31 @@ describe('Binding: Text', {
         ko.applyBindings(null, testNode);
         var actualText = "textContent" in testNode.childNodes[0] ? testNode.childNodes[0].textContent : testNode.childNodes[0].innerText;
         value_of(actualText).should_be("");
+    },
+
+    'Should work with virtual elements, adding a text node between the comments': function () {
+        var observable = ko.observable("Some text");
+        testNode.innerHTML = "xxx <!-- ko text: textProp --><!-- /ko -->";
+        ko.applyBindings({textProp: observable}, testNode);
+        value_of(testNode).should_contain_text("xxx Some text");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop -->some text<!-- /ko -->");
+
+        // update observable; should update text
+        observable("New text");
+        value_of(testNode).should_contain_text("xxx New text");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop -->new text<!-- /ko -->");
+
+        // clear observable; should remove text
+        observable(undefined);
+        value_of(testNode).should_contain_text("xxx ");
+        value_of(testNode).should_contain_html("xxx <!-- ko text: textprop --><!-- /ko -->");
+    },
+
+    'Should work with virtual elements, removing any existing stuff between the comments': function () {
+        testNode.innerHTML = "xxx <!--ko text: undefined-->some random thing<span> that won't be here later</span><!--/ko-->";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text("xxx ");
+        value_of(testNode).should_contain_html("xxx <!--ko text: undefined--><!--/ko-->");
     }
 });
 
@@ -588,6 +613,21 @@ describe('Binding: Selected Options', {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
         value_of(selection()).should_be(['a', 'c']);
+    },
+
+    'Should set selection in the SELECT node inside an optgroup to match the model': function () {
+        var selection = new ko.observableArray(['a']);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><optgroup label='group'><option value='a'>a-text</option><option value='b'>b-text</option><option value='c'>c-text</option></optgroup><optgroup label='group2'><option value='d'>d-text</option></optgroup></select>";
+        ko.applyBindings({ mySelection: selection }, testNode);
+
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be([]);
+        selection.push('c');
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a', 'c']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be([]);
+        selection.push('d');
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[0])).should_be(['a', 'c']);
+        value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0].childNodes[1])).should_be(['d']);
     }
 });
 

@@ -276,24 +276,13 @@ ko.bindingHandlers['options'] = {
 ko.bindingHandlers['options'].optionValueDomDataKey = '__ko.optionValueDomData__';
 
 ko.bindingHandlers['selectedOptions'] = {
-    getSelectedValuesFromSelectNode: function (selectNode) {
-        var result = [];
-        var nodes = selectNode.childNodes;
-        for (var i = 0, j = nodes.length; i < j; i++) {
-            var node = nodes[i], tagName = ko.utils.tagNameLower(node);
-            if (tagName == "option" && node.selected)
-                result.push(ko.selectExtensions.readValue(node));
-            else if (tagName == "optgroup") {
-                var selectedValuesFromOptGroup = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(node);
-                Array.prototype.splice.apply(result, [result.length, 0].concat(selectedValuesFromOptGroup)); // Add new entries to existing 'result' instance
-            }
-        }
-        return result;
-    },
     'init': function (element, valueAccessor, allBindingsAccessor) {
         ko.utils.registerEventHandler(element, "change", function () {
-            var value = valueAccessor();
-            var valueToWrite = ko.bindingHandlers['selectedOptions'].getSelectedValuesFromSelectNode(this);
+            var value = valueAccessor(), valueToWrite = [];
+            ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
+                if (node.selected)
+                    valueToWrite.push(ko.selectExtensions.readValue(node));
+            });
             ko.jsonExpressionRewriting.writeValueToProperty(value, allBindingsAccessor, 'value', valueToWrite);
         });
     },
@@ -303,12 +292,10 @@ ko.bindingHandlers['selectedOptions'] = {
 
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         if (newValue && typeof newValue.length == "number") {
-            var nodes = element.childNodes;
-            for (var i = 0, j = nodes.length; i < j; i++) {
-                var node = nodes[i];
-                if (ko.utils.tagNameLower(node) === "option")
-                    ko.utils.setOptionNodeSelectionState(node, ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0);
-            }
+            ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
+                var isSelected = ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0;
+                ko.utils.setOptionNodeSelectionState(node, isSelected);
+            });
         }
     }
 };
@@ -318,6 +305,7 @@ ko.bindingHandlers['text'] = {
         ko.utils.setTextContent(element, valueAccessor());
     }
 };
+ko.virtualElements.allowedBindings['text'] = true;
 
 ko.bindingHandlers['html'] = {
     'init': function() {
