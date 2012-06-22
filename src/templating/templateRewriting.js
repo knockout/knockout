@@ -4,7 +4,7 @@ ko.templateRewriting = (function () {
     var memoizeVirtualContainerBindingSyntaxRegex = /<!--\s*ko\b\s*([\s\S]*?)\s*-->/g;
 
     function validateDataBindValuesForRewriting(keyValueArray) {
-        var allValidators = ko.jsonExpressionRewriting.bindingRewriteValidators;
+        var allValidators = ko.expressionRewriting.bindingRewriteValidators;
         for (var i = 0; i < keyValueArray.length; i++) {
             var key = keyValueArray[i]['key'];
             if (allValidators.hasOwnProperty(key)) {
@@ -22,9 +22,9 @@ ko.templateRewriting = (function () {
     }
 
     function constructMemoizedTagReplacement(dataBindAttributeValue, tagToRetain, templateEngine) {
-        var dataBindKeyValueArray = ko.jsonExpressionRewriting.parseObjectLiteral(dataBindAttributeValue);
+        var dataBindKeyValueArray = ko.expressionRewriting.parseObjectLiteral(dataBindAttributeValue);
         validateDataBindValuesForRewriting(dataBindKeyValueArray);
-        var rewrittenDataBindAttributeValue = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson(dataBindKeyValueArray);
+        var rewrittenDataBindAttributeValue = ko.expressionRewriting.preProcessBindings(dataBindKeyValueArray);
 
         // For no obvious reason, Opera fails to evaluate rewrittenDataBindAttributeValue unless it's wrapped in an additional
         // anonymous function, even though Opera's built-in debugger can evaluate it anyway. No other browser requires this
