@@ -419,18 +419,18 @@ describe('Binding attribute syntax', {
         value_of(hasUpdatedSecondBinding).should_be(true);
     },
 
-    'Should be able to set and use binding handlers with x.y syntax': function() {
+    'Should be able to set and use binding handlers with x_y syntax': function() {
         var initCalls = 0;
-        ko.bindingHandlers['a.b'] = {
+        ko.bindingHandlers['a_b'] = {
             init: function(element, valueAccessor) { if (valueAccessor()) initCalls++; }
         };
-        testNode.innerHTML = "<div data-bind='a.b: true'></div>";
+        testNode.innerHTML = "<div data-bind='a_b: true'></div>";
         ko.applyBindings(null, testNode);
         value_of(initCalls).should_be(1);
     },
 
-    'Should be able to use x.y binding syntax to call \'x\' handler with \'y\' as object key': function() {
-        delete ko.bindingHandlers['a.b'];   // ensure that a.b doesn't exist
+    'Should be able to use x_y binding syntax to call \'x\' handler with \'y\' as object key': function() {
+        delete ko.bindingHandlers['a_b'];   // ensure that a.b doesn't exist
         var observable = ko.observable(), lastSubKey;
         ko.bindingHandlers['a'] = {
             update: function(element, valueAccessor) {
@@ -440,7 +440,7 @@ describe('Binding attribute syntax', {
                         lastSubKey = key;
             }
         };
-        testNode.innerHTML = "<div data-bind='a.b: true, a.c: myObservable'></div>";
+        testNode.innerHTML = "<div data-bind='a_b: true, a_c: myObservable'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(lastSubKey).should_be("b");
 

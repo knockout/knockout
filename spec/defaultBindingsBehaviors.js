@@ -712,9 +712,9 @@ describe('Binding: Event', {
         value_of(model.outerWasCalled).should_be(false);
     },
 
-    'Should be able to supply event type as event.type': function() {
+    'Should be able to supply event type as event_type': function() {
         var model = { clickCalled: false };
-        testNode.innerHTML = "<button data-bind='event.click: function() { clickCalled = true; }'>hey</button>";
+        testNode.innerHTML = "<button data-bind='event_click: function() { clickCalled = true; }'>hey</button>";
         ko.applyBindings(model, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "click");
         value_of(model.clickCalled).should_be(true);
@@ -782,9 +782,9 @@ describe('Binding: CSS class name', {
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
     },
 
-    'Should be able to set CSS class as css.classname': function() {
+    'Should be able to set CSS class as css_classname': function() {
         var observable1 = new ko.observable();
-        testNode.innerHTML = "<div data-bind='css.myRule: someModelProperty'>Hallo</div>";
+        testNode.innerHTML = "<div data-bind='css_myRule: someModelProperty'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
         value_of(testNode.childNodes[0].className).should_be("");
@@ -844,9 +844,9 @@ describe('Binding: CSS style', {
         value_of(testNode.childNodes[0].style.backgroundColor).should_be("");
     },
 
-    'Should be able to set CSS style as style.stylename': function() {
+    'Should be able to set CSS style as style_stylename': function() {
         var myObservable = new ko.observable("red");
-        testNode.innerHTML = "<div data-bind='style.backgroundColor: colorValue'>Hallo</div>";
+        testNode.innerHTML = "<div data-bind='style_backgroundColor: colorValue'>Hallo</div>";
         ko.applyBindings({ colorValue: myObservable }, testNode);
 
         value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
@@ -1069,9 +1069,9 @@ describe('Binding: Attr', {
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
     },
 
-    'Should be able to set attribute as attr.name': function() {
+    'Should be able to set attribute as attr_name': function() {
         var model = { myprop : ko.observable("initial value") };
-        testNode.innerHTML = "<div data-bind='attr.someAttrib: myprop'></div>";
+        testNode.innerHTML = "<div data-bind='attr_someAttrib: myprop'></div>";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
 

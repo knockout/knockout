@@ -1,7 +1,7 @@
 // For bindings that use a "key: {subkey: value}" syntax, support a short-hand
-// syntax of "key.subkey: value". The "key.subkey" binding can be created either
+// syntax of "key_subkey: value". The "key_subkey" binding can be created either
 // initially (as event.click is) or as needed (using ko.getBindingHandler).
-var keySubkeyMatch = /([^\.]+)\.(.+)/, keySubkeyBindingDivider = '.';
+var keySubkeyMatch = /([^_]+)_(.+)/, keySubkeyBindingDivider = '_';
 function makeKeySubkeyBinding(bindingKey) {
     var match = bindingKey.match(keySubkeyMatch);
     if (match) {
