@@ -1,6 +1,10 @@
 (function () {
     ko.bindingHandlers = {};
 
+    ko.getBindingHandler = function(bindingKey) {
+        return ko.bindingHandlers[bindingKey] || makeKeySubkeyBinding(bindingKey);
+    };
+
     ko.bindingContext = function(dataItem, parentBindingContext) {
         if (parentBindingContext) {
             ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
@@ -106,7 +110,7 @@
                     if (initPhase === 0) {
                         initPhase = 1;
                         for (var bindingKey in parsedBindings) {
-                            var binding = ko.bindingHandlers[bindingKey];
+                            var binding = ko.getBindingHandler(bindingKey);
                             if (binding && node.nodeType === 8)
                                 validateThatBindingIsAllowedForVirtualElements(bindingKey);
 
@@ -128,7 +132,7 @@
                     // ... then run all the updates, which might trigger changes even on the first evaluation
                     if (initPhase === 2) {
                         for (var bindingKey in parsedBindings) {
-                            var binding = ko.bindingHandlers[bindingKey];
+                            var binding = ko.getBindingHandler(bindingKey);
                             if (binding && typeof binding["update"] == "function") {
                                 var handlerUpdateFn = binding["update"];
                                 handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
@@ -192,6 +196,7 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('getBindingHandler', ko.getBindingHandler);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);

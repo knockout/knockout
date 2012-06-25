@@ -1,19 +1,31 @@
-// For certain common events (currently just 'click'), allow a simplified data-binding syntax
-// e.g. click:handler instead of the usual full-length event:{click:handler}
-var eventHandlersWithShortcuts = ['click'];
-ko.utils.arrayForEach(eventHandlersWithShortcuts, function(eventName) {
-    ko.bindingHandlers[eventName] = {
-        'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
-            var newValueAccessor = function () {
-                var result = {};
-                result[eventName] = valueAccessor();
-                return result;
-            };
-            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindingsAccessor, viewModel);
+// For bindings that use a "key: {subkey: value}" syntax, support a short-hand
+// syntax of "key.subkey: value". The "key.subkey" binding can be created either
+// initially (as event.click is) or as needed (using ko.getBindingHandler).
+var keySubkeyMatch = /([^\.]+)\.(.+)/, keySubkeyBindingDivider = '.';
+function makeKeySubkeyBinding(bindingKey) {
+    var match = bindingKey.match(keySubkeyMatch);
+    if (match) {
+        var baseKey = match[1],
+            baseHandler = ko.bindingHandlers[baseKey];
+        if (baseHandler) {
+            var subKey = match[2], subHandler = {};
+            function setHandlerFunction(funcName) {
+                if (baseHandler[funcName]) {
+                    subHandler[funcName] = function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                        function subValueAccessor() {
+                            var result = {};
+                            result[subKey] = valueAccessor();
+                            return result;
+                        }
+                        return ko.bindingHandlers[baseKey][funcName](element, subValueAccessor, allBindingsAccessor, viewModel, bindingContext);
+                    };
+                }
+            }
+            ko.utils.arrayForEach(['init', 'update'], setHandlerFunction);
+            return (ko.bindingHandlers[bindingKey] = subHandler);
         }
     }
-});
-
+}
 
 ko.bindingHandlers['event'] = {
     'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -55,6 +67,10 @@ ko.bindingHandlers['event'] = {
         }
     }
 };
+
+// For certain common events (currently just 'click'), allow a simplified data-binding syntax
+// e.g. click:handler instead of the usual full-length event:{click:handler}
+ko.bindingHandlers['click'] = makeKeySubkeyBinding('event' + keySubkeyBindingDivider + 'click');
 
 ko.bindingHandlers['submit'] = {
     'init': function (element, valueAccessor, allBindingsAccessor, viewModel) {
