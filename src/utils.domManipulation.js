@@ -62,6 +62,9 @@
     ko.utils.setHtml = function(node, html) {
         ko.utils.emptyDomNode(node);
 
+        // There's no legitimate reason to display a stringified observable without unwrapping it, so we'll unwrap it
+        html = ko.utils.unwrapObservable(html);
+
         if ((html !== null) && (html !== undefined)) {
             if (typeof html != 'string')
                 html = html.toString();

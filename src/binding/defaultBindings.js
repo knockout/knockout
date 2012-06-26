@@ -313,8 +313,8 @@ ko.bindingHandlers['html'] = {
         return { 'controlsDescendantBindings': true };
     },
     'update': function (element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        ko.utils.setHtml(element, value);
+        // setHtml will unwrap the value if needed
+        ko.utils.setHtml(element, valueAccessor());
     }
 };
 

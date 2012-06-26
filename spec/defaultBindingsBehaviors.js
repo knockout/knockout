@@ -541,6 +541,25 @@ describe('Binding: Options', {
         ko.applyBindings({}, testNode);
         var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         value_of(displayedOptions).should_be(["Select one...", "A", "B"]);
+    },
+
+    'Should allow the caption to be given by an observable, and update it when the model value changes (without affecting selection)': function() {
+        var myCaption = ko.observable("Initial caption"),
+            mySelectedValue = ko.observable("B");
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: myCaption, value: mySelectedValue'></select>";
+        ko.applyBindings({ myCaption: myCaption, mySelectedValue: mySelectedValue }, testNode);
+
+        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
+        value_of(testNode.childNodes[0].selectedIndex).should_be(2);
+        value_of(mySelectedValue()).should_be("B");
+        value_of(displayedOptions).should_be(["Initial caption", "A", "B"]);
+
+        // Also show we can update the caption without affecting selection
+        myCaption("New caption");
+        var displayedOptions2 = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
+        value_of(testNode.childNodes[0].selectedIndex).should_be(2);
+        value_of(mySelectedValue()).should_be("B");
+        value_of(displayedOptions2).should_be(["New caption", "A", "B"]);
     }
 });
 
