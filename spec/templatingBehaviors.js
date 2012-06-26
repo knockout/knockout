@@ -207,13 +207,15 @@ describe('Templating', {
         value_of(innerObservable.getSubscriptionsCount()).should_be(0);
     },
 
-    'Should be able to pick template as a function of the data item using data-bind syntax': function () {
-        var templatePicker = function(dataItem) {
+    'Should be able to pick template as a function of the data item using data-bind syntax, with the binding context available as a second parameter': function () {
+        var templatePicker = function(dataItem, bindingContext) {
+            // Having the entire binding context available means you can read sibling or parent level properties
+            value_of(bindingContext.$parent.anotherProperty).should_be(456);
             return dataItem.myTemplate;
         };
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: templateSelectorFunction, data: someProp }'></div>";
-        ko.applyBindings({ someProp: { childProp: 123, myTemplate: "someTemplate" }, templateSelectorFunction: templatePicker }, testNode);
+        ko.applyBindings({ someProp: { childProp: 123, myTemplate: "someTemplate" }, templateSelectorFunction: templatePicker, anotherProperty: 456 }, testNode);
         value_of(testNode.childNodes[0].innerHTML).should_be("result = 123");
     },
 
@@ -588,7 +590,7 @@ describe('Templating', {
         value_of(testNode.childNodes[0].checked).should_be(true);
     },
 
-    'Should be able to render a different template for each array entry by passing a function as template name': function() {
+    'Should be able to render a different template for each array entry by passing a function as template name, with the array entry\'s binding context available as a second parameter': function() {
         var myArray = new ko.observableArray([
             { preferredTemplate: 1, someProperty: 'firstItemValue' },
             { preferredTemplate: 2, someProperty: 'secondItemValue' }
@@ -599,10 +601,13 @@ describe('Templating', {
         }));
         testNode.innerHTML = "<div data-bind='template: {name: getTemplateModelProperty, foreach: myCollection}'></div>";
 
-        var getTemplate = function(dataItem) {
+        var getTemplate = function(dataItem, bindingContext) {
+            // Having the item's binding context available means you can read sibling or parent level properties
+            value_of(bindingContext.$parent.anotherProperty).should_be(123);
+
             return dataItem.preferredTemplate == 1 ? 'firstTemplate' : 'secondTemplate';
         };
-        ko.applyBindings({ myCollection: myArray, getTemplateModelProperty: getTemplate }, testNode);
+        ko.applyBindings({ myCollection: myArray, getTemplateModelProperty: getTemplate, anotherProperty: 123 }, testNode);
         value_of(testNode.childNodes[0]).should_contain_html("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
     },
 
