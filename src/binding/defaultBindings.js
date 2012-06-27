@@ -34,7 +34,9 @@ ko.bindingHandlers['event'] = {
                             var argsForHandler = ko.utils.makeArray(arguments);
                             argsForHandler.unshift(viewModel);
                             handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
-                        } finally {
+                        } 
+						catch(pseudoError){}
+						finally {
                             if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                                 if (event.preventDefault)
                                     event.preventDefault();
@@ -64,6 +66,7 @@ ko.bindingHandlers['submit'] = {
             var handlerReturnValue;
             var value = valueAccessor();
             try { handlerReturnValue = value.call(viewModel, element); }
+			catch(pseudoError) {}
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
                     if (event.preventDefault)
