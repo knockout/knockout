@@ -215,7 +215,9 @@ ko.bindingHandlers['options'] = {
         }
 
         if (value) {
-            var allBindings = allBindingsAccessor();
+            var allBindings = allBindingsAccessor(),
+                includeDestroyed = allBindings['optionsIncludeDestroyed'];
+
             if (typeof value.length != "number")
                 value = [value];
             if (allBindings['optionsCaption']) {
@@ -224,7 +226,13 @@ ko.bindingHandlers['options'] = {
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
+
             for (var i = 0, j = value.length; i < j; i++) {
+                // Skip destroyed items
+                var arrayEntry = value[i];
+                if (arrayEntry && arrayEntry['_destroy'] && !includeDestroyed)
+                    continue;
+
                 var option = document.createElement("option");
 
                 function applyToObject(object, predicate, defaultValue) {
@@ -238,11 +246,11 @@ ko.bindingHandlers['options'] = {
                 }
 
                 // Apply a value to the option element
-                var optionValue = applyToObject(value[i], allBindings['optionsValue'], value[i]);
+                var optionValue = applyToObject(arrayEntry, allBindings['optionsValue'], arrayEntry);
                 ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionText = applyToObject(value[i], allBindings['optionsText'], optionValue);
+                var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue);
                 ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
