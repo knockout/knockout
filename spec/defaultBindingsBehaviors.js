@@ -520,6 +520,28 @@ describe('Binding: Options', {
         value_of(displayedText).should_be(["bob (manager)", "frank (coder & tester)"]);
     },
 
+    'Should exclude any items marked as destroyed': function() {
+        var modelValues = new ko.observableArray([
+            { name: 'bob', _destroy: true },
+            { name: 'frank' }
+        ]);
+        testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: \"name\"'></select>";
+        ko.applyBindings({ myValues: modelValues }, testNode);
+        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
+        value_of(values).should_be(["frank"]);
+    },
+
+    'Should include items marked as destroyed if optionsIncludeDestroyed is set': function() {
+        var modelValues = new ko.observableArray([
+            { name: 'bob', _destroy: true },
+            { name: 'frank' }
+        ]);
+        testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: \"name\", optionsIncludeDestroyed: true'></select>";
+        ko.applyBindings({ myValues: modelValues }, testNode);
+        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
+        value_of(values).should_be(["bob", "frank"]);
+    },
+
     'Should update the SELECT node\'s options if the model changes': function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
