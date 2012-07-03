@@ -1051,6 +1051,7 @@ describe('Binding: Attr', {
         testNode.innerHTML = "<input data-bind='attr: { name: \"newName\" }' />";
         ko.applyBindings(null, testNode);
         value_of(testNode.childNodes[0].name).should_be("newName");
+        value_of(testNode.childNodes[0].outerHTML).should_match('name="?newName"?');
     },
 
     'Should respond to changes in an observable value': function() {
