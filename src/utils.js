@@ -315,6 +315,16 @@ ko.utils = new (function () {
             ko.utils.forceRefresh(element);
         },
 
+        setElementName: function(element, name) {
+            element.name = name.toString();
+
+            // Workaround IE 6/7 issue
+            // - https://github.com/SteveSanderson/knockout/issues/197
+            // - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
+            if (ieVersion <= 7)
+                element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
+        },
+
         forceRefresh: function(node) {
             // Workaround for an IE9 rendering bug - https://github.com/SteveSanderson/knockout/issues/209
             if (ieVersion >= 9) {

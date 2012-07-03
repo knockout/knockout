@@ -351,13 +351,8 @@ ko.bindingHandlers['style'] = {
 ko.bindingHandlers['uniqueName'] = {
     'init': function (element, valueAccessor) {
         if (valueAccessor()) {
-            element.name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
-
-            // Workaround IE 6/7 issue
-            // - https://github.com/SteveSanderson/knockout/issues/197
-            // - http://www.matts411.com/post/setting_the_name_attribute_in_ie_dom/
-            if (ko.utils.isIe6 || ko.utils.isIe7)
-                element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
+            var name = "ko_unique_" + (++ko.bindingHandlers['uniqueName'].currentIndex);
+            ko.utils.setElementName(element, name);
         }
     }
 };
@@ -438,6 +433,14 @@ ko.bindingHandlers['attr'] = {
                         element[attrName] = attrValue;
                 } else if (!toRemove) {
                     element.setAttribute(attrName, attrValue.toString());
+                }
+
+                // Treat "name" specially - although you can think of it as an attribute, it also needs
+                // special handling on older versions of IE (https://github.com/SteveSanderson/knockout/pull/333)
+                // Deliberately being case-sensitive here because XHTML would regard "Name" as a different thing
+                // entirely, and there's no strong reason to allow for such casing in HTML.
+                if (attrName === "name") {
+                    ko.utils.setElementName(element, attrValue);
                 }
             }
         }
