@@ -316,7 +316,7 @@ ko.utils = new (function () {
         },
 
         setElementName: function(element, name) {
-            element.name = name.toString();
+            element.name = name;
 
             // Workaround IE 6/7 issue
             // - https://github.com/SteveSanderson/knockout/issues/197

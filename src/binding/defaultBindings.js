@@ -440,7 +440,7 @@ ko.bindingHandlers['attr'] = {
                 // Deliberately being case-sensitive here because XHTML would regard "Name" as a different thing
                 // entirely, and there's no strong reason to allow for such casing in HTML.
                 if (attrName === "name") {
-                    ko.utils.setElementName(element, attrValue);
+                    ko.utils.setElementName(element, toRemove ? "" : attrValue.toString());
                 }
             }
         }

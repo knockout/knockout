@@ -1048,10 +1048,16 @@ describe('Binding: Attr', {
     },
 
     'Should be able to set \"name\" attribute, even on IE6-7': function() {
-        testNode.innerHTML = "<input data-bind='attr: { name: \"newName\" }' />";
-        ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].name).should_be("newName");
-        value_of(testNode.childNodes[0].outerHTML).should_match('name="?newName"?');
+        var myValue = ko.observable("myName");
+        testNode.innerHTML = "<input data-bind='attr: { name: myValue }' />";
+        ko.applyBindings({ myValue: myValue }, testNode);
+        value_of(testNode.childNodes[0].name).should_be("myName");
+        value_of(testNode.childNodes[0].outerHTML).should_match('name="?myName"?');
+
+        // Also check we can remove it (which, for a name attribute, means setting it to an empty string)
+        myValue(false);
+        value_of(testNode.childNodes[0].name).should_be("");
+        value_of(testNode.childNodes[0].outerHTML).should_not_match('name="?([^">]+)');
     },
 
     'Should respond to changes in an observable value': function() {
