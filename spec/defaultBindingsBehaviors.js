@@ -1047,6 +1047,12 @@ describe('Binding: Attr', {
         value_of(testNode.childNodes[0].getAttribute("second-attribute")).should_be("true");
     },
 
+    'Should be able to set \"name\" attribute, even on IE6-7': function() {
+        testNode.innerHTML = "<input data-bind='attr: { name: \"newName\" }' />";
+        ko.applyBindings(null, testNode);
+        value_of(testNode.childNodes[0].name).should_be("newName");
+    },
+
     'Should respond to changes in an observable value': function() {
         var model = { myprop : ko.observable("initial value") };
         testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
