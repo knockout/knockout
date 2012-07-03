@@ -227,5 +227,37 @@ describe('Observable Array', {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         value_of(testObservableArray.length).should_be(0); // Because JavaScript won't let us override "length" directly
         value_of(testObservableArray().length).should_be(3);
+    },
+
+    'Should be able to call standard mutators without creating a subscription': function() {
+        var timesEvaluated = 0,
+            newArray = ko.observableArray(["Alpha", "Beta", "Gamma"]);
+
+        var computed = ko.computed(function() {
+            // Make a few standard mutations
+            newArray.push("Delta");
+            newArray.remove("Beta");
+            newArray.splice(2, 1);
+
+            // Peek to ensure we really had the intended effect
+            value_of(newArray.peek()).should_be(["Alpha", "Gamma"]);
+
+            // Also make use of the KO delete/destroy functions to check they don't cause subscriptions
+            newArray([{ someProp: 123 }]);
+            newArray.destroyAll();
+            value_of(newArray.peek()[0]._destroy).should_be(true);
+            newArray.removeAll();
+            value_of(newArray.peek()).should_be([]);
+
+            timesEvaluated++;
+        });
+
+        // Verify that we haven't caused a subscription
+        value_of(timesEvaluated).should_be(1);
+        value_of(newArray.getSubscriptionsCount()).should_be(0);
+
+        // Don't just trust getSubscriptionsCount - directly verify that mutating newArray doesn't cause a re-eval
+        newArray.push("Another");
+        value_of(timesEvaluated).should_be(1);
     }
 })
