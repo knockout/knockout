@@ -1133,10 +1133,12 @@ describe('Binding: Hasfocus', {
         // Need to raise "focusin" and "focusout" manually, because simply calling ".focus()" and ".blur()"
         // in IE doesn't reliably trigger the "focus" and "blur" events synchronously
 
+        testNode.childNodes[0].focus();
         ko.utils.triggerEvent(testNode.childNodes[0], "focusin");
         value_of(model.myVal()).should_be(true);
 
         // Move the focus elsewhere
+        testNode.childNodes[1].focus();
         ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
         value_of(model.myVal()).should_be(false);
     },
@@ -1146,10 +1148,12 @@ describe('Binding: Hasfocus', {
         testNode.innerHTML = "<input data-bind='hasfocus: myVal' /><input />";
         ko.applyBindings(model, testNode);
 
+        testNode.childNodes[0].focus();
         ko.utils.triggerEvent(testNode.childNodes[0], "focusin");
         value_of(model.myVal).should_be(true);
 
         // Move the focus elsewhere
+        testNode.childNodes[1].focus();
         ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
         value_of(model.myVal).should_be(false);
     }

@@ -454,14 +454,15 @@ ko.bindingHandlers['attr'] = {
 
 ko.bindingHandlers['hasfocus'] = {
     'init': function(element, valueAccessor, allBindingsAccessor) {
-        var writeValue = function(valueToWrite) {
+        var writeValue = function() {
             var modelValue = valueAccessor();
+            var valueToWrite = element.ownerDocument.activeElement === element;
             ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', valueToWrite, true);
         };
-        ko.utils.registerEventHandler(element, "focus", function() { writeValue(true) });
-        ko.utils.registerEventHandler(element, "focusin", function() { writeValue(true) }); // For IE
-        ko.utils.registerEventHandler(element, "blur",  function() { writeValue(false) });
-        ko.utils.registerEventHandler(element, "focusout",  function() { writeValue(false) }); // For IE
+        ko.utils.registerEventHandler(element, "focus", writeValue);
+        ko.utils.registerEventHandler(element, "focusin", writeValue); // For IE
+        ko.utils.registerEventHandler(element, "blur",  writeValue);
+        ko.utils.registerEventHandler(element, "focusout",  writeValue); // For IE
     },
     'update': function(element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
