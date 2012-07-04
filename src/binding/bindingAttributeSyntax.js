@@ -11,6 +11,10 @@
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;
+            // Export 'ko' in the binding context so it will be available in bindings and templates
+            // even if 'ko' isn't exported as a global, such as when using an AMD loader.
+            // See https://github.com/SteveSanderson/knockout/issues/490
+            this['ko'] = ko;
         }
         this['$data'] = dataItem;
     }
