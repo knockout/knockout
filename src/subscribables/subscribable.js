@@ -23,6 +23,9 @@ var defaultEvent = "change";
 
 ko.subscribable['fn'] = {
     subscribe: function (callback, callbackTarget, event) {
+        if (!(typeof callback === 'function')) {
+            throw new Error('Tried to register a subscriber that is not a function.');
+        }
         event = event || defaultEvent;
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
