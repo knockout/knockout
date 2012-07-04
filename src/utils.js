@@ -325,7 +325,7 @@ ko.utils = new (function () {
                 try {
                     element.mergeAttributes(document.createElement("<input name='" + element.name + "'/>"), false);
                 }
-                catch(e) {}
+                catch(e) {} // For IE9 with doc mode "IE9 Standards" and browser mode "IE9 Compatibility View"
             }
         },
 
