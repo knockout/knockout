@@ -1245,6 +1245,27 @@ describe('Binding: If', {
         // Make inner appear
         condition2(true);
         value_of(testNode).should_contain_html("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
+    },
+
+    'Should be able to supply afterRender callback': function() {
+        var afterRenderCalled = false;
+        var passedElement;
+        var passedData;
+        var viewModel = {
+            active: true,
+            myAfterRender: function(renderedElements, data) {
+                afterRenderCalled = true;
+                passedElement = renderedElements[0];
+                passedData = data;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='if: active, afterRender: myAfterRender'>Hello there</div>";
+        ko.applyBindings(viewModel, testNode);
+
+        value_of(afterRenderCalled).should_be(true);
+        value_of(passedElement.data).should_be("Hello there");
+        value_of(passedData).should_be(viewModel);
     }
 });
 
@@ -1293,6 +1314,27 @@ describe('Binding: Ifnot', {
         ko.applyBindings({ }, testNode);
         value_of(testNode.childNodes[0]).should_contain_text("Parents: 0");
         value_of(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).should_be(0);
+    },
+
+    'Should be able to supply afterRender callback': function() {
+        var afterRenderCalled = false;
+        var passedElement;
+        var passedData;
+        var viewModel = {
+            active: false,
+            myAfterRender: function(renderedElements, data) {
+                afterRenderCalled = true;
+                passedElement = renderedElements[0];
+                passedData = data;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='ifnot: active, afterRender: myAfterRender'>Hello there</div>";
+        ko.applyBindings(viewModel, testNode);
+
+        value_of(afterRenderCalled).should_be(true);
+        value_of(passedElement.data).should_be("Hello there");
+        value_of(passedData).should_be(viewModel);
     }
 });
 
@@ -1449,6 +1491,27 @@ describe('Binding: With', {
         // Make top disappear
         viewModel.topitem(null);
         value_of(testNode).should_contain_html("hello <!-- ko with: topitem --><!-- /ko -->");
+    },
+
+    'Should be able to supply afterRender callback': function() {
+        var afterRenderCalled = false;
+        var passedElement;
+        var passedData;
+        var viewModel = {
+            active: true,
+            myAfterRender: function(renderedElements, data) {
+                afterRenderCalled = true;
+                passedElement = renderedElements[0];
+                passedData = data;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='with: active, afterRender: myAfterRender'>Hello there</div>";
+        ko.applyBindings(viewModel, testNode);
+
+        value_of(afterRenderCalled).should_be(true);
+        value_of(passedElement.data).should_be("Hello there");
+        value_of(passedData).should_be(true);
     }
 });
 
