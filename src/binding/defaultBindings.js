@@ -473,48 +473,58 @@ ko.bindingHandlers['hasfocus'] = {
     }
 };
 
+
+/*
+ * Creates bindings that are specialized versions of the 'template'-binding. The
+ * standard creation can be further customized by passing a 'modifyResultFn', which
+ * will be called during the execution of 'makeTemplateValueAccessor'.
+ */
+function specializeTemplateBinding(name, modifyResultFn) {
+    return {
+        makeTemplateValueAccessor: function(valueAccessor) {
+            // This function assigns the binding's value to the result object's
+            // 'name'-property. If present, the afterRender-property is copied, too.
+            return function() {
+                var bindingValue = valueAccessor();
+                var result = { 'templateEngine': ko.nativeTemplateEngine.instance };
+                // determine whether the 'full' binding syntax with an object literal
+                // was used by checking the presence of a 'data' property
+                if (bindingValue == null || !bindingValue.hasOwnProperty('data')) {
+                    // the standard shorthand binding syntax was used
+                    result[name] = bindingValue;
+                } else {
+                    // full, object-literal syntax was used
+                    result[name] = bindingValue.data;
+                    result.afterRender = bindingValue.afterRender;
+                }
+                return modifyResultFn ? modifyResultFn(result, valueAccessor) : result;
+            };
+        },
+        'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers[name].makeTemplateValueAccessor(valueAccessor));
+        },
+        'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers[name].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
+        }
+    };
+}
+
 // "with: someExpression" is equivalent to "template: { if: someExpression, data: someExpression }"
-ko.bindingHandlers['with'] = {
-    makeTemplateValueAccessor: function(valueAccessor) {
-        return function() { var value = valueAccessor(); return { 'if': value, 'data': value, 'templateEngine': ko.nativeTemplateEngine.instance } };
-    },
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor));
-    },
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['with'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
-    }
-};
+ko.bindingHandlers['with'] = specializeTemplateBinding('with', function(result, valueAccessor) {
+    result.data = result['if'] = result['with'];
+    delete result['with'];
+    return result;
+});
 ko.jsonExpressionRewriting.bindingRewriteValidators['with'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['with'] = true;
 
 // "if: someExpression" is equivalent to "template: { if: someExpression }"
-ko.bindingHandlers['if'] = {
-    makeTemplateValueAccessor: function(valueAccessor) {
-        return function() { return { 'if': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
-    },
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor));
-    },
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['if'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
-    }
-};
+ko.bindingHandlers['if'] = specializeTemplateBinding('if');
 ko.jsonExpressionRewriting.bindingRewriteValidators['if'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['if'] = true;
 
 // "ifnot: someExpression" is equivalent to "template: { ifnot: someExpression }"
-ko.bindingHandlers['ifnot'] = {
-    makeTemplateValueAccessor: function(valueAccessor) {
-        return function() { return { 'ifnot': valueAccessor(), 'templateEngine': ko.nativeTemplateEngine.instance } };
-    },
-    'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['init'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor));
-    },
-    'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        return ko.bindingHandlers['template']['update'](element, ko.bindingHandlers['ifnot'].makeTemplateValueAccessor(valueAccessor), allBindingsAccessor, viewModel, bindingContext);
-    }
-};
+ko.bindingHandlers['ifnot'] = specializeTemplateBinding('ifnot');;
 ko.jsonExpressionRewriting.bindingRewriteValidators['ifnot'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['ifnot'] = true;
 
