@@ -1,8 +1,8 @@
 
-describe('JSON Expression Rewriting', {
+describe('Expression Rewriting', {
 
     'Should be able to parse simple object literals': function() {
-        var result = ko.jsonExpressionRewriting.parseObjectLiteral("a: 1, b: 2, \"quotedKey\": 3, 'aposQuotedKey': 4");
+        var result = ko.expressionRewriting.parseObjectLiteral("a: 1, b: 2, \"quotedKey\": 3, 'aposQuotedKey': 4");
         value_of(result.length).should_be(4);
         value_of(result[0].key).should_be("a");
         value_of(result[0].value).should_be(" 1");
@@ -15,14 +15,14 @@ describe('JSON Expression Rewriting', {
     },
 
     'Should ignore any outer braces': function() {
-        var result = ko.jsonExpressionRewriting.parseObjectLiteral("{a: 1}");
+        var result = ko.expressionRewriting.parseObjectLiteral("{a: 1}");
         value_of(result.length).should_be(1);
         value_of(result[0].key).should_be("a");
         value_of(result[0].value).should_be(" 1");
     },
 
     'Should be able to parse object literals containing string literals': function() {
-        var result = ko.jsonExpressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\\' brace} bracket] quot\"'");
+        var result = ko.expressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\\' brace} bracket] quot\"'");
         value_of(result.length).should_be(2);
         value_of(result[0].key).should_be("a");
         value_of(result[0].value).should_be(" \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
@@ -31,7 +31,7 @@ describe('JSON Expression Rewriting', {
     },
 
     'Should be able to parse object literals containing child objects, arrays, function literals, and newlines': function() {
-        var result = ko.jsonExpressionRewriting.parseObjectLiteral(
+        var result = ko.expressionRewriting.parseObjectLiteral(
             "myObject : { someChild: { }, someChildArray: [1,2,3], \"quotedChildProp\": 'string value' },\n"
           + "someFn: function(a, b, c) { var regex = /}/; var str='/})({'; return {}; },"
           + "myArray : [{}, function() { }, \"my'Str\", 'my\"Str']"
@@ -46,7 +46,7 @@ describe('JSON Expression Rewriting', {
     },
 
     'Should be able to cope with malformed syntax (things that aren\'t key-value pairs)': function() {
-        var result = ko.jsonExpressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }");
+        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }");
         value_of(result.length).should_be(4);
         value_of(result[0].unknown).should_be("malformed1");
         value_of(result[1].unknown).should_be(" 'mal:formed2'");
@@ -56,12 +56,12 @@ describe('JSON Expression Rewriting', {
     },
 
     'Should ensure all keys are wrapped in quotes': function() {
-        var rewritten = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson("a: 1, 'b': 2, \"c\": 3");
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b': 2, \"c\": 3");
         value_of(rewritten).should_be("'a': 1, 'b': 2, \"c\": 3");
     },
 
     'Should convert JSON values to property accessors': function () {
-        var rewritten = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson('a : 1, b : firstName, c : function() { return "returnValue"; }');
+        var rewritten = ko.expressionRewriting.preProcessBindings('a : 1, b : firstName, c : function() { return "returnValue"; }');
 
         var model = { firstName: "bob", lastName: "smith" };
         with (model) {
@@ -76,7 +76,7 @@ describe('JSON Expression Rewriting', {
     },
 
     'Should be able to eval rewritten literals that contain unquoted keywords as keys': function() {
-        var rewritten = ko.jsonExpressionRewriting.insertPropertyAccessorsIntoJson("if: true");
+        var rewritten = ko.expressionRewriting.preProcessBindings("if: true");
         value_of(rewritten).should_be("'if': true");
         var evaluated = eval("({" + rewritten + "})");
         value_of(evaluated['if']).should_be(true);
