@@ -41,8 +41,8 @@ In this live example, there's an `instantaneousValue` observable that reacts imm
 Try it:
 
 {% capture live_example_view %}
-<p>Type stuff here: <input data-bind="value: instantaneousValue, valueUpdate: 'afterkeydown'" /></p>
-<p>Current throttled value: <b data-bind="text: throttledValue"> </b></p>
+<p>Type stuff here: <input data-bind='value: instantaneousValue, valueUpdate: "afterkeydown"' /></p>
+<p>Current throttled value: <b data-bind='text: throttledValue'> </b></p>
 
 <div data-bind="visible: loggedValues().length > 0">
     <h3>Stuff you have typed:</h3>
