@@ -433,6 +433,7 @@ describe('Binding attribute syntax', {
         // ensure that a.b and a.c don't exist
         delete ko.bindingHandlers['a.b'];
         delete ko.bindingHandlers['a.c'];
+
         var observable = ko.observable(), lastSubKey;
         ko.bindingHandlers['a'] = {
             update: function(element, valueAccessor) {
@@ -455,6 +456,7 @@ describe('Binding attribute syntax', {
         // ensure that a.b and a.c don't exist
         delete ko.bindingHandlers['a.b'];
         delete ko.bindingHandlers['a.c'];
+
         var observable = ko.observable(), lastSubKey;
         ko.bindingHandlers['a'] = {
             makeSubkeyHandler: function(baseKey, subKey) {
@@ -473,5 +475,23 @@ describe('Binding attribute syntax', {
         // update observable to true so a.c binding gets updated
         observable(true);
         value_of(lastSubKey).should_be("c");
+    },
+
+    'Should be able to use x.y binding syntax in virtual elements if \'x\' binding supports it': function() {
+        delete ko.bindingHandlers['a.b'];   // ensure that a.b doesn't exist
+        var lastSubKey;
+        ko.bindingHandlers['a'] = {
+            update: function(element, valueAccessor) {
+                var value = valueAccessor();
+                for (var key in value)
+                    if (ko.utils.unwrapObservable(value[key]))
+                        lastSubKey = key;
+            }
+        };
+        ko.virtualElements.allowedBindings.a = true;
+
+        testNode.innerHTML = "x <!-- ko a.b: true --><!--/ko-->";
+        ko.applyBindings(null, testNode);
+        value_of(lastSubKey).should_be("b");
     }
 });

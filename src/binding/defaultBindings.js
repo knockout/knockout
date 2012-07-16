@@ -10,7 +10,8 @@ function makeKeySubkeyBinding(bindingKey) {
         if (baseHandler) {
             var subKey = match[2],
                 makeSubHandler = baseHandler['makeSubkeyHandler'] || makeDefaultKeySubkeyHandler,
-                subHandler = makeSubHandler.call(baseHandler, baseKey, subKey);
+                subHandler = makeSubHandler.call(baseHandler, baseKey, subKey, bindingKey);
+            ko.virtualElements.allowedBindings[bindingKey] = ko.virtualElements.allowedBindings[baseKey];
             return (ko.bindingHandlers[bindingKey] = subHandler);
         }
     }
