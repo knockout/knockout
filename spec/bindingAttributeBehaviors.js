@@ -430,7 +430,9 @@ describe('Binding attribute syntax', {
     },
 
     'Should be able to use x.y binding syntax to call \'x\' handler with \'y\' as object key': function() {
-        delete ko.bindingHandlers['a.b'];   // ensure that a.b doesn't exist
+        // ensure that a.b and a.c don't exist
+        delete ko.bindingHandlers['a.b'];
+        delete ko.bindingHandlers['a.c'];
         var observable = ko.observable(), lastSubKey;
         ko.bindingHandlers['a'] = {
             update: function(element, valueAccessor) {
@@ -438,6 +440,30 @@ describe('Binding attribute syntax', {
                 for (var key in value)
                     if (ko.utils.unwrapObservable(value[key]))
                         lastSubKey = key;
+            }
+        };
+        testNode.innerHTML = "<div data-bind='a.b: true, a.c: myObservable'></div>";
+        ko.applyBindings({ myObservable: observable }, testNode);
+        value_of(lastSubKey).should_be("b");
+
+        // update observable to true so a.c binding gets updated
+        observable(true);
+        value_of(lastSubKey).should_be("c");
+    },
+
+    'Should be able to define a custom handler for x.y binding syntax': function() {
+        // ensure that a.b and a.c don't exist
+        delete ko.bindingHandlers['a.b'];
+        delete ko.bindingHandlers['a.c'];
+        var observable = ko.observable(), lastSubKey;
+        ko.bindingHandlers['a'] = {
+            makeSubkeyHandler: function(baseKey, subKey) {
+                return {
+                    update: function(element, valueAccessor) {
+                        if (ko.utils.unwrapObservable(valueAccessor()))
+                            lastSubKey = subKey;
+                    }
+                };
             }
         };
         testNode.innerHTML = "<div data-bind='a.b: true, a.c: myObservable'></div>";
