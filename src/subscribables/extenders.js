@@ -43,7 +43,7 @@ function applyExtenders(requestedExtenders) {
 
 // Define ko.asyncComputed as a syntactical shortcut for a minimally-throttled computed
 ko.asyncComputed = function() {
-    return ko.computed.apply(this, arguments).extend({ 'throttle': 0 });
+    return ko.dependentObservable.apply(this, arguments).extend({ 'throttle': 0 });
 };
 
 ko.exportSymbol('extenders', ko.extenders);
