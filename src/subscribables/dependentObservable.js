@@ -50,8 +50,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     var evaluationTimeoutInstance = null;
     function evaluatePossiblyAsync() {
-        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
-        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'],
+            shouldThrottle = typeof throttleEvaluationTimeout == 'number';
+        if (shouldThrottle) {
             clearTimeout(evaluationTimeoutInstance);
             evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
         } else
