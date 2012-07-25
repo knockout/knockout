@@ -459,15 +459,22 @@ ko.bindingHandlers['attr'] = {
 
 ko.bindingHandlers['hasfocus'] = {
     'init': function(element, valueAccessor, allBindingsAccessor) {
-        var writeValue = function() {
+        var handleElementFocusChange = function(isFocused) {
+            // Where possible, ignore which event was raised and determine focus state using activeElement,
+            // as this avoids phantom focus/blur events raised when changing tabs in modern browsers.
+            // However, not all KO-targeted browsers (Firefox 2) support activeElement.
+            // Discussion at https://github.com/SteveSanderson/knockout/pull/352
+            var ownerDoc = element.ownerDocument;
+            if ("activeElement" in ownerDoc) {
+                isFocused = (ownerDoc.activeElement === element);
+            }
             var modelValue = valueAccessor();
-            var valueToWrite = element.ownerDocument.activeElement === element;
-            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', valueToWrite, true);
+            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
         };
-        ko.utils.registerEventHandler(element, "focus", writeValue);
-        ko.utils.registerEventHandler(element, "focusin", writeValue); // For IE
-        ko.utils.registerEventHandler(element, "blur",  writeValue);
-        ko.utils.registerEventHandler(element, "focusout",  writeValue); // For IE
+        ko.utils.registerEventHandler(element, "focus", function() { handleElementFocusChange(true) });
+        ko.utils.registerEventHandler(element, "focusin", function() { handleElementFocusChange(true) }); // For IE
+        ko.utils.registerEventHandler(element, "blur",  function() { handleElementFocusChange(false) });
+        ko.utils.registerEventHandler(element, "focusout",  function() { handleElementFocusChange(false) }); // For IE
     },
     'update': function(element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
