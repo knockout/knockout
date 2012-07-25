@@ -108,10 +108,10 @@ asyncTest("Should run evaluator only once when dependencies stop updating for th
 	}, 10);
 });
 
-asyncTest("Should be able to use ko.asyncComputed as a shortcut to create a minimally-throttled computed", function() {
+asyncTest("Should be able to use ko.computedAsync as a shortcut to create a minimally-throttled computed", function() {
 	var evaluationCount = 0,
 		someDependency = ko.observable("Initial value"),
-		asyncComputed = ko.asyncComputed(function() {
+		computedAsync = ko.computedAsync(function() {
 			evaluationCount++;
 			return someDependency();
 		});
@@ -125,11 +125,11 @@ asyncTest("Should be able to use ko.asyncComputed as a shortcut to create a mini
 	equal(evaluationCount, 1, "Should not re-evaluate synchronously when dependencies update");
 
 	// Check it does re-evaluate after a pause
-	equal(asyncComputed(), "Initial value");
+	equal(computedAsync(), "Initial value");
 	stop();
 	setTimeout(function() {
 		start();
 		equal(evaluationCount, 2); // Finally, it's evaluated
-		equal(asyncComputed(), "C");
+		equal(computedAsync(), "C");
 	}, 1);
 });
