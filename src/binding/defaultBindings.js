@@ -471,7 +471,7 @@ ko.bindingHandlers['hasfocus'] = {
                 isFocused = (ownerDoc.activeElement === element);
             }
             var modelValue = valueAccessor();
-            ko.jsonExpressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
+            ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
             element[hasfocusUpdatingProperty] = false;
         };
         var handleElementFocusIn = handleElementFocusChange.bind(null, true);
