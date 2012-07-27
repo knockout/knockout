@@ -3,17 +3,17 @@ ko.utils.compareArrays = (function () {
     var statusNotInOld = 'added', statusNotInNew = 'deleted';
 
     // Simple calculation based on Levenshtein distance.
-    function compareArrays(oldArray, newArray) {
+    function compareArrays(oldArray, newArray, dontLimitMoves) {
         oldArray = oldArray || [];
         newArray = newArray || [];
 
         if (oldArray.length <= newArray.length)
-            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew);
+            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, dontLimitMoves);
         else
-            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld);
+            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves);
     }
 
-    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig) {
+    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, dontLimitMoves) {
         var myMin = Math.min,
             myMax = Math.max,
             editDistanceMatrix = [],
@@ -51,12 +51,12 @@ ko.utils.compareArrays = (function () {
                 notInSml.push(editScript[editScript.length] = {     // added
                     'status': statusNotInSml,
                     'value': bigArray[--bigIndex],
-                    'idx': bigIndex });
+                    'index': bigIndex });
             } else if (smlIndex && meMinusOne === editDistanceMatrix[smlIndex - 1][bigIndex]) {
                 notInBig.push(editScript[editScript.length] = {     // deleted
                     'status': statusNotInBig,
                     'value': smlArray[--smlIndex],
-                    'idx': smlIndex });
+                    'index': smlIndex });
             } else {
                 editScript.push({
                     'status': "retained",
@@ -66,17 +66,22 @@ ko.utils.compareArrays = (function () {
         }
 
         if (notInSml.length && notInBig.length) {
+            // Set a limit on the number of consecutive non-matching comparisons; having it a multiple of
+            // smlIndexMax keeps the time complexity of this algorithm linear.
+            var limitFailedCompares = smlIndexMax * 10, failedCompares,
+                a, d, notInSmlItem, notInBigItem;
             // Go through the items that have been added and deleted and try to find matches between them.
-            var a, d, notInSmlItem, notInBigItem;
-            for (a = 0; notInSmlItem = notInSml[a]; a++) {
+            for (failedCompares = a = 0; (dontLimitMoves || failedCompares < limitFailedCompares) && (notInSmlItem = notInSml[a]); a++) {
                 for (d = 0; notInBigItem = notInBig[d]; d++) {
                     if (notInSmlItem['value'] === notInBigItem['value']) {
-                        notInSmlItem['moved'] = notInBigItem['idx'];
-                        notInBigItem['moved'] = notInSmlItem['idx'];
-                        notInBig.splice(d,1);        // This item is marked as moved; so remove it from notInBig list
+                        notInSmlItem['moved'] = notInBigItem['index'];
+                        notInBigItem['moved'] = notInSmlItem['index'];
+                        notInBig.splice(d,1);       // This item is marked as moved; so remove it from notInBig list
+                        failedCompares = d = 0;     // Reset failed compares count because we're checking for consecutive failures
                         break;
                     }
                 }
+                failedCompares += d;
             }
         }
         return editScript.reverse();
