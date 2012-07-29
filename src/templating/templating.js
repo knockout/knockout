@@ -72,7 +72,7 @@
         if (haveAddedNodesToParent) {
             activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
             if (options['afterRender'])
-                options['afterRender'](renderedNodesArray, bindingContext['$data']);
+                options['afterRender'](renderedNodesArray, bindingContext['$data'], bindingContext); //Justin Ohms 2012-05-03 : 3rd param to pass the whole binding context
         }
 
         return renderedNodesArray;
@@ -135,7 +135,7 @@
         var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
             activateBindingsOnContinuousNodeArray(addedNodesArray, arrayItemContext);
             if (options['afterRender'])
-                options['afterRender'](addedNodesArray, arrayValue);
+                options['afterRender'](addedNodesArray, arrayValue, arrayItemContext); //Justin Ohms 2012-05-03 : 3rd param to pass the item context
         };
 
         return ko.dependentObservable(function () {
