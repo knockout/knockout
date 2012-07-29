@@ -753,6 +753,14 @@ describe('Binding: Event', {
         value_of(model.outerWasCalled).should_be(false);
     },
 
+    'Should be able to supply event type as event.type': function() {
+        var model = { clickCalled: false };
+        testNode.innerHTML = "<button data-bind='event.click: function() { clickCalled = true; }'>hey</button>";
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        value_of(model.clickCalled).should_be(true);
+    },
+
     'Should be able to supply handler params using "bind" helper': function() {
         // Using "bind" like this just eliminates the function literal wrapper - it's purely stylistic
         var didCallHandler = false, someObj = {};
@@ -815,6 +823,16 @@ describe('Binding: CSS class name', {
         value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
     },
 
+    'Should be able to set CSS class as css.classname': function() {
+        var observable1 = new ko.observable();
+        testNode.innerHTML = "<div data-bind='css.myRule: someModelProperty'>Hallo</div>";
+        ko.applyBindings({ someModelProperty: observable1 }, testNode);
+
+        value_of(testNode.childNodes[0].className).should_be("");
+        observable1(true);
+        value_of(testNode.childNodes[0].className).should_be("myRule");
+    },
+
     'Should give the element a single CSS class without a leading space when the specified value is true': function() {
         var observable1 = new ko.observable();
         testNode.innerHTML = "<div data-bind='css: { myRule: someModelProperty }'>Hallo</div>";
@@ -858,6 +876,18 @@ describe('Binding: CSS style', {
     'Should give the element the specified CSS style value': function () {
         var myObservable = new ko.observable("red");
         testNode.innerHTML = "<div data-bind='style: { backgroundColor: colorValue }'>Hallo</div>";
+        ko.applyBindings({ colorValue: myObservable }, testNode);
+
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
+        myObservable("green");
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["green", "#008000"]);
+        myObservable(undefined);
+        value_of(testNode.childNodes[0].style.backgroundColor).should_be("");
+    },
+
+    'Should be able to set CSS style as style.stylename': function() {
+        var myObservable = new ko.observable("red");
+        testNode.innerHTML = "<div data-bind='style.backgroundColor: colorValue'>Hallo</div>";
         ko.applyBindings({ colorValue: myObservable }, testNode);
 
         value_of(testNode.childNodes[0].style.backgroundColor).should_be_one_of(["red", "#ff0000"]); // Opera returns style color values in #rrggbb notation, unlike other browsers
@@ -1085,6 +1115,17 @@ describe('Binding: Attr', {
     'Should respond to changes in an observable value': function() {
         var model = { myprop : ko.observable("initial value") };
         testNode.innerHTML = "<div data-bind='attr: { someAttrib: myprop }'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
+
+        // Change the observable; observe it reflected in the DOM
+        model.myprop("new value");
+        value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("new value");
+    },
+
+    'Should be able to set attribute as attr.name': function() {
+        var model = { myprop : ko.observable("initial value") };
+        testNode.innerHTML = "<div data-bind='attr.someAttrib: myprop'></div>";
         ko.applyBindings(model, testNode);
         value_of(testNode.childNodes[0].getAttribute("someAttrib")).should_be("initial value");
 
