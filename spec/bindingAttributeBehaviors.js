@@ -417,5 +417,49 @@ describe('Binding attribute syntax', {
 
         ko.applyBindings({ myObservable: observable }, testNode);
         value_of(hasUpdatedSecondBinding).should_be(true);
+    },
+
+    'Should call bindingProvider preprocess node function if present': function() {
+        var currentBindingProvider = ko.bindingProvider.instance,
+            preprocessingBindingProvider = new ko.bindingProvider(),
+            preprocessedNode;
+
+        preprocessingBindingProvider.preprocessNode = function(node) {
+            preprocessedNode = node;
+        };
+
+        ko.bindingProvider.instance = preprocessingBindingProvider;
+
+        testNode.innerHTML = "<div id='testNode'></div>";
+        ko.applyBindings({ }, testNode);
+
+        ko.bindingProvider.instance = currentBindingProvider
+
+        value_of(preprocessedNode.id).should_be('testNode');
+    },
+
+    'Should use returned node from bindingProvider\'s preprocessNode': function() {
+        var currentBindingProvider = ko.bindingProvider.instance,
+            preprocessingBindingProvider = new ko.bindingProvider(),
+            testInitCalled = false;
+
+        preprocessingBindingProvider.preprocessNode = function(node) {
+            return document.createElement('div');;
+        };
+
+        ko.bindingHandlers.test = {
+            init: function() {
+                testInitCalled = true;
+            }
+        }
+
+        ko.bindingProvider.instance = preprocessingBindingProvider;
+
+        testNode.innerHTML = "<div id='testNode' data-bind='test: true'></div>";
+        ko.applyBindings({ }, testNode);
+
+        ko.bindingProvider.instance = currentBindingProvider
+
+        value_of(testInitCalled).should_be(false);
     }
 });
