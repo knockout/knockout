@@ -55,6 +55,13 @@
                     element.value = value;
                     break;
             }
+        },
+
+        readText: function(element) {
+            if (element.tagName == 'SELECT')
+                return element.selectedIndex >= 0 ? ko.selectExtensions.readText(element.options[element.selectedIndex]) : undefined;
+            else
+                return 'innerText' in element ? element.innerText : element.textContent;
         }
     };
 })();
@@ -62,3 +69,4 @@
 ko.exportSymbol('selectExtensions', ko.selectExtensions);
 ko.exportSymbol('selectExtensions.readValue', ko.selectExtensions.readValue);
 ko.exportSymbol('selectExtensions.writeValue', ko.selectExtensions.writeValue);
+ko.exportSymbol('selectExtensions.readText', ko.selectExtensions.readText);

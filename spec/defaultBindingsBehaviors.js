@@ -552,8 +552,13 @@ describe('Binding: Options', {
     },
 
     'Should retain as much selection as possible when changing the SELECT node\'s options': function () {
-        var observable = new ko.observableArray(["A", "B", "C"]);
-        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'><option>A</option><option selected='selected'>B</option><option selected='selected'>X</option></select>";
+        var observable = new ko.observableArray([
+            { value: "A", text: "A" },
+            { value: "B", text: "B" },
+            { value: "C", text: "C" },
+            { value: "B", text: "D" }
+        ]);
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsText:\"text\", optionsValue:\"value\"' multiple='multiple'><option value='A'>A</option><option value='B' selected='selected'>B</option><option value='X' selected='selected'>X</option></select>";
         ko.applyBindings({ myValues: observable }, testNode);
         value_of(getSelectedValuesFromSelectNode(testNode.childNodes[0])).should_be(["B"]);
     },
