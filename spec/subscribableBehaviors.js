@@ -13,6 +13,19 @@ describe('Subscribable', {
         value_of(notifiedValue).should_be(123);
     },
 
+    'Should complain if subscriber is not a function': function(){
+        var instance = new ko.subscribable();
+        var bad_subscriber = {};
+        var threw = false;
+        try {
+            instance.subscribe(bad_subscriber);
+        }
+        catch (ex) {
+            threw = true;
+        }
+        value_of(threw).should_be(true);
+    },
+
     'Should be able to unsubscribe': function () {
         var instance = new ko.subscribable();
         var notifiedValue;
