@@ -182,6 +182,11 @@ ko.utils = new (function () {
                 return false;
             return string.substring(0, startsWith.length) === startsWith;
         },
+        
+        stringContains: function (string, contains) {
+            string = string || "";
+            return string.indexOf(contains) != -1;
+        },
 
         buildEvalWithinScopeFunction: function (expression, scopeLevels) {
             // Build the source for a function that evaluates "expression"
