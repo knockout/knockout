@@ -90,9 +90,9 @@ ko.bindingHandlers['visible'] = {
 ko.bindingHandlers['enable'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        if (value && element.disabled)
+        if ((value == true || value === "true") && element.disabled)
             element.removeAttribute("disabled");
-        else if ((!value) && (!element.disabled))
+        else if ((!value || value === "false") && (!element.disabled))
             element.disabled = true;
     }
 };
