@@ -315,6 +315,33 @@ ko.bindingHandlers['text'] = {
 };
 ko.virtualElements.allowedBindings['text'] = true;
 
+ko.bindingHandlers['para'] = {
+    'init': function () {
+		return { 'controlsDescendantBindings': true };
+	},
+	'update': function (element, valueAccessor) {
+		ko.virtualElements.emptyNode(element);
+
+		var splitParas = ko.utils.unwrapObservable(valueAccessor()).split(/[\r\n]+/);
+
+		var arrayOfNodes = [];
+
+		for (var i = 0; i < splitParas.length; i++) {
+			var paraNode = document.createElement('p');
+			var thisPara = splitParas[i].trim();
+			//Prevent any empty paragraphs
+			if (thisPara === null || thisPara === undefined || thisPara == "") {
+				continue;
+			}
+			ko.utils.setTextContent(paraNode, splitParas[i]);
+			arrayOfNodes.push(paraNode);
+		}
+
+		ko.virtualElements.setDomNodeChildren(element, arrayOfNodes);
+	}
+};
+ko.virtualElements.allowedBindings['para'] = true;
+
 ko.bindingHandlers['html'] = {
     'init': function() {
         // Prevent binding on the dynamically-injected HTML (as developers are unlikely to expect that, and it has security implications)
