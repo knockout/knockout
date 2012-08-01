@@ -9,7 +9,7 @@ ko.extenders = {
         // (2) For writable targets (observables, or writable dependent observables), we throttle *writes*
         //     so the target cannot change value synchronously or faster than a certain rate
         var writeTimeoutInstance = null;
-        return ko.dependentObservable({
+        return ko.computed({
             'read': target,
             'write': function(value) {
                 clearTimeout(writeTimeoutInstance);

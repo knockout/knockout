@@ -72,7 +72,7 @@
         // Need to be sure that inits are only run once, and updates never run until all the inits have been run
         var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
 
-        // Each time the dependentObservable is evaluated (after data changes),
+        // Each time the computed observable is evaluated (after data changes),
         // the binding attribute is reparsed so that it can pick out the correct
         // model properties in the context of the changed data.
         // DOM event callbacks need to be able to access this changed data,
@@ -87,7 +87,7 @@
         }
 
         var bindingHandlerThatControlsDescendantBindings;
-        ko.dependentObservable(
+        ko.computed.possiblyWrap(
             function () {
                 // Ensure we have a nonnull binding context to work with
                 var bindingContextInstance = viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
@@ -141,8 +141,7 @@
                     }
                 }
             },
-            null,
-            { 'disposeWhenNodeIsRemoved' : node }
+            node
         );
 
         return {

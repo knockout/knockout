@@ -46,9 +46,9 @@
     }
 
     function mapNodeAndRefreshWhenChanged(containerNode, mapping, valueToMap, callbackAfterAddingNodes, index) {
-        // Map this array value inside a dependentObservable so we re-map when any dependency changes
+        // Map this array value inside a computed observable so we re-map when any dependency changes
         var mappedNodes = [];
-        var dependentObservable = ko.dependentObservable(function() {
+        var computedObservable = ko.computed.possiblyWrap(function() {
             var newMappedNodes = mapping(valueToMap, index) || [];
 
             // On subsequent evaluations, just replace the previously-inserted DOM nodes
@@ -63,8 +63,8 @@
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-        }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
-        return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
+        }, containerNode, function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } );
+        return { mappedNodes : mappedNodes, computedObservable : computedObservable };
     }
 
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
@@ -98,12 +98,15 @@
                     break;
 
                 case "deleted":
+                    var mapData = lastMappingResult[lastMappingResultIndex];
+
                     // Stop tracking changes to the mapping for these nodes
-                    lastMappingResult[lastMappingResultIndex].dependentObservable.dispose();
+                    if (mapData.computedObservable)
+                        mapData.computedObservable.dispose();
 
                     // Queue these nodes for later removal
-                    fixUpNodesToBeRemoved(lastMappingResult[lastMappingResultIndex].domNodes);
-                    ko.utils.arrayForEach(lastMappingResult[lastMappingResultIndex].domNodes, function (node) {
+                    fixUpNodesToBeRemoved(mapData.domNodes);
+                    ko.utils.arrayForEach(mapData.domNodes, function (node) {
                         nodesToDelete.push({
                           element: node,
                           index: i,
@@ -124,7 +127,7 @@
                     newMappingResultIndex = newMappingResult.push({
                         arrayEntry: editScript[i].value,
                         domNodes: mappedNodes,
-                        dependentObservable: mapData.dependentObservable,
+                        computedObservable: mapData.computedObservable,
                         indexObservable: indexObservable
                     });
                     for (var nodeIndex = 0, nodeIndexMax = mappedNodes.length; nodeIndex < nodeIndexMax; nodeIndex++) {
