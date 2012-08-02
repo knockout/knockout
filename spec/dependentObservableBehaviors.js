@@ -56,6 +56,22 @@ describe('Dependent Observable', {
         value_of(invokedWriteWithThis).should_be(window); // Since no owner was specified
     },
 
+    'Should be able to write to multiple computed properties on a model object using chaining syntax': function() {
+        var model = {
+            prop1: ko.computed({
+                read: function(){},
+                write: function(value) {
+                    value_of(value).should_be("prop1");
+                } }),
+            prop2: ko.computed({
+                read: function(){},
+                write: function(value) {
+                    value_of(value).should_be("prop2");
+                } })
+        };
+        model.prop1('prop1').prop2('prop2');
+    },
+
     'Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters': function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
