@@ -1,7 +1,10 @@
 ko.expressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
+
+    // Matches something that can be assigned to--either an isolated identifier or something ending with a property accessor
+    // This is designed to be simple and avoid false negatives, but could produce false positives (e.g., a+b.c).
+    var javaScriptAssignmentTarget = /^((.+\.\s*)?[$_a-z][$\w]*|.+\[.+\])$/i;
 
     function restoreTokens(string, tokens) {
         var prevValue = null;

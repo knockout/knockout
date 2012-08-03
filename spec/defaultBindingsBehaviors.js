@@ -231,6 +231,38 @@ describe('Binding: Value', {
         value_of(model.modelProperty123).should_be(789);
     },
 
+    'Should be able to read and write to a property of an object returned by a function': function () {
+        var mySetter = { set: 666 };
+        var model = {
+            getSetter: function () {
+                return mySetter;
+            }
+        };
+        testNode.innerHTML =
+            "<input data-bind='value: getSetter().set' />" +
+            "<input data-bind='value: getSetter()[\"set\"]' />" +
+            "<input data-bind=\"value: getSetter()['set']\" />";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].value).should_be(666);
+        value_of(testNode.childNodes[1].value).should_be(666);
+        value_of(testNode.childNodes[2].value).should_be(666);
+
+        // .property
+        testNode.childNodes[0].value = 667;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(mySetter.set).should_be(667);
+
+        // ["property"]
+        testNode.childNodes[1].value = 668;
+        ko.utils.triggerEvent(testNode.childNodes[1], "change");
+        value_of(mySetter.set).should_be(668);
+
+        // ['property']
+        testNode.childNodes[0].value = 669;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(mySetter.set).should_be(669);
+    },
+
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
         // This spec represents https://github.com/SteveSanderson/knockout/issues#issue/13
         var originalSubproperty = ko.observable("original value");
