@@ -21,6 +21,27 @@
             // If you don't specify columns configuration, we'll use scaffolding
             this.columns = configuration.columns || getColumnsForScaffolding(ko.utils.unwrapObservable(this.data));
 
+            self.currentSort = ko.observable("");
+            self.sortBy = function(sortField) {
+                sortFunc = self.defaultSorter;
+
+                self.data.sort(function(left, right) {
+                    return sortFunc(left[sortField], right[sortField]);
+                });
+                
+                self.currentSort(sortField);
+            };
+
+
+
+            self.defaultSorter = function(left, right) {
+                if(left > right)
+                    return 1;
+
+                return left < right ? -1 : 1;
+            };
+
+
             this.itemsOnCurrentPage = ko.computed(function () {
                 var startIndex = this.pageSize * this.currentPageIndex();
                 return this.data.slice(startIndex, startIndex + this.pageSize);
@@ -43,7 +64,7 @@
                     <table class=\"ko-grid\" cellspacing=\"0\">\
                         <thead>\
                             <tr data-bind=\"foreach: columns\">\
-                               <th data-bind=\"text: headerText\"></th>\
+                               <th data-bind=\"text: headerText click: $parent.sortBy.bind($data, headerText)\"></th>\
                             </tr>\
                         </thead>\
                         <tbody data-bind=\"foreach: itemsOnCurrentPage\">\
