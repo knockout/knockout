@@ -64,7 +64,8 @@ describe('Expression Rewriting', {
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
-            'g: getAssitant(), h: getAssitant().firstName, i: getAssitant()[ "lastName" ]'
+            'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
+            'j: boss.firstName + boss.lastName'
         );
         var assistant = { firstName: "john", lastName: "english" };
         var model = {
@@ -86,8 +87,9 @@ describe('Expression Rewriting', {
             value_of(parsed.i).should_be("english");
 
             // test that only writable expressions are set up for writing
+            // 'j' matches due to the simple checking for trailing property accessor
             if (Object.keys)
-                value_of(Object.keys(parsed._ko_property_writers)).should_be(['b','e','f','h','i']);
+                value_of(Object.keys(parsed._ko_property_writers)).should_be(['b','e','f','h','i','j']);
 
             // make sure writing to them works
             parsed._ko_property_writers.b("bob2");
@@ -100,6 +102,11 @@ describe('Expression Rewriting', {
             value_of(assistant.firstName).should_be("john2");
             parsed._ko_property_writers.i("english2");
             value_of(assistant.lastName).should_be("english2");
+
+            // make sure writing to 'j' doesn't error or actually change anything
+            parsed._ko_property_writers.j("nothing at all");
+            value_of(model.boss.firstName).should_be("rick2");
+            value_of(model.boss.lastName).should_be("martin2");
         }
     },
 
