@@ -125,8 +125,13 @@
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
             // Support selecting template as a function of the data being rendered
-            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            var arrayValueUnwrapped = ko.utils.unwrapObservable(arrayValue),
+                foreachAsOption = options['as'];
+            arrayItemContext = parentBindingContext['createChildContext'](arrayValueUnwrapped);
             arrayItemContext['$index'] = index;
+            if (typeof foreachAsOption == 'string') {
+                arrayItemContext[foreachAsOption] = arrayValueUnwrapped;
+            }
             var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
         }
