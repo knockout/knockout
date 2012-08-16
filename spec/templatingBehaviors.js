@@ -668,6 +668,15 @@ describe('Templating', {
         value_of(testNode.childNodes[0]).should_contain_text("Alternative output");
     },
 
+    'Should be able to bind $data to an alias using \'as\'': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+        }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\" }'></div>";
+        ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("ValueLiteral: Hello, ValueBound: Hello");
+    },
+
     'Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value': function() {
         ko.setTemplateEngine(new dummyTemplateEngine({
             myTemplate: "ValueLiteral: [js:$parent.parentProp], ValueBound: <span data-bind='text: $parent.parentProp'></span>"
