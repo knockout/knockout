@@ -88,8 +88,7 @@ describe('Expression Rewriting', {
 
             // test that only writable expressions are set up for writing
             // 'j' matches due to the simple checking for trailing property accessor
-            if (Object.keys)
-                value_of(Object.keys(parsed._ko_property_writers)).should_be(['b','e','f','h','i','j']);
+            value_of(parsed._ko_property_writers).should_have_own_properties(['b','e','f','h','i','j']);
 
             // make sure writing to them works
             parsed._ko_property_writers.b("bob2");
