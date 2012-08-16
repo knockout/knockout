@@ -473,6 +473,17 @@ describe('Templating', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
 
+    'Data binding \'foreach\' option should accept an \"as\" option to define an alias for the iteration variable': function() {
+        // Note: There are more detailed specs (e.g., covering nesting) associated with the "foreach" binding which
+        // uses this templating functionality internally.
+        var myArray = new ko.observableArray(["A", "B"]);
+        ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "[js:myAliasedItem]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, as: \"myAliasedItem\" }'></div>";
+
+        ko.applyBindings({ myCollection: myArray }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("AB");
+    },
+
     'Data binding \'foreach\' option should stop tracking inner observables when the container node is removed': function() {
         var innerObservable = ko.observable("some value");
         var myArray = new ko.observableArray([{obsVal:innerObservable}, {obsVal:innerObservable}]);
@@ -655,6 +666,15 @@ describe('Templating', {
         ko.applyBindings({ chosenEngine: alternativeTemplateEngine }, testNode);
 
         value_of(testNode.childNodes[0]).should_contain_text("Alternative output");
+    },
+
+    'Should be able to bind $data to an alias using \'as\'': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+        }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\" }'></div>";
+        ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("ValueLiteral: Hello, ValueBound: Hello");
     },
 
     'Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value': function() {

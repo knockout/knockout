@@ -1,7 +1,7 @@
 (function () {
     ko.bindingHandlers = {};
 
-    ko.bindingContext = function(dataItem, parentBindingContext) {
+    ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
         if (parentBindingContext) {
             ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
             this['$parentContext'] = parentBindingContext;
@@ -17,9 +17,11 @@
             this['ko'] = ko;
         }
         this['$data'] = dataItem;
+        if (dataItemAlias)
+            this[dataItemAlias] = dataItem;
     }
-    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
-        return new ko.bindingContext(dataItem, this);
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem, dataItemAlias) {
+        return new ko.bindingContext(dataItem, this, dataItemAlias);
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
         var clone = ko.utils.extend(new ko.bindingContext(), this);

@@ -125,7 +125,7 @@
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
             // Support selecting template as a function of the data being rendered
-            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue), options['as']);
             arrayItemContext['$index'] = index;
             var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
@@ -200,7 +200,7 @@
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
-                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data']), bindingValue['as']) // Given an explitit 'data' value, we create a child binding context for it
                         : bindingContext;                                                                       // Given no explicit 'data' value, we retain the same binding context
                     templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
