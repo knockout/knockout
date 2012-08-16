@@ -181,7 +181,7 @@ describe('Binding: Value', {
     'Should assign the value to the node': function () {
         testNode.innerHTML = "<input data-bind='value:123' />";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
     },
 
     'Should treat null values as empty strings': function () {
@@ -206,9 +206,9 @@ describe('Binding: Value', {
         var myobservable = new ko.observable(123);
         testNode.innerHTML = "<input data-bind='value:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
         myobservable(456);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
     },
 
     'For writeable observable values, should catch the node\'s onchange and write values back to the observable': function () {
@@ -224,11 +224,11 @@ describe('Binding: Value', {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
 
         testNode.childNodes[0].value = 789;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(model.modelProperty123).should_be(789);
+        value_of(model.modelProperty123).should_be("789");
     },
 
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
@@ -493,7 +493,7 @@ describe('Binding: Options', {
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
         value_of(displayedText).should_be(["bob", "frank"]);
-        value_of(displayedValues).should_be([6, 13]);
+        value_of(displayedValues).should_be(["6", "13"]);
     },
 
     'Should accept function in optionsText param to display subproperties of the model values': function() {
