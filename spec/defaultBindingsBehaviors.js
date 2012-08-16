@@ -1840,9 +1840,9 @@ describe('Binding: Foreach', {
 
     'Should be able to give an alias to $data using \"as\", and use it within a nested loop': function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<div data-bind='foreach: sub'>"
+                           +    "<span data-bind='foreach: sub'>"
                            +        "<span data-bind='text: item.name+\":\"+$data'></span>,"
-                           +    "</div>"
+                           +    "</span>"
                            + "</div>";
         var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c'] }];
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -1851,9 +1851,9 @@ describe('Binding: Foreach', {
 
     'Should be able to set up multiple nested levels of aliases using \"as\"': function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<div data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
+                           +    "<span data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
                            +        "<span data-bind='text: item.name+\":\"+subvalue'></span>,"
-                           +    "</div>"
+                           +    "</span>"
                            + "</div>";
         var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -1861,7 +1861,7 @@ describe('Binding: Foreach', {
     },
 
     'Should be able to give an alias to $data using \"as\", and use it within arbitrary descendant binding contexts': function() {
-        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><div data-bind='if: item.length'><span data-bind='text: item'></span>,</div></div>";
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='if: item.length'><span data-bind='text: item'></span>,</span></div>";
         var someItems = ['alpha', 'beta'];
         ko.applyBindings({ someItems: someItems }, testNode);
         value_of(testNode.childNodes[0]).should_contain_text('alpha,beta,');
