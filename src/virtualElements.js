@@ -12,7 +12,7 @@
     // So, use node.text where available, and node.nodeValue elsewhere
     var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
 
-    var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko\s+(.*\:.*)\s*-->$/ : /^\s*ko\s+(.*\:.*)\s*$/;
+    var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko\s+(.+\s*\:[\s\S]*)\s*-->$/ : /^\s*ko\s+(.+\s*\:[\s\S]*)\s*$/;
     var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko\s*-->$/ : /^\s*\/ko\s*$/;
     var htmlTagsWithOptionallyClosingChildren = { 'ul': true, 'ol': true };
 

@@ -271,11 +271,25 @@ describe('Binding attribute syntax', {
         ko.bindingHandlers.test = { init: function () { initCalls++ } };
         ko.virtualElements.allowedBindings['test'] = true;
 
-        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye";
         ko.applyBindings(null, testNode);
 
         value_of(initCalls).should_be(1);
         value_of(testNode).should_contain_text("Hello Some text Goodbye");
+    },
+
+    'Should be allowed to express containerless bindings with arbitrary internal whitespace and newlines': function() {
+            testNode.innerHTML = "Hello <!-- ko\n" +
+                             "    with\n" +
+                             "      : \n "+
+                             "        { \n" +
+                             "           \tpersonName: 'Bert'\n" +
+                             "        }\n" +
+                             "   \t --><span data-bind='text: personName'></span><!-- \n" +
+                             "     /ko \n" +
+                             "--> Goodbye";
+        ko.applyBindings(null, testNode);
+        value_of(testNode).should_contain_text('Hello Bert Goodbye');
     },
 
     'Should be able to access virtual children in custom containerless binding': function() {
