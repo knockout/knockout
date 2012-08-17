@@ -1831,6 +1831,49 @@ describe('Binding: Foreach', {
         value_of(testNode).should_contain_text("B");
     },
 
+    'Should be able to give an alias to $data using \"as\"': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: item">alpha</span><span data-bind="text: item">beta</span>');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within a nested loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                           +    "<span data-bind='foreach: sub'>"
+                           +        "<span data-bind='text: item.name+\":\"+$data'></span>,"
+                           +    "</span>"
+                           + "</div>";
+        var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c'] }];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha:a,alpha:b,beta:c,');
+    },
+
+    'Should be able to set up multiple nested levels of aliases using \"as\"': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                           +    "<span data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
+                           +        "<span data-bind='text: item.name+\":\"+subvalue'></span>,"
+                           +    "</span>"
+                           + "</div>";
+        var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha:a,alpha:b,beta:c,beta:d,');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within arbitrary descendant binding contexts': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='if: item.length'><span data-bind='text: item'></span>,</span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha,beta,');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within descendant binding contexts defined using containerless syntax': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>x<!-- ko if: item.length --><span data-bind='text: item'></span>x,<!-- /ko --></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('xalphax,xbetax,');
+    },
+
     'Should be able to output HTML5 elements (even on IE<9, as long as you reference either innershiv.js or jQuery1.7+Modernizr)': function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/194
         ko.utils.setHtml(testNode, "<div data-bind='foreach:someitems'><section data-bind='text: $data'></section></div>");
