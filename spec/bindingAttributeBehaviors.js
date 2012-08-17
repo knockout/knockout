@@ -287,9 +287,9 @@ describe('Binding attribute syntax', {
                              "        }\n" +
                              "   \t --><span data-bind='text: personName'></span><!-- \n" +
                              "     /ko \n" +
-                             "--> Goodbye";
+                             "-->, Goodbye";
         ko.applyBindings(null, testNode);
-        value_of(testNode).should_contain_text('Hello Bert Goodbye');
+        value_of(testNode).should_contain_text('Hello Bert, Goodbye');
     },
 
     'Should be able to access virtual children in custom containerless binding': function() {

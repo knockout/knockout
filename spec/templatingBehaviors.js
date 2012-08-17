@@ -751,6 +751,19 @@ describe('Templating', {
         });
     },
 
+    'Data binding syntax should permit nested templates using virtual containers (with arbitrary internal whitespace and newlines)': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            outerTemplate: "Outer <!-- ko template: \n" +
+                "{ name: \"innerTemplate\" } \n" +
+                "--><!-- /ko -->",
+            innerTemplate: "Inner via inline binding: <span data-bind='text: \"someText\"'></span>"
+        }));
+        var model = { };
+        testNode.innerHTML = "<div data-bind='template: { name: \"outerTemplate\" }'></div>";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html("outer <!-- ko -->inner via inline binding: <span>sometext</span><!-- /ko -->");
+    },
+
     'Should be able to render anonymous templates using virtual containers': function() {
         ko.setTemplateEngine(new dummyTemplateEngine());
         testNode.innerHTML = "Start <!-- ko template: { data: someData } -->Childprop: [js: childProp]<!-- /ko --> End";
