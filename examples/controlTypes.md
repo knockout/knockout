@@ -100,3 +100,5 @@ For reference, here's an example of binding view model properties to a range of 
     ko.applyBindings(viewModel);
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/ZbrB7/)

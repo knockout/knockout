@@ -16,7 +16,7 @@ Take a look at the HTML source code - it's pretty easy to use and interact with 
     .ko-grid { margin-bottom: 1em; width: 25em; border: 1px solid silver; background-color:White; }
     .ko-grid th { text-align:left; background-color: Black; color:White; }
     .ko-grid td, th { padding: 0.4em; }
-    .ko-grid tr.odd { background-color: #DDD; }
+    .ko-grid tr:nth-child(odd) { background-color: #DDD; }
     .ko-grid-pageLinks { margin-bottom: 1em; }
     .ko-grid-pageLinks a { padding: 0.5em; }
     .ko-grid-pageLinks a.selected { background-color: Black; color: White; }
@@ -81,3 +81,5 @@ Take a look at the HTML source code - it's pretty easy to use and interact with 
     ko.applyBindings(new PagedGridModel(initialData));
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/QSRBR/)

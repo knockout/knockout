@@ -161,3 +161,5 @@ This is a sophisticated example showing how many different features in Knockout 
     });
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/rhQLj/)

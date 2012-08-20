@@ -25,6 +25,7 @@ There are two main ways of using templates:
 
      * `name` --- the ID of an element that contains the template you wish to render - see [Note 4](#note_4_dynamically_choosing_which_template_is_used) for how to vary this programmatically.
      * `data` --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your current model object.
+     * `if` --- if this parameter is provided, the template will only be rendered if the specified expression evaluates to `true` (or a `true`-ish value). This can be useful for preventing a null observable from being bound against a template before it is populated.
      * `foreach` --- instructs KO to render the template in "foreach" mode - see [Note 2](#note_2_using_the_foreach_option_with_a_named_template) for details.
      * `afterRender`, `afterAdd`, or `beforeRemove` --- callback functions to be invoked against the rendered DOM elements - see [Note 3](#note_3_using_afterrender_afteradd_and_beforeremove)
 

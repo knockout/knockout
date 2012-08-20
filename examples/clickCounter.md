@@ -41,3 +41,5 @@ You don't have to define or manage these subscriptions manually. They are create
 {% endcapture %}
 
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/3Lqsx/)

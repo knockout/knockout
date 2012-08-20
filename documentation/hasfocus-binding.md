@@ -11,9 +11,6 @@ The `hasfocus` binding links a DOM element's focus state with a viewmodel proper
 
 This is useful if you're building sophisticated forms in which editable elements appear dynamically, and you would like to control where the user should start typing, or respond to the location of the caret.
 
-### Tip
-If multiple elements have `hasfocus` bindings with associated values set to `true`, the browser will switch focus to whichever element had its `hasfocus` binding set *most recently*. So, you can simply write `data-bind="hasfocus: true"` if you want to make an element gain focus as soon as it is dynamically inserted into the document. This will not prevent the focus from later moving to a different element.
-
 ### Example 1: The basics
 This example simply displays a message if the textbox currently has focus, and uses a button to show that you can trigger focus programmatically.
 

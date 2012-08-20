@@ -33,3 +33,5 @@ Notice how the "Add" button is enabled only when you have entered some text - ch
     ko.applyBindings(new SimpleListModel(["Alpha", "Beta", "Gamma"]));
 {% endcapture %}
 {% include live-example-tabs.html %}
+
+[Try it in jsFiddle](http://jsfiddle.net/rniemeyer/bxfXd/)

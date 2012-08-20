@@ -107,6 +107,9 @@ The preceding view model code demonstrates the *single parameter syntax* for ini
  * `read` --- Required. A function that is used to evaluate the computed observable's current value.
  * `write` --- Optional. If given, makes the computed observable writeable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
  * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks. See the section "Managing `this`" earlier on this page for more information.
+ * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access it. By default, a computed observable has its value determined immediately during creation.
+ * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
+ * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
  
 ### Example 2: A value converter
 
