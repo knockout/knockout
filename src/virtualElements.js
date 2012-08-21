@@ -118,7 +118,9 @@
         },
 
         insertAfter: function(containerNode, nodeToInsert, insertAfterNode) {
-            if (!isStartComment(containerNode)) {
+            if (!insertAfterNode) {
+                ko.virtualElements.prepend(containerNode, nodeToInsert);
+            } else if (!isStartComment(containerNode)) {
                 // Insert after insertion point
                 if (insertAfterNode.nextSibling)
                     containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);

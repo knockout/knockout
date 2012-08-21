@@ -24,10 +24,10 @@ describe('Compare Arrays', {
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
             { status: "retained", value: "A" },
-            { status: "added", value: "A2" },
-            { status: "added", value: "A3" },
+            { status: "added", value: "A2", index: 1 },
+            { status: "added", value: "A3", index: 2 },
             { status: "retained", value: "B" },
-            { status: "added", value: "B2" }
+            { status: "added", value: "B2", index: 4 }
         ]);
     },
 
@@ -36,10 +36,10 @@ describe('Compare Arrays', {
         var newArray = ["B", "C", "E"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
-            { status: "deleted", value: "A" },
+            { status: "deleted", value: "A", index: 0 },
             { status: "retained", value: "B" },
             { status: "retained", value: "C" },
-            { status: "deleted", value: "D" },
+            { status: "deleted", value: "D", index: 3 },
             { status: "retained", value: "E" }
         ]);
     },
@@ -49,13 +49,33 @@ describe('Compare Arrays', {
         var newArray = [123, "A", "E", "C", "D"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         value_of(compareResult).should_be([
-            { status: "added", value: 123 },
+            { status: "added", value: 123, index: 0 },
             { status: "retained", value: "A" },
-            { status: "deleted", value: "B" },
-            { status: "added", value: "E" },
+            { status: "deleted", value: "B", index: 1 },
+            { status: "added", value: "E", index: 2, moved: 4 },
             { status: "retained", value: "C" },
             { status: "retained", value: "D" },
-            { status: "deleted", value: "E" }
+            { status: "deleted", value: "E", index: 4, moved: 2 }
+        ]);
+    },
+
+    'Should recognize replaced array': function () {
+        var oldArray = ["A", "B", "C", "D", "E"];
+        var newArray = ["F", "G", "H", "I", "J"];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray);
+        // the order of added and deleted doesn't really matter
+        compareResult.sort(function(a, b) { return a.status.localeCompare(b.status) });
+        value_of(compareResult).should_be([
+            { status: "added", value: "F", index: 0},
+            { status: "added", value: "G", index: 1},
+            { status: "added", value: "H", index: 2},
+            { status: "added", value: "I", index: 3},
+            { status: "added", value: "J", index: 4},
+            { status: "deleted", value: "A", index: 0},
+            { status: "deleted", value: "B", index: 1},
+            { status: "deleted", value: "C", index: 2},
+            { status: "deleted", value: "D", index: 3},
+            { status: "deleted", value: "E", index: 4}
         ]);
     }
 });
@@ -210,6 +230,12 @@ describe('Array to DOM node children mapping', {
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping, null, callback); // Add at beginning and end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["A", "B", "C"]);
         value_of(mappingInvocations).should_be(["A", "C"]);
+        value_of(countCallbackInvocations).should_be(mappingInvocations.length);
+
+        mappingInvocations = [], countCallbackInvocations = 0;
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["C", "B", "A"], mapping, null, callback); // Move items
+        value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["C", "B", "A"]);
+        value_of(mappingInvocations).should_be([]);
         value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
         mappingInvocations = [], countCallbackInvocations = 0;
