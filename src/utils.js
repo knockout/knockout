@@ -1,5 +1,5 @@
 ko.utils = (function () {
-    var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+    var stringTrimRegex = /^[\s\xa0]+|[\s\xa0]+$/g;
 
     var objectForEach = function(obj, action) {
         for (var prop in obj) {
