@@ -1,7 +1,10 @@
 ko.expressionRewriting = (function () {
     var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
     var javaScriptReservedWords = ["true", "false"];
+
+    // Matches something that can be assigned to--either an isolated identifier or something ending with a property accessor
+    // This is designed to be simple and avoid false negatives, but could produce false positives (e.g., a+b.c).
+    var javaScriptAssignmentTarget = /^(?:[$_a-z][$\w]*|(.+)(\.\s*[$_a-z][$\w]*|\[.+\]))$/i;
 
     function restoreTokens(string, tokens) {
         var prevValue = null;
@@ -14,10 +17,11 @@ ko.expressionRewriting = (function () {
         return string;
     }
 
-    function isWriteableValue(expression) {
+    function getWriteableValue(expression) {
         if (ko.utils.arrayIndexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
             return false;
-        return expression.match(javaScriptAssignmentTarget) !== null;
+        var match = expression.match(javaScriptAssignmentTarget);
+        return match === null ? false : match[1] ? ('Object(' + match[1] + ')' + match[2]) : expression;
     }
 
     function ensureQuoted(key) {
@@ -137,7 +141,7 @@ ko.expressionRewriting = (function () {
                     resultStrings.push(":");
                     resultStrings.push(val);
 
-                    if (isWriteableValue(ko.utils.stringTrim(val))) {
+                    if (val = getWriteableValue(ko.utils.stringTrim(val))) {
                         if (propertyAccessorResultStrings.length > 0)
                             propertyAccessorResultStrings.push(", ");
                         propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");

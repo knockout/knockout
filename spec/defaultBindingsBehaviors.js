@@ -181,7 +181,7 @@ describe('Binding: Value', {
     'Should assign the value to the node': function () {
         testNode.innerHTML = "<input data-bind='value:123' />";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
     },
 
     'Should treat null values as empty strings': function () {
@@ -206,9 +206,9 @@ describe('Binding: Value', {
         var myobservable = new ko.observable(123);
         testNode.innerHTML = "<input data-bind='value:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
         myobservable(456);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
     },
 
     'For writeable observable values, should catch the node\'s onchange and write values back to the observable': function () {
@@ -224,11 +224,43 @@ describe('Binding: Value', {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
 
         testNode.childNodes[0].value = 789;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(model.modelProperty123).should_be(789);
+        value_of(model.modelProperty123).should_be("789");
+    },
+
+    'Should be able to read and write to a property of an object returned by a function': function () {
+        var mySetter = { set: 666 };
+        var model = {
+            getSetter: function () {
+                return mySetter;
+            }
+        };
+        testNode.innerHTML =
+            "<input data-bind='value: getSetter().set' />" +
+            "<input data-bind='value: getSetter()[\"set\"]' />" +
+            "<input data-bind=\"value: getSetter()['set']\" />";
+        ko.applyBindings(model, testNode);
+        value_of(testNode.childNodes[0].value).should_be(666);
+        value_of(testNode.childNodes[1].value).should_be(666);
+        value_of(testNode.childNodes[2].value).should_be(666);
+
+        // .property
+        testNode.childNodes[0].value = 667;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(mySetter.set).should_be(667);
+
+        // ["property"]
+        testNode.childNodes[1].value = 668;
+        ko.utils.triggerEvent(testNode.childNodes[1], "change");
+        value_of(mySetter.set).should_be(668);
+
+        // ['property']
+        testNode.childNodes[0].value = 669;
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(mySetter.set).should_be(669);
     },
 
     'Should be able to write to observable subproperties of an observable, even after the parent observable has changed': function () {
@@ -493,7 +525,7 @@ describe('Binding: Options', {
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
         value_of(displayedText).should_be(["bob", "frank"]);
-        value_of(displayedValues).should_be([6, 13]);
+        value_of(displayedValues).should_be(["6", "13"]);
     },
 
     'Should accept function in optionsText param to display subproperties of the model values': function() {
@@ -1797,6 +1829,49 @@ describe('Binding: Foreach', {
 
         ko.applyBindings(null, testNode);
         value_of(testNode).should_contain_text("B");
+    },
+
+    'Should be able to give an alias to $data using \"as\"': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: item">alpha</span><span data-bind="text: item">beta</span>');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within a nested loop': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                           +    "<span data-bind='foreach: sub'>"
+                           +        "<span data-bind='text: item.name+\":\"+$data'></span>,"
+                           +    "</span>"
+                           + "</div>";
+        var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c'] }];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha:a,alpha:b,beta:c,');
+    },
+
+    'Should be able to set up multiple nested levels of aliases using \"as\"': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                           +    "<span data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
+                           +        "<span data-bind='text: item.name+\":\"+subvalue'></span>,"
+                           +    "</span>"
+                           + "</div>";
+        var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha:a,alpha:b,beta:c,beta:d,');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within arbitrary descendant binding contexts': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='if: item.length'><span data-bind='text: item'></span>,</span></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('alpha,beta,');
+    },
+
+    'Should be able to give an alias to $data using \"as\", and use it within descendant binding contexts defined using containerless syntax': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>x<!-- ko if: item.length --><span data-bind='text: item'></span>x,<!-- /ko --></div>";
+        var someItems = ['alpha', 'beta'];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text('xalphax,xbetax,');
     },
 
     'Should be able to output HTML5 elements (even on IE<9, as long as you reference either innershiv.js or jQuery1.7+Modernizr)': function() {

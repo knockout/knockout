@@ -31,6 +31,16 @@ JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
     JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
 };
 
+JSSpec.DSL.Subject.prototype.should_have_own_properties = function (expectedProperties) {
+    var ownProperties = [];
+    for (var prop in this.target) {
+        if (this.target.hasOwnProperty(prop)) {
+            ownProperties.push(prop);
+        }
+    }
+    value_of(ownProperties).should_be(expectedProperties);
+};
+
 JSSpec.addScriptReference = function(scriptUrl) {
     if (window.console)
         console.log("Loading " + scriptUrl + "...");
