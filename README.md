@@ -15,7 +15,7 @@ You can [download released versions of Knockout](https://github.com/SteveSanders
 
 Or, if you prefer to build the source yourself, clone the repo from Github, and then:
 
-* To build on Linux or Mac, run `build/build-linux`
+* To build on Linux or Mac, run `cd build` then `./build-linux`
 * To build on Windows, run `build\build-windows.bat`
 
 ##License

@@ -29,7 +29,7 @@ describe('Binding: Options', {
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
         value_of(displayedText).should_be(["bob", "frank"]);
-        value_of(displayedValues).should_be([6, 13]);
+        value_of(displayedValues).should_be(["6", "13"]);
     },
 
     'Should accept function in optionsText param to display subproperties of the model values': function() {

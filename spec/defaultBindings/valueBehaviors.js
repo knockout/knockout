@@ -4,7 +4,7 @@ describe('Binding: Value', {
     'Should assign the value to the node': function () {
         testNode.innerHTML = "<input data-bind='value:123' />";
         ko.applyBindings(null, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
     },
 
     'Should treat null values as empty strings': function () {
@@ -29,9 +29,9 @@ describe('Binding: Value', {
         var myobservable = new ko.observable(123);
         testNode.innerHTML = "<input data-bind='value:someProp' />";
         ko.applyBindings({ someProp: myobservable }, testNode);
-        value_of(testNode.childNodes[0].value).should_be(123);
+        value_of(testNode.childNodes[0].value).should_be("123");
         myobservable(456);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
     },
 
     'For writeable observable values, should catch the node\'s onchange and write values back to the observable': function () {
@@ -47,11 +47,11 @@ describe('Binding: Value', {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
         ko.applyBindings(model, testNode);
-        value_of(testNode.childNodes[0].value).should_be(456);
+        value_of(testNode.childNodes[0].value).should_be("456");
 
         testNode.childNodes[0].value = 789;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        value_of(model.modelProperty123).should_be(789);
+        value_of(model.modelProperty123).should_be("789");
     },
 
     'Should be able to read and write to a property of an object returned by a function': function () {
