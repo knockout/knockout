@@ -2,7 +2,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     var _latestValue,
         _hasBeenEvaluated = false,
         _isBeingEvaluated = false,
-        isActive = true,
         readFunction = evaluatorFunctionOrOptions;
 
     if (readFunction && typeof readFunction == "object") {
@@ -27,7 +26,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             subscription.dispose();
         });
         _subscriptionsToDependencies = [];
-        isActive = false;
     }
 
     function evaluatePossiblyAsync() {
@@ -122,6 +120,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         disposeWhen = options["disposeWhen"] || options.disposeWhen || function() { return false; },
         dispose = disposeAllSubscriptionsToDependencies,
         _subscriptionsToDependencies = [],
+        isActive = function() { return _subscriptionsToDependencies.length > 0; },
         evaluationTimeoutInstance = null;
 
     if (!evaluatorFunctionTarget)
@@ -131,7 +130,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; };
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () { dispose(); };
-    dependentObservable.isActive = function () { return isActive };
+    dependentObservable.isActive = isActive;
 
     ko.subscribable.call(dependentObservable);
     ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
@@ -149,7 +148,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     // But skip if isActive is false (there will never be any dependencies to dispose).
     // (Note: "disposeWhenNodeIsRemoved" option both proactively disposes as soon as the node is removed using ko.removeNode(),
     // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
-    if (disposeWhenNodeIsRemoved && isActive) {
+    if (disposeWhenNodeIsRemoved && isActive()) {
         dispose = function() {
             ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, arguments.callee);
             disposeAllSubscriptionsToDependencies();
