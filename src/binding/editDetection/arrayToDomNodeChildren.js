@@ -63,8 +63,8 @@
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-        }, null, { 'disposeWhenNodeIsRemoved': containerNode, 'disposeWhen': function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
-        return { mappedNodes : mappedNodes, dependentObservable : dependentObservable };
+        }, null, { disposeWhenNodeIsRemoved: containerNode, disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        return { mappedNodes : mappedNodes, dependentObservable : (dependentObservable.isActive() ? dependentObservable : undefined) };
     }
 
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
@@ -121,7 +121,8 @@
                         mapData = lastMappingResult[lastMappingResultIndex];
 
                         // Stop tracking changes to the mapping for these nodes
-                        mapData.dependentObservable.dispose();
+                        if (mapData.dependentObservable)
+                            mapData.dependentObservable.dispose();
 
                         // Queue these nodes for later removal
                         nodesToDelete.push.apply(nodesToDelete, fixUpNodesToBeMovedOrRemoved(mapData.mappedNodes));

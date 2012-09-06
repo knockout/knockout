@@ -144,7 +144,7 @@
                 }
             },
             null,
-            { 'disposeWhenNodeIsRemoved' : node }
+            { disposeWhenNodeIsRemoved : node }
         );
 
         return {
