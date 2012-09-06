@@ -211,6 +211,7 @@ describe('Dependent Observable', {
         var computed1 = new ko.dependentObservable(function () { return underlyingObservable() + 1; });
         var computed2 = new ko.dependentObservable(function () { return computed1.peek() + 1; });
         value_of(computed2()).should_be(3);
+        value_of(computed2.isActive()).should_be(false);
 
         underlyingObservable(11);
         value_of(computed2()).should_be(3);    // value wasn't changed
@@ -237,11 +238,55 @@ describe('Dependent Observable', {
         );
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(1);
+        value_of(dependent.isActive()).should_be(true);
 
         timeToDispose = true;
         underlyingObservable(101);
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
+        value_of(dependent.isActive()).should_be(false);
+    },
+
+    'Should describe itself as active if the evaluator has dependencies on its first run': function() {
+        var someObservable = ko.observable('initial'),
+            dependentObservable = new ko.dependentObservable(function () { return someObservable(); });
+        value_of(dependentObservable.isActive()).should_be(true);
+    },
+
+    'Should describe itself as inactive if the evaluator has no dependencies on its first run': function() {
+        var dependentObservable = new ko.dependentObservable(function () { return 123; });
+        value_of(dependentObservable.isActive()).should_be(false);
+    },
+
+    'Should describe itself as inactive if subsequent runs of the evaluator result in there being no dependencies': function() {
+        var someObservable = ko.observable('initial'),
+            shouldHaveDependency = true,
+            dependentObservable = new ko.dependentObservable(function () { return shouldHaveDependency && someObservable(); });
+        value_of(dependentObservable.isActive()).should_be(true);
+
+        // Trigger a refresh
+        shouldHaveDependency = false;
+        someObservable('modified');
+        value_of(dependentObservable.isActive()).should_be(false);
+    },
+
+    'Should register DOM node disposal callback only if active after the initial evaluation': function() {
+        // Set up an active one
+        var nodeForActive = document.createElement('DIV'),
+            observable = ko.observable('initial'),
+            activeDependentObservable = ko.dependentObservable({ read: function() { return observable(); }, disposeWhenNodeIsRemoved: nodeForActive });
+        var nodeForInactive = document.createElement('DIV')
+            inactiveDependentObservable = ko.dependentObservable({ read: function() { return 123; }, disposeWhenNodeIsRemoved: nodeForInactive });
+
+        value_of(activeDependentObservable.isActive()).should_be(true);
+        value_of(inactiveDependentObservable.isActive()).should_be(false);
+
+        // Infer existence of disposal callbacks from presence/absence of DOM data. This is really just an implementation detail,
+        // and so it's unusual to rely on it in a spec. However, the presence/absence of the callback isn't exposed in any other way,
+        // and if the implementation ever changes, this spec should automatically fail because we're checking for both the positive
+        // and negative cases.
+        value_of(ko.utils.domData.clear(nodeForActive)).should_be(true);    // There was a callback
+        value_of(ko.utils.domData.clear(nodeForInactive)).should_be(false); // There was no callback
     },
 
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {

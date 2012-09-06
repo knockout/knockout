@@ -33,7 +33,9 @@ ko.utils.domData = new (function () {
             if (dataStoreKey) {
                 delete dataStore[dataStoreKey];
                 node[dataStoreKeyExpandoPropertyName] = null;
+                return true; // Exposing "did clean" flag purely so specs can infer whether things have been cleaned up as intended
             }
+            return false;
         }
     }
 })();
