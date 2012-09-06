@@ -90,7 +90,7 @@
             var whenToDispose = function () { return (!firstTargetNode) || !ko.utils.domNodeIsAttachedToDocument(firstTargetNode); }; // Passive disposal (on next evaluation)
             var activelyDisposeWhenNodeIsRemoved = (firstTargetNode && renderMode == "replaceNode") ? firstTargetNode.parentNode : firstTargetNode;
 
-            return ko.dependentObservable( // So the DOM is automatically updated when any dependency changes
+            return ko.computed.possiblyWrap( // So the DOM is automatically updated when any dependency changes
                 function () {
                     // Ensure we've got a proper binding context to work with
                     var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
@@ -106,8 +106,8 @@
                         firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
                     }
                 },
-                null,
-                { 'disposeWhen': whenToDispose, 'disposeWhenNodeIsRemoved': activelyDisposeWhenNodeIsRemoved }
+                activelyDisposeWhenNodeIsRemoved,
+                whenToDispose
             );
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
@@ -138,7 +138,7 @@
                 options['afterRender'](addedNodesArray, arrayValue);
         };
 
-        return ko.dependentObservable(function () {
+        return ko.computed.possiblyWrap(function () {
             var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
@@ -150,7 +150,7 @@
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback);
 
-        }, null, { 'disposeWhenNodeIsRemoved': targetNode });
+        }, targetNode);
     };
 
     var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
