@@ -19,7 +19,6 @@ knockoutDebugCallback([
     'src/virtualElements.js',
     'src/binding/bindingProvider.js',
     'src/binding/bindingAttributeSyntax.js',
-    'src/binding/defaultBindings/common.js',
     'src/binding/defaultBindings/attr.js',
     'src/binding/defaultBindings/checked.js',
     'src/binding/defaultBindings/css.js',
