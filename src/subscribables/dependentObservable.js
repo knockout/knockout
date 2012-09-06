@@ -114,13 +114,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         return _latestValue;
     }
 
+    function isActive() {
+        return !_hasBeenEvaluated || _subscriptionsToDependencies.length > 0;
+    }
+
     // By here, "options" is always non-null
     var writeFunction = options["write"],
         disposeWhenNodeIsRemoved = options["disposeWhenNodeIsRemoved"] || options.disposeWhenNodeIsRemoved || null,
         disposeWhen = options["disposeWhen"] || options.disposeWhen || function() { return false; },
         dispose = disposeAllSubscriptionsToDependencies,
         _subscriptionsToDependencies = [],
-        isActive = function() { return _subscriptionsToDependencies.length > 0; },
         evaluationTimeoutInstance = null;
 
     if (!evaluatorFunctionTarget)
