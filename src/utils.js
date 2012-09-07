@@ -132,6 +132,13 @@ ko.utils = new (function () {
             return container;
         },
 
+        cloneNodes: function (nodesArray) {
+            for (var i = 0, j = nodesArray.length, newNodesArray = []; i < j; i++) {
+                newNodesArray.push(nodesArray[i].cloneNode(true));
+            }
+            return newNodesArray;
+        },
+
         setDomNodeChildren: function (domNode, childNodes) {
             ko.utils.emptyDomNode(domNode);
             if (childNodes) {
