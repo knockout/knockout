@@ -188,6 +188,12 @@
                     shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
                 if ('ifnot' in bindingValue)
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
+
+                // Ensure that the callbacks don't add any dependencies to the template code
+                ko.utils.arrayForEach(['afterRender', 'afterAdd', 'beforeRemove'], function(propName) {
+                    if (bindingValue[propName])
+                        bindingValue[propName] = ko.dependencyDetection.makeIgnoredCallback(bindingValue[propName]);
+                })
             }
 
             var templateComputed = null;
