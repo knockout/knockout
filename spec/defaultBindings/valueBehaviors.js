@@ -65,19 +65,19 @@ describe('Binding: Value', {
         testNode.childNodes[0].value = "1234";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(validValue()).should_be("1234");
-        value_of(valid()).should_be(true);
+        value_of(isValid()).should_be(true);
 
         //set to an invalid value
         testNode.childNodes[0].value = "1234a";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(validValue()).should_be("1234");
-        value_of(valid()).should_be(false);
+        value_of(isValid()).should_be(false);
 
         //set to a valid value where the current value of the writeable computed is the same as the written value
         testNode.childNodes[0].value = "1234";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         value_of(validValue()).should_be("1234");
-        value_of(valid()).should_be(true);
+        value_of(isValid()).should_be(true);
     },
 
     'For non-observable property values, should catch the node\'s onchange and write values back to the property': function () {
