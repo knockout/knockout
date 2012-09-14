@@ -18,5 +18,10 @@ For example,
 
 ... and now you're ready to use it. (Obviously, update the `src` attribute to match the location where you put the downloaded file.)
 
+You can also reference Knockout.js from a content delivery network (CDN):
+
+* Microsoft Ajax CDN: `http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.1.0.js`
+* cdnjs: `http://cdnjs.cloudflare.com/ajax/libs/knockout/2.1.0/knockout-min.js`
+
 If you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](observables.html).
 
