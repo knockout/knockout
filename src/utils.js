@@ -103,7 +103,11 @@ ko.utils = new (function () {
         },
 
         extend: function (target, source) {
-            if (source) {
+            if( arguments.length > 2 ) {
+                for( var i=1, l=arguments.length; i<l; i++ ) {
+                    extend( target, arguments[i] );
+                }
+            } else if (source) {
                 for(var prop in source) {
                     if(source.hasOwnProperty(prop)) {
                         target[prop] = source[prop];
