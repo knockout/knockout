@@ -1,7 +1,7 @@
 (function () {
     ko.bindingHandlers = {};
 
-    ko.bindingContext = function(dataItem, parentBindingContext) {
+    ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
         if (parentBindingContext) {
             ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
             this['$parentContext'] = parentBindingContext;
@@ -11,11 +11,17 @@
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;
+            // Export 'ko' in the binding context so it will be available in bindings and templates
+            // even if 'ko' isn't exported as a global, such as when using an AMD loader.
+            // See https://github.com/SteveSanderson/knockout/issues/490
+            this['ko'] = ko;
         }
         this['$data'] = dataItem;
+        if (dataItemAlias)
+            this[dataItemAlias] = dataItem;
     }
-    ko.bindingContext.prototype['createChildContext'] = function (dataItem) {
-        return new ko.bindingContext(dataItem, this);
+    ko.bindingContext.prototype['createChildContext'] = function (dataItem, dataItemAlias) {
+        return new ko.bindingContext(dataItem, this, dataItemAlias);
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
         var clone = ko.utils.extend(new ko.bindingContext(), this);
@@ -138,7 +144,7 @@
                 }
             },
             null,
-            { 'disposeWhenNodeIsRemoved' : node }
+            { disposeWhenNodeIsRemoved : node }
         );
 
         return {

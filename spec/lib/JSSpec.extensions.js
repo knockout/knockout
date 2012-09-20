@@ -31,8 +31,35 @@ JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
     JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
 };
 
+JSSpec.DSL.Subject.prototype.should_have_own_properties = function (expectedProperties) {
+    var ownProperties = [];
+    for (var prop in this.target) {
+        if (this.target.hasOwnProperty(prop)) {
+            ownProperties.push(prop);
+        }
+    }
+    value_of(ownProperties).should_be(expectedProperties);
+};
+
+JSSpec.DSL.Subject.prototype.should_have_selected_values = function (expectedValues) {
+    var selectedNodes = ko.utils.arrayFilter(this.target.childNodes, function (node) { return node.selected; }),
+        selectedValues = ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
+    value_of(selectedValues).should_be(expectedValues);
+};
+
 JSSpec.addScriptReference = function(scriptUrl) {
     if (window.console)
         console.log("Loading " + scriptUrl + "...");
     document.write("<scr" + "ipt type='text/javascript' src='" + scriptUrl + "'></sc" + "ript>");
+};
+
+JSSpec.prepareTestNode = function() {
+    // The bindings specs make frequent use of this utility function to set up
+    // a clean new DOM node they can execute code against
+    var existingNode = document.getElementById("testNode");
+    if (existingNode != null)
+        existingNode.parentNode.removeChild(existingNode);
+    testNode = document.createElement("div");
+    testNode.id = "testNode";
+    document.body.appendChild(testNode);
 };

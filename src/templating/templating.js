@@ -107,7 +107,7 @@
                     }
                 },
                 null,
-                { 'disposeWhen': whenToDispose, 'disposeWhenNodeIsRemoved': activelyDisposeWhenNodeIsRemoved }
+                { disposeWhen: whenToDispose, disposeWhenNodeIsRemoved: activelyDisposeWhenNodeIsRemoved }
             );
         } else {
             // We don't yet have a DOM node to evaluate, so use a memo and render the template later when there is a DOM node
@@ -125,7 +125,7 @@
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
             // Support selecting template as a function of the data being rendered
-            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue));
+            arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue), options['as']);
             arrayItemContext['$index'] = index;
             var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
@@ -150,15 +150,15 @@
 
             ko.utils.setDomNodeChildrenFromArrayMapping(targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback);
 
-        }, null, { 'disposeWhenNodeIsRemoved': targetNode });
+        }, null, { disposeWhenNodeIsRemoved: targetNode });
     };
 
-    var templateSubscriptionDomDataKey = '__ko__templateSubscriptionDomDataKey__';
-    function disposeOldSubscriptionAndStoreNewOne(element, newSubscription) {
-        var oldSubscription = ko.utils.domData.get(element, templateSubscriptionDomDataKey);
-        if (oldSubscription && (typeof(oldSubscription.dispose) == 'function'))
-            oldSubscription.dispose();
-        ko.utils.domData.set(element, templateSubscriptionDomDataKey, newSubscription);
+    var templateComputedDomDataKey = '__ko__templateComputedDomDataKey__';
+    function disposeOldComputedAndStoreNewOne(element, newComputed) {
+        var oldComputed = ko.utils.domData.get(element, templateComputedDomDataKey);
+        if (oldComputed && (typeof(oldComputed.dispose) == 'function'))
+            oldComputed.dispose();
+        ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
     }
 
     ko.bindingHandlers['template'] = {
@@ -190,36 +190,36 @@
                     shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
             }
 
-            var templateSubscription = null;
+            var templateComputed = null;
 
             if ((typeof bindingValue === 'object') && ('foreach' in bindingValue)) { // Note: can't use 'in' operator on strings
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
-                templateSubscription = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
+                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
             } else {
                 if (shouldDisplay) {
                     // Render once for this single data point (or use the viewModel if no data was provided)
                     var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
-                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data'])) // Given an explitit 'data' value, we create a child binding context for it
+                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data']), bindingValue['as']) // Given an explitit 'data' value, we create a child binding context for it
                         : bindingContext;                                                                       // Given no explicit 'data' value, we retain the same binding context
-                    templateSubscription = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
+                    templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
                 } else
                     ko.virtualElements.emptyNode(element);
             }
 
-            // It only makes sense to have a single template subscription per element (otherwise which one should have its output displayed?)
-            disposeOldSubscriptionAndStoreNewOne(element, templateSubscription);
+            // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
+            disposeOldComputedAndStoreNewOne(element, templateComputed);
         }
     };
 
     // Anonymous templates can't be rewritten. Give a nice error message if you try to do it.
-    ko.jsonExpressionRewriting.bindingRewriteValidators['template'] = function(bindingValue) {
-        var parsedBindingValue = ko.jsonExpressionRewriting.parseObjectLiteral(bindingValue);
+    ko.expressionRewriting.bindingRewriteValidators['template'] = function(bindingValue) {
+        var parsedBindingValue = ko.expressionRewriting.parseObjectLiteral(bindingValue);
 
         if ((parsedBindingValue.length == 1) && parsedBindingValue[0]['unknown'])
             return null; // It looks like a string literal, not an object literal, so treat it as a named template (which is allowed for rewriting)
 
-        if (ko.jsonExpressionRewriting.keyValueArrayContainsKey(parsedBindingValue, "name"))
+        if (ko.expressionRewriting.keyValueArrayContainsKey(parsedBindingValue, "name"))
             return null; // Named templates can be rewritten, so return "no error"
         return "This template engine does not support anonymous templates nested within its templates";
     };

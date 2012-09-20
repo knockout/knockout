@@ -56,6 +56,22 @@ describe('Dependent Observable', {
         value_of(invokedWriteWithThis).should_be(window); // Since no owner was specified
     },
 
+    'Should be able to write to multiple computed properties on a model object using chaining syntax': function() {
+        var model = {
+            prop1: ko.computed({
+                read: function(){},
+                write: function(value) {
+                    value_of(value).should_be("prop1");
+                } }),
+            prop2: ko.computed({
+                read: function(){},
+                write: function(value) {
+                    value_of(value).should_be("prop2");
+                } })
+        };
+        model.prop1('prop1').prop2('prop2');
+    },
+
     'Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters': function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
@@ -195,6 +211,7 @@ describe('Dependent Observable', {
         var computed1 = new ko.dependentObservable(function () { return underlyingObservable() + 1; });
         var computed2 = new ko.dependentObservable(function () { return computed1.peek() + 1; });
         value_of(computed2()).should_be(3);
+        value_of(computed2.isActive()).should_be(false);
 
         underlyingObservable(11);
         value_of(computed2()).should_be(3);    // value wasn't changed
@@ -221,11 +238,55 @@ describe('Dependent Observable', {
         );
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(1);
+        value_of(dependent.isActive()).should_be(true);
 
         timeToDispose = true;
         underlyingObservable(101);
         value_of(timesEvaluated).should_be(1);
         value_of(dependent.getDependenciesCount()).should_be(0);
+        value_of(dependent.isActive()).should_be(false);
+    },
+
+    'Should describe itself as active if the evaluator has dependencies on its first run': function() {
+        var someObservable = ko.observable('initial'),
+            dependentObservable = new ko.dependentObservable(function () { return someObservable(); });
+        value_of(dependentObservable.isActive()).should_be(true);
+    },
+
+    'Should describe itself as inactive if the evaluator has no dependencies on its first run': function() {
+        var dependentObservable = new ko.dependentObservable(function () { return 123; });
+        value_of(dependentObservable.isActive()).should_be(false);
+    },
+
+    'Should describe itself as inactive if subsequent runs of the evaluator result in there being no dependencies': function() {
+        var someObservable = ko.observable('initial'),
+            shouldHaveDependency = true,
+            dependentObservable = new ko.dependentObservable(function () { return shouldHaveDependency && someObservable(); });
+        value_of(dependentObservable.isActive()).should_be(true);
+
+        // Trigger a refresh
+        shouldHaveDependency = false;
+        someObservable('modified');
+        value_of(dependentObservable.isActive()).should_be(false);
+    },
+
+    'Should register DOM node disposal callback only if active after the initial evaluation': function() {
+        // Set up an active one
+        var nodeForActive = document.createElement('DIV'),
+            observable = ko.observable('initial'),
+            activeDependentObservable = ko.dependentObservable({ read: function() { return observable(); }, disposeWhenNodeIsRemoved: nodeForActive });
+        var nodeForInactive = document.createElement('DIV')
+            inactiveDependentObservable = ko.dependentObservable({ read: function() { return 123; }, disposeWhenNodeIsRemoved: nodeForInactive });
+
+        value_of(activeDependentObservable.isActive()).should_be(true);
+        value_of(inactiveDependentObservable.isActive()).should_be(false);
+
+        // Infer existence of disposal callbacks from presence/absence of DOM data. This is really just an implementation detail,
+        // and so it's unusual to rely on it in a spec. However, the presence/absence of the callback isn't exposed in any other way,
+        // and if the implementation ever changes, this spec should automatically fail because we're checking for both the positive
+        // and negative cases.
+        value_of(ko.utils.domData.clear(nodeForActive)).should_be(true);    // There was a callback
+        value_of(ko.utils.domData.clear(nodeForInactive)).should_be(false); // There was no callback
     },
 
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
@@ -256,5 +317,70 @@ describe('Dependent Observable', {
                 // isn't prevented
                 observable(observable() + 1);
             });
+    },
+
+    'Should not subscribe to observables accessed through change notifications of a computed': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            computed = ko.computed(function() { return observableDependent() });
+
+        // initially there is only one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // create a change subscription that also accesses an observable
+        computed.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of the computed by updating its dependency
+        observableDependent(1);
+        // there should still only be one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // also test with a beforeChange subscription
+        computed.subscribe(function() { observableIndependent() }, null, 'beforeChange');
+        observableDependent(2);
+        value_of(computed.getDependenciesCount()).should_be(1);
+    },
+
+    'Should not subscribe to observables accessed through change notifications of a modified observable': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            observableModified = ko.observable(),
+            computed = ko.computed(function() { observableModified(observableDependent()) });
+
+        // initially there is only one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // create a change subscription that also accesses an observable
+        observableModified.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of the computed by updating its dependency
+        observableDependent(1);
+        // there should still only be one dependency
+        value_of(computed.getDependenciesCount()).should_be(1);
+
+        // also test with a beforeChange subscription
+        observableModified.subscribe(function() { observableIndependent() }, null, 'beforeChange');
+        observableDependent(2);
+        value_of(computed.getDependenciesCount()).should_be(1);
+    },
+
+    'Should not subscribe to observables accessed through change notifications of an accessed computed': function() {
+        // See https://github.com/SteveSanderson/knockout/issues/341
+        var observableDependent = ko.observable(),
+            observableIndependent = ko.observable(),
+            computedInner = ko.computed({read: function() { return observableDependent() }, deferEvaluation: true}),
+            computedOuter = ko.computed({read: function() { return computedInner() }, deferEvaluation: true});
+
+        // initially there are no dependencies (because they haven't been evaluated)
+        value_of(computedInner.getDependenciesCount()).should_be(0);
+        value_of(computedOuter.getDependenciesCount()).should_be(0);
+
+        // create a change subscription on the inner computed that also accesses an observable
+        computedInner.subscribe(function() { observableIndependent() });
+        // now trigger evaluation of both computeds by accessing the outer one
+        computedOuter();
+        // there should be only one dependency for each
+        value_of(computedInner.getDependenciesCount()).should_be(1);
+        value_of(computedOuter.getDependenciesCount()).should_be(1);
     }
 })

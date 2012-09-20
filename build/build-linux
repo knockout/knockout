@@ -17,7 +17,7 @@ SourceFiles=`grep js < fragments/source-references.js | # Find JS references
              tr '\n' ' '`                               # Combine into single line
 cat fragments/extern-pre.js         > $OutDebugFile.temp
 cat fragments/amd-pre.js            >> $OutDebugFile.temp
-cat $SourceFiles                    >> $OutDebugFile.temp
+cat $SourceFiles                    >> $OutDebugFile.temp || handle_fail
 cat fragments/amd-post.js           >> $OutDebugFile.temp
 cat fragments/extern-post.js        >> $OutDebugFile.temp
 

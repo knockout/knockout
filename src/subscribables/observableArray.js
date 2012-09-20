@@ -13,7 +13,7 @@ ko.observableArray = function (initialValues) {
 
 ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
-        var underlyingArray = this();
+        var underlyingArray = this.peek();
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = 0; i < underlyingArray.length; i++) {
@@ -36,7 +36,7 @@ ko.observableArray['fn'] = {
     'removeAll': function (arrayOfValues) {
         // If you passed zero args, we remove everything
         if (arrayOfValues === undefined) {
-            var underlyingArray = this();
+            var underlyingArray = this.peek();
             var allValues = underlyingArray.slice(0);
             this.valueWillMutate();
             underlyingArray.splice(0, underlyingArray.length);
@@ -52,7 +52,7 @@ ko.observableArray['fn'] = {
     },
 
     'destroy': function (valueOrPredicate) {
-        var underlyingArray = this();
+        var underlyingArray = this.peek();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         this.valueWillMutate();
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
@@ -85,16 +85,20 @@ ko.observableArray['fn'] = {
         var index = this['indexOf'](oldItem);
         if (index >= 0) {
             this.valueWillMutate();
-            this()[index] = newItem;
+            this.peek()[index] = newItem;
             this.valueHasMutated();
         }
     }
 }
 
 // Populate ko.observableArray.fn with read/write functions from native arrays
+// Important: Do not add any additional functions here that may reasonably be used to *read* data from the array
+// because we'll eval them without causing subscriptions, so ko.computed output could end up getting stale
 ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "unshift"], function (methodName) {
     ko.observableArray['fn'][methodName] = function () {
-        var underlyingArray = this();
+        // Use "peek" to avoid creating a subscription in any computed that we're executing in the context of
+        // (for consistency with mutating regular observables)
+        var underlyingArray = this.peek();
         this.valueWillMutate();
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
         this.valueHasMutated();
