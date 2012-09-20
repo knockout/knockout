@@ -80,7 +80,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
-        } 
+        }
 		catch(pseudoError) {}
 		finally {
             ko.dependencyDetection.end();
