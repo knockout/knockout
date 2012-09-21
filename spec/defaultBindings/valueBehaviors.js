@@ -43,6 +43,43 @@ describe('Binding: Value', {
         value_of(myobservable()).should_be("some user-entered value");
     },
 
+    'For writeable observable values, should always write when triggered, even when value is the same': function () {
+        var validValue = ko.observable(123);
+        var isValid = ko.observable(true);
+        var valueForEditing = ko.computed({
+            read: validValue,
+            write: function(newValue) {
+                if (!isNaN(newValue)) {
+                    isValid(true);
+                    validValue(newValue);
+                } else {
+                    isValid(false);
+                }
+            }
+        });
+
+        testNode.innerHTML = "<input data-bind='value: valueForEditing' />";
+        ko.applyBindings({ valueForEditing: valueForEditing}, testNode);
+
+        //set initial valid value
+        testNode.childNodes[0].value = "1234";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(validValue()).should_be("1234");
+        value_of(isValid()).should_be(true);
+
+        //set to an invalid value
+        testNode.childNodes[0].value = "1234a";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(validValue()).should_be("1234");
+        value_of(isValid()).should_be(false);
+
+        //set to a valid value where the current value of the writeable computed is the same as the written value
+        testNode.childNodes[0].value = "1234";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        value_of(validValue()).should_be("1234");
+        value_of(isValid()).should_be(true);
+    },
+
     'For non-observable property values, should catch the node\'s onchange and write values back to the property': function () {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
