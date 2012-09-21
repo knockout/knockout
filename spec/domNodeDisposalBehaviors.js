@@ -48,5 +48,23 @@ describe('DOM node disposal', {
         ko.utils.domNodeDisposal.removeDisposeCallback(testNode, callback);
         ko.cleanNode(testNode);
         value_of(didRun).should_be(false); // Didn't run only because we removed it
+    },
+
+    'Should be able to attach disposal callback to a node that has been cloned': function() {
+        // This represents bug https://github.com/SteveSanderson/knockout/issues/324
+        // IE < 9 copies expando properties when cloning nodes, so if the node already has some DOM data associated with it,
+        // the DOM data key will be copied too. This causes a problem for disposal, because if the original node gets disposed,
+        // the shared DOM data is disposed, and then it becomes an error to try to set new DOM data on the clone.
+        // The solution is to make the DOM-data-setting logic able to recover from the scenario by detecting that the original
+        // DOM data is gone, and therefore recreating a new DOM data store for the clone.
+
+        // Create an element with DOM data
+        var originalNode = document.createElement("DIV");
+        ko.utils.domNodeDisposal.addDisposeCallback(originalNode, function() { });
+
+        // Clone it, then dispose it. Then check it's still safe to associate DOM data with the clone.
+        var cloneNode = originalNode.cloneNode();
+        ko.cleanNode(originalNode);
+        ko.utils.domNodeDisposal.addDisposeCallback(cloneNode, function() { });
     }
 });
