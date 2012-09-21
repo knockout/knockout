@@ -280,6 +280,12 @@ describe('Templating', {
         value_of(testNode.childNodes[0].value).should_be("hello");
     },
 
+    'Data binding syntax should be able to use $element in binding value': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: $element.tagName'></div>" }));
+        ko.renderTemplate("someTemplate", null, null, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("DIV");
+    },
+
     'Data binding syntax should defer evaluation of variables until the end of template rendering (so bindings can take independent subscriptions to them)': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({
             someTemplate: "<input data-bind='value:message' />[js: message = 'goodbye'; undefined; ]"
