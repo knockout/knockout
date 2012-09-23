@@ -23,13 +23,19 @@ ko.dependencyDetection = (function () {
             }
         },
 
-        ignore: function(callback, callbackTarget) {
+        ignore: function(callback, callbackTarget, callbackArgs) {
             try {
                 _frames.push(null);
-                callback.call(callbackTarget);
+                return callback.apply(callbackTarget, callbackArgs || []);
             } finally {
                 _frames.pop();
             }
+        },
+
+        makeIgnoredCallback: function(callback, callbackTarget) {
+            return function() {
+                return ko.dependencyDetection.ignore(callback, callbackTarget, arguments);
+            };
         }
     };
 })();

@@ -8,7 +8,7 @@ function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, 
     // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
     // change the model value to match the dropdown.
     if (modelValue !== ko.selectExtensions.readValue(element))
-        ko.utils.triggerEvent(element, "change");
+        triggerEventIgnoreDependencies(element, "change");
 };
 
 ko.bindingHandlers['options'] = {
@@ -93,7 +93,7 @@ ko.bindingHandlers['options'] = {
                 // Ensure consistency between model value and selected option.
                 // If the dropdown is being populated for the first time here (or was otherwise previously empty),
                 // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.unwrapObservable(allBindings['value']), /* preferModelValue */ true);
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings['value']), /* preferModelValue */ true);
             }
 
             // Workaround for IE9 bug

@@ -24,7 +24,7 @@ var defaultEvent = "change";
 ko.subscribable['fn'] = {
     subscribe: function (callback, callbackTarget, event) {
         event = event || defaultEvent;
-        var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
+        var boundCallback = ko.dependencyDetection.makeIgnoredCallback(callback, callbackTarget);
 
         var subscription = new ko.subscription(this, boundCallback, function () {
             ko.utils.arrayRemoveItem(this._subscriptions[event], subscription);
@@ -39,14 +39,12 @@ ko.subscribable['fn'] = {
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
         if (this._subscriptions[event]) {
-            ko.dependencyDetection.ignore(function() {
-                ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
-                    // In case a subscription was disposed during the arrayForEach cycle, check
-                    // for isDisposed on each subscription before invoking its callback
-                    if (subscription && (subscription.isDisposed !== true))
-                        subscription.callback(valueToNotify);
-                });
-            }, this);
+            ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
+                // In case a subscription was disposed during the arrayForEach cycle, check
+                // for isDisposed on each subscription before invoking its callback
+                if (subscription && (subscription.isDisposed !== true))
+                    subscription.callback(valueToNotify);
+            });
         }
     },
 
