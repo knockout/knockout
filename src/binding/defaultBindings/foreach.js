@@ -17,6 +17,8 @@ ko.bindingHandlers['foreach'] = {
                 'afterAdd': bindingValue['afterAdd'],
                 'beforeRemove': bindingValue['beforeRemove'],
                 'afterRender': bindingValue['afterRender'],
+                'beforeMove': bindingValue['beforeMove'],
+                'afterMove': bindingValue['afterMove'],
                 'templateEngine': ko.nativeTemplateEngine.instance
             };
         };
