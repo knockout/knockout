@@ -3,22 +3,26 @@
 ko.bindingHandlers['foreach'] = {
     makeTemplateValueAccessor: function(valueAccessor) {
         return function() {
-            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
+            var modelValue = valueAccessor(),
+                unwrappedValue = ko.utils.peekObservable(modelValue);    // Unwrap without setting a dependency here
 
-            // If bindingValue is the array, just pass it on its own
-            if ((!bindingValue) || typeof bindingValue.length == "number")
-                return { 'foreach': bindingValue, 'templateEngine': ko.nativeTemplateEngine.instance };
+            // If unwrappedValue is the array, pass in the wrapped value on its own
+            // The value will be unwrapped and tracked within the template binding
+            // (See https://github.com/SteveSanderson/knockout/issues/523)
+            if ((!unwrappedValue) || typeof unwrappedValue.length == "number")
+                return { 'foreach': modelValue, 'templateEngine': ko.nativeTemplateEngine.instance };
 
-            // If bindingValue.data is the array, preserve all relevant options
+            // If unwrappedValue.data is the array, preserve all relevant options and unwrap again value so we get updates
+            ko.utils.unwrapObservable(modelValue);
             return {
-                'foreach': bindingValue['data'],
-                'as': bindingValue['as'],
-                'includeDestroyed': bindingValue['includeDestroyed'],
-                'afterAdd': bindingValue['afterAdd'],
-                'beforeRemove': bindingValue['beforeRemove'],
-                'afterRender': bindingValue['afterRender'],
-                'beforeMove': bindingValue['beforeMove'],
-                'afterMove': bindingValue['afterMove'],
+                'foreach': unwrappedValue['data'],
+                'as': unwrappedValue['as'],
+                'includeDestroyed': unwrappedValue['includeDestroyed'],
+                'afterAdd': unwrappedValue['afterAdd'],
+                'beforeRemove': unwrappedValue['beforeRemove'],
+                'afterRender': unwrappedValue['afterRender'],
+                'beforeMove': unwrappedValue['beforeMove'],
+                'afterMove': unwrappedValue['afterMove'],
                 'templateEngine': ko.nativeTemplateEngine.instance
             };
         };

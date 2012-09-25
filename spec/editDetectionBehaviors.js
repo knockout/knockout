@@ -238,17 +238,30 @@ describe('Array to DOM node children mapping', {
         value_of(mappingInvocations).should_be([]);
         value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
+        // Check that observable items can be added and unwrapped in the mapping function and will update the DOM.
+        // Also check that observables accessed in the callback function do not update the DOM.
         mappingInvocations = [], countCallbackInvocations = 0;
-        var observable = ko.observable(1);
-        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [observable, null, "B"], mapping, null, callback); // Add to beginning; delete from end
+        var observable = ko.observable(1), callbackObservable = ko.observable(1);
+        var callback2 = function(arrayItem, nodes) {
+            callbackObservable();
+            callback(arrayItem, nodes);
+        };
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, [observable, null, "B"], mapping, null, callback2); // Add to beginning; delete from end
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["1", "null", "B"]);
         value_of(mappingInvocations).should_be([observable, null]);
         value_of(countCallbackInvocations).should_be(mappingInvocations.length);
 
+        // Change the value of the mapped observable and verify that the DOM is updated
         mappingInvocations = [], countCallbackInvocations = 0;
-        observable(2);      // Change the value of the observable
+        observable(2);
         value_of(ko.utils.arrayMap(testNode.childNodes, function (x) { return x.innerHTML })).should_be(["2", "null", "B"]);
         value_of(mappingInvocations).should_be([observable]);
         value_of(countCallbackInvocations).should_be(mappingInvocations.length);
+
+        // Change the value of the callback observable and verify that the DOM wasn't updated
+        mappingInvocations = [], countCallbackInvocations = 0;
+        callbackObservable(2);
+        value_of(mappingInvocations.length).should_be(0);
+        value_of(countCallbackInvocations).should_be(0);
     }
 });

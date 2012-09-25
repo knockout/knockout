@@ -56,7 +56,7 @@
             if (mappedNodes.length > 0) {
                 ko.utils.replaceDomNodes(fixUpNodesToBeMovedOrRemoved(mappedNodes), newMappedNodes);
                 if (callbackAfterAddingNodes)
-                    callbackAfterAddingNodes(valueToMap, newMappedNodes, index);
+                    ko.dependencyDetection.ignore(callbackAfterAddingNodes, null, [valueToMap, newMappedNodes, index]);
             }
 
             // Replace the contents of the mappedNodes array, thereby updating the record

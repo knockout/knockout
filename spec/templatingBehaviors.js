@@ -154,6 +154,24 @@ describe('Templating', {
         value_of(testNode.innerHTML).should_be("Value = B");
     },
 
+    'Should not rerender DOM element if observable accessed in \'afterRender\' callaback is changed': function () {
+        var observable = new ko.observable("A"), count = 0;
+        var myCallback = function(elementsArray, dataItem) {
+            observable();   // access observable in callback
+        };
+        var myTemplate = function() {
+            return "Value = " + (++count);
+        };
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: myTemplate }));
+        ko.renderTemplate("someTemplate", {}, { afterRender: myCallback }, testNode);
+        value_of(testNode.childNodes.length).should_be(1);
+        value_of(testNode.innerHTML).should_be("Value = 1");
+
+        observable("B");
+        value_of(testNode.childNodes.length).should_be(1);
+        value_of(testNode.innerHTML).should_be("Value = 1");
+    },
+
     'If the supplied data item is observable, evaluates it and has subscription on it': function () {
         var observable = new ko.observable("A");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: function (data) {
