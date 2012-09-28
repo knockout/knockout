@@ -279,6 +279,10 @@ ko.utils = new (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
+        peekObservable: function (value) {
+            return ko.isObservable(value) ? value.peek() : value;
+        },
+
         toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
             if (classNames) {
                 var cssClassNameRegex = /[\w-]+/g,
@@ -454,6 +458,7 @@ ko.exportSymbol('utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('utils.extend', ko.utils.extend);
 ko.exportSymbol('utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('utils.peekObservable', ko.utils.peekObservable);
 ko.exportSymbol('utils.postJson', ko.utils.postJson);
 ko.exportSymbol('utils.parseJson', ko.utils.parseJson);
 ko.exportSymbol('utils.registerEventHandler', ko.utils.registerEventHandler);

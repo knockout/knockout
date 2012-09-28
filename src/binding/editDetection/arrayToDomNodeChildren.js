@@ -56,7 +56,7 @@
             if (mappedNodes.length > 0) {
                 ko.utils.replaceDomNodes(fixUpNodesToBeMovedOrRemoved(mappedNodes), newMappedNodes);
                 if (callbackAfterAddingNodes)
-                    callbackAfterAddingNodes(valueToMap, newMappedNodes, index);
+                    ko.dependencyDetection.ignore(callbackAfterAddingNodes, null, [valueToMap, newMappedNodes, index]);
             }
 
             // Replace the contents of the mappedNodes array, thereby updating the record
@@ -155,10 +155,6 @@
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
-        // Next remove nodes for deleted items; or call beforeRemove, which will remove them
-        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
-        callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
-
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
@@ -177,6 +173,10 @@
                 mapData.initialized = true;
             }
         }
+
+        // Next remove nodes for deleted items; or call beforeRemove, which will remove them
+        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+        callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
 
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);

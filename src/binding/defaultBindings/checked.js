@@ -10,11 +10,11 @@ ko.bindingHandlers['checked'] = {
                 return; // "checked" binding only responds to checkboxes and selected radio buttons
             }
 
-            var modelValue = valueAccessor();
-            if ((element.type == "checkbox") && (ko.utils.unwrapObservable(modelValue) instanceof Array)) {
+            var modelValue = valueAccessor(), unwrappedValue = ko.utils.unwrapObservable(modelValue);
+            if ((element.type == "checkbox") && (unwrappedValue instanceof Array)) {
                 // For checkboxes bound to an array, we add/remove the checkbox value to that array
                 // This works for both observable and non-observable arrays
-                var existingEntryIndex = ko.utils.arrayIndexOf(ko.utils.unwrapObservable(modelValue), element.value);
+                var existingEntryIndex = ko.utils.arrayIndexOf(unwrappedValue, element.value);
                 if (element.checked && (existingEntryIndex < 0))
                     modelValue.push(element.value);
                 else if ((!element.checked) && (existingEntryIndex >= 0))

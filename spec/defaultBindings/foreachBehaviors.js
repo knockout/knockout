@@ -175,6 +175,116 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
     },
 
+    'Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('first child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('first child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('first childhidden child');
+    },
+
+    'Should call an afterAdd callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        someItems.push({ childprop: 'added child'});
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('added child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('added child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('added childhidden child');
+    },
+
+    'Should call an beforeRemove callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeRemove: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }, { childprop: 'second child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function(elem) { callbackObservable(); callbacks++; ko.removeNode(elem); } }, testNode);
+        someItems.pop();
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('first child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('first child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('first childhidden child');
+    },
+
+    'Should call an afterMove callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterMove: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        someItems.splice(0, 0, { childprop: 'added child'});
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst childhidden child');
+    },
+
+    'Should call an beforeMove callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeMove: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        someItems.splice(0, 0, { childprop: 'added child'});
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst childhidden child');
+    },
+
+    'Should not double-unwrap the given value': function() {
+        // Previously an observable value was doubly-unwrapped: in the foreach handler and then in the template handler.
+        // This is now fixed so that the value is unwrapped just in the template handler and only peeked at in the foreach handler.
+        // See https://github.com/SteveSanderson/knockout/issues/523
+        testNode.innerHTML = "<div data-bind='foreach: myArray'><span data-bind='text: $data'></span></div>";
+        var myArrayWrapped = ko.observable(ko.observableArray(['data value']));
+        ko.applyBindings({ myArray: myArrayWrapped }, testNode);
+        // Because the unwrapped value isn't an array, nothing gets rendered.
+        value_of(testNode.childNodes[0]).should_contain_text('');
+    },
+
     'Should be able to nest foreaches and access binding contexts both during and after binding': function() {
         testNode.innerHTML = "<div data-bind='foreach: items'>"
                                 + "<div data-bind='foreach: children'>"
