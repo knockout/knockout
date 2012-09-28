@@ -165,6 +165,18 @@ describe('Binding attribute syntax', {
         value_of(passedValues[1]).should_be("goodbye");
     },
 
+    'Should be able to use $element in binding value': function() {
+        testNode.innerHTML = "<div data-bind='text: $element.tagName'></div>";
+        ko.applyBindings({}, testNode);
+        value_of(testNode).should_contain_text("DIV");
+    },
+
+    'Should be able to use $context in binding value to refer to the context object': function() {
+        testNode.innerHTML = "<div data-bind='text: $context.$data === $data'></div>";
+        ko.applyBindings({}, testNode);
+        value_of(testNode).should_contain_text("true");
+    },
+
     'Should be able to refer to the bound object itself (at the root scope, the viewmodel) via $data': function() {
         testNode.innerHTML = "<div data-bind='text: $data.someProp'></div>";
         ko.applyBindings({ someProp: 'My prop value' }, testNode);
