@@ -568,6 +568,38 @@ describe('Templating', {
         value_of(testNode.childNodes[0]).should_contain_text("");
     },
 
+    'Data binding syntax \"if\" condition should not re-render template if value remains truthy when changed': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<span>Value: [js: myProp2]</span>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp1 }'></div>";
+
+        var viewModel = { myProp1: ko.observable(true), myProp2: 'abc' };
+        ko.applyBindings(viewModel, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
+
+        // Changing to a different true value shouldn't re-render the template
+        viewModel.myProp2 = 'def';  // Change the property so we can verify that there was no update
+        var renderedNode = testNode.childNodes[0].childNodes[0];
+        viewModel.myProp1('something');  // Update value bound to 'if'
+        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(renderedNode);
+    },
+
+    'Data binding syntax \"ifnot\" condition should not re-render template if value remains falsey when changed': function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<span>Value: [js: myProp2]</span>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"ifnot\": myProp1 }'></div>";
+
+        var viewModel = { myProp1: ko.observable(false), myProp2: 'abc' };
+        ko.applyBindings(viewModel, testNode);
+        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
+
+        // Changing to a different true value shouldn't re-render the template
+        viewModel.myProp2 = 'def';  // Change the property so we can verify that there was no update
+        var renderedNode = testNode.childNodes[0].childNodes[0];
+        viewModel.myProp1(0);  // Update value bound to 'ifnot'
+        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(renderedNode);
+    },
+
     'Data binding syntax should support \"if\" condition in conjunction with foreach': function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp, foreach: [$data, $data, $data] }'></div>";
@@ -638,24 +670,26 @@ describe('Templating', {
     },
 
     'If the template binding is updated, should dispose any template subscriptions previously associated with the element': function() {
-        var myModel = {
-            myObservable: ko.observable("some value"),
-            unrelatedObservable: ko.observable()
-        };
-        ko.setTemplateEngine(new dummyTemplateEngine({myTemplate: "The value is [js:myObservable()]"}));
-        testNode.innerHTML = "<div data-bind='template: \"myTemplate\", unrelatedBindingHandler: unrelatedObservable()'></div>";
+        var myObservable = ko.observable("some value"),
+            myModel = {
+                subModel: ko.observable({ myObservable: myObservable })
+            };
+        ko.setTemplateEngine(new dummyTemplateEngine({myTemplate: "<span>The value is [js:myObservable()]</span>"}));
+        testNode.innerHTML = "<div data-bind='template: {name: \"myTemplate\", data: subModel}'></div>";
         ko.applyBindings(myModel, testNode);
 
         // Right now the template references myObservable, so there should be exactly one subscription on it
-        value_of(testNode.childNodes[0].innerHTML).should_be("The value is some value");
-        value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
+        value_of(testNode.childNodes[0]).should_contain_text("The value is some value");
+        value_of(myObservable.getSubscriptionsCount()).should_be(1);
+        var renderedNode1 = testNode.childNodes[0].childNodes[0];
 
-        // By changing unrelatedObservable, we force the data-bind value to be re-evaluated, setting up a new template subscription,
-        // so there have now existed two subscriptions on myObservable...
-        myModel.unrelatedObservable("any value");
+        // By changing the object for subModel, we force the data-bind value to be re-evaluated and the template to be re-rendered,
+        // setting up a new template subscription, so there have now existed two subscriptions on myObservable...
+        myModel.subModel({ myObservable: myObservable });
+        value_of(testNode.childNodes[0].childNodes[0]).should_not_be(renderedNode1);
 
         // ...but, because the old subscription should have been disposed automatically, there should only be one left
-        value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
+        value_of(myObservable.getSubscriptionsCount()).should_be(1);
     },
 
     'Should be able to specify a template engine instance using data-bind syntax': function() {

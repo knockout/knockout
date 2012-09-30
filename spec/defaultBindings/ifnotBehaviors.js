@@ -17,6 +17,22 @@ describe('Binding: Ifnot', {
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
     },
 
+    'Should leave descendant nodes unchanged if the value is falsey and remains falsey when changed': function() {
+        var someItem = ko.observable(false);
+        testNode.innerHTML = "<div data-bind='ifnot: someItem'><span data-bind='text: someItem()'></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ someItem: someItem }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("false");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
+
+        // Change the value to a different falsey value
+        someItem(0);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("0");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
+    },
+
     'Should toggle the presence and bindedness of descendant nodes according to the falsiness of the value': function() {
         var someItem = ko.observable(undefined);
         var condition = ko.observable(true);

@@ -8,12 +8,31 @@ describe('Binding: With', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
 
-    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truey': function() {
+    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truthy': function() {
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: existentChildProp'></span></div>";
         value_of(testNode.childNodes.length).should_be(1);
         ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+
+    'Should leave descendant nodes unchanged if the value is truthy and equals the original value when changed': function() {
+        var someItem = { childProp: 'child prop value' };
+        var wrapper = ko.observable(ko.observable(someItem));
+        testNode.innerHTML = "<div data-bind='with: wrapper()'><span data-bind='text: childProp'></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ wrapper: wrapper }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("child prop value");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
+
+        // Cause the binding to update by changing the wrapper observable
+        // It shouldn't re-render or update the descendent nodes because the bound value hasn't changed
+        someItem.childProp = 'new prop value';  // change the property so we can verify that there was no update
+        wrapper(ko.observable(someItem));
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("child prop value");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
     },
 
     'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value, performing binding in the context of the value': function() {
