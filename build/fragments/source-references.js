@@ -27,8 +27,7 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/foreach.js',
     'src/binding/defaultBindings/hasfocus.js',
     'src/binding/defaultBindings/html.js',
-    'src/binding/defaultBindings/if.js',
-    'src/binding/defaultBindings/ifnot.js',
+    'src/binding/defaultBindings/ifIfnotWith.js',
     'src/binding/defaultBindings/options.js',
     'src/binding/defaultBindings/selectedOptions.js',
     'src/binding/defaultBindings/style.js',
@@ -37,7 +36,6 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/uniqueName.js',
     'src/binding/defaultBindings/value.js',
     'src/binding/defaultBindings/visible.js',
-    'src/binding/defaultBindings/with.js',
     // click depends on event - The order matters for specs, which includes each file individually
     'src/binding/defaultBindings/click.js',
     'src/templating/templateEngine.js',

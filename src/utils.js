@@ -126,10 +126,17 @@ ko.utils = new (function () {
 
             var container = document.createElement('div');
             for (var i = 0, j = nodesArray.length; i < j; i++) {
-                ko.cleanNode(nodesArray[i]);
-                container.appendChild(nodesArray[i]);
+                container.appendChild(ko.cleanNode(nodesArray[i]));
             }
             return container;
+        },
+
+        cloneNodes: function (nodesArray, shouldCleanNodes) {
+            for (var i = 0, j = nodesArray.length, newNodesArray = []; i < j; i++) {
+                var clonedNode = nodesArray[i].cloneNode(true);
+                newNodesArray.push(shouldCleanNodes ? ko.cleanNode(clonedNode) : clonedNode);
+            }
+            return newNodesArray;
         },
 
         setDomNodeChildren: function (domNode, childNodes) {
