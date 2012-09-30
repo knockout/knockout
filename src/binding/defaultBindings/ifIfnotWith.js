@@ -35,4 +35,11 @@ function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
     ko.virtualElements.allowedBindings[bindingKey] = true;
 }
 
+// Construct the actual binding handlers
 makeWithIfBinding('if');
+makeWithIfBinding('ifnot', false /* isWith */, true /* isNot */);
+makeWithIfBinding('with', true /* isWith */, false /* isNot */,
+    function(bindingContext, dataValue) {
+        return bindingContext['createChildContext'](dataValue);
+    }
+);
