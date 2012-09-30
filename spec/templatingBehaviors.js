@@ -196,6 +196,20 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML).should_be("result = 123");
     },
 
+    'Should re-render a named template when its data item notifies about mutation': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
+
+        var myData = ko.observable({ childProp: 123 });
+        ko.applyBindings({ someProp: myData }, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("result = 123");
+
+        // Now mutate and notify
+        myData().childProp = 456;
+        myData.valueHasMutated();
+        value_of(testNode.childNodes[0].innerHTML).should_be("result = 456");
+    },
+
     'Should stop tracking inner observables immediately when the container node is removed from the document': function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));
@@ -205,6 +219,21 @@ describe('Templating', {
         value_of(innerObservable.getSubscriptionsCount()).should_be(1);
         ko.removeNode(testNode.childNodes[0]);
         value_of(innerObservable.getSubscriptionsCount()).should_be(0);
+    },
+
+    'Should be able to pick template via an observable model property': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First template output",
+            secondTemplate: "Second template output"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        testNode.innerHTML = "<div data-bind='template: chosenTemplate'></div>";
+        ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("First template output");
+
+        chosenTemplate("secondTemplate");
+        value_of(testNode.childNodes[0].innerHTML).should_be("Second template output");
     },
 
     'Should be able to pick template as a function of the data item using data-bind syntax, with the binding context available as a second parameter': function () {

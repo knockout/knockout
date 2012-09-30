@@ -53,6 +53,19 @@ describe('Binding: With', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
 
+    'Should reconstruct and bind descendants when the data item notifies about mutation': function() {
+        var someItem = ko.observable({ childProp: 'Hello' });
+
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Hello");
+
+        // Force "update" binding handler to fire, then check the DOM changed
+        someItem().childProp = 'Goodbye';
+        someItem.valueHasMutated();
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Goodbye");
+    },
+
     'Should not bind the same elements more than once even if the supplied value notifies a change': function() {
         var countedClicks = 0;
         var someItem = ko.observable({
