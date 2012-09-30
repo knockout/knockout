@@ -3,38 +3,31 @@ var withIfDomDataKey = '__ko_withIfBindingData';
 function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var dataValue = ko.utils.unwrapObservable(valueAccessor()),
-                nodesArray = ko.virtualElements.childNodes(element);
-
-            if (!dataValue !== !isNot /* equivalent to isNot ? !dataValue : dataValue */) {
-                // When the data value is initially truthy (or falsy for ifnot), save a copy of the nodes and bind to the originals
-                nodesArray = ko.utils.cloneNodes(nodesArray);
-                ko.applyBindingsToDescendants(makeContextCallback ? makeContextCallback(bindingContext, dataValue) : bindingContext, element);
-            }
-
-            // Store the copied nodes and the previous value for later
-            ko.utils.domData.set(element, withIfDomDataKey, {
-                savedNodes: ko.utils.moveCleanedNodesToContainerElement(nodesArray),
-                savedDataValue: dataValue});
-
+            ko.utils.domData.set(element, withIfDomDataKey, { isFirstRender: true });
             return { 'controlsDescendantBindings': true };
         },
         'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var withData = ko.utils.domData.get(element, withIfDomDataKey),
-                savedDataValue = withData.savedDataValue,
-                dataValue = ko.utils.unwrapObservable(valueAccessor());
+                dataValue = ko.utils.unwrapObservable(valueAccessor()),
+                shouldDisplay = isNot ? !dataValue : !!dataValue, // Ensure it's really a bool, to avoid storing extra refs to model objects
+                needsRefresh = withData.isFirstRender || isWith || (shouldDisplay !== withData.didDisplayOnLastUpdate);
 
-            // Check to see if the value has changed; for with, compare the values, for if/ifnot, compare the truthiness of the values
-            if (isWith ? (savedDataValue !== dataValue) : (!savedDataValue !== !dataValue)) {
-                if (!dataValue !== !isNot) {
-                    // If new value is truthy (or falsy for ifnot), replace nodes and re-bind
-                    ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(withData.savedNodes.childNodes));
+            if (needsRefresh) {
+                if (withData.isFirstRender) {
+                    withData.savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element));
+                }
+
+                if (shouldDisplay) {
+                    if (!withData.isFirstRender) {
+                        ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(withData.savedNodes));
+                    }
                     ko.applyBindingsToDescendants(makeContextCallback ? makeContextCallback(bindingContext, dataValue) : bindingContext, element);
                 } else {
-                    // If new value is falsy, clear the nodes
                     ko.virtualElements.emptyNode(element);
                 }
-                withData.savedDataValue = dataValue;
+
+                withData.isFirstRender = false;
+                withData.didDisplayOnLastUpdate = shouldDisplay;
             }
         }
     };

@@ -161,7 +161,6 @@
         ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
     }
 
-    var templateParamCacheDomDataKey = '__ko_templateParamData';
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
@@ -172,8 +171,6 @@
                     container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             }
-            // Store object for tracking changes to binding parameters
-            ko.utils.domData.set(element, templateParamCacheDomDataKey, {});
             return { 'controlsDescendantBindings': true };
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
@@ -181,8 +178,6 @@
                 options = {},
                 shouldDisplay = true,
                 dataValue,
-                paramCache = ko.utils.domData.get(element, templateParamCacheDomDataKey),
-                didUpdate = true,
                 templateComputed = null;
 
             if (typeof templateName != "string") {
@@ -204,9 +199,6 @@
                 templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
             } else if (!shouldDisplay) {
                 ko.virtualElements.emptyNode(element);
-            } else if (paramCache.shouldDisplay && paramCache.dataValue === dataValue) {
-                // If shouldDisplay is still true and dataValue didn't change, don't re-render the template
-                didUpdate = false;
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var innerBindingContext = ('data' in options) ?
@@ -214,12 +206,9 @@
                     bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
                 templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }
-            paramCache.shouldDisplay = shouldDisplay;
-            paramCache.dataValue = dataValue;
 
             // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
-            if (didUpdate)
-                disposeOldComputedAndStoreNewOne(element, templateComputed);
+            disposeOldComputedAndStoreNewOne(element, templateComputed);
         }
     };
 

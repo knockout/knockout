@@ -597,38 +597,6 @@ describe('Templating', {
         value_of(testNode.childNodes[0]).should_contain_text("");
     },
 
-    'Data binding syntax \"if\" condition should not re-render template if value remains truthy when changed': function() {
-        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<span>Value: [js: myProp2]</span>" }));
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp1 }'></div>";
-
-        var viewModel = { myProp1: ko.observable(true), myProp2: 'abc' };
-        ko.applyBindings(viewModel, testNode);
-        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
-
-        // Changing to a different true value shouldn't re-render the template
-        viewModel.myProp2 = 'def';  // Change the property so we can verify that there was no update
-        var renderedNode = testNode.childNodes[0].childNodes[0];
-        viewModel.myProp1('something');  // Update value bound to 'if'
-        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
-        value_of(testNode.childNodes[0].childNodes[0]).should_be(renderedNode);
-    },
-
-    'Data binding syntax \"ifnot\" condition should not re-render template if value remains falsey when changed': function() {
-        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<span>Value: [js: myProp2]</span>" }));
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"ifnot\": myProp1 }'></div>";
-
-        var viewModel = { myProp1: ko.observable(false), myProp2: 'abc' };
-        ko.applyBindings(viewModel, testNode);
-        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
-
-        // Changing to a different true value shouldn't re-render the template
-        viewModel.myProp2 = 'def';  // Change the property so we can verify that there was no update
-        var renderedNode = testNode.childNodes[0].childNodes[0];
-        viewModel.myProp1(0);  // Update value bound to 'ifnot'
-        value_of(testNode.childNodes[0]).should_contain_text("Value: abc");
-        value_of(testNode.childNodes[0].childNodes[0]).should_be(renderedNode);
-    },
-
     'Data binding syntax should support \"if\" condition in conjunction with foreach': function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp, foreach: [$data, $data, $data] }'></div>";

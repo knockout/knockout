@@ -19,17 +19,17 @@ describe('Binding: If', {
 
     'Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed': function() {
         var someItem = ko.observable(true);
-        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem()'></span></div>";
+        testNode.innerHTML = "<div data-bind='if: someItem'><span></span></div>";
         var originalNode = testNode.childNodes[0].childNodes[0];
 
         // Value is initially true, so nodes are retained
         ko.applyBindings({ someItem: someItem }, testNode);
-        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("true");
+        value_of(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).should_be("span");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
 
-        // Change the value to a different truthy value
-        someItem('prop value');
-        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("prop value");
+        // Change the value to a different truthy value; see the previous SPAN remains
+        someItem('different truthy value');
+        value_of(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).should_be("span");
         value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
     },
 
