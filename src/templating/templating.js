@@ -176,37 +176,37 @@
             return { 'controlsDescendantBindings': true };
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            var templateName;
-            var shouldDisplay = true;
+            var templateName = ko.utils.unwrapObservable(valueAccessor()),
+                options = {},
+                shouldDisplay = true,
+                dataValue,
+                templateComputed = null;
 
-            if (typeof bindingValue == "string") {
-                templateName = bindingValue;
-            } else {
-                templateName = bindingValue['name'];
+            if (typeof templateName != "string") {
+                options = templateName;
+                templateName = options['name'];
 
                 // Support "if"/"ifnot" conditions
-                if ('if' in bindingValue)
-                    shouldDisplay = shouldDisplay && ko.utils.unwrapObservable(bindingValue['if']);
-                if ('ifnot' in bindingValue)
-                    shouldDisplay = shouldDisplay && !ko.utils.unwrapObservable(bindingValue['ifnot']);
+                if ('if' in options)
+                    shouldDisplay = ko.utils.unwrapObservable(options['if']);
+                if (shouldDisplay && 'ifnot' in options)
+                    shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
+
+                dataValue = ko.utils.unwrapObservable(options['data']);
             }
 
-            var templateComputed = null;
-
-            if ((typeof bindingValue === 'object') && ('foreach' in bindingValue)) { // Note: can't use 'in' operator on strings
+            if ('foreach' in options) {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
-                var dataArray = (shouldDisplay && bindingValue['foreach']) || [];
-                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, /* options: */ bindingValue, element, bindingContext);
+                var dataArray = (shouldDisplay && options['foreach']) || [];
+                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
+            } else if (!shouldDisplay) {
+                ko.virtualElements.emptyNode(element);
             } else {
-                if (shouldDisplay) {
-                    // Render once for this single data point (or use the viewModel if no data was provided)
-                    var innerBindingContext = (typeof bindingValue == 'object') && ('data' in bindingValue)
-                        ? bindingContext['createChildContext'](ko.utils.unwrapObservable(bindingValue['data']), bindingValue['as']) // Given an explitit 'data' value, we create a child binding context for it
-                        : bindingContext;                                                                       // Given no explicit 'data' value, we retain the same binding context
-                    templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, /* options: */ bindingValue, element);
-                } else
-                    ko.virtualElements.emptyNode(element);
+                // Render once for this single data point (or use the viewModel if no data was provided)
+                var innerBindingContext = ('data' in options) ?
+                    bindingContext['createChildContext'](dataValue, options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
+                    bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
+                templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }
 
             // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)

@@ -8,13 +8,29 @@ describe('Binding: If', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
 
-    'Should leave descendant nodes in the document (and bind them) if the value is truey, independently of the active template engine': function() {
+    'Should leave descendant nodes in the document (and bind them) if the value is truthy, independently of the active template engine': function() {
         ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
         testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem.existentChildProp'></span></div>";
         value_of(testNode.childNodes.length).should_be(1);
         ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+
+    'Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed': function() {
+        var someItem = ko.observable(true);
+        testNode.innerHTML = "<div data-bind='if: someItem'><span></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ someItem: someItem }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).should_be("span");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
+
+        // Change the value to a different truthy value; see the previous SPAN remains
+        someItem('different truthy value');
+        value_of(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).should_be("span");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
     },
 
     'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value': function() {

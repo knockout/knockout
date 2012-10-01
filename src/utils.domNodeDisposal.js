@@ -79,6 +79,7 @@ ko.utils.domNodeDisposal = new (function () {
                         cleanSingleNode(descendants[i]);
                 }
             }
+            return node;
         },
 
         removeNode : function(node) {

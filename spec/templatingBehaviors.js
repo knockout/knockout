@@ -214,6 +214,20 @@ describe('Templating', {
         value_of(testNode.childNodes[0].innerHTML).should_be("result = 123");
     },
 
+    'Should re-render a named template when its data item notifies about mutation': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
+
+        var myData = ko.observable({ childProp: 123 });
+        ko.applyBindings({ someProp: myData }, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("result = 123");
+
+        // Now mutate and notify
+        myData().childProp = 456;
+        myData.valueHasMutated();
+        value_of(testNode.childNodes[0].innerHTML).should_be("result = 456");
+    },
+
     'Should stop tracking inner observables immediately when the container node is removed from the document': function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));
@@ -223,6 +237,21 @@ describe('Templating', {
         value_of(innerObservable.getSubscriptionsCount()).should_be(1);
         ko.removeNode(testNode.childNodes[0]);
         value_of(innerObservable.getSubscriptionsCount()).should_be(0);
+    },
+
+    'Should be able to pick template via an observable model property': function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First template output",
+            secondTemplate: "Second template output"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        testNode.innerHTML = "<div data-bind='template: chosenTemplate'></div>";
+        ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
+        value_of(testNode.childNodes[0].innerHTML).should_be("First template output");
+
+        chosenTemplate("secondTemplate");
+        value_of(testNode.childNodes[0].innerHTML).should_be("Second template output");
     },
 
     'Should be able to pick template as a function of the data item using data-bind syntax, with the binding context available as a second parameter': function () {
@@ -668,24 +697,26 @@ describe('Templating', {
     },
 
     'If the template binding is updated, should dispose any template subscriptions previously associated with the element': function() {
-        var myModel = {
-            myObservable: ko.observable("some value"),
-            unrelatedObservable: ko.observable()
-        };
-        ko.setTemplateEngine(new dummyTemplateEngine({myTemplate: "The value is [js:myObservable()]"}));
-        testNode.innerHTML = "<div data-bind='template: \"myTemplate\", unrelatedBindingHandler: unrelatedObservable()'></div>";
+        var myObservable = ko.observable("some value"),
+            myModel = {
+                subModel: ko.observable({ myObservable: myObservable })
+            };
+        ko.setTemplateEngine(new dummyTemplateEngine({myTemplate: "<span>The value is [js:myObservable()]</span>"}));
+        testNode.innerHTML = "<div data-bind='template: {name: \"myTemplate\", data: subModel}'></div>";
         ko.applyBindings(myModel, testNode);
 
         // Right now the template references myObservable, so there should be exactly one subscription on it
-        value_of(testNode.childNodes[0].innerHTML).should_be("The value is some value");
-        value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
+        value_of(testNode.childNodes[0]).should_contain_text("The value is some value");
+        value_of(myObservable.getSubscriptionsCount()).should_be(1);
+        var renderedNode1 = testNode.childNodes[0].childNodes[0];
 
-        // By changing unrelatedObservable, we force the data-bind value to be re-evaluated, setting up a new template subscription,
-        // so there have now existed two subscriptions on myObservable...
-        myModel.unrelatedObservable("any value");
+        // By changing the object for subModel, we force the data-bind value to be re-evaluated and the template to be re-rendered,
+        // setting up a new template subscription, so there have now existed two subscriptions on myObservable...
+        myModel.subModel({ myObservable: myObservable });
+        value_of(testNode.childNodes[0].childNodes[0]).should_not_be(renderedNode1);
 
         // ...but, because the old subscription should have been disposed automatically, there should only be one left
-        value_of(myModel.myObservable.getSubscriptionsCount()).should_be(1);
+        value_of(myObservable.getSubscriptionsCount()).should_be(1);
     },
 
     'Should be able to specify a template engine instance using data-bind syntax': function() {

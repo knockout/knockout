@@ -8,12 +8,23 @@ describe('Binding: With', {
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
     },
 
-    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truey': function() {
+    'Should leave descendant nodes in the document (and bind them in the context of the supplied value) if the value is truthy': function() {
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: existentChildProp'></span></div>";
         value_of(testNode.childNodes.length).should_be(1);
         ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
         value_of(testNode.childNodes[0].childNodes.length).should_be(1);
         value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Child prop value");
+    },
+
+    'Should leave descendant nodes unchanged if the value is truthy': function() {
+        var someItem = ko.observable({ childProp: 'child prop value' });
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp'></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ someItem: someItem }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("child prop value");
+        value_of(testNode.childNodes[0].childNodes[0]).should_be(originalNode);
     },
 
     'Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value, performing binding in the context of the value': function() {
@@ -32,6 +43,19 @@ describe('Binding: With', {
         // Then it's gone again
         someItem(null);
         value_of(testNode.childNodes[0].childNodes.length).should_be(0);
+    },
+
+    'Should reconstruct and bind descendants when the data item notifies about mutation': function() {
+        var someItem = ko.observable({ childProp: 'Hello' });
+
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: childProp'></span></div>";
+        ko.applyBindings({ someItem: someItem }, testNode);
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Hello");
+
+        // Force "update" binding handler to fire, then check the DOM changed
+        someItem().childProp = 'Goodbye';
+        someItem.valueHasMutated();
+        value_of(testNode.childNodes[0].childNodes[0]).should_contain_text("Goodbye");
     },
 
     'Should not bind the same elements more than once even if the supplied value notifies a change': function() {
