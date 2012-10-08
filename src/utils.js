@@ -302,17 +302,21 @@ ko.utils = new (function () {
             if ((value === null) || (value === undefined))
                 value = "";
 
-            // We need there to be exactly one child: a text node.
-            // If there are no children, more than one, or if it's not a text node,
-            // we'll clear everything and create a single text node.
-            var innerTextNode = ko.virtualElements.firstChild(element);
-            if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
-                ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
+            if (element.nodeType === 3) {
+                element.data = value;
             } else {
-                innerTextNode.data = value;
-            }
+                // We need there to be exactly one child: a text node.
+                // If there are no children, more than one, or if it's not a text node,
+                // we'll clear everything and create a single text node.
+                var innerTextNode = ko.virtualElements.firstChild(element);
+                if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
+                    ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
+                } else {
+                    innerTextNode.data = value;
+                }
 
-            ko.utils.forceRefresh(element);
+                ko.utils.forceRefresh(element);
+            }
         },
 
         setElementName: function(element, name) {
