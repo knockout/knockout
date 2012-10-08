@@ -323,10 +323,13 @@ describe('Binding: Value', {
         value_of(dropdown.selectedIndex).should_be(2);
     },
 
-    'On IE, should respond exactly once to "propertychange" followed by "blur" or "change" or both': function() {
-        var isIE = navigator.userAgent.indexOf("MSIE") >= 0;
+    'On IE < 10, should respond exactly once to "propertychange" followed by "blur" or "change" or both': function() {
+        // This spec describes the awkward choreography of events needed to detect changes to text boxes on IE < 10,
+        // because it doesn't fire regular "change" events when the user selects an autofill entry. It isn't applicable
+        // on IE 10+ or other browsers, because they don't have that problem with autofill.
+        var isOldIE = JSSpec.Browser.IEVersion && JSSpec.Browser.IEVersion < 10;
 
-        if (isIE) {
+        if (isOldIE) {
             var myobservable = new ko.observable(123).extend({ notify: 'always' });
             var numUpdates = 0;
             myobservable.subscribe(function() { numUpdates++ });
