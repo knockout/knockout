@@ -323,17 +323,24 @@ describe('Binding: Value', {
         value_of(dropdown.selectedIndex).should_be(2);
     },
 
-    'On IE, should respond exactly once to "propertychange" followed by "blur" or "change" or both': function() {
-        var isIE = navigator.userAgent.indexOf("MSIE") >= 0;
+    'On IE < 10, should handle autofill selection by treating "propertychange" followed by "blur" as a change event': function() {
+        // This spec describes the awkward choreography of events needed to detect changes to text boxes on IE < 10,
+        // because it doesn't fire regular "change" events when the user selects an autofill entry. It isn't applicable
+        // on IE 10+ or other browsers, because they don't have that problem with autofill.
+        var isOldIE = JSSpec.Browser.IEVersion && JSSpec.Browser.IEVersion < 10;
 
-        if (isIE) {
+        if (isOldIE) {
             var myobservable = new ko.observable(123).extend({ notify: 'always' });
             var numUpdates = 0;
             myobservable.subscribe(function() { numUpdates++ });
             testNode.innerHTML = "<input data-bind='value:someProp' />";
             ko.applyBindings({ someProp: myobservable }, testNode);
 
-            // First try change then blur
+            // Simulate:
+            // 1. Select from autofill
+            // 2. Modify the textbox further
+            // 3. Tab out of the textbox
+            // --- should be treated as a single change
             testNode.childNodes[0].value = "some user-entered value";
             ko.utils.triggerEvent(testNode.childNodes[0], "propertychange");
             ko.utils.triggerEvent(testNode.childNodes[0], "change");
@@ -342,14 +349,18 @@ describe('Binding: Value', {
             ko.utils.triggerEvent(testNode.childNodes[0], "blur");
             value_of(numUpdates).should_be(1);
 
-            // Now try blur then change
+            // Simulate:
+            // 1. Select from autofill
+            // 2. Tab out of the textbox
+            // 3. Reselect, edit, then tab out of the textbox
+            // --- should be treated as two changes (one after step 2, one after step 3)
             testNode.childNodes[0].value = "different user-entered value";
             ko.utils.triggerEvent(testNode.childNodes[0], "propertychange");
             ko.utils.triggerEvent(testNode.childNodes[0], "blur");
             value_of(myobservable()).should_be("different user-entered value");
             value_of(numUpdates).should_be(2);
             ko.utils.triggerEvent(testNode.childNodes[0], "change");
-            value_of(numUpdates).should_be(2);
+            value_of(numUpdates).should_be(3);
         }
     }
 });

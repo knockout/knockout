@@ -3,6 +3,7 @@ ko.bindingHandlers['value'] = {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
         var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        var propertyChangedFired = false;
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -11,6 +12,7 @@ ko.bindingHandlers['value'] = {
         }
 
         var valueUpdateHandler = function() {
+            propertyChangedFired = false;
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
@@ -21,11 +23,9 @@ ko.bindingHandlers['value'] = {
         var ieAutoCompleteHackNeeded = ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
                                        && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
         if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
-            var propertyChangedFired = false;
             ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
             ko.utils.registerEventHandler(element, "blur", function() {
                 if (propertyChangedFired) {
-                    propertyChangedFired = false;
                     valueUpdateHandler();
                 }
             });
