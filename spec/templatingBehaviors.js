@@ -848,5 +848,18 @@ describe('Templating', {
         testNode.innerHTML = "<div data-bind='template: {}'><!-- ko nonexistentHandler: true --><span data-bind='countInits: true'></span><!-- /ko --></div>";
         ko.applyBindings(null, testNode);
         value_of(initCalls).should_be(1);
+    },
+
+    'Should not throw errors if trying to apply text to a non-rendered node': function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/660
+        // A <tbody> can't exist on its own, so it won't be included in the doc. We need
+        // to ensure that setText doesn't throw an error in this case.
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "<tbody data-bind=\"text: 'Some text'\"></tbody>Other text"
+        }));
+        testNode.innerHTML = "<div data-bind='template: \"myTemplate\"'></div>";
+        ko.applyBindings(null, testNode);
+        // Since the actual template markup was invalid, we don't really care what the
+        // resulting DOM looks like. We are only verifying there were no exceptions.
     }
 })
