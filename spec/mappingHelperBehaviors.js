@@ -109,6 +109,9 @@ describe('Mapping helpers', {
         value_of(ko.toJSON(data, myReplacer)).should_be("\"my replacement\"");
 
         // With spacer
-        value_of(ko.toJSON(data, undefined, "    ")).should_be("{\n    \"a\": 1\n}");
+        value_of(ko.toJSON(data, undefined, "    ")).should_be_one_of([
+            "{\n    \"a\":1\n}",  // Firefox 3.6, for some reason, omits the space after the colon. Doesn't really matter to us.
+            "{\n    \"a\": 1\n}"  // All other browsers produce this format
+        ]);
     }
 })
