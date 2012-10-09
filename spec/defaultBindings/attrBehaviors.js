@@ -14,12 +14,18 @@ describe('Binding: Attr', {
         testNode.innerHTML = "<input data-bind='attr: { name: myValue }' />";
         ko.applyBindings({ myValue: myValue }, testNode);
         value_of(testNode.childNodes[0].name).should_be("myName");
-        value_of(testNode.childNodes[0].outerHTML).should_match('name="?myName"?');
+        if (testNode.childNodes[0].outerHTML) { // Old Firefox doesn't support outerHTML
+            value_of(testNode.childNodes[0].outerHTML).should_match('name="?myName"?');
+        }
+        value_of(testNode.childNodes[0].getAttribute("name")).should_be("myName");
 
         // Also check we can remove it (which, for a name attribute, means setting it to an empty string)
         myValue(false);
         value_of(testNode.childNodes[0].name).should_be("");
-        value_of(testNode.childNodes[0].outerHTML).should_not_match('name="?([^">]+)');
+        if (testNode.childNodes[0].outerHTML) { // Old Firefox doesn't support outerHTML
+            value_of(testNode.childNodes[0].outerHTML).should_not_match('name="?([^">]+)');
+        }
+        value_of(testNode.childNodes[0].getAttribute("name")).should_be("");
     },
 
     'Should respond to changes in an observable value': function() {

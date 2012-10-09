@@ -63,19 +63,20 @@ describe('Compare Arrays', {
         var oldArray = ["A", "B", "C", "D", "E"];
         var newArray = ["F", "G", "H", "I", "J"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
-        // the order of added and deleted doesn't really matter
-        compareResult.sort(function(a, b) { return a.status.localeCompare(b.status) });
+        // The order of added and deleted doesn't really matter. We sort by a property that
+        // contains unique values to ensure the results are in a known order for verification.
+        compareResult.sort(function(a, b) { return a.value.localeCompare(b.value) });
         value_of(compareResult).should_be([
-            { status: "added", value: "F", index: 0},
-            { status: "added", value: "G", index: 1},
-            { status: "added", value: "H", index: 2},
-            { status: "added", value: "I", index: 3},
-            { status: "added", value: "J", index: 4},
             { status: "deleted", value: "A", index: 0},
             { status: "deleted", value: "B", index: 1},
             { status: "deleted", value: "C", index: 2},
             { status: "deleted", value: "D", index: 3},
-            { status: "deleted", value: "E", index: 4}
+            { status: "deleted", value: "E", index: 4},
+            { status: "added", value: "F", index: 0},
+            { status: "added", value: "G", index: 1},
+            { status: "added", value: "H", index: 2},
+            { status: "added", value: "I", index: 3},
+            { status: "added", value: "J", index: 4}
         ]);
     }
 });
