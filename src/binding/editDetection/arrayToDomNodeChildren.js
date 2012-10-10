@@ -155,6 +155,9 @@
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
+        // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
+        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
@@ -174,8 +177,11 @@
             }
         }
 
-        // Next remove nodes for deleted items; or call beforeRemove, which will remove them
-        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+        // If there's a beforeRemove callback, call it after reordering.
+        // Note that we assume that the beforeRemove callback will usually be used to remove the nodes using
+        // some sort of animation, which is why we first reorder the nodes that will be removed. If the
+        // callback instead removes the nodes right away, it would be more efficient to skip reordering them.
+        // Perhaps we'll make that change in the future if this scenario becomes more common.
         callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
 
         // Finally call afterMove and afterAdd callbacks
