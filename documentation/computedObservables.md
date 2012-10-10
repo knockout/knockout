@@ -32,7 +32,7 @@ Now you could bind UI elements to it, e.g.:
 
 *Beginners may wish to skip this section - as long as you follow the same coding patterns as the examples, you won't need to know or care about it!*
 
-In case you're wondering what the second parameter to `ko.computed` is (the bit where I passed `this` in the preceding code), that defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
+In case you're wondering what the second parameter to `ko.computed` is (the bit where we passed `this` in the preceding code), that defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
 
 #### A popular convention that simplifies things
 
@@ -67,7 +67,7 @@ Then, changes to `items` or `selectedIndexes` will ripple through the chain of c
 
 As you've learned, computed observables have a value that is computed from other observables. In that sense, computed observables are normally *read-only*. What may seem surprising, then, is that it is possible to make computed observables *writeable*. You just need to supply your own callback function that does something sensible with written values.
 
-You can then use your writeable computed observable exactly like a regular observable - performing two-way data binding with DOM elements, with your own custom logic intercepting all reads and writes. This is a powerful feature with a wide range of possible uses.
+You can then use your writeable computed observable exactly like a regular observable, with your own custom logic intercepting all reads and writes. This is a powerful feature with a wide range of possible uses. Just like observables, you can write values to multiple observable or computed observable properties on a model object using *chaining syntax*. For example, `myViewModel.fullName('Joe Smith').age(50)`.
 
 ### Example 1: Decomposing user input
 
@@ -176,7 +176,7 @@ Now, `acceptedNumericValue` will only ever contain numeric values, and any other
 
 # How dependency tracking works
 
-*Beginners don't need to know about this, but more advanced developers will want to know why I keep making all these claims about KO automatically tracking dependencies and updating the right parts of the UI...*
+*Beginners don't need to know about this, but more advanced developers will want to know why we keep making all these claims about KO automatically tracking dependencies and updating the right parts of the UI...*
 
 It's actually very simple and rather lovely. The tracking algorithm goes like this:
 
@@ -189,11 +189,27 @@ So, KO doesn't just detect your dependencies the first time your evaluator runs 
 
 The other neat trick is that declarative bindings are simply implemented as computed observables. So, if a binding reads the value of an observable, that binding becomes dependent on that observable, which causes that binding to be re-evaluated if the observable changes.
 
+### Controlling dependencies using peek
+
+Knockout's automatic dependency tracking normally does exactly what you want. But you might sometimes need to control which observables will update your computed observable, especially if the computed observable performs some sort of action, such as making an Ajax request. For example:
+
+    ko.computed(function() {
+        var params = {
+            page: this.pageIndex(),
+            selected: this.selectedItem.peek()
+        };
+        $.getJSON('/Some/Json/Service', params, this.currentPageData);
+    }, this);
+
+This computed observable will reload `currentPageData` whenever the `pageIndex` observable changes but not when `selectedItem` changes because it is accessed using the `peek` function. `peek` lets you access an observable or computed observable without creating a dependency. In this example, the user only wants to use the current value of `selectedItem` for tracking purposes when a new set of data is loaded.
+
+Note: For another way to control when a computed observable is updated, see the [throttle extender](throttle-extender.html).
+
 ### Note: Why circular dependencies aren't meaningful
 
 Computed observables are supposed to map a set of observable inputs into a single observable output. As such, it doesn't make sense to include cycles in your dependency chains. Cycles would *not* be analogous to recursion; they would be analogous to having two spreadsheet cells that are computed as functions of each other. It would lead to an infinite evaluation loop.
 
-So what does Knockout do if you have got a cycle in your dependency graph? It avoids infinite loops by enforcing the following rule: **a computed observable cannot trigger its own re-evaluation**. This is very unlikely to affect your code. It's relevant only if you have a `ko.computed` (call it `A`) whose evaluator writes to another observable (call it `B`) that (directly or via a dependency chain) affects the value of `A`. In that case, KO will not restart evaluation of `A` while it is already evaluating, so the resulting value of `A` will respect only the original value of `B`, ignoring any update made to `B` while `A`'s evaluator is running.
+So what does Knockout do if you have a cycle in your dependency graph? It avoids infinite loops by enforcing the following rule: **Knockout will not restart evaluation of a computed while it is already evaluating**. This is very unlikely to affect your code. It's relevant in two situations: when two computed observables are dependent on each other (possible only if one or both use the `deferEvaluation` option), or when a computed observable writes to another observable on which it has a dependency (either directly or via a dependency chain). If you need to use one of these patterns and want to entirely avoid the circular dependency, you can use the `peek` function described above.
 
 # Determining if a property is a computed observable
 
@@ -209,7 +225,6 @@ Additionally, Knockout provides similar functions that can operate on observable
 
 * `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
 * `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
-
 
 # What happened to dependent observables?
 
