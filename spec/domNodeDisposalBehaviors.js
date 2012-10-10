@@ -63,7 +63,7 @@ describe('DOM node disposal', {
         ko.utils.domNodeDisposal.addDisposeCallback(originalNode, function() { });
 
         // Clone it, then dispose it. Then check it's still safe to associate DOM data with the clone.
-        var cloneNode = originalNode.cloneNode();
+        var cloneNode = originalNode.cloneNode(true);
         ko.cleanNode(originalNode);
         ko.utils.domNodeDisposal.addDisposeCallback(cloneNode, function() { });
     }
