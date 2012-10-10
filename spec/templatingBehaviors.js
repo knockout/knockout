@@ -66,21 +66,9 @@ var dummyTemplateEngine = function (templates) {
             }
         }
 
-        if (options.bypassDomNodeTransform)
-            return ko.utils.parseHtmlFragment(result);
-        else {
-            var node = document.createElement("div");
-
-            // Annoyingly, IE strips out comment nodes unless they are contained between other nodes, so put some dummy nodes around the HTML, then remove them after parsing.
-            node.innerHTML = "<div>a</div>" + result + "<div>a</div>";
-            node.removeChild(node.firstChild);
-            node.removeChild(node.lastChild);
-
-            // Convert the nodelist to an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-            var renderedNodesArray = ko.utils.arrayPushAll([], node.childNodes);
-
-            return renderedNodesArray;
-        }
+        // Use same HTML parsing code as real template engine so as to trigger same combination of IE weirdnesses
+        // Also ensure resulting nodelist is an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
+        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result));
     };
 
     this.rewriteTemplate = function (template, rewriterCallback) {
@@ -106,7 +94,7 @@ describe('Templating', {
 
     'Template engines can return an array of DOM nodes': function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ x: [document.createElement("div"), document.createElement("span")] }));
-        ko.renderTemplate("x", null, { bypassDomNodeTransform: true });
+        ko.renderTemplate("x", null);
     },
 
     'Should not be able to render a template until a template engine is provided': function () {
@@ -852,10 +840,14 @@ describe('Templating', {
 
     'Should not throw errors if trying to apply text to a non-rendered node': function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/660
-        // A <tbody> can't exist on its own, so it won't be included in the doc. We need
-        // to ensure that setText doesn't throw an error in this case.
+        // A <span> can't go directly into a <tr>, so modern browsers will silently strip it. We need to verify this doesn't
+        // throw errors during unmemoization (when unmemoizing, it will try to apply the text to the following text node
+        // instead of the node you intended to bind to).
+        // Note that IE < 9 won't strip the <tr>; instead it has much stranger behaviors regarding unexpected DOM structures.
+        // It just happens not to give an error in this particular case, though it would throw errors in many other cases
+        // of malformed template DOM.
         ko.setTemplateEngine(new dummyTemplateEngine({
-            myTemplate: "<tbody data-bind=\"text: 'Some text'\"></tbody>Other text"
+            myTemplate: "<tr><span data-bind=\"text: 'Some text'\"></span> </tr>" // The whitespace after the closing span is what triggers the strange HTML parsing
         }));
         testNode.innerHTML = "<div data-bind='template: \"myTemplate\"'></div>";
         ko.applyBindings(null, testNode);
