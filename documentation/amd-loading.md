@@ -47,7 +47,7 @@ scripts/appViewModel.js
         };
     });
 
-Of course, `x.y.z` should be replaced with the version number of the Knockout script you are loading (e.g., `knockout-2.1.0`).
+Of course, `x.y.z` should be replaced with the version number of the Knockout script you are loading (e.g., `knockout-2.2.0`).
 
 ### Loading Knockout.js, a Binding Handler, and a ViewModel class via RequireJs
 

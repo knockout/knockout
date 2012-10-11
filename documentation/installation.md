@@ -14,7 +14,7 @@ Knockout's core library is pure JavaScript and doesn't depend on any other libra
 
 For example,
 
-    <script type='text/javascript' src='knockout-2.1.0.js'></script>
+    <script type='text/javascript' src='knockout-2.2.0.js'></script>
 
 ... and now you're ready to use it. (Obviously, update the `src` attribute to match the location where you put the downloaded file.)
 
