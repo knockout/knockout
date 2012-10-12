@@ -58,9 +58,9 @@ Example:
 
 ### Note 1: Working with drop-down lists (i.e., SELECT nodes)
 
-Knockout has special support for drop-down lists (i.e., `<select>` nodes). The `value` binding works in conjunction with the `options` binding to let you read and write values that are arbitrary JavaScript objects, not just string values. This is very useful if you want to let the user select from a set of model objects. For examples of this, see [the `options` binding](options-binding.html)
-	
-Similarly, if you want to create a multi-select list, see the documentation for [the `selectedOptions` binding](selectedOptions-binding.html).
+Knockout has special support for drop-down lists (i.e., `<select>` nodes). The `value` binding works in conjunction with the `options` binding to let you read and write values that are arbitrary JavaScript objects, not just string values. This is very useful if you want to let the user select from a set of model objects. For examples of this, see [the `options` binding](options-binding.html) or for handling multi-select lists, see the documentation for [the `selectedOptions` binding](selectedOptions-binding.html).
+
+You can also use the `value` binding with a `<select>` element that does not use the `options` binding. In this case, you can choose to specify your `<option>` elements in markup or build them using the `foreach` or `template` bindings. You can even nest options within `<optgroup>` elements and Knockout will set the selected value appropriately.
 
 ### Note 2: Updating observable and non-observable property values
 
