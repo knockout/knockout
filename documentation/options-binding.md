@@ -44,16 +44,16 @@ Note: For a multi-select list, to set which of the options are selected, or to r
     
     <script type="text/javascript">
     	// Constructor for an object with two properties
-        var country = function(name, population) {
+        var Country = function(name, population) {
             this.countryName = name;
             this.countryPopulation = population;	
         };        
     
 	    var viewModel = {
 			availableCountries : ko.observableArray([
-				new country("UK", 65000000),
-				new country("USA", 320000000),
-				new country("Sweden", 29000000)
+				new Country("UK", 65000000),
+				new Country("USA", 320000000),
+				new Country("Sweden", 29000000)
 			]),
 			selectedCountry : ko.observable() // Nothing selected by default
 	    };
@@ -90,8 +90,8 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
      
      `<select data-bind='options: myOptions, optionsCaption: "Select an item...", value: myChosenValue'></select>`
      
-     KO will prefix the list of items with one that displays the text "Select an item..." and has the value `undefined`. So, if `myChosenValue` holds the value `undefined` (which observables do by default), then the dummy option will be selected.
-   
+     KO will prefix the list of items with one that displays the text "Select an item..." and has the value `undefined`. So, if `myChosenValue` holds the value `undefined` (which observables do by default), then the dummy option will be selected. If the `optionsCaption` parameter is an observable, then the text of the initial item will update as the observable's value changes.
+
    * `optionsText`
      
      See Example 3 above to see how you can bind `options` to an array of arbitrary JavaScript object - not just strings. In this case, you need to choose which of the objects' properties should be displayed as the text in the drop-down list or multi-select list. Example 3 shows how you can specify that property name by passing an additional parameter called `optionsText`.
@@ -100,10 +100,18 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
      
    * `optionsValue`
      
-     Similar to `optionsText`, you can also pass an additional parameter called `optionsValue` to specify which of the objects' properties should be used to set the `value` attribute on the `<option>` elements that KO generates. 
+     Similar to `optionsText`, you can also pass an additional parameter called `optionsValue` to specify which of the objects' properties should be used to set the `value` attribute on the `<option>` elements that KO generates. You can also specify a JavaScript function to determine this value. This function will receive the selected item as its only argument and should return a string to use for the `<option>` element's value attribute.
      	
-     Typically you'd only want to do this as a way of ensuring that KO can correctly retain selection when you update the set of available options. For example, if you're repeatedly getting a list of "car" objects via Ajax calls and want to ensure that the selected car is preserved, you might need to set `optionsValue` to `"carId"` or whatever unique identifier each "car" object has, otherwise KO won't necessarily know which of the previous "car" objects corresponds to which of the new ones.
-     
+     Typically you'd only want to use `optionsValue` as a way of ensuring that KO can correctly retain selection when you update the set of available options. For example, if you're repeatedly getting a list of "car" objects via Ajax calls and want to ensure that the selected car is preserved, you might need to set `optionsValue` to `"carId"` or whatever unique identifier each "car" object has, otherwise KO won't necessarily know which of the previous "car" objects corresponds to which of the new ones.
+
+   * `optionsIncludeDestroyed`
+
+     Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a non-destructive delete. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy_and_destroyall_note_usually_relevant_to_ruby_on_rails_developers_only).
+
+     By default, the options binding will skip over (i.e., hide) any array entries that are marked as destroyed. If you want to show destroyed entries, then specify this additional parameter like:
+
+     `<select data-bind='options: myOptions, optionsIncludeDestroyed: true'></select>`
+
    * `selectedOptions`
    
      For a multi-select list, you can read and write the selection state using `selectedOptions`. Technically this is a separate binding, so it has [its own documentation](selectedOptions-binding.html).
