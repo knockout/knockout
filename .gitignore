@@ -10,3 +10,5 @@ _ReSharper*
 desktop.ini
 .eprj
 _site
+
+.DS_Store
