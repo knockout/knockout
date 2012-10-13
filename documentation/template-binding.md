@@ -116,21 +116,51 @@ For example,
     <ul data-bind='template: { name: displayMode,
                                foreach: employees }'> </ul>
 
-    var viewModel = {
-        employees: ko.observableArray([
-            { name: "Kari", active: ko.observable(true) },
-            { name: "Brynn", active: ko.observable(false) },
-            { name: "Nora", active: ko.observable(false) }
-        ]),
-        displayMode: function(employee) {
-            return employee.active() ? "active" : "inactive";  // Initially "Kari" uses the "active" template, while the others use "inactive"
-        }
-    };
+    <script>
+        var viewModel = {
+            employees: ko.observableArray([
+                { name: "Kari", active: ko.observable(true) },
+                { name: "Brynn", active: ko.observable(false) },
+                { name: "Nora", active: ko.observable(false) }
+            ]),
+            displayMode: function(employee) {
+                // Initially "Kari" uses the "active" template, while the others use "inactive"
+                return employee.active() ? "active" : "inactive";
+            }
+        };
 
-    // ... then later ...
-    viewModel.employees()[1].active(true); // Now "Brynn" is also rendered using the "active" template.
+        // ... then later ...
+        viewModel.employees()[1].active(true); // Now "Brynn" is also rendered using the "active" template.
+    </script>
 
 If your function references observable values, then the binding will update whenever any of those values change.  This will cause the data to be re-rendered using the appropriate template.
+
+If your function accepts a second parameter, then it will receive the entire [binding context](binding-context.html). You can then access `$parent` or any other [binding context](binding-context.html) variable when dynamically choosing a template. For example, you could amend the preceding code snippet as follows:
+
+    displayMode: function(employee, bindingContext) {
+        // Now return a template name string based on properties of employee or bindingContext
+    }
+
+As an alternative to using a callback function, you could even simply declare an observable property on your model object whose value is the name of the template to be rendered. Then, any time that model property changes, the UI will switch to display the output from the newly-selected template. For example, this code will render each `employee` using a template defined by the employee's `displayMode`:
+
+    <ul data-bind="foreach: employees">
+        <!-- ko template: displayMode --><!-- /ko -->
+    </ul>
+
+    <script>
+        var viewModel = {
+            employees: ko.observableArray([
+                { name: "Kari", displayMode: ko.observable("active") },
+                { name: "Brynn", displayMode: ko.observable("inactive") },
+                { name: "Nora", displayMode: ko.observable("inactive") }
+            ])
+        };
+
+        // ... then later ...
+        viewModel.employees()[1].displayMode("active"); // Now "Brynn" is also rendered using the "active" template.
+    </script>
+
+Of course, this will only work if you have defined templates called `active` and `inactive`.
 
 ### Note 5: Using jQuery.tmpl, an external string-based template engine
 
