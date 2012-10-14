@@ -117,7 +117,6 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 
 ... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway.
 
-
 ### Note 2: Using $index, $parent, and other context properties
 
 As you can see from Example 2 above, it's possible to use `$index` to refer to the zero-based index of the current array item. `$index` is an observable and is updated whenever the index of the item changes (e.g., if items are added to or removed from the array).
@@ -133,7 +132,39 @@ Similarly, you can use `$parent` to refer to data from outside the `foreach`, e.
 
 For more information about `$index` and other context properties such as `$parent`, see documentation for [binding context properties](binding-context.html).
 
-### Note 3: Using foreach without a container element
+### Note 3: Using "as" to give an alias to "foreach" items
+
+As described in Note 1, you can refer to each array entry using the `$data` [context variable](binding-context.html). In some cases though, it may be useful to give the current item a more descriptive name using the `as` option like:
+
+    <ul data-bind="foreach: { data: people, as: 'person' }"></ul>
+
+Now anywhere inside this `foreach` loop, bindings will be able to refer to `person` to access the current array item, from the `people` array, that is being rendered. This can be especially useful in scenarios where you have nested `foreach` blocks and you need to refer to an item declared at a higher level in the hierarchy. For example:
+
+    <ul data-bind="foreach: { data: categories, as: 'category' }">
+        <li>
+            <ul data-bind="foreach: { data: items, as: 'item' }">
+                <li>
+                    <span data-bind="text: category.name"></span>:
+                    <span data-bind="text: item"></span>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <script>
+        var viewModel = {
+            categories: ko.observableArray([
+                { name: 'Fruit', items: [ 'Apple', 'Orange', 'Banana' ] },
+                { name: 'Vegetables', items: [ 'Celery', 'Corn', 'Spinach' ] }
+            ])
+        };
+        ko.applyBindings(viewModel);
+    </script>
+
+Tip: Remember to pass a *string literal value* to `as` (e.g., `as: 'category'`, *not* `as: category`), because you are giving a name for a new variable, not reading the value of a variable that already exists.
+
+
+### Note 4: Using foreach without a container element
 
 In some cases, you might want to duplicate a section of markup, but you don't have any container element on which to put a `foreach` binding. For example, you might want to generate the following:
 
@@ -165,7 +196,7 @@ To handle this, you can use the *containerless control flow syntax*, which is ba
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
 
 
-### Note 4: Destroyed entries are hidden by default
+### Note 5: Destroyed entries are hidden by default
 
 Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy_and_destroyall_note_usually_relevant_to_ruby_on_rails_developers_only).
 
@@ -176,7 +207,7 @@ By default, the `foreach` binding will skip over (i.e., hide) any array entries 
     </div>
 
 
-### Note 5: Post-processing or animating the generated DOM elements
+### Note 6: Post-processing or animating the generated DOM elements
 
 If you need to run some further custom logic on the generated DOM elements, you can use any of the following callbacks:
 
