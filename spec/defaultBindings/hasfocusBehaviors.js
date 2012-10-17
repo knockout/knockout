@@ -34,6 +34,13 @@ describe('Binding: Hasfocus', {
         testNode.childNodes[1].focus();
         ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
         value_of(model.myVal()).should_be(false);
+
+        // If the model value becomes true after a blur, we re-focus the element
+        // (Represents issue #672, where this wasn't working)
+        var didFocusExpectedElement = false;
+        ko.utils.registerEventHandler(testNode.childNodes[0], "focusin", function() { didFocusExpectedElement = true });
+        model.myVal(true);
+        value_of(didFocusExpectedElement).should_be(true);
     },
 
     'Should set a non-observable value to be true on focus and false on blur': function() {
