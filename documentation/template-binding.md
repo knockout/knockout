@@ -187,27 +187,6 @@ If your function accepts a second parameter, then it will receive the entire [bi
         // Now return a template name string based on properties of employee or bindingContext
     }
 
-As an alternative to using a callback function, you could even simply declare an observable property on your model object whose value is the name of the template to be rendered. Then, any time that model property changes, the UI will switch to display the output from the newly-selected template. For example, this code will render each `employee` using a template defined by the employee's `displayMode`:
-
-    <ul data-bind="foreach: employees">
-        <!-- ko template: displayMode --><!-- /ko -->
-    </ul>
-
-    <script>
-        var viewModel = {
-            employees: ko.observableArray([
-                { name: "Kari", displayMode: ko.observable("active") },
-                { name: "Brynn", displayMode: ko.observable("inactive") },
-                { name: "Nora", displayMode: ko.observable("inactive") }
-            ])
-        };
-
-        // ... then later ...
-        viewModel.employees()[1].displayMode("active"); // Now "Brynn" is also rendered using the "active" template.
-    </script>
-
-Of course, this will only work if you have defined templates called `active` and `inactive`.
-
 ### Note 6: Using jQuery.tmpl, an external string-based template engine
 
 In the vast majority of cases, Knockout's native templating and the `foreach`, `if`, `with` and other control flow bindings will be all you need to construct an arbitrarily sophisticated UI. But in case you wish to integrate with an external templating library, such as the [Underscore template engine](http://documentcloud.github.com/underscore/#template) or [jquery.tmpl](http://api.jquery.com/jquery.tmpl/), Knockout offers a way to do it.
