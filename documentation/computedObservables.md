@@ -11,7 +11,7 @@ For example, given the following view model class,
         this.firstName = ko.observable('Bob');
         this.lastName = ko.observable('Smith');
     }
-    
+
 ... you could add a computed observable to return the full name:
 
     function AppViewModel() {
@@ -20,12 +20,12 @@ For example, given the following view model class,
         this.fullName = ko.computed(function() {
             return this.firstName() + " " + this.lastName();
         }, this);
-    }    
-    
+    }
+
 Now you could bind UI elements to it, e.g.:
 
     The name is <span data-bind="text: fullName"></span>
-    
+
 ... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
 
 ### Managing 'this'
@@ -42,12 +42,12 @@ There's a popular convention for avoiding the need to track `this` altogether: i
         var self = this;
 
         self.firstName = ko.observable('Bob');
-        self.lastName = ko.observable('Smith');     
+        self.lastName = ko.observable('Smith');
         self.fullName = ko.computed(function() {
             return self.firstName() + " " + self.lastName();
         });
-    }    
-    
+    }
+
 Because `self` is captured in the function's closure, it remains available and consistent in any nested functions, such as the `ko.computed` evaluator. This convention is even more useful when it comes to event handlers, as you'll see in many of the [live examples](../examples/).
 
 ### Dependency chains just work
@@ -76,10 +76,10 @@ Going back to the classic "first name + last name = full name" example, you can 
     function MyViewModel() {
         this.firstName = ko.observable('Planet');
         this.lastName = ko.observable('Earth');
-        
+
         this.fullName = ko.computed({
             read: function () {
-                return this.firstName() + " " + this.lastName(); 
+                return this.firstName() + " " + this.lastName();
             },
             write: function (value) {
                 var lastSpacePos = value.lastIndexOf(" ");
@@ -102,22 +102,15 @@ In this example, the `write` callback handles incoming values by splitting the i
 
 This is the exact opposite of the [Hello World](../examples/helloWorld.html) example, in that here the first and last names are not editable, but the combined full name is editable.
 
-The preceding view model code demonstrates the *single parameter syntax* for initialising computed observables. You can pass a JavaScript object with any of the following properties:
+The preceding view model code demonstrates the *single parameter syntax* for initialising computed observables. See the [computed observable reference](#computed_observable_reference) below for the full list of available options.
 
- * `read` --- Required. A function that is used to evaluate the computed observable's current value.
- * `write` --- Optional. If given, makes the computed observable writeable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
- * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks. See the section "Managing `this`" earlier on this page for more information.
- * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access it. By default, a computed observable has its value determined immediately during creation.
- * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
- * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
- 
 ### Example 2: A value converter
 
 Sometimes you might want to represent a data point on the screen in a different format from its underlying storage. For example, you might want to store a price as a raw float value, but let the user edit it with a currency symbol and fixed number of decimal places. You can use a writeable computed observable to represent the formatted price, mapping incoming values back to the underlying float value:
 
     function MyViewModel() {
         this.price = ko.observable(25.99);
-            
+
         this.formattedPrice = ko.computed({
             read: function () {
                 return '$' + this.price().toFixed(2);
@@ -138,7 +131,7 @@ It's trivial to bind the formatted price to a text box:
     <p>Enter bid price: <input data-bind="value: formattedPrice"/></p>
 
 Now, whenever the user enters a new price, the text box immediately updates to show it formatted with the currency symbol and two decimal places, no matter what format they entered the value in. This gives a great user experience, because the user sees how the software has understood their data entry as a price. They know they can't enter more than two decimal places, because if they try to, the additional decimal places are immediately removed. Similarly, they can't enter negative values, because the `write` callback strips off any minus sign.
- 
+
 ### Example 3: Filtering and validating user input
 
 Example 1 showed how a writeable computed observable can effectively *filter* its incoming data by choosing not to write certain values back to the underlying observables if they don't meet some criteria. It ignored full name values that didn't include a space.
@@ -148,19 +141,19 @@ Taking this a step further, you could also toggle an `isValid` flag depending on
     function MyViewModel() {
         this.acceptedNumericValue = ko.observable(123);
         this.lastInputWasValid = ko.observable(true);
-        
+
         this.attemptedValue = ko.computed({
             read: this.acceptedNumericValue,
             write: function (value) {
                 if (isNaN(value))
-                    this.lastInputWasValid(false);    
+                    this.lastInputWasValid(false);
                 else {
                     this.lastInputWasValid(true);
                     this.acceptedNumericValue(value); // Write to underlying storage
                 }
             },
             owner: this
-        });    
+        });
     }
 
     ko.applyBindings(new MyViewModel());
@@ -225,6 +218,30 @@ Additionally, Knockout provides similar functions that can operate on observable
 
 * `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
 * `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
+
+# Computed Observable Reference
+
+A computed observable can be constructed using one of the following forms:
+
+1. `ko.computed( evaluator [, targetObject, options] )` --- This form supports the most common case of creating a computed observable.
+  * `evaluator` --- A function that is used to evaluate the computed observable's current value.
+  * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](#managing_this) for more information.
+  * `options` --- A object with further properties for the computed observable. See the full list below.
+
+1. `ko.computed( options )` --- This single parameter form for creating a computed observable accepts a JavaScript object with any of the following properties.
+  * `read` --- Required. A function that is used to evaluate the computed observable's current value.
+  * `write` --- Optional. If given, makes the computed observable writeable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
+  * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
+  * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access it. By default, a computed observable has its value determined immediately during creation.
+  * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
+  * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
+
+A computed observable provides the following functions:
+
+* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
+* `dispose()` --- Manually disposes the computed observable, clearing all subscriptions to dependencies. This function is useful if you want to stop a computed observable from being updated or want to clean up memory for a computed observable that has dependencies on observables that won't be cleaned.
+* `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
+* `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
 
 # What happened to dependent observables?
 
