@@ -220,7 +220,7 @@ By default, the `foreach` binding will skip over (i.e., hide) any array entries 
 
 If you need to run some further custom logic on the generated DOM elements, you can use any of the `afterRender`/`afterAdd`/`beforeRemove`/`beforeMove`/`afterMove` callbacks described below.
 
-> **Note:** You should *only* use these callbacks for triggering animations related to changes in a list. If your goal is actually to attach other behaviors to new DOM elements when they have been added (e.g., event handlers, or to activate third-party UI controls), then your work will be much easier if you implement that new behavior as a [custom binding](custom-bindings.html) instead, because then you can use that behavior anywhere, independently of the `foreach` binding.
+> **Note:** These callbacks are *only* intended for triggering animations related to changes in a list. If your goal is actually to attach other behaviors to new DOM elements when they have been added (e.g., event handlers, or to activate third-party UI controls), then your work will be much easier if you implement that new behavior as a [custom binding](custom-bindings.html) instead, because then you can use that behavior anywhere, independently of the `foreach` binding.
 
 Here's a trivial example that uses `afterAdd` to apply the classic "yellow fade" effect to newly-added items. It requires the [jQuery Color plugin](https://github.com/jquery/jquery-color) to enable animation of background colors.
 
