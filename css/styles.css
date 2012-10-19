@@ -59,7 +59,7 @@ ul.stickerList li p.smallprint { margin-top: 0.1em; }
 
 /* Page */
 #wrapper {margin: 0 auto; width: 982px; }
-html { background: #d05400 url(../img/main-background.jpg) no-repeat top center; }
+html { background: #B85C1E url(../img/main-background.jpg) no-repeat top center; }
 body { font-family: arial; font-size: 14px; }
 .sticker { 
 	background-color: white; padding: 1.25em 1.45em 1.25em 1.55em; margin: 0.5em 0 3em 0; -moz-border-radius: 1em; -webkit-border-radius: 1em; border-radius: 1em; 
@@ -156,6 +156,10 @@ div.leftCol li.active, div.leftCol li.active a, div.leftCol li.active code, div.
 .homepageExample .liveExample { padding: 0.5em 1em 0.5em 1.3em; }
 .homepageExample .liveExample button { padding: 0.2em 0.6em; margin-left: 0.5em; }
 .homepageExample p { margin: 1.3em 0 0.8em 0; }
+
+/* Set a minimum height for the documentation content so the menu doesn't extend below the content */
+.documentation > .content { min-height: 1650px; }
+
 
 /* Footer */
 #page-footer { padding: 15px; text-align: right; }
