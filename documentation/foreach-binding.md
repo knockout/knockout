@@ -6,7 +6,7 @@ title: The "foreach" binding
 ### Purpose
 The `foreach` binding duplicates a section of markup for each entry in an array, and binds each copy of that markup to the corresponding array item. This is especially useful for rendering lists or tables.
 
-Assuming your array is an [observable array](observableArrays.html), whenever you later add or remove array entries, the binding will efficiently update the UI to match - inserting or removing more copies of the markup, without affecting any other DOM elements.
+Assuming your array is an [observable array](observableArrays.html), whenever you later add, remove, or re-order array entries, the binding will efficiently update the UI to match - inserting or removing more copies of the markup, or re-ordering existing DOM elements, without affecting any other DOM elements. This is far faster than regenerating the entire `foreach` output after each array change.
 
 Of course, you can arbitrarily nest any number of `foreach` bindings along with other control-flow bindings such as `if` and `with`.
 
@@ -195,8 +195,17 @@ To handle this, you can use the *containerless control flow syntax*, which is ba
 
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
 
+### Note 5: How array changes are detected and handled
 
-### Note 5: Destroyed entries are hidden by default
+When you modify the contents of your model array (by adding, moving, or deleting its entries), the `foreach` binding uses an efficient differencing algorithm to figure out what has changed, so it can then update the DOM to match. This means it can handle arbitrary combinations of simulaneous changes.
+
+* When you **add** array entries, `foreach` will render new copies of your template and insert them into the existing DOM
+* When you **delete** array entries, `foreach` will simply remove the corresponding DOM elements
+* When you **reorder** array entries (retaining the same object instances), `foreach` will typically just move the corresponding DOM elements into their new position
+
+Note that reordering detection is not guaranteed: to ensure the algorithm completes quickly, it is optimized to detect "simple" movements of small numbers of array entries. If the algorithm detects too many simultaneous reorderings combined with unrelated insertions and deletions, then for speed it can choose to regard a reordering as an "delete" plus an "add" instead of a single "move", and in that case the corresponding DOM elements will be torn down and recreated. Most developers won't encounter this edge case, and even if you do, the end-user experience will usually be identical.
+
+### Note 6: Destroyed entries are hidden by default
 
 Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy_and_destroyall_note_usually_relevant_to_ruby_on_rails_developers_only).
 
@@ -207,9 +216,33 @@ By default, the `foreach` binding will skip over (i.e., hide) any array entries 
     </div>
 
 
-### Note 6: Post-processing or animating the generated DOM elements
+### Note 7: Post-processing or animating the generated DOM elements
 
-If you need to run some further custom logic on the generated DOM elements, you can use any of the following callbacks:
+If you need to run some further custom logic on the generated DOM elements, you can use any of the `afterRender`/`afterAdd`/`beforeRemove`/`beforeMove`/`afterMove` callbacks described below.
+
+> **Note:** You should *only* use these callbacks for triggering animations related to changes in a list. If your goal is actually to attach other behaviors to new DOM elements when they have been added (e.g., event handlers, or to activate third-party UI controls), then your work will be much easier if you implement that new behavior as a [custom binding](custom-bindings.html) instead, because then you can use that behavior anywhere, independently of the `foreach` binding.
+
+Here's a trivial example that uses `afterAdd` to apply the classic "yellow fade" effect to newly-added items. It requires the [jQuery Color plugin](https://github.com/jquery/jquery-color) to enable animation of background colors.
+
+    <ul data-bind="foreach: { data: myItems, afterAdd: yellowFadeIn }">
+        <li data-bind="text: $data"></li>
+    </ul>
+
+    <button data-bind="click: addItem">Add</button>
+
+    <script type="text/javascript">
+        ko.applyBindings({
+            myItems: ko.observableArray([ 'A', 'B', 'C' ]),
+            yellowFadeIn: function(elements, data) {
+                $(elements).filter("li")
+                           .animate({ backgroundColor: 'yellow' }, 200)
+                           .animate({ backgroundColor: 'white' }, 800);
+            },
+            addItem: function() { this.myItems.push('New item'); }
+        });
+    </script>
+
+Full details:
 
  * `afterRender` --- is invoked each time the `foreach` block is duplicated and inserted into the document, both when `foreach` first initializes, and when new entries are added to the associated array later. Knockout will supply the following parameters to your callback:
 
@@ -228,20 +261,17 @@ If you need to run some further custom logic on the generated DOM elements, you 
    2. The index of the removed array element
    3. The removed array element
 
-Here's a trivial example that uses `afterRender`. It simply uses jQuery's `$.css` to make the rendered element turn red:
+ * `beforeMove` --- is invoked when an array item has changed position in the array, but before the corresponding DOM nodes have been moved. Note that `beforeMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. You could use `beforeMove` to store the original screen coordinates of the affected elements so that you can animate their movements in the `afterMove` callback.  Knockout will supply the following parameters to your callback:
 
-    <ul data-bind="foreach: { data: myItems, afterRender: handleAfterRender }">
-        <li data-bind="text: $data"></li>
-    </ul>
+   1. A DOM node that may be about to move
+   2. The index of the moved array element
+   3. The moved array element
 
-    <script type="text/javascript">
-        ko.applyBindings({
-            myItems: ko.observableArray([ 'A', 'B', 'C' ]),
-            handleAfterRender: function(elements, data) {
-                $(elements).css({ color: 'red' });
-            }
-        });
-    </script>
+ * `afterMove` --- is invoked after an array item has changed position in the array, and after `foreach` has updated the DOM to match. Note that `afterMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. Knockout will supply the following parameters to your callback:
+
+   1. A DOM node that may have moved
+   2. The index of the moved array element
+   3. The moved array element
 
 For examples of `afterAdd` and `beforeRemove` see [animated transitions](/examples/animatedTransitions.html).
 

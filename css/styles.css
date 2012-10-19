@@ -1,11 +1,12 @@
 /* Tripoli overrides */
 .content { font-size: 1.1em !important; }
-.content p + ul { margin-top: -0.8em; }
+.content p + ul, .content p + blockquote { margin-top: -0.8em; }
 .sticker .content h1 { font-size: 1.6em; margin: 0.4em 0 0.4em 0; }
 .sticker .content h2 { font-size: 1.4em ;}
 .sticker .content h3 { font-size: 1.2em ;}
 .sticker .content a, .sticker a { color: #A71500; text-decoration: underline; }
 .sticker .content form { margin: 0; padding: 0; }
+blockquote > :first-child::before { content: ""; margin-left: 0; padding-right: 0; }
 
 /* Basics */
 a { text-decoration: none; }
@@ -28,6 +29,9 @@ code { font-family: Consolas, Monaco, "Courier New", mono-space, monospace !impo
 }
 
 li ul, li ol  { margin-bottom: 1em !important ; }
+
+.content blockquote { padding: 1em; background-color: #fec; margin-bottom: 1em; color: inherit; }
+.content blockquote p:last-child { margin-bottom: 0; }
 
 .center { text-align: center }
 .left { text-align: left }
