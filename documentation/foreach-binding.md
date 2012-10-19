@@ -233,10 +233,10 @@ Here's a trivial example that uses `afterAdd` to apply the classic "yellow fade"
     <script type="text/javascript">
         ko.applyBindings({
             myItems: ko.observableArray([ 'A', 'B', 'C' ]),
-            yellowFadeIn: function(elements, data) {
-                $(elements).filter("li")
-                           .animate({ backgroundColor: 'yellow' }, 200)
-                           .animate({ backgroundColor: 'white' }, 800);
+            yellowFadeIn: function(element, index, data) {
+                $(element).filter("li")
+                          .animate({ backgroundColor: 'yellow' }, 200)
+                          .animate({ backgroundColor: 'white' }, 800);
             },
             addItem: function() { this.myItems.push('New item'); }
         });
