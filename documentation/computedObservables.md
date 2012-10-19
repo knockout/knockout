@@ -102,7 +102,7 @@ In this example, the `write` callback handles incoming values by splitting the i
 
 This is the exact opposite of the [Hello World](../examples/helloWorld.html) example, in that here the first and last names are not editable, but the combined full name is editable.
 
-The preceding view model code demonstrates the *single parameter syntax* for initialising computed observables. See the [computed observable reference](#computed_observable_reference) below for the full list of available options.
+The preceding view model code demonstrates the *single parameter syntax* for initializing computed observables. See the [computed observable reference](#computed_observable_reference) below for the full list of available options.
 
 ### Example 2: A value converter
 
@@ -184,7 +184,9 @@ The other neat trick is that declarative bindings are simply implemented as comp
 
 ### Controlling dependencies using peek
 
-Knockout's automatic dependency tracking normally does exactly what you want. But you might sometimes need to control which observables will update your computed observable, especially if the computed observable performs some sort of action, such as making an Ajax request. For example:
+Knockout's automatic dependency tracking normally does exactly what you want. But you might sometimes need to control which observables will update your computed observable, especially if the computed observable performs some sort of action, such as making an Ajax request. The `peek` function lets you access an observable or computed observable without creating a dependency.
+
+In the example below, a computed observable is used to reload an observable named `currentPageData` using Ajax with data from two other observable properties. The computed observable will update whenever `pageIndex` changes, but it ignores changes to `selectedItem` because it is accessed using `peek`. In this case, the user might want to use the current value of `selectedItem` only for tracking purposes when a new set of data is loaded.
 
     ko.computed(function() {
         var params = {
@@ -194,9 +196,7 @@ Knockout's automatic dependency tracking normally does exactly what you want. Bu
         $.getJSON('/Some/Json/Service', params, this.currentPageData);
     }, this);
 
-This computed observable will reload `currentPageData` whenever the `pageIndex` observable changes but not when `selectedItem` changes because it is accessed using the `peek` function. `peek` lets you access an observable or computed observable without creating a dependency. In this example, the user only wants to use the current value of `selectedItem` for tracking purposes when a new set of data is loaded.
-
-Note: For another way to control when a computed observable is updated, see the [throttle extender](throttle-extender.html).
+Note: If you just want to prevent a computed observable from updating too often, see the [throttle extender](throttle-extender.html).
 
 ### Note: Why circular dependencies aren't meaningful
 
@@ -238,10 +238,13 @@ A computed observable can be constructed using one of the following forms:
 
 A computed observable provides the following functions:
 
-* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
 * `dispose()` --- Manually disposes the computed observable, clearing all subscriptions to dependencies. This function is useful if you want to stop a computed observable from being updated or want to clean up memory for a computed observable that has dependencies on observables that won't be cleaned.
-* `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
+* `extend(extenders)` --- Applies the given [extenders](extenders.html) to the computed observable.
 * `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
+* `getSubscriptionsCount()` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable.
+* `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
+* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
+* `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly_subscribing_to_observables) to be notified of changes to the computed observable.
 
 # What happened to dependent observables?
 
