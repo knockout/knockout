@@ -3,7 +3,7 @@ layout: documentation
 title: Binding context
 ---
 
-A *binding context* is an object that holds data that you can reference from your bindings. While applying bindings, Knockout automatically creates and manages a hierarchy of binding contexts. The root level of the hierarchy refers to the `viewModel` parameter you supplied to `ko.applyBindings(viewModel)`. Then, each time you use a control flow binding such as [`with`](with-binding.html) or [`foreach`](foreach-binding.html), that creates a child binding context that refers to the nested view model data. 
+A *binding context* is an object that holds data that you can reference from your bindings. While applying bindings, Knockout automatically creates and manages a hierarchy of binding contexts. The root level of the hierarchy refers to the `viewModel` parameter you supplied to `ko.applyBindings(viewModel)`. Then, each time you use a control flow binding such as [`with`](with-binding.html) or [`foreach`](foreach-binding.html), that creates a child binding context that refers to the nested view model data.
 
 Bindings contexts offer the following special properties that you can reference in any binding:
 
@@ -50,6 +50,18 @@ Bindings contexts offer the following special properties that you can reference 
 * `$parentContext`
 
     This refers to the binding context object at the parent level. This is different from `$parent`, which refers to the *data* (not binding context) at the parent level. This is useful, for example, if you need to access the index value of an outer `foreach` item from an inner context (usage: `$parentContext.$index`). This is undefined in the root context.
+
+The following special variables are also available in bindings, but are not part of the binding context object:
+
+* `$context`
+
+    This refers to the current binding context object. This may be useful if you want to access properties of the context when they might also exist in the view model, or if you want to pass the context object to a helper function in your view model.
+
+* `$element`
+
+    This is the element DOM object (for virtual elements, it will be the comment DOM object) of the current binding. This can be useful if a binding needs to access an attribute of the current element. Example:
+
+        <div id="item1" data-bind="text: $element.id"></div>
 
 ### Controlling or modifying the binding context in custom bindings
 
