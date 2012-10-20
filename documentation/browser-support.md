@@ -11,7 +11,7 @@ Knockout is tested on the following browsers:
  * Apple Safari (tested on Windows Safari version 5, Mac OS X Safari version 3.1.2, and iPhone Safari for iOS 4; should work on newer/older versions too)
  * Opera 10 for Windows
 
-It's very likely that Knockout also works on older and newer versions of these browsers, but there's only so many combinations I can check regularly! At the time of the last check, Knockout was also found to work on the following browsers (though I don't recheck these for every release):
+It's very likely that Knockout also works on older and newer versions of these browsers, but there's only so many combinations we can check regularly! At the time of the last check, Knockout was also found to work on the following browsers (though we don't recheck these for every release):
 
  * Opera Mini
  * Google Android OS browser (OS version 2.2)

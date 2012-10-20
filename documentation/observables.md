@@ -9,7 +9,7 @@ Knockout is built around three core features:
 1. Declarative bindings
 1. Templating
 
-On this page, you'll learn about the first of these three. But before that, let me explain the MVVM pattern and the concept of a *view model*.
+On this page, you'll learn about the first of these three. But before that, let's examine the MVVM pattern and the concept of a *view model*.
 
 # MVVM and View Models
 
@@ -21,10 +21,10 @@ On this page, you'll learn about the first of these three. But before that, let 
 
   Note that this is not the UI itself: it doesn't have any concept of buttons or display styles. It's not the persisted data model either - it holds the unsaved data the user is working with. When using KO, your view models are pure JavaScript objects that hold no knowledge of HTML. Keeping the view model abstract in this way lets it stay simple, so you can manage more sophisticated behaviors without getting lost.
 
-* A *view*: a visible, interactive UI representing the state of the view model. It displays information from the view model, sends commands to the view model (e.g., when the user clicks buttons), and updates whenever the state of the view model changes. 
+* A *view*: a visible, interactive UI representing the state of the view model. It displays information from the view model, sends commands to the view model (e.g., when the user clicks buttons), and updates whenever the state of the view model changes.
 
   When using KO, your view is simply your HTML document with declarative bindings to link it to the view model. Alternatively, you can use templates that generate HTML using data from your view model.
-  
+
 To create a view model with KO, just declare any JavaScript object. For example,
 
     var myViewModel = {
@@ -41,9 +41,9 @@ You can then create a very simple *view* of this view model using a declarative 
 The `data-bind` attribute isn't native to HTML, though it is perfectly OK (it's strictly compliant in HTML 5, and causes no problems with HTML 4 even though a validator will point out that it's an unrecognized attribute). But since the browser doesn't know what it means, you need to activate Knockout to make it take effect.
 
 To activate Knockout, add the following line to a `<script>` block:
-	
-	ko.applyBindings(myViewModel);
-	
+
+    ko.applyBindings(myViewModel);
+
 You can either put the script block at the bottom of your HTML document, or you can put it at the top and wrap the contents in a DOM-ready handler such as [jQuery's `$` function](http://api.jquery.com/jQuery/#jQuery3).
 
 That does it! Now, your view will display as if you'd written the following HTML:
@@ -68,12 +68,12 @@ For example, rewrite the preceding view model object as follows:
         personName: ko.observable('Bob'),
         personAge: ko.observable(123)
     };
-    
+
 You don't have to change the view at all - the same `data-bind` syntax will keep working. The difference is that it's now capable of detecting changes, and when it does, it will update the view automatically.
 
 ## Reading and writing observables
 
-Not all browsers support JavaScript getters and setters (\* cough \* IE \* cough \*), so for compatibility, `ko.observable` objects are actually *functions*. 
+Not all browsers support JavaScript getters and setters (\* cough \* IE \* cough \*), so for compatibility, `ko.observable` objects are actually *functions*.
 
 * To **read** the observable's current value, just call the observable with no parameters. In this example, `myViewModel.personName()` will return `'Bob'`, and `myViewModel.personAge()` will return `123`.
 
@@ -81,7 +81,7 @@ Not all browsers support JavaScript getters and setters (\* cough \* IE \* cough
 
 * To write values to **multiple observable properties** on a model object, you can use *chaining syntax*. For example, `myViewModel.personName('Mary').personAge(50)` will change the name value to `'Mary'` *and* the age value to `50`.
 
-The whole point of observables is that they can be observed, i.e., other code can say that it wants to be notified of changes. That's what many of KO's built-in bindings do internally. So, when you wrote `data-bind="text: personName"`, the `text` binding registered itself to be notified when `personName` changes (assuming it's an observable value, which it is now). 
+The whole point of observables is that they can be observed, i.e., other code can say that it wants to be notified of changes. That's what many of KO's built-in bindings do internally. So, when you wrote `data-bind="text: personName"`, the `text` binding registered itself to be notified when `personName` changes (assuming it's an observable value, which it is now).
 
 When you change the name value to `'Mary'` by calling `myViewModel.personName('Mary')`, the `text` binding will automatically update the text contents of the associated DOM element. That's how changes to the view model automatically propagate to the view.
 
@@ -92,13 +92,13 @@ When you change the name value to `'Mary'` by calling `myViewModel.personName('M
 For advanced users, if you want to register your own subscriptions to be notified of changes to observables, you can call their `subscribe` function. For example,
 
     myViewModel.personName.subscribe(function(newValue) {
-    	alert("The person's new name is " + newValue);
-	});
+        alert("The person's new name is " + newValue);
+    });
 
 The `subscribe` function is how many parts of KO work internally. You can also terminate a subscription if you wish: first capture it as a variable, then you can call its `dispose` function, e.g.:
 
     var subscription = myViewModel.personName.subscribe(function(newValue) { /* do stuff */ });
     // ...then later...
     subscription.dispose(); // I no longer want notifications
-    
+
 Most of the time you don't need to do this, because the built-in bindings and templating system take care of managing subscriptions.

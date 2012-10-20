@@ -136,7 +136,7 @@ Now, whenever the user enters a new price, the text box immediately updates to s
 
 Example 1 showed how a writeable computed observable can effectively *filter* its incoming data by choosing not to write certain values back to the underlying observables if they don't meet some criteria. It ignored full name values that didn't include a space.
 
-Taking this a step further, you could also toggle an `isValid` flag depending on whether the latest input was satisfactory, and display a message in the UI accordingly. I'll explain in a moment an easier way of doing validation, but first consider the following view model, which demonstrates the mechanism:
+Taking this a step further, you could also toggle an `isValid` flag depending on whether the latest input was satisfactory, and display a message in the UI accordingly. There's an easier way of doing validation (explained below), but first consider the following view model, which demonstrates the mechanism:
 
     function MyViewModel() {
         this.acceptedNumericValue = ko.observable(123);
