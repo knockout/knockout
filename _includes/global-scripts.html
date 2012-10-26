@@ -39,5 +39,12 @@
         if (urlFilename) {
             $(".leftColContents li:has(a[href$=" + urlFilename[1] + "])").addClass("active");
         }
+
+        // Don't stay on URLs that end with /index.html as one day we may stop supporting these.
+        // (Ideally this would be done by a 301 on the server, but GitHub Pages doesn't support that
+        // Instead we use a combination of <link rel=canonical> and client-side redirect.)
+        var urlSuffixToRemove = "/index.html";
+        if (location.href.substring(location.href.length - urlSuffixToRemove.length) === urlSuffixToRemove)
+            location.replace(location.href.substring(0, location.href.length - urlSuffixToRemove.length + 1))
     });
 </script> 
