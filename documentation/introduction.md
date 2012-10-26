@@ -23,7 +23,7 @@ Developers familiar with Ruby on Rails, ASP.NET MVC, or other MV* technologies m
 
 ## OK, how do you use it?
 
-The quickest and most fun way to get started is by working through the [interactive tutorials](http://learn.knockoutjs.com). Once you've got to grips with the basics, explore the [live examples](../examples/index.html) and then have a go with it in your own project.
+The quickest and most fun way to get started is by working through the [interactive tutorials](http://learn.knockoutjs.com). Once you've got to grips with the basics, explore the [live examples](../examples/) and then have a go with it in your own project.
 
 ## Is KO intended to compete with jQuery (or Prototype, etc.) or work with it?
 
