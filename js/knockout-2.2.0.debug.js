@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.2.0rc
+// Knockout JavaScript library v2.2.0
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -37,7 +37,7 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
-ko.version = "2.2.0rc";
+ko.version = "2.2.0";
 
 ko.exportSymbol('version', ko.version);
 ko.utils = new (function () {
@@ -58,6 +58,9 @@ ko.utils = new (function () {
     var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
+    // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
+    // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
+    // If there is a future need to detect specific versions of IE10+, we will amend this.
     var ieVersion = (function() {
         var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
 
@@ -344,17 +347,21 @@ ko.utils = new (function () {
             if ((value === null) || (value === undefined))
                 value = "";
 
-            // We need there to be exactly one child: a text node.
-            // If there are no children, more than one, or if it's not a text node,
-            // we'll clear everything and create a single text node.
-            var innerTextNode = ko.virtualElements.firstChild(element);
-            if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
-                ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
+            if (element.nodeType === 3) {
+                element.data = value;
             } else {
-                innerTextNode.data = value;
-            }
+                // We need there to be exactly one child: a text node.
+                // If there are no children, more than one, or if it's not a text node,
+                // we'll clear everything and create a single text node.
+                var innerTextNode = ko.virtualElements.firstChild(element);
+                if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
+                    ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
+                } else {
+                    innerTextNode.data = value;
+                }
 
-            ko.utils.forceRefresh(element);
+                ko.utils.forceRefresh(element);
+            }
         },
 
         setElementName: function(element, name) {
@@ -2390,8 +2397,8 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
     },
     'update': function(element, valueAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
         if (!element[hasfocusUpdatingProperty]) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
             value ? element.focus() : element.blur();
             ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
         }
@@ -2630,6 +2637,7 @@ ko.bindingHandlers['value'] = {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
         var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
+        var propertyChangedFired = false;
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -2638,6 +2646,7 @@ ko.bindingHandlers['value'] = {
         }
 
         var valueUpdateHandler = function() {
+            propertyChangedFired = false;
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
@@ -2648,11 +2657,9 @@ ko.bindingHandlers['value'] = {
         var ieAutoCompleteHackNeeded = ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
                                        && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
         if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
-            var propertyChangedFired = false;
             ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
             ko.utils.registerEventHandler(element, "blur", function() {
                 if (propertyChangedFired) {
-                    propertyChangedFired = false;
                     valueUpdateHandler();
                 }
             });
@@ -3422,6 +3429,9 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
+        // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
+        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
@@ -3441,8 +3451,11 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
             }
         }
 
-        // Next remove nodes for deleted items; or call beforeRemove, which will remove them
-        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+        // If there's a beforeRemove callback, call it after reordering.
+        // Note that we assume that the beforeRemove callback will usually be used to remove the nodes using
+        // some sort of animation, which is why we first reorder the nodes that will be removed. If the
+        // callback instead removes the nodes right away, it would be more efficient to skip reordering them.
+        // Perhaps we'll make that change in the future if this scenario becomes more common.
         callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
 
         // Finally call afterMove and afterAdd callbacks
