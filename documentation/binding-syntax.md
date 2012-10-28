@@ -61,9 +61,10 @@ Bindings can include any amount of *whitespace* (spaces, tab, and newlines), so 
 
 ### Notes for multiple bindings on a single element
 
-When an element has multiple bindings, these bindings interact in ways that aren't always obvious. Note that the behaviors described here are not features of Knockout, but are issues to consider and work around. It's likely that future versions of Knockout will include improvements that fix these issues.
+When you use multiple bindings on a single element, those bindings can interact. If this behavior surprises you, it's worth bearing in mind the following current implementation details:
 
-1.  The order of bindings is sometimes important. For example, the `checked` binding uses the element's value to determine if the box should be checked or not. If the value is being set by another binding such as `attr`, the `checked` binding must be run after the `attr` binding and thus must be specified in that order: `attr: { value: myValue }, checked: myChecked`. Here is a full list:
-    * `attr.value` or `value` (sets the value) should come before `checked` (accesses the value)
-    * `options` or `foreach` (sets the options) should come before `value` or `selectedOptions` (accesses the options)
-1.  Multiple bindings for the same element are updated together. This can be a performance issue in some circumstances. See Ryan Niemeyer's [blog post](http://www.knockmeout.net/2012/06/knockoutjs-performance-gotcha-3-all-bindings.html) for details.
+1. **Bindings are applied in order from left to right.** There are a few rare cases where bindings function correctly only when ordered in a certain way, because one reads a property that another writes. This is a limitation that we're likely to eliminate in a future version of Knockout. At present, the full list is:
+    * `attr: { value: ... }` or `value: ...` should be used before `checked: ...`
+    * `options: ...` or `foreach: ...` should be used before `value: ...` or `selectedOptions: ...`
+
+1. **When model values change, all bindings on the same element are updated together.** For example, if you use `enable: allowEdits, value: someValue`, then both the `enable` and `value` bindings will be refreshed when either `allowEdits` or `someValue` changes. In some extreme cases this can lead to worse performance ([more info](http://www.knockmeout.net/2012/06/knockoutjs-performance-gotcha-3-all-bindings.html)). Don't create custom bindings that rely on this implementation detail, because it's a limitation we are likely to eliminate in a future version of Knockout.
