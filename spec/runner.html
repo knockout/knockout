@@ -1,49 +1,24 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>JSSpec results</title>
         <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
 
-        <!-- All specs should pass with or without jQuery being referenced -->
-        <!-- <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.js"></script> -->
+        <!-- All specs should pass with or without jQuery+Modernizr being referenced -->
+        <!--
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.2.js"></script>
+        <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-1.7-development-only.js"></script>
+        -->
 
+        <script type="text/javascript" src="lib/innershiv.js"></script>
         <script type="text/javascript" src="lib/diff_match_patch.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.js"></script>        
-        <script type="text/javascript">
-            JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
-                for (var i = 0; i < expectedPossibilities.length; i++) {
-                    var matcher = JSSpec.EqualityMatcher.createInstance(expectedPossibilities[i], this.target);
-                    if (matcher.matches())
-                        return;
-                }
-                JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
-                throw JSSpec._assertionFailure;
-            };
-            JSSpec.DSL.Subject.prototype.should_contain = function (expected) {
-                if (this.target.indexOf(expected) >= 0)
-                    return;
-                JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
-                throw JSSpec._assertionFailure;
-            };            
-            JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
-                var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
-                // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
-                cleanedHtml = cleanedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
-                expectedHtml = expectedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
-                // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
-                cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"(ko\d+|null)\"/g, "");
-                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
-            };
-            JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
-            	var actualText = 'innerText' in this.target ? this.target.innerText : this.target.textContent;
-                var cleanedActualText = actualText.replace(/\r\n/g, "\n");
-                JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
-            };
-            
-        </script>
+        <script type="text/javascript" src="lib/JSSpec.js"></script>
+        <script type="text/javascript" src="lib/JSSpec.extensions.js"></script>
         <script type="text/javascript" src="lib/json2.js"></script>
-        <script type="text/javascript" src="lib/knockout-latest.js"></script>
-        
+        <script type="text/javascript">
+            // An external runner, such as PhantomJS, can prepopulate window.koFilename (e.g., to run tests against the minified build)
+            JSSpec.addScriptReference(window.koFilename || "lib/knockout-latest.js");
+        </script>
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
         <script type="text/javascript" src="subscribableBehaviors.js"></script>
         <script type="text/javascript" src="observableBehaviors.js"></script>
@@ -52,13 +27,34 @@
         <script type="text/javascript" src="extenderBehaviors.js"></script>
         <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
         <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
-        <script type="text/javascript" src="jsonExpressionRewritingBehaviors.js"></script>
+        <script type="text/javascript" src="expressionRewritingBehaviors.js"></script>
         <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
-        <script type="text/javascript" src="defaultBindingsBehaviors.js"></script>
         <script type="text/javascript" src="templatingBehaviors.js"></script>
         <script type="text/javascript" src="editDetectionBehaviors.js"></script>
         <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
         <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
+
+        <!-- Default bindings -->
+        <script type="text/javascript" src="defaultBindings/attrBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/checkedBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/clickBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/cssBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/enableDisableBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/eventBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/foreachBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/hasfocusBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/htmlBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/ifBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/ifnotBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/optionsBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/selectedOptionsBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/styleBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/submitBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/textBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/uniqueNameBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/visibleBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
     </head>
     <body>
         <div style="display:none;"><p>A</p><p>B</p></div>
