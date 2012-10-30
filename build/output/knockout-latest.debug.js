@@ -960,7 +960,7 @@ ko.dependencyDetection = (function () {
                 _frames.push(null);
                 callback.call(callbackTarget);
             }
-			catch(pseudoError) {}
+			catch(pseudoError) { throw pseudoError; }
 			finally {
                 _frames.pop();
             }
@@ -1239,7 +1239,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         }
-		catch(pseudoError) {}
+		catch(pseudoError) { throw pseudoError; }
 		finally {
             ko.dependencyDetection.end();
         }

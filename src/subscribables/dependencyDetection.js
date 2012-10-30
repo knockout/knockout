@@ -28,7 +28,7 @@ ko.dependencyDetection = (function () {
                 _frames.push(null);
                 callback.call(callbackTarget);
             }
-			catch(pseudoError) {}
+			catch(pseudoError) { throw pseudoError; }
 			finally {
                 _frames.pop();
             }

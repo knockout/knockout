@@ -81,7 +81,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         }
-		catch(pseudoError) {}
+		catch(pseudoError) { throw pseudoError; }
 		finally {
             ko.dependencyDetection.end();
         }
