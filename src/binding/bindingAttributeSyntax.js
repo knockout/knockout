@@ -88,6 +88,12 @@
             return parsedBindings;
         }
 
+        var preprocessNode = ko.bindingProvider['instance']['preprocessNode'];
+
+        if (preprocessNode) {
+            node = preprocessNode(node) || node;
+        }
+        
         var bindingHandlerThatControlsDescendantBindings;
         ko.dependentObservable(
             function () {
