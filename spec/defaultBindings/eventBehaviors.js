@@ -87,5 +87,24 @@ describe('Binding: Event', {
         ko.applyBindings(viewModel, testNode);
         ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
         value_of(didCallHandler).should_be(true);
+    },
+
+    'Should skip properties added to Object.prototype when looping on the supplied events': function() {
+        //add an extra property to Object.prototype
+        Object.prototype.someExtraMethod = function() { };
+
+        var didCallHandler = false;
+        var myHandler = function() {
+            didCallHandler = true;
+        };
+
+        testNode.innerHTML = "<button data-bind='event:{ mouseover: myHandler }'>hey</button>";
+        var viewModel = { myHandler: myHandler };
+        ko.applyBindings(viewModel, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "mouseover");
+        value_of(didCallHandler).should_be(true);
+
+        //remove the extra property
+        delete Object.prototype.someExtraMethod;
     }
 });
