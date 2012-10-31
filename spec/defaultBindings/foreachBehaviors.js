@@ -175,6 +175,54 @@ describe('Binding: Foreach', {
         value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
     },
 
+    'Should be able to supply before and after global callbacks': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, before: myBefore, after: myAfter }'><span data-bind='text: childprop'></span></div>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var beforeCallbacks = 0, afterCallbacks = 0;
+        ko.applyBindings({
+            someItems: someItems,
+            myBefore: function() { beforeCallbacks++ },
+            myAfter: function() { afterCallbacks++ }
+        }, testNode);
+
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span>');
+
+        // Try adding
+        someItems.push({ childprop: 'added child'});
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        value_of(beforeCallbacks).should_be(1);
+        value_of(afterCallbacks).should_be(1);
+
+        // Try removing multiple items, but callbacks are only called once
+        someItems.pop();
+        value_of(testNode.childNodes[0]).should_contain_html('<span data-bind="text: childprop">first child</span>');
+        value_of(beforeCallbacks).should_be(2);
+        value_of(afterCallbacks).should_be(2);
+    },
+
+    'Should not call before or after global callbacks if binding is re-evaluated without removing, adding, or moving items': function() {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, before: myBefore, after: myAfter }, css: { test: testObservable }'><span data-bind='text: childprop'></span></div>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var testObservable = ko.observable(false);
+        var beforeCallbacks = 0, afterCallbacks = 0;
+        ko.applyBindings({
+            someItems: someItems,
+            testObservable: testObservable,
+            myBefore: function() { beforeCallbacks++ },
+            myAfter: function() { afterCallbacks++ }
+        }, testNode);
+
+        // Remove an item and ensure that callback counting works
+        someItems.pop();
+        value_of(beforeCallbacks).should_be(1);
+        value_of(afterCallbacks).should_be(1);
+
+        // Change another observable in the same binding and verify that global callbacks aren't called again
+        testObservable(true);
+        value_of(beforeCallbacks).should_be(1);
+        value_of(afterCallbacks).should_be(1);
+    },
+
     'Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed': function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
@@ -256,6 +304,46 @@ describe('Binding: Foreach', {
 
     'Should call an beforeMove callback function and not cause updates if an observable accessed in the callback is changed': function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeMove: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        someItems.splice(0, 0, { childprop: 'added child'});
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst childhidden child');
+    },
+
+    'Should call a before global callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, before: callback }'><span data-bind='text: childprop'></span></div>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        someItems.splice(0, 0, { childprop: 'added child'});
+        value_of(callbacks).should_be(1);
+
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        value_of(testNode.childNodes[0]).should_contain_text('added childfirst childhidden child');
+    },
+
+    'Should call an after global callback function and not cause updates if an observable accessed in the callback is changed': function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, after: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
             someItems = ko.observableArray([{ childprop: 'first child' }]),
             callbacks = 0;
