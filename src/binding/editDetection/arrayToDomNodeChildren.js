@@ -101,6 +101,11 @@
             itemsToProcess.push(mapData);
         }
 
+        function callGlobalCallback(callback) {
+            if (callback && !isFirstExecution && editScript.length > 0)
+                callback();
+        }
+
         function callCallback(callback, items) {
             if (callback) {
                 for (var i = 0, n = items.length; i < n; i++) {
@@ -152,7 +157,10 @@
             }
         }
 
-        // Call beforeMove first before any changes have been made to the DOM
+        // Call global before callback one time before any changes have been made to the DOM
+        callGlobalCallback(options['before']);
+
+        // Call beforeMove for each item before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
@@ -184,9 +192,12 @@
         // Perhaps we'll make that change in the future if this scenario becomes more common.
         callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
 
-        // Finally call afterMove and afterAdd callbacks
+        // Call afterMove and afterAdd callbacks for each item once changes to the DOM are finished
         callCallback(options['afterMove'], itemsForMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
+
+        // Finally, call global after callback one time after changes to the DOM are finished
+        callGlobalCallback(options['after']);
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);

@@ -23,6 +23,8 @@ ko.bindingHandlers['foreach'] = {
                 'afterRender': unwrappedValue['afterRender'],
                 'beforeMove': unwrappedValue['beforeMove'],
                 'afterMove': unwrappedValue['afterMove'],
+                'before': unwrappedValue['before'],
+                'after': unwrappedValue['after'],
                 'templateEngine': ko.nativeTemplateEngine.instance
             };
         };
