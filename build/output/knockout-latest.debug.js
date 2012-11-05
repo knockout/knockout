@@ -1450,7 +1450,10 @@ ko.exportSymbol('toJSON', ko.toJSON);
                         ? (element.getAttributeNode('value').specified ? element.value : element.text)
                         : element.value;
                 case 'select':
-                    return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+					var value = element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+					if (element.selectedIndex == 0 && element.options.length == 1 && value == null)
+						return undefined;
+                    return value;
                 default:
                     return element.value;
             }
@@ -2504,7 +2507,7 @@ ko.bindingHandlers['options'] = {
             if (allBindings['optionsCaption']) {
                 var option = document.createElement("option");
                 ko.utils.setHtml(option, allBindings['optionsCaption']);
-                ko.selectExtensions.writeValue(option, undefined);
+                ko.selectExtensions.writeValue(option, null);
                 element.appendChild(option);
             }
 
