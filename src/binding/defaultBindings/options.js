@@ -43,7 +43,7 @@ ko.bindingHandlers['options'] = {
             if (allBindings['optionsCaption']) {
                 var option = document.createElement("option");
                 ko.utils.setHtml(option, allBindings['optionsCaption']);
-                ko.selectExtensions.writeValue(option, undefined);
+                ko.selectExtensions.writeValue(option, null);
                 element.appendChild(option);
             }
 

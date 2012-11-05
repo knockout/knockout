@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.2.0
+// Knockout JavaScript library v##VERSION##
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -37,7 +37,7 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
-ko.version = "2.2.0";
+ko.version = "##VERSION##";
 
 ko.exportSymbol('version', ko.version);
 ko.utils = new (function () {
@@ -1450,7 +1450,10 @@ ko.exportSymbol('toJSON', ko.toJSON);
                         ? (element.getAttributeNode('value').specified ? element.value : element.text)
                         : element.value;
                 case 'select':
-                    return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+					var value = element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+					if (element.selectedIndex == 0 && element.options.length == 1 && value == null)
+						return undefined;
+                    return value;
                 default:
                     return element.value;
             }
@@ -2504,7 +2507,7 @@ ko.bindingHandlers['options'] = {
             if (allBindings['optionsCaption']) {
                 var option = document.createElement("option");
                 ko.utils.setHtml(option, allBindings['optionsCaption']);
-                ko.selectExtensions.writeValue(option, undefined);
+                ko.selectExtensions.writeValue(option, null);
                 element.appendChild(option);
             }
 
@@ -2649,7 +2652,8 @@ ko.bindingHandlers['value'] = {
             propertyChangedFired = false;
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
-            ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
+			if (elementValue !== undefined)
+				ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
         }
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122

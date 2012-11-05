@@ -15,7 +15,8 @@ ko.bindingHandlers['value'] = {
             propertyChangedFired = false;
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
-            ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
+			if (elementValue !== undefined)
+				ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'value', elementValue);
         }
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122
