@@ -16,6 +16,11 @@ describe('Observable Array', {
         value_of(ko.isObservable(testObservableArray)).should_be(true);
     },
 
+    'Should be able to determine type' : function() {
+        var instance = new ko.observableArray();
+        value_of(ko.isObservableArray(instance)).should_be(true);
+    },
+
     'Should initialize to empty array if you pass no args to constructor' : function() {
         var instance = new ko.observableArray();
         value_of(instance().length).should_be(0);

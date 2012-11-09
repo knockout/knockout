@@ -91,10 +91,13 @@ ko.observableArray['fn'] = {
     }
 }
 
-ko.observableArray['fn'][protoProperty] = ko.observableArray;
-
 ko.isObservableArray = function (instance) {
-    return ko.hasPrototype(instance, ko.observableArray);
+    return typeof instance["remove"] == "function" &&
+           typeof instance["removeAll"] == "function" &&
+           typeof instance["destroy"] == "function" &&
+           typeof instance["destroyAll"] == "function" &&
+           typeof instance["indexOf"] == "function" &&
+           typeof instance["replace"] == "function";
 }
 
 // Populate ko.observableArray.fn with read/write functions from native arrays
