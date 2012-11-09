@@ -1138,6 +1138,12 @@ ko.observableArray['fn'] = {
     }
 }
 
+ko.observableArray['fn'][protoProperty] = ko.observableArray;
+
+ko.isObservableArray = function (instance) {
+    return ko.hasPrototype(instance, ko.observableArray);
+}
+
 // Populate ko.observableArray.fn with read/write functions from native arrays
 // Important: Do not add any additional functions here that may reasonably be used to *read* data from the array
 // because we'll eval them without causing subscriptions, so ko.computed output could end up getting stale
@@ -1162,6 +1168,7 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
 });
 
 ko.exportSymbol('observableArray', ko.observableArray);
+ko.exportSymbol('isObservableArray', ko.isObservableArray);
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
         _hasBeenEvaluated = false,
