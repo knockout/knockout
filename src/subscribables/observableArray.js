@@ -91,6 +91,15 @@ ko.observableArray['fn'] = {
     }
 }
 
+ko.isObservableArray = function (instance) {
+    return typeof instance["remove"] == "function" &&
+           typeof instance["removeAll"] == "function" &&
+           typeof instance["destroy"] == "function" &&
+           typeof instance["destroyAll"] == "function" &&
+           typeof instance["indexOf"] == "function" &&
+           typeof instance["replace"] == "function";
+}
+
 // Populate ko.observableArray.fn with read/write functions from native arrays
 // Important: Do not add any additional functions here that may reasonably be used to *read* data from the array
 // because we'll eval them without causing subscriptions, so ko.computed output could end up getting stale
@@ -115,3 +124,4 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
 });
 
 ko.exportSymbol('observableArray', ko.observableArray);
+ko.exportSymbol('isObservableArray', ko.isObservableArray);
