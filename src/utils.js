@@ -129,7 +129,14 @@ ko.utils = new (function () {
 
             var container = document.createElement('div');
             for (var i = 0, j = nodesArray.length; i < j; i++) {
-                container.appendChild(ko.cleanNode(nodesArray[i]));
+                var node = nodesArray[i];
+                var isEmptyTextNode = (node.nodeType == 3 && node.textContent.trim() == '');
+
+                // Skip empty text nodes; Some browsers are slow at appending such nodes.
+                if (isEmptyTextNode)
+                    node.parentNode.removeChild(node);
+                else 
+                    container.appendChild(ko.cleanNode(node));  
             }
             return container;
         },
