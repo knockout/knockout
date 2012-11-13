@@ -3,6 +3,7 @@ knockoutDebugCallback([
     'src/google-closure-compiler-utils.js',
     'src/version.js',
     'src/utils.js',
+    'src/domUtils.js',
     'src/utils.domData.js',
     'src/utils.domNodeDisposal.js',
     'src/utils.domManipulation.js',

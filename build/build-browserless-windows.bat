@@ -3,10 +3,10 @@
 call tools/check-trailing-space-windows.bat
 if %errorlevel% NEQ 0 goto Fail
 
-set OutDebugFile=output\knockout-latest.debug.js
-set OutMinFile=output\knockout-latest.js
+set OutDebugFile=output\knockout-browserless-latest.debug.js
+set OutMinFile=output\knockout-browserless-latest.js
 set AllFiles=
-for /f "eol=] skip=1 delims=' " %%i in (fragments\source-references.js) do set Filename=%%i& call :Concatenate
+for /f "eol=] skip=1 delims=' " %%i in (fragments\browserless-source-references.js) do set Filename=%%i& call :Concatenate
 
 goto :Combine
 :Concatenate
@@ -18,11 +18,9 @@ goto :Combine
 goto :EOF
 
 :Combine
-type fragments\extern-pre.js      > %OutDebugFile%.temp
-type fragments\amd-pre.js         >> %OutDebugFile%.temp
+type fragments\amd-pre.js         > %OutDebugFile%.temp
 type %AllFiles%                   >> %OutDebugFile%.temp 2>nul
 type fragments\amd-post.js        >> %OutDebugFile%.temp
-type fragments\extern-post.js     >> %OutDebugFile%.temp
 
 @rem Now call Google Closure Compiler to produce a minified version
 tools\curl -d output_info=compiled_code -d output_format=text -d compilation_level=ADVANCED_OPTIMIZATIONS --data-urlencode output_wrapper="(function() {%%output%%})();" --data-urlencode "js_code=/**@const*/var DEBUG=false;" --data-urlencode js_code@%OutDebugFile%.temp "http://closure-compiler.appspot.com/compile" > %OutMinFile%.temp
@@ -43,8 +41,6 @@ del %OutMinFile%.temp
 set /p Version= <fragments\version.txt
 cscript tools\searchReplace.js "##VERSION##" %VERSION% %OutDebugFile% %OutMinFile% >nul
 cscript tools\searchReplace.js "\r\n" "\n" %OutDebugFile%  %OutMinFile% >nul
-
-build-browserless-windows.bat
 
 echo.
 echo Build succeeded
