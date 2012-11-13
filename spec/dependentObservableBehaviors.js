@@ -270,25 +270,6 @@ describe('Dependent Observable', {
         value_of(dependentObservable.isActive()).should_be(false);
     },
 
-    'Should register DOM node disposal callback only if active after the initial evaluation': function() {
-        // Set up an active one
-        var nodeForActive = document.createElement('DIV'),
-            observable = ko.observable('initial'),
-            activeDependentObservable = ko.dependentObservable({ read: function() { return observable(); }, disposeWhenNodeIsRemoved: nodeForActive });
-        var nodeForInactive = document.createElement('DIV')
-            inactiveDependentObservable = ko.dependentObservable({ read: function() { return 123; }, disposeWhenNodeIsRemoved: nodeForInactive });
-
-        value_of(activeDependentObservable.isActive()).should_be(true);
-        value_of(inactiveDependentObservable.isActive()).should_be(false);
-
-        // Infer existence of disposal callbacks from presence/absence of DOM data. This is really just an implementation detail,
-        // and so it's unusual to rely on it in a spec. However, the presence/absence of the callback isn't exposed in any other way,
-        // and if the implementation ever changes, this spec should automatically fail because we're checking for both the positive
-        // and negative cases.
-        value_of(ko.utils.domData.clear(nodeForActive)).should_be(true);    // There was a callback
-        value_of(ko.utils.domData.clear(nodeForInactive)).should_be(false); // There was no callback
-    },
-
     'Should advertise that instances *can* have values written to them if you supply a "write" callback': function() {
         var instance = new ko.dependentObservable({
             read: function() {},
