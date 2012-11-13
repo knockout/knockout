@@ -128,8 +128,8 @@ ko.utils = new (function () {
             if (typeof jsonString == "string") {
                 jsonString = ko.utils.stringTrim(jsonString);
                 if (jsonString) {
-                    if (window.JSON && window.JSON.parse) // Use native parsing where available
-                        return window.JSON.parse(jsonString);
+                    if ((typeof JSON != "undefined") && (typeof JSON.parse != "undefined")) // Use native parsing where available
+                        return JSON.parse(jsonString);
                     return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
                 }
             }
