@@ -410,12 +410,12 @@ describe('Binding: Foreach', function() {
             someitems: [ 'Alpha', 'Beta' ]
         };
         ko.applyBindings(viewModel, testNode);
-
+        debugger;
         // Either of the following two results are acceptable.
-        try {
+        if (testNode.innerHTML.toLowerCase().match(/<\/li>/g).length == 3) {
             // Modern browsers implicitly re-add the closing </li> tags
             expect(testNode).toContainHtml('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha</li><li data-bind="text: $data">beta</li><!-- /ko --></ul>');
-        } catch(ex) {
+        } else {
             // ... but IE < 8 doesn't add ones that immediately precede a <li>
             expect(testNode).toContainHtml('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha<li data-bind="text: $data">beta</li><!-- /ko --></ul>');
         }
