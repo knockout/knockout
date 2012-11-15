@@ -1,109 +1,116 @@
-module("Throttled observables");
+describe("Throttled observables", function() {
 
-asyncTest("Should notify subscribers asynchronously after writes stop for the specified timeout duration", function() {
-	var observable = ko.observable('A').extend({ throttle: 50 });
-	var notifiedValues = []
-	observable.subscribe(function(value) {
-		notifiedValues.push(value);
-	});
+  it("Should notify subscribers asynchronously after writes stop for the specified timeout duration", function() {
+    var observable = ko.observable('A').extend({ throttle: 50 });
+    var notifiedValues = [];
+    observable.subscribe(function(value) {
+      notifiedValues.push(value);
+    });
 
-	// Mutate a few times
-	start();
-	observable('B');
-	observable('C');
-	observable('D');
-	equal(notifiedValues.length, 0, "Should not notify synchronously");
+    runs(function() {
 
-	// Wait
-	stop();
-	setTimeout(function() {
-		// Mutate more
-		start();
-		observable('E');
-		observable('F');
-		equal(notifiedValues.length, 0, "Should not notify until end of throttle timeout");
+      // Mutate a few times
+      observable('B');
+      observable('C');
+      observable('D');
+      expect(notifiedValues.length).toEqual(0); // Should not notify synchronously
 
-		// Wait until after timeout
-		stop();
-		setTimeout(function() {
-			start();
-			equal(notifiedValues.length, 1);
-			equal(notifiedValues[0], "F");
-		}, 60);
-	}, 20);
+      // Wait
+      setTimeout(function() {
+        // Mutate more
+        observable('E');
+        observable('F');
+        expect(notifiedValues.length).toEqual(0); // Should not notify until end of throttle timeout
+      }, 20);
+    });
+
+    waitsFor(function() {
+      // Wait until after timeout
+      return notifiedValues.length > 0;
+    }, 80);
+
+    runs(function() {
+      expect(notifiedValues.length).toEqual(1);
+      expect(notifiedValues[0]).toEqual("F");
+    });
+
+  });
 });
 
-// ---------
+describe("Throttled dependent observables", function() {
 
-module("Throttled dependent observables");
+  it("Should notify subscribers asynchronously after dependencies stop updating for the specified timeout duration", function() {
+    var underlying = ko.observable();
+    var asyncDepObs = ko.dependentObservable(function() {
+      return underlying();
+    }).extend({ throttle: 100 });
+    var notifiedValues = [];
+    asyncDepObs.subscribe(function(value) {
+      notifiedValues.push(value);
+    });
 
-asyncTest("Should notify subscribers asynchronously after dependencies stop updating for the specified timeout duration", function() {
-	var underlying = ko.observable();
-	var asyncDepObs = ko.dependentObservable(function() {
-		return underlying();
-	}).extend({ throttle: 100 });
-	var notifiedValues = []
-	asyncDepObs.subscribe(function(value) {
-		notifiedValues.push(value);
-	});
 
-	// Check initial state
-	start();
-	equal(asyncDepObs(), undefined);
+    runs(function() {
+      // Check initial state
+      expect(asyncDepObs()).toBeUndefined();
 
-	// Mutate
-	underlying('New value');
-	equal(asyncDepObs(), undefined, 'Should not update synchronously');
-	equal(notifiedValues.length, 0);
-	stop();
+      // Mutate
+      underlying('New value');
+      expect(asyncDepObs()).toBeUndefined(); // Should not update synchronously
+      expect(notifiedValues.length).toEqual(0);
 
-	// Wait
-	setTimeout(function() {
-		// After 50ms, still shouldn't have evaluated
-		start();
-		equal(asyncDepObs(), undefined, 'Should not update until throttle timeout');
-		equal(notifiedValues.length, 0);
-		stop();
+      // Wait
+      setTimeout(function() {
+        // After 50ms, still shouldn't have evaluated
+        expect(asyncDepObs()).toBeUndefined(); // Should not update until throttle timeout
+        expect(notifiedValues.length).toEqual(0);
+      }, 50);
+    });
 
-		// Wait again
-		setTimeout(function() {
-			start();
-			equal(asyncDepObs(), 'New value');
-			equal(notifiedValues.length, 1);
-			equal(notifiedValues[0], 'New value');
-		}, 60);
-	}, 50);
-});
+    waitsFor(function() {
+      // Now wait for throttle timeout
+      return notifiedValues.length > 0;
+    }, 110);
 
-asyncTest("Should run evaluator only once when dependencies stop updating for the specified timeout duration", function() {
-	var evaluationCount = 0;
-	var someDependency = ko.observable();
-	var asyncDepObs = ko.dependentObservable(function() {
-		evaluationCount++;
-		return someDependency();
-	}).extend({ throttle: 100 });
+    runs(function() {
+      expect(asyncDepObs()).toEqual('New value');
+      expect(notifiedValues.length).toEqual(1);
+      expect(notifiedValues[0]).toEqual('New value');
+    });
 
-	// Mutate a few times synchronously
-	start();
-	equal(evaluationCount, 1); // Evaluates synchronously when first created, like all dependent observables
-	someDependency("A");
-	someDependency("B");
-	someDependency("C");
-	equal(evaluationCount, 1, "Should not re-evaluate synchronously when dependencies update");
+  });
 
-	// Also mutate async
-	stop();
-	setTimeout(function() {
-		start();
-		someDependency("D");
-		equal(evaluationCount, 1);
+  it("Should run evaluator only once when dependencies stop updating for the specified timeout duration", function() {
+    var evaluationCount = 0;
+    var someDependency = ko.observable();
+    var asyncDepObs = ko.dependentObservable(function() {
+      evaluationCount++;
+      return someDependency();
+    }).extend({ throttle: 100 });
 
-		// Now wait for throttle timeout
-		stop();
-		setTimeout(function() {
-			start();
-			equal(evaluationCount, 2); // Finally, it's evaluated
-			equal(asyncDepObs(), "D");
-		}, 110);
-	}, 10);
+    runs(function() {
+      // Mutate a few times synchronously
+      expect(evaluationCount).toEqual(1); // Evaluates synchronously when first created, like all dependent observables
+      someDependency("A");
+      someDependency("B");
+      someDependency("C");
+      expect(evaluationCount).toEqual(1); // Should not re-evaluate synchronously when dependencies update
+
+      // Also mutate async
+      setTimeout(function() {
+        someDependency("D");
+        expect(evaluationCount).toEqual(1);
+      }, 10);
+    });
+
+    waitsFor(function() {
+      // Now wait for throttle timeout
+      return evaluationCount > 1;
+    }, 120);
+
+    runs(function() {
+      expect(evaluationCount).toEqual(2); // Finally, it's evaluated
+      expect(asyncDepObs()).toEqual("D");
+    });
+  });
 });
