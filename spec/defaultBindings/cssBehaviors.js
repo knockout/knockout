@@ -1,52 +1,52 @@
-describe('Binding: CSS class name', {
-    before_each: JSSpec.prepareTestNode,
+describe('Binding: CSS class name', function() {
+    beforeEach(jasmine.prepareTestNode);
 
-    'Should give the element the specific CSS class only when the specified value is true': function () {
+    it('Should give the element the specific CSS class only when the specified value is true', function () {
         var observable1 = new ko.observable();
         var observable2 = new ko.observable(true);
         testNode.innerHTML = "<div class='unrelatedClass1 unrelatedClass2' data-bind='css: { myRule: someModelProperty, anotherRule: anotherModelProperty }'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1, anotherModelProperty: observable2 }, testNode);
 
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 anotherRule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 unrelatedClass2 anotherRule");
         observable1(true);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 anotherRule myRule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 unrelatedClass2 anotherRule myRule");
         observable2(false);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 unrelatedClass2 myRule");
-    },
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 unrelatedClass2 myRule");
+    });
 
-    'Should give the element a single CSS class without a leading space when the specified value is true': function() {
+    it('Should give the element a single CSS class without a leading space when the specified value is true', function() {
         var observable1 = new ko.observable();
         testNode.innerHTML = "<div data-bind='css: { myRule: someModelProperty }'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
-        value_of(testNode.childNodes[0].className).should_be("");
+        expect(testNode.childNodes[0].className).toEqual("");
         observable1(true);
-        value_of(testNode.childNodes[0].className).should_be("myRule");
-    },
+        expect(testNode.childNodes[0].className).toEqual("myRule");
+    });
 
-    'Should toggle multiple CSS classes if specified as a single string separated by spaces': function() {
+    it('Should toggle multiple CSS classes if specified as a single string separated by spaces', function() {
         var observable1 = new ko.observable();
         testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: { \"myRule _another-Rule123\": someModelProperty }'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
         observable1(true);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 myRule _another-Rule123");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 myRule _another-Rule123");
         observable1(false);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
-    },
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    });
 
-    'Should set/change dynamic CSS class(es) if string is specified': function() {
+    it('Should set/change dynamic CSS class(es) if string is specified', function() {
         var observable1 = new ko.observable("");
         testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: someModelProperty'>Hallo</div>";
         ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
         observable1("my-Rule");
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 my-Rule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
         observable1("another_Rule  my-Rule");
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1 another_Rule my-Rule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 another_Rule my-Rule");
         observable1(undefined);
-        value_of(testNode.childNodes[0].className).should_be("unrelatedClass1");
-    }
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    });
 });

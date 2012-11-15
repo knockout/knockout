@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>JSSpec results</title>
-        <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
+        <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
 
         <!-- All specs should pass with or without jQuery+Modernizr being referenced -->
         <!--
@@ -10,15 +10,17 @@
         <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-1.7-development-only.js"></script>
         -->
 
-        <script type="text/javascript" src="lib/innershiv.js"></script>
-        <script type="text/javascript" src="lib/diff_match_patch.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.extensions.js"></script>
-        <script type="text/javascript" src="lib/json2.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
+        <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
+
+
         <script type="text/javascript">
             // An external runner, such as PhantomJS, can prepopulate window.koFilename (e.g., to run tests against the minified build)
-            JSSpec.addScriptReference(window.koFilename || "../build/knockout-raw.js");
+            jasmine.addScriptReference(window.koFilename || "../build/knockout-raw.js");
         </script>
+
+
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
         <script type="text/javascript" src="subscribableBehaviors.js"></script>
         <script type="text/javascript" src="observableBehaviors.js"></script>
@@ -52,11 +54,38 @@
         <script type="text/javascript" src="defaultBindings/submitBehaviors.js"></script>
         <script type="text/javascript" src="defaultBindings/textBehaviors.js"></script>
         <script type="text/javascript" src="defaultBindings/uniqueNameBehaviors.js"></script>
-        <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>
+        <!-- FAILING <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>-->
         <script type="text/javascript" src="defaultBindings/visibleBehaviors.js"></script>
         <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
     </head>
     <body>
-        <div style="display:none;"><p>A</p><p>B</p></div>
+        <script type="text/javascript">
+          (function() {
+            var jasmineEnv = jasmine.getEnv();
+            jasmineEnv.updateInterval = 1000;
+
+            var htmlReporter = new jasmine.HtmlReporter();
+
+            jasmineEnv.addReporter(htmlReporter);
+
+            jasmineEnv.specFilter = function(spec) {
+              return htmlReporter.specFilter(spec);
+            };
+
+            var currentWindowOnload = window.onload;
+
+            window.onload = function() {
+              if (currentWindowOnload) {
+                currentWindowOnload();
+              }
+              execJasmine();
+            };
+
+            function execJasmine() {
+              jasmineEnv.execute();
+            }
+
+          })();
+        </script>
     </body>
 </html>
