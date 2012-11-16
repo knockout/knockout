@@ -4,54 +4,54 @@ function parseMemoCommentHtml(commentHtml) {
     return ko.memoization.parseMemoText(commentHtml);
 }
 
-describe('Memoization', {
-    "Should only accept a function": function () {
+describe('Memoization', function() {
+    it("Should only accept a function", function () {
         var threw = false;
         try { ko.memoization.memoize({}) }
         catch (ex) { threw = true; }
-        value_of(threw).should_be(true);
-    },
+        expect(threw).toEqual(true);
+    });
 
-    "Should return an HTML comment": function () {
+    it("Should return an HTML comment", function () {
         var result = ko.memoization.memoize(function () { });
-        value_of(typeof result).should_be("string");
-        value_of(result.substring(0, 4)).should_be("<!--");
-    },
+        expect(typeof result).toEqual("string");
+        expect(result.substring(0, 4)).toEqual("<!--");
+    });
 
-    "Should call the function when unmemoizing": function () {
+    it("Should call the function when unmemoizing", function () {
         var didCall = false;
         var memo = ko.memoization.memoize(function () { didCall = true });
         ko.memoization.unmemoize(parseMemoCommentHtml(memo));
-        value_of(didCall).should_be(true);
-    },
+        expect(didCall).toEqual(true);
+    });
 
-    "Should not be able to unmemoize more than once": function () {
+    it("Should not be able to unmemoize more than once", function () {
         var memo = ko.memoization.memoize(function () { });
         ko.memoization.unmemoize(parseMemoCommentHtml(memo));
 
         var threw = false;
         try { ko.memoization.unmemoize(parseMemoCommentHtml(memo)) }
         catch (ex) { threw = true; }
-        value_of(threw).should_be(true);
-    },
+        expect(threw).toEqual(true);
+    });
 
-    "Should be able to find memos in a DOM tree and unmemoize them, passing the memo node as a param": function () {
+    it("Should be able to find memos in a DOM tree and unmemoize them, passing the memo node as a param", function () {
         var containerNode = document.createElement("DIV");
         var didCall = false;
         containerNode.innerHTML = "Hello " + ko.memoization.memoize(function (domNode) {
-            value_of(domNode.parentNode).should_be(containerNode);
+            expect(domNode.parentNode).toEqual(containerNode);
             didCall = true;
         });
         ko.memoization.unmemoizeDomNodeAndDescendants(containerNode);
-        value_of(didCall).should_be(true);
-    },
+        expect(didCall).toEqual(true);
+    });
 
-    "After unmemoizing a DOM tree, removes the memo nodes": function () {
+    it("After unmemoizing a DOM tree, removes the memo nodes", function () {
         var containerNode = document.createElement("DIV");
         containerNode.innerHTML = "Hello " + ko.memoization.memoize(function () { });
 
-        value_of(containerNode.childNodes.length).should_be(2);
+        expect(containerNode.childNodes.length).toEqual(2);
         ko.memoization.unmemoizeDomNodeAndDescendants(containerNode);
-        value_of(containerNode.childNodes.length).should_be(1);
-    }
+        expect(containerNode.childNodes.length).toEqual(1);
+    });
 });
