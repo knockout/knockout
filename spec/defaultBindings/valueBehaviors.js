@@ -103,24 +103,24 @@ describe('Binding: Value', function() {
             "<input data-bind='value: getSetter()[\"set\"]' />" +
             "<input data-bind=\"value: getSetter()['set']\" />";
         ko.applyBindings(model, testNode);
-        expect(testNode.childNodes[0].value).toEqual(666);
-        expect(testNode.childNodes[1].value).toEqual(666);
-        expect(testNode.childNodes[2].value).toEqual(666);
+        expect(testNode.childNodes[0].value).toEqual('666');
+        expect(testNode.childNodes[1].value).toEqual('666');
+        expect(testNode.childNodes[2].value).toEqual('666');
 
         // .property
         testNode.childNodes[0].value = 667;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        expect(mySetter.set).toEqual(667);
+        expect(mySetter.set).toEqual('667');
 
         // ["property"]
         testNode.childNodes[1].value = 668;
         ko.utils.triggerEvent(testNode.childNodes[1], "change");
-        expect(mySetter.set).toEqual(668);
+        expect(mySetter.set).toEqual('668');
 
         // ['property']
         testNode.childNodes[0].value = 669;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        expect(mySetter.set).toEqual(669);
+        expect(mySetter.set).toEqual('669');
     });
 
     it('Should be able to write to observable subproperties of an observable, even after the parent observable has changed', function () {
