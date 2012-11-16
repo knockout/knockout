@@ -54,6 +54,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             return;
         }
 
+        var valueHasChanged = true;
+
         _isBeingEvaluated = true;
         try {
             // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
@@ -77,14 +79,19 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             }
             _hasBeenEvaluated = true;
 
-            dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+            valueHasChanged = !dependentObservable["equalityComparer"](_latestValue, newValue);
+
+            if(valueHasChanged) {
+                dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+            }
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         } finally {
             ko.dependencyDetection.end();
         }
-
-        dependentObservable["notifySubscribers"](_latestValue);
+        if (valueHasChanged) {
+            dependentObservable["notifySubscribers"](_latestValue);
+        }
         _isBeingEvaluated = false;
         if (!_subscriptionsToDependencies.length)
             dispose();
@@ -173,7 +180,16 @@ ko.isComputed = function(instance) {
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'] = {
+    equalityComparer: function() {
+        // Override this default implementaiton of equalityComparer
+        // to make computed properties notify subscribers conditionally.
+        // To keep equalityComparer from becoming a breaking
+        // change, the default implementation will always
+        // return false, to be consistent with current behaviour.
+        return false;
+    }
+};
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
