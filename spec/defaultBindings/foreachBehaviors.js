@@ -410,7 +410,6 @@ describe('Binding: Foreach', function() {
             someitems: [ 'Alpha', 'Beta' ]
         };
         ko.applyBindings(viewModel, testNode);
-        debugger;
         // Either of the following two results are acceptable.
         if (testNode.innerHTML.toLowerCase().match(/<\/li>/g).length == 3) {
             // Modern browsers implicitly re-add the closing </li> tags
