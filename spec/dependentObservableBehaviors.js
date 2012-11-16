@@ -174,6 +174,25 @@ describe('Dependent Observable', {
         value_of(notifiedValue).should_be(3);
     },
 
+    'Should only notify subscribers if equalityComparer returns false': function() {
+
+        var observable = new ko.observable(1);
+        var dependentObservable = new ko.dependentObservable(function () { return observable() < 4; });
+
+        dependentObservable.equalityComparer = function(a,b) { return a === b; };
+
+        observable(2);
+
+        var notifiedValue;
+        dependentObservable.subscribe(function (value) { notifiedValue = value; });
+
+        observable(3);
+        value_of(notifiedValue).should_be(undefined);
+
+        observable(4);
+        value_of(notifiedValue).should_be(false);
+    },
+
     'Should notify "beforeChange" subscribers before changes': function () {
         var notifiedValue;
         var observable = new ko.observable(1);
@@ -184,6 +203,25 @@ describe('Dependent Observable', {
         observable(2);
         value_of(notifiedValue).should_be(2);
         value_of(depedentObservable()).should_be(3);
+    },
+
+    'Should only "beforeChange" subscribers if equalityComparer returns false': function () {
+        var observable = new ko.observable(1);
+        var dependentObservable = new ko.dependentObservable(function () { return observable() < 4; });
+
+        dependentObservable.equalityComparer = function(a,b) { return a === b; };
+
+        observable(2);
+
+        var notifiedValue;
+        dependentObservable.subscribe(function (value) { notifiedValue = value; }, null, "beforeChange");
+
+        observable(3);
+        value_of(notifiedValue).should_be(undefined);
+
+        observable(4);
+        value_of(notifiedValue).should_be(true);
+        value_of(dependentObservable()).should_be(false);
     },
 
     'Should only update once when each dependency changes, even if evaluation calls the dependency multiple times': function () {
