@@ -14,6 +14,7 @@
         <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
 
         <!-- our jasmine extensions -->
+        <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
         <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
 
         <!-- knockout polyfills -->
@@ -69,28 +70,13 @@
         <script type="text/javascript">
           (function() {
             var jasmineEnv = jasmine.getEnv();
-            jasmineEnv.updateInterval = 1000;
+            jasmineEnv.updateInterval = 100;
 
             var htmlReporter = new jasmine.HtmlReporter();
-
             jasmineEnv.addReporter(htmlReporter);
+            jasmineEnv.specFilter = htmlReporter.specFilter;
 
-            jasmineEnv.specFilter = function(spec) {
-              return htmlReporter.specFilter(spec);
-            };
-
-            var currentWindowOnload = window.onload;
-
-            window.onload = function() {
-              if (currentWindowOnload) {
-                currentWindowOnload();
-              }
-              execJasmine();
-            };
-
-            function execJasmine() {
-              jasmineEnv.execute();
-            }
+            jasmineEnv.execute();
 
           })();
         </script>
