@@ -1,5 +1,11 @@
-//Based on https://raw.github.com/ariya/phantomjs/1.7.0/examples/run-jasmine.js
-//Not sure if the BSD license needs to be included but belt and braces and all that...
+// ---------------------------------------------------------------------------------------
+// Note: The following BSD-New license relates only to this particular file, which is
+// not part of the runtime package for KnockoutJS - it is only used as part of a mechanism
+// for testing KnockoutJS.
+// The following license is *not* the license for KnockoutJS.
+// ---------------------------------------------------------------------------------------
+
+// Based on https://raw.github.com/ariya/phantomjs/1.7.0/examples/run-jasmine.js
 
 //Redistribution and use in source and binary forms, with or without
 //modification, are permitted provided that the following conditions are met:
