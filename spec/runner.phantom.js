@@ -74,6 +74,11 @@ page.onConsoleMessage = function(msg) {
     console.log(msg);
 };
 
+// Run the specs against the latest minified build
+page.onInitialized = function() {
+    page.evaluate(function() { window.koFilename = '../build/output/knockout-latest.js'; });
+};
+
 page.open(system.args[1] || 'spec/runner.html', function(status){
     if (status !== "success") {
         console.log("Unable to access network");
