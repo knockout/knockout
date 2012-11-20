@@ -1,17 +1,22 @@
 describe("Throttled observables", function() {
 
     it("Should notify subscribers asynchronously after writes stop for the specified timeout duration", function() {
-        var observable = ko.observable('A').extend({ throttle: 50 });
-        var notifiedValues = [];
-        observable.subscribe(function(value) {
-            notifiedValues.push(value);
-        });
+        var observable, notifiedValues;
 
-        // Mutate a few times
-        observable('B');
-        observable('C');
-        observable('D');
-        expect(notifiedValues.length).toEqual(0); // Should not notify synchronously
+        waits(10); // Was getting spurious failures (blocks running out of order, mainly on IE) if the first item queued wasn't a "wait"
+        runs(function() {
+            observable = ko.observable('A').extend({ throttle: 50 });
+            notifiedValues = [];
+            observable.subscribe(function(value) {
+                notifiedValues.push(value);
+            });
+
+            // Mutate a few times
+            observable('B');
+            observable('C');
+            observable('D');
+            expect(notifiedValues.length).toEqual(0); // Should not notify synchronously
+        });
 
         // Wait
         waits(20);
