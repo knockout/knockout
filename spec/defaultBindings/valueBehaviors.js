@@ -216,7 +216,7 @@ describe('Binding: Value', {
         value_of(testNode.childNodes[0].selectedIndex).should_be(0);
     },
 
-    'For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)': function () {
+    'For select boxes, should update the model value when the UI is changed (setting it to null when the caption is selected)': function () {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
         ko.applyBindings({ myObservable: observable }, testNode);
@@ -228,7 +228,7 @@ describe('Binding: Value', {
 
         dropdown.selectedIndex = 0;
         ko.utils.triggerEvent(dropdown, "change");
-        value_of(observable()).should_be(undefined);
+        value_of(observable()).should_be(null);
     },
 
     'For select boxes, should be able to associate option values with arbitrary objects (not just strings)': function() {
