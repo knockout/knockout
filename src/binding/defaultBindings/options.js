@@ -61,6 +61,9 @@ ko.bindingHandlers['options'] = {
                         return predicate(object);
                     else if (predicateType == "string") // Given a string; treat it as a property name on the data value
                         return object[predicate];
+                    else if (predicateType == "object" && predicate != null && 'length' in predicate)
+                        // Given an array: map the value to the text
+                        return predicate[i];
                     else                                // Given no optionsText arg; use the data value itself
                         return defaultValue;
                 }

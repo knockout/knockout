@@ -56,6 +56,30 @@ describe('Binding: Options', function() {
         expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
     });
 
+    it('Should accept an array in optionsValue param to map model values to the option text', function() {
+        var modelValues = new ko.observableArray([
+            { name: 'bob', job: 'manager' },
+            { name: 'frank', job: 'coder & tester' }
+        ]);
+        var modelText = ["bob (manager)", "frank (coder & tester)"];
+        testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: myText'><option>should be deleted</option></select>";
+        ko.applyBindings({ myValues: modelValues, myText: modelText }, testNode);
+        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
+        expect(values).toEqual(["bob (manager)", "frank (coder & tester)"]);
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
+        expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
+    });
+
+    it('Should ignore optionsValue if it is null', function() {
+        var modelValues = new ko.observableArray(["A", "B", "C"]);
+        testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: myText'><option>should be deleted</option></select>";
+        ko.applyBindings({ myValues: modelValues, myText: null }, testNode);
+        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
+        expect(values).toEqual(["A", "B", "C"]);
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
+        expect(displayedText).toEqual(["A", "B", "C"]);
+    });
+
     it('Should exclude any items marked as destroyed', function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', _destroy: true },
