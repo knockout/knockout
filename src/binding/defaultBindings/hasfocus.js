@@ -33,3 +33,5 @@ ko.bindingHandlers['hasfocus'] = {
         }
     }
 };
+
+ko.exportSymbol('hasFocus', ko.bindingHandlers.hasfocus); //Make "hasFocus" an alias
