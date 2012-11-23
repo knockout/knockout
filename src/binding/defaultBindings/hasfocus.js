@@ -33,3 +33,5 @@ ko.bindingHandlers['hasfocus'] = {
         }
     }
 };
+
+ko.bindingHandlers['hasFocus'] = ko.bindingHandlers['hasfocus']; // Make "hasFocus" an alias
