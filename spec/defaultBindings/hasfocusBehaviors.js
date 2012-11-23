@@ -57,4 +57,8 @@ describe('Binding: Hasfocus', function() {
         ko.utils.triggerEvent(testNode.childNodes[0], "focusout");
         expect(model.myVal).toEqual(false);
     });
+
+    it('Should be aliased as hasFocus as well as hasfocus', function() {
+        expect(ko.bindingHandlers.hasFocus).toEqual(ko.bindingHandlers.hasfocus);
+    });
 });
