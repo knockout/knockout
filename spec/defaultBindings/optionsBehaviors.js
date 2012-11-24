@@ -56,7 +56,24 @@ describe('Binding: Options', function() {
         expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
     });
 
-    it('Should accept an array in optionsValue param to map model values to the option text', function() {
+    it('Should accept an object in optionsText param to map model values to the option text', function() {
+        var pets = new ko.observableArray(['cat', 'dog', 'bird']);
+        var l10n = {
+            es: {
+                cat: 'gato',
+                dog: 'perro',
+                bird: 'pájaro'
+            }
+        };
+        testNode.innerHTML = "<select data-bind='options: pets, optionsText: l10n.es'><option>should be deleted</option></select>";
+        ko.applyBindings({ pets: pets, l10n: l10n }, testNode);
+        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
+        expect(values).toEqual(["cat", "dog", "bird"]);
+        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
+        expect(displayedText).toEqual(["gato", "perro", "pájaro"]);
+    });
+
+    it('Should accept an array in optionsValue param to use as the text, mapping indexes', function() {
         var modelValues = new ko.observableArray([
             { name: 'bob', job: 'manager' },
             { name: 'frank', job: 'coder & tester' }
@@ -70,10 +87,10 @@ describe('Binding: Options', function() {
         expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
     });
 
-    it('Should ignore optionsValue if it is null', function() {
+    it('Should ignore optionsText and optionsValue if it is null', function() {
         var modelValues = new ko.observableArray(["A", "B", "C"]);
-        testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: myText'><option>should be deleted</option></select>";
-        ko.applyBindings({ myValues: modelValues, myText: null }, testNode);
+        testNode.innerHTML = "<select data-bind='options: myOptions, optionsValues: myValues, optionsText: myText'><option>should be deleted</option></select>";
+        ko.applyBindings({ myOptions: modelValues, myText: null, myValues: null }, testNode);
         var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
         expect(values).toEqual(["A", "B", "C"]);
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
