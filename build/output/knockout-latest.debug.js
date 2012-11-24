@@ -2516,22 +2516,28 @@ ko.bindingHandlers['options'] = {
 
                 var option = document.createElement("option");
 
-                function applyToObject(object, predicate, defaultValue) {
+                function applyToObject(object, predicate, defaultValue, index) {
                     var predicateType = typeof predicate;
                     if (predicateType == "function")    // Given a function; run it against the data value
                         return predicate(object);
                     else if (predicateType == "string") // Given a string; treat it as a property name on the data value
                         return object[predicate];
+                    else if (predicateType == "object" && predicate != null) {
+                        if (Object.prototype.toString.apply(predicate) === '[object Array]')
+                            return predicate[index];    // Given an array: translate the value to the text
+                        else
+                            return predicate[object];   // Given an object: map the value to the text
+                    }
                     else                                // Given no optionsText arg; use the data value itself
                         return defaultValue;
                 }
 
                 // Apply a value to the option element
-                var optionValue = applyToObject(arrayEntry, allBindings['optionsValue'], arrayEntry);
+                var optionValue = applyToObject(arrayEntry, allBindings['optionsValue'], arrayEntry, i);
                 ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue);
+                var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue, i);
                 ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
