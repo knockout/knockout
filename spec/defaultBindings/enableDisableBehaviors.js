@@ -1,37 +1,37 @@
-describe('Binding: Enable/Disable', {
-    before_each: JSSpec.prepareTestNode,
+describe('Binding: Enable/Disable', function() {
+    beforeEach(jasmine.prepareTestNode);
 
-    'Enable means the node is enabled only when the value is true': function () {
+    it('Enable means the node is enabled only when the value is true', function () {
         var observable = new ko.observable();
         testNode.innerHTML = "<input data-bind='enable:myModelProperty()' />";
         ko.applyBindings({ myModelProperty: observable }, testNode);
 
-        value_of(testNode.childNodes[0].disabled).should_be(true);
+        expect(testNode.childNodes[0].disabled).toEqual(true);
         observable(1);
-        value_of(testNode.childNodes[0].disabled).should_be(false);
-    },
+        expect(testNode.childNodes[0].disabled).toEqual(false);
+    });
 
-    'Disable means the node is enabled only when the value is false': function () {
+    it('Disable means the node is enabled only when the value is false', function () {
         var observable = new ko.observable();
         testNode.innerHTML = "<input data-bind='disable:myModelProperty()' />";
         ko.applyBindings({ myModelProperty: observable }, testNode);
 
-        value_of(testNode.childNodes[0].disabled).should_be(false);
+        expect(testNode.childNodes[0].disabled).toEqual(false);
         observable(1);
-        value_of(testNode.childNodes[0].disabled).should_be(true);
-    },
+        expect(testNode.childNodes[0].disabled).toEqual(true);
+    });
 
-    'Enable should unwrap observables implicitly': function () {
+    it('Enable should unwrap observables implicitly', function () {
         var observable = new ko.observable(false);
         testNode.innerHTML = "<input data-bind='enable:myModelProperty' />";
         ko.applyBindings({ myModelProperty: observable }, testNode);
-        value_of(testNode.childNodes[0].disabled).should_be(true);
-    },
+        expect(testNode.childNodes[0].disabled).toEqual(true);
+    });
 
-    'Disable should unwrap observables implicitly': function () {
+    it('Disable should unwrap observables implicitly', function () {
         var observable = new ko.observable(false);
         testNode.innerHTML = "<input data-bind='disable:myModelProperty' />";
         ko.applyBindings({ myModelProperty: observable }, testNode);
-        value_of(testNode.childNodes[0].disabled).should_be(false);
-    }
+        expect(testNode.childNodes[0].disabled).toEqual(false);
+    });
 });

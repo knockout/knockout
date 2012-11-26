@@ -1,59 +1,54 @@
-JSSpec.DSL.Subject.prototype.should_be_one_of = function (expectedPossibilities) {
+jasmine.Matchers.prototype.toEqualOneOf = function (expectedPossibilities) {
     for (var i = 0; i < expectedPossibilities.length; i++) {
-        var matcher = JSSpec.EqualityMatcher.createInstance(expectedPossibilities[i], this.target);
-        if (matcher.matches())
-            return;
+        if (this.env.equals_(this.actual, expectedPossibilities[i])) {
+            return true;
+        }
     }
-    JSSpec._assertionFailure = { message: "Should be one of the values: " + expectedPossibilities.toString() + "; was: " + this.target.toString() };
-    throw JSSpec._assertionFailure;
+    return false;
 };
 
-JSSpec.DSL.Subject.prototype.should_contain = function (expected) {
-    if (this.target.indexOf(expected) >= 0)
-        return;
-    JSSpec._assertionFailure = { message: "Should contain: " + expected.toString() + "; was: " + this.target.toString() };
-    throw JSSpec._assertionFailure;
-};
-
-JSSpec.DSL.Subject.prototype.should_contain_html = function (expectedHtml) {
-    var cleanedHtml = this.target.innerHTML.toLowerCase().replace(/\r\n/g, "");
+jasmine.Matchers.prototype.toContainHtml = function (expectedHtml) {
+    var cleanedHtml = this.actual.innerHTML.toLowerCase().replace(/\r\n/g, "");
     // IE < 9 strips whitespace immediately following comment nodes. Normalize by doing the same on all browsers.
     cleanedHtml = cleanedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
     expectedHtml = expectedHtml.replace(/(<!--.*?-->)\s*/g, "$1");
     // Also remove __ko__ expando properties (for DOM data) - most browsers hide these anyway but IE < 9 includes them in innerHTML
     cleanedHtml = cleanedHtml.replace(/ __ko__\d+=\"(ko\d+|null)\"/g, "");
-    JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedHtml }, expectedHtml);
+    this.actual = cleanedHtml;      // Fix explanatory message
+    return cleanedHtml === expectedHtml;
 };
 
-JSSpec.DSL.Subject.prototype.should_contain_text = function (expectedText) {
-    var actualText = 'textContent' in this.target ? this.target.textContent : this.target.innerText;
+jasmine.Matchers.prototype.toContainText = function (expectedText) {
+    var actualText = 'textContent' in this.actual ? this.actual.textContent : this.actual.innerText;
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
-    JSSpec.DSL.Subject.prototype.should_be.call({ target: cleanedActualText }, expectedText);
+    this.actual = cleanedActualText;    // Fix explanatory message
+    return cleanedActualText === expectedText;
 };
 
-JSSpec.DSL.Subject.prototype.should_have_own_properties = function (expectedProperties) {
+jasmine.Matchers.prototype.toHaveOwnProperties = function (expectedProperties) {
     var ownProperties = [];
-    for (var prop in this.target) {
-        if (this.target.hasOwnProperty(prop)) {
+    for (var prop in this.actual) {
+        if (this.actual.hasOwnProperty(prop)) {
             ownProperties.push(prop);
         }
     }
-    value_of(ownProperties).should_be(expectedProperties);
+    return this.env.equals_(ownProperties, expectedProperties);
 };
 
-JSSpec.DSL.Subject.prototype.should_have_selected_values = function (expectedValues) {
-    var selectedNodes = ko.utils.arrayFilter(this.target.childNodes, function (node) { return node.selected; }),
+jasmine.Matchers.prototype.toHaveSelectedValues = function (expectedValues) {
+    var selectedNodes = ko.utils.arrayFilter(this.actual.childNodes, function (node) { return node.selected; }),
         selectedValues = ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
-    value_of(selectedValues).should_be(expectedValues);
+    this.actual = selectedValues;   // Fix explanatory message
+    return this.env.equals_(selectedValues, expectedValues);
 };
 
-JSSpec.addScriptReference = function(scriptUrl) {
+jasmine.addScriptReference = function(scriptUrl) {
     if (window.console)
         console.log("Loading " + scriptUrl + "...");
     document.write("<scr" + "ipt type='text/javascript' src='" + scriptUrl + "'></sc" + "ript>");
 };
 
-JSSpec.prepareTestNode = function() {
+jasmine.prepareTestNode = function() {
     // The bindings specs make frequent use of this utility function to set up
     // a clean new DOM node they can execute code against
     var existingNode = document.getElementById("testNode");
@@ -67,13 +62,13 @@ JSSpec.prepareTestNode = function() {
 // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
 // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
 // If there is a future need to detect specific versions of IE10+, we will amend this.
-JSSpec.Browser.IEVersion = (function() {
+jasmine.ieVersion = (function() {
     var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
 
     // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
     while (
         div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
-        iElems[0]
-    );
+            iElems[0]
+        );
     return version > 4 ? version : undefined;
 }());
