@@ -1,7 +1,7 @@
 ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
         // Always catch "change" event; possibly other events too if asked
-        var eventsToCatch = ["change"];
+        var eventsToCatch = ["change", "input"];
         var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
         var propertyChangedFired = false;
         if (requestedEventsToCatch) {
