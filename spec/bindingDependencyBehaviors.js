@@ -155,8 +155,7 @@ describe('Binding dependencies', function() {
         expect(lastBoundValueUpdate).toEqual("fourth value");*/
     });
 
-    /* TODO: add support for independent bindings */
-    xit('Should not subscribe to observables accessed in init function if binding are run independently', function() {
+    it('Should not subscribe to observables accessed in init function if binding are run independently', function() {
         var observable = ko.observable('A');
         ko.bindingHandlers.test = {
             init: function(element, valueAccessor) {
@@ -170,7 +169,7 @@ describe('Binding dependencies', function() {
         expect(observable.getSubscriptionsCount()).toEqual(0);
     });
 
-    xit('Should not run updates for all bindings if only one needs to run if binding are run independently', function() {
+    it('Should not run updates for all bindings if only one needs to run if binding are run independently', function() {
         var observable = ko.observable('A'), updateCount1 = 0, updateCount2 = 0;
         ko.bindingHandlers.test1 = {
             update: function(element, valueAccessor) {
@@ -195,7 +194,7 @@ describe('Binding dependencies', function() {
         expect(updateCount2).toEqual(1);
     });
 
-    xit('Should not update all bindings if a binding unwraps an observable if binding are run independently', function() {
+    it('Should not update all bindings if a binding unwraps an observable if binding are run independently', function() {
         var countUpdates = 0, observable = ko.observable(1);
         ko.bindingHandlers.countingHandler = {
             update: function() { countUpdates++; }

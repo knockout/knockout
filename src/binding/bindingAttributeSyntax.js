@@ -6,13 +6,15 @@
         return ko.bindingHandlers[bindingKey];
     };
 
-    ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
-        if (parentBindingContext) {
+    ko.bindingContext = function(dataItem, parentBindingContextOrOptions, dataItemAlias) {
+        if (parentBindingContextOrOptions && (parentBindingContextOrOptions instanceof ko.bindingContext)) {
+            var parentBindingContext = parentBindingContextOrOptions;
             ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
             this['$parentContext'] = parentBindingContext;
             this['$parent'] = parentBindingContext['$data'];
             this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
             this['$parents'].unshift(this['$parent']);
+            parentBindingContextOrOptions = parentBindingContext['$options'];
         } else {
             this['$parents'] = [];
             this['$root'] = dataItem;
@@ -21,6 +23,7 @@
             // See https://github.com/SteveSanderson/knockout/issues/490
             this['ko'] = ko;
         }
+        this['$options'] = ko.utils.extend({}, parentBindingContextOrOptions);
         this['$data'] = dataItem;
         if (dataItemAlias)
             this[dataItemAlias] = dataItem;
@@ -94,7 +97,7 @@
         var shouldApplyBindings = (isElement && bindingContextMayDifferFromDomParentElement)             // Case (1)
                                || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
         if (shouldApplyBindings)
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext, bindingContextMayDifferFromDomParentElement).shouldBindDescendants;
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext, bindingContextMayDifferFromDomParentElement)['shouldBindDescendants'];
 
         if (shouldBindDescendants) {
             // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
@@ -108,8 +111,10 @@
     }
 
     function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
-        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
-        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
+        var runInits = true, // true = inits need to run, false = inits don't need to run
+            isElement = (node.nodeType === 1),
+            independentBindings = bindingContext['$options']['independentBindings'],
+            bindingHandlerThatControlsDescendantBindings;
 
         // Optimization: Don't store the binding context on this node if it's definitely the same as on node.parentNode, because
         // we can easily recover it just by scanning up the node's ancestors in the DOM
@@ -123,60 +128,86 @@
             bindings = (provider['getBindingAccessors'] || defaultGetBindingAccessors).call(provider, node, bindingContext);
         }
 
-        var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
+            // Create an accessor function that will unwrap a specific binding value or all values (for backwards compatibility)
             function allBindingsAccessor(key) {
                 return key ?
                     (bindings[key] && bindings[key]()) :
                     ko.utils.objectMap(bindings, unwrapValue);
             }
-            ko.utils.extend(allBindingsAccessor, bindings);
 
-            ko.dependentObservable(
-                function () {
-                    var viewModel = bindingContext['$data'];
+            // Go through the bindings, check that they are valid and put them in the right order
+            var orderedBindings = [];
+            for (var bindingKey in bindings) {
+                // Also store the binding value accessors in allBindingsAccessor so it's easy to check if a binding value is present
+                allBindingsAccessor[bindingKey] = bindings[bindingKey];
 
-                    // First run all the inits, so bindings can register for notification on changes
-                    if (initPhase === 0) {
-                        initPhase = 1;
-                        for (var bindingKey in bindings) {
-                            var binding = ko['getBindingHandler'](bindingKey);
-                            if (binding && node.nodeType === 8)
-                                validateThatBindingIsAllowedForVirtualElements(bindingKey);
-
-                            if (binding && typeof binding["init"] == "function") {
-                                var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindingsAccessor, viewModel, bindingContext);
-
-                                // If this binding handler claims to control descendant bindings, make a note of this
-                                if (initResult && initResult['controlsDescendantBindings']) {
-                                    if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                        throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
-                                    bindingHandlerThatControlsDescendantBindings = bindingKey;
-                                }
-                            }
-                        }
-                        initPhase = 2;
+                var handler = ko['getBindingHandler'](bindingKey);
+                if (handler) {
+                    if (!isElement) {
+                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
                     }
+                    orderedBindings.push({
+                        key: bindingKey,
+                        valueAccessor: bindings[bindingKey],
+                        handler: handler
+                    });
+                }
+            }
 
-                    // ... then run all the updates, which might trigger changes even on the first evaluation
-                    if (initPhase === 2) {
-                        for (var bindingKey in bindings) {
-                            var binding = ko['getBindingHandler'](bindingKey);
-                            if (binding && typeof binding["update"] == "function") {
-                                var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, bindings[bindingKey], allBindingsAccessor, viewModel, bindingContext);
-                            }
-                        }
+            if (orderedBindings.length) {
+                var forEachBinding = ko.utils.arrayForEach.bind(null, orderedBindings);
+
+                function wrapBindingCall(callback) {
+                    ko.computed(callback, null, { disposeWhenNodeIsRemoved: node });
+                }
+                function callBindingFunc(binding, methodName) {
+                    if (typeof binding.handler[methodName] == "function") {
+                        var handlerFn = binding.handler[methodName];
+                        return handlerFn(node, binding.valueAccessor, allBindingsAccessor, bindingContext['$data'], bindingContext);
                     }
-                },
-                null,
-                { disposeWhenNodeIsRemoved : node }
-            );
+                }
+                function callInit(binding) {
+                    var initResult = callBindingFunc(binding, "init");
+
+                    // If this binding handler claims to control descendant bindings, make a note of this
+                    if (initResult && initResult['controlsDescendantBindings']) {
+                        if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                            throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + binding.key + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                        bindingHandlerThatControlsDescendantBindings = binding.key;
+                    }
+                }
+                function callUpdate(binding) {
+                    callBindingFunc(binding, "update");
+                }
+
+                if (independentBindings) {
+                    // For independent bindings, go through each binding, and call init and then update
+                    forEachBinding(function(binding) {
+                        // Run init, ignoring any dependencies
+                        ko.dependencyDetection.ignore(callInit, null, [binding]);
+
+                        // Run update in its own computed wrapper
+                        wrapBindingCall(callUpdate.bind(null, binding));
+                    });
+                } else {
+                    // For dependent bindings, call init for each binding and then update each binding
+                    wrapBindingCall(function () {
+                        // First run all the inits
+                        if (runInits)
+                            forEachBinding(callInit);
+
+                        // then run all the updates
+                        forEachBinding(callUpdate);
+                    });
+                }
+            }
         }
 
+        runInits = false;
+
         return {
-            shouldBindDescendants: bindingHandlerThatControlsDescendantBindings === undefined
+            'shouldBindDescendants': bindingHandlerThatControlsDescendantBindings === undefined
         };
     };
 
@@ -191,7 +222,7 @@
     function getBindingContext(viewModelOrBindingContext, options) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
-            : new ko.bindingContext(ko.utils.peekObservable(viewModelOrBindingContext));
+            : new ko.bindingContext(ko.utils.peekObservable(viewModelOrBindingContext), options);
     }
 
     ko.applyBindingAccessorsToNode = function (node, bindings, viewModelOrBindingContext) {
@@ -210,12 +241,12 @@
             applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
     };
 
-    ko.applyBindings = function (viewModelOrBindingContext, rootNode) {
+    ko.applyBindings = function (viewModelOrBindingContext, rootNode, options) {
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
 
-        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
+        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, options), rootNode, true);
     };
 
     // Retrieving binding context from arbitrary nodes
