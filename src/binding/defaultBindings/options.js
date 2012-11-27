@@ -35,14 +35,13 @@ ko.bindingHandlers['options'] = {
         }
 
         if (value) {
-            var allBindings = allBindingsAccessor(),
-                includeDestroyed = allBindings['optionsIncludeDestroyed'];
+            var includeDestroyed = allBindingsAccessor('optionsIncludeDestroyed');
 
             if (typeof value.length != "number")
                 value = [value];
-            if (allBindings['optionsCaption']) {
+            if (allBindingsAccessor['optionsCaption']) {
                 var option = document.createElement("option");
-                ko.utils.setHtml(option, allBindings['optionsCaption']);
+                ko.utils.setHtml(option, allBindingsAccessor('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
                 element.appendChild(option);
             }
@@ -66,11 +65,11 @@ ko.bindingHandlers['options'] = {
                 }
 
                 // Apply a value to the option element
-                var optionValue = applyToObject(arrayEntry, allBindings['optionsValue'], arrayEntry);
+                var optionValue = applyToObject(arrayEntry, allBindingsAccessor('optionsValue'), arrayEntry);
                 ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue);
+                var optionText = applyToObject(arrayEntry, allBindingsAccessor('optionsText'), optionValue);
                 ko.utils.setTextContent(option, optionText);
 
                 element.appendChild(option);
@@ -89,11 +88,11 @@ ko.bindingHandlers['options'] = {
 
             element.scrollTop = previousScrollTop;
 
-            if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+            if (selectWasPreviouslyEmpty && ('value' in allBindingsAccessor)) {
                 // Ensure consistency between model value and selected option.
                 // If the dropdown is being populated for the first time here (or was otherwise previously empty),
                 // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings['value']), /* preferModelValue */ true);
+                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindingsAccessor('value')), /* preferModelValue */ true);
             }
 
             // Workaround for IE9 bug

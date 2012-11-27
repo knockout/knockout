@@ -25,7 +25,6 @@ ko.bindingHandlers['event'] = {
                         var handlerFunction = valueAccessor()[eventName];
                         if (!handlerFunction)
                             return;
-                        var allBindings = allBindingsAccessor();
 
                         try {
                             // Take all the event args, and prefix with the viewmodel
@@ -41,7 +40,7 @@ ko.bindingHandlers['event'] = {
                             }
                         }
 
-                        var bubble = allBindings[eventName + 'Bubble'] !== false;
+                        var bubble = allBindingsAccessor(eventName + 'Bubble') !== false;
                         if (!bubble) {
                             event.cancelBubble = true;
                             if (event.stopPropagation)
