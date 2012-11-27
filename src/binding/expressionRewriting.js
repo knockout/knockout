@@ -98,7 +98,7 @@ ko.expressionRewriting = (function () {
 
         var resultStrings = [],
             propertyAccessorResultStrings = [],
-            makeValueAccessors = bindingOptions['valueAccessors'],
+            makeValueAccessors = bindingOptions['valueAccessors'] || bindingOptions.valueAccessors,
             keyValueArray = typeof bindingsStringOrKeyValueArray === "string" ?
                 parseObjectLiteral(bindingsStringOrKeyValueArray) : bindingsStringOrKeyValueArray;
 
@@ -139,7 +139,7 @@ ko.expressionRewriting = (function () {
         //                      it is !== existing value on that writable observable
         writeValueToProperty: function(property, allBindingsAccessors, key, value, checkIfDifferent) {
             if (!property || !ko.isWriteableObservable(property)) {
-                var propWriters = allBindingsAccessors()['_ko_property_writers'];
+                var propWriters = allBindingsAccessors['_ko_property_writers']();
                 if (propWriters && propWriters[key])
                     propWriters[key](value);
             } else if (!checkIfDifferent || property.peek() !== value) {

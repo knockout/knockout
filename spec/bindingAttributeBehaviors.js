@@ -120,6 +120,9 @@ describe('Binding attribute syntax', function() {
 
     it('If the associated DOM element was removed by KO, handler subscriptions are disposed immediately', function () {
         var observable = new ko.observable("A");
+        ko.bindingHandlers.anyHandler = {
+            update: function (element, valueAccessor) { valueAccessor(); }
+        };
         testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
 
@@ -132,6 +135,9 @@ describe('Binding attribute syntax', function() {
 
     it('If the associated DOM element was removed independently of KO, handler subscriptions are disposed on the next evaluation', function () {
         var observable = new ko.observable("A");
+        ko.bindingHandlers.anyHandler = {
+            update: function (element, valueAccessor) { valueAccessor(); }
+        };
         testNode.innerHTML = "<div data-bind='anyHandler: myObservable()'></div>";
         ko.applyBindings({ myObservable: observable }, testNode);
 

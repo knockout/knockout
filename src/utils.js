@@ -117,6 +117,18 @@ ko.utils = new (function () {
             return target;
         },
 
+        objectMap: function(source, mapping) {
+            if (!source)
+                return source;
+            var target = {};
+            for(var prop in source) {
+                if(source.hasOwnProperty(prop)) {
+                    target[prop] = mapping(source[prop], prop);
+                }
+            }
+            return target;
+        },
+
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
                 ko.removeNode(domNode.firstChild);
