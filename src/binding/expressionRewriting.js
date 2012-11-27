@@ -69,7 +69,7 @@ ko.expressionRewriting = (function () {
 
     // Two-way bindings include a write function that allow the handler to update the value even if it's not an observable.
     var twoWayBindings = {
-        value:1, selectedOptions:1, checked:1, hasfocus:1
+        'value':1, 'selectedOptions':1, 'checked':1, 'hasfocus':1, 'hasFocus':1
     };
 
     function preProcessBindings(bindingsStringOrKeyValueArray, bindingOptions) {
