@@ -55,4 +55,20 @@ describe('Binding preprocessing', function() {
         expect(parsedRewritten.a).toBeUndefined();
         expect(parsedRewritten.b).toEqual(3);
     });
+
+    it('Should be able to get a dynamically created binding handler during preprocessing', function() {
+        var oldGetHandler = ko.getBindingHandler;
+        ko.getBindingHandler = function(bindingKey) {
+            return {
+                preprocess: function(value) {
+                    return value + '2';
+                }
+            };
+        };
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1");
+        ko.getBindingHandler = oldGetHandler;   // restore original function
+
+        var parsedRewritten = eval("({" + rewritten + "})");
+        expect(parsedRewritten.a).toEqual(12);
+    });
 });
