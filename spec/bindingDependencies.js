@@ -13,8 +13,8 @@ describe('Binding dependencies', function() {
         ko.applyBindings({ myObservable: observable }, testNode);
         expect(initPassedValues.length).toEqual(1);
         expect(updatePassedValues.length).toEqual(1);
-        expect(initPassedValues[0]).toEqual(undefined);
-        expect(updatePassedValues[0]).toEqual(undefined);
+        expect(initPassedValues[0]).toBeUndefined();
+        expect(updatePassedValues[0]).toBeUndefined();
 
         observable("A");
         expect(initPassedValues.length).toEqual(1);

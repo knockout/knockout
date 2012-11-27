@@ -76,6 +76,10 @@ describe('Expression Rewriting', function() {
             'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
             'j: boss.firstName + boss.lastName'
         );
+
+        // Clear the two-way flag
+        w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = false;
+
         var assistant = { firstName: "john", lastName: "english" };
         var model = {
             firstName: "bob", lastName: "smith",
