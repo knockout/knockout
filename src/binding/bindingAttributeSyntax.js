@@ -168,7 +168,7 @@
                 var forEachBinding = ko.utils.arrayForEach.bind(null, orderedBindings);
 
                 function wrapBindingCall(callback) {
-                    ko.computed(callback, null, { disposeWhenNodeIsRemoved: node });
+                    ko.dependentObservable(callback, null, { disposeWhenNodeIsRemoved: node });
                 }
                 function callBindingFunc(binding, methodName) {
                     if (typeof binding.handler[methodName] == "function") {
