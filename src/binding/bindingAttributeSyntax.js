@@ -36,8 +36,17 @@
         return ko.utils.extend(clone, properties);
     };
 
+    ko.bindingValueWrap = function(valueFunction) {
+        valueFunction['__ko_wrap'] = ko.bindingValueWrap;
+        return valueFunction;
+    };
+
+    ko.isBindingValueWrapped = function(value) {
+        return (value && value['__ko_wrap'] === ko.bindingValueWrap);
+    }
+
     function wrapValue(value) {
-        return function() {
+        return (ko.isBindingValueWrapped(value) && value) || function() {
             return value;
         };
     }
@@ -48,7 +57,7 @@
 
     function makeAccessorsFromFunction(callback) {
         return ko.utils.objectMap(ko.dependencyDetection.ignore(callback), function(value, key) {
-            return function() {
+            return (ko.isBindingValueWrapped(value) && value) || function() {
                 return callback()[key];
             };
         });
@@ -268,6 +277,8 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('bindingValueWrap', ko.bindingValueWrap);
+    ko.exportSymbol('isBindingValueWrapped', ko.isBindingValueWrapped);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);

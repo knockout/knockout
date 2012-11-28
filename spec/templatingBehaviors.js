@@ -353,15 +353,15 @@ describe('Templating', function() {
             nodeHasBindings: function(node, bindingContext) {
                 return (node.tagName == 'EM') || originalBindingProvider.nodeHasBindings(node, bindingContext);
             },
-            getBindingAccessors: function(node, bindingContext) {
+            getBindings: function(node, bindingContext) {
                 if (node.tagName == 'EM') {
                     return {
-                        text: function() {
+                        text: ko.bindingValueWrap(function() {
                             return ++model.numBindings;
-                        }
+                        })
                     };
                 }
-                return originalBindingProvider.getBindingAccessors(node, bindingContext);
+                return originalBindingProvider.getBindings(node, bindingContext);
             }
         };
 
