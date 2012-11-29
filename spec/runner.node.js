@@ -1,3 +1,4 @@
+var fs = require('fs');
 var jasmine = require('./lib/jasmine-1.2.0/jasmine');
 
 // export jasmine globals
@@ -6,7 +7,19 @@ for (var key in jasmine) {
 }
 
 // export ko globals
-global.ko = require(process.argv[2] || '../build/knockout-raw.js');
+if (process.argv.length > 2) {
+  global.ko = require(process.argv[2]);
+} else {
+  // equivalent of  ../build/knockout-raw.js
+  global.DEBUG = true;
+  global.ko = global.koExports = {};
+  global.knockoutDebugCallback = function(sources) {
+    eval(sources.reduce(function(all, source) {
+      return all + '\n' + fs.readFileSync(source);
+    }, ''));
+  };
+  require('../build/fragments/source-references');
+}
 
 // reference behaviors that should work out of browser
 require('./asyncBehaviors');
