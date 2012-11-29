@@ -1,1 +1,3 @@
-(function(window,document,navigator,jQuery,undefined){
+(function(undefined){
+    var jQuery = (function(){return this;}).call()['jQuery'];
+
