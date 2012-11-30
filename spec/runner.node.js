@@ -25,9 +25,9 @@ if (process.argv.length > 2) {
 }
 
 // reference behaviors that should work out of browser
+require('./arrayEditDetectionBehaviors');
 require('./asyncBehaviors');
 require('./dependentObservableBehaviors');
-require('./editDetectionBehaviors');
 require('./expressionRewritingBehaviors');
 require('./extenderBehaviors');
 require('./mappingHelperBehaviors');
