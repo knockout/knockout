@@ -169,31 +169,6 @@ describe('Binding dependencies', function() {
         expect(observable.getSubscriptionsCount()).toEqual(0);
     });
 
-    it('Should not run updates for all bindings if only one needs to run if binding are run independently', function() {
-        var observable = ko.observable('A'), updateCount1 = 0, updateCount2 = 0;
-        ko.bindingHandlers.test1 = {
-            update: function(element, valueAccessor) {
-                valueAccessor()();  // access value to create a subscription
-                updateCount1++;
-            }
-        };
-        ko.bindingHandlers.test2 = {
-            update: function() {
-                updateCount2++;
-            }
-        };
-        testNode.innerHTML = "<div data-bind='test1: myObservable, test2: true'></div>";
-
-        ko.applyBindings({ myObservable: observable }, testNode, {independentBindings: true});
-        expect(updateCount1).toEqual(1);
-        expect(updateCount2).toEqual(1);
-
-        // update the observable and check that only the first binding was updated
-        observable('B');
-        expect(updateCount1).toEqual(2);
-        expect(updateCount2).toEqual(1);
-    });
-
     it('Should not update all bindings if a binding unwraps an observable if binding are run independently', function() {
         var countUpdates = 0, observable = ko.observable(1);
         ko.bindingHandlers.countingHandler = {

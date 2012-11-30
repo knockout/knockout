@@ -120,8 +120,7 @@
     }
 
     function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
-        var runInits = true, // true = inits need to run, false = inits don't need to run
-            isElement = (node.nodeType === 1),
+        var isElement = (node.nodeType === 1),
             independentBindings = bindingContext['$options']['independentBindings'],
             bindingHandlerThatControlsDescendantBindings;
 
@@ -165,8 +164,6 @@
             }
 
             if (orderedBindings.length) {
-                var forEachBinding = ko.utils.arrayForEach.bind(null, orderedBindings);
-
                 function wrapBindingCall(callback) {
                     ko.dependentObservable(callback, null, { disposeWhenNodeIsRemoved: node });
                 }
@@ -191,29 +188,27 @@
                 }
 
                 if (independentBindings) {
-                    // For independent bindings, go through each binding, and call init and then update
-                    forEachBinding(function(binding) {
+                    // For independent bindings, go through the bindings, calling init and update for each
+                    ko.utils.arrayForEach(orderedBindings, function(binding) {
                         // Run init, ignoring any dependencies
                         ko.dependencyDetection.ignore(callInit, null, [binding]);
 
                         // Run update in its own computed wrapper
-                        wrapBindingCall(callUpdate.bind(null, binding));
+                        wrapBindingCall(function() {
+                            callUpdate(binding);
+                        });
                     });
                 } else {
-                    // For dependent bindings, call init for each binding and then update each binding
-                    wrapBindingCall(function () {
-                        // First run all the inits
-                        if (runInits)
-                            forEachBinding(callInit);
+                    // For dependent bindings, first run all the inits, ignoring dependencies
+                    ko.dependencyDetection.ignore(ko.utils.arrayForEach, null, [orderedBindings, callInit]);
 
-                        // then run all the updates
-                        forEachBinding(callUpdate);
+                    // Then run all the updates in a single computed wrapper
+                    wrapBindingCall(function() {
+                        ko.utils.arrayForEach(orderedBindings, callUpdate);
                     });
                 }
             }
         }
-
-        runInits = false;
 
         return {
             'shouldBindDescendants': bindingHandlerThatControlsDescendantBindings === undefined
