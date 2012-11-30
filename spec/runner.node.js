@@ -6,6 +6,9 @@ for (var key in jasmine) {
   global[key] = jasmine[key];
 }
 
+// add our jasmine extensions to the exported globals
+require('./lib/jasmine.extensions');
+
 // export ko globals
 if (process.argv.length > 2) {
   global.ko = require(process.argv[2]);
