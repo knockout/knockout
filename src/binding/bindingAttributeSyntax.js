@@ -132,8 +132,9 @@
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
         if (!bindings) {
-            var provider = ko.bindingProvider['instance'];
-            bindings = (provider['getBindingAccessors'] || defaultGetBindingAccessors).call(provider, node, bindingContext);
+            var provider = ko.bindingProvider['instance'],
+                getBindings = provider['getBindingAccessors'] || defaultGetBindingAccessors;
+            bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
         }
 
         if (bindings) {
@@ -205,6 +206,9 @@
                     // Then run all the updates in a single computed wrapper
                     wrapBindingCall(function() {
                         ko.utils.arrayForEach(orderedBindings, callUpdate);
+
+                        // Ensure there's a dependency on each binding
+                        // allBindingsAccessor();  Causes specs to fail that check the number of times a binding is accessed
                     });
                 }
             }

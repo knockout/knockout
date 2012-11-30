@@ -72,3 +72,4 @@ ko.bindingHandlers['value'] = {
             ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
+ko.expressionRewriting.twoWayBindings['value'] = true;

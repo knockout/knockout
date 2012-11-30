@@ -45,3 +45,4 @@ ko.bindingHandlers['checked'] = {
         }
     }
 };
+ko.expressionRewriting.twoWayBindings['checked'] = true;
