@@ -146,22 +146,32 @@
             }
 
             // Go through the bindings, check that they are valid and put them in the right order
-            var orderedBindings = [];
-            for (var bindingKey in bindings) {
-                // Also store the binding value accessors in allBindingsAccessor so it's easy to check if a binding value is present
-                allBindingsAccessor[bindingKey] = bindings[bindingKey];
+            var orderedBindings = [], bindingsOrdered = {};
+            function pushBinding(bindingKey) {
+                if (!bindingsOrdered[bindingKey] && bindings[bindingKey]) {
+                    bindingsOrdered[bindingKey] = true;
 
-                var handler = ko['getBindingHandler'](bindingKey);
-                if (handler) {
-                    if (!isElement) {
-                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
+                    // Also store the binding value accessors in allBindingsAccessor so it's easy to check if a binding value is present
+                    allBindingsAccessor[bindingKey] = bindings[bindingKey];
+
+                    var handler = ko['getBindingHandler'](bindingKey);
+                    if (handler) {
+                        if (!isElement) {
+                            validateThatBindingIsAllowedForVirtualElements(bindingKey);
+                        }
+                        if (handler['after']) {
+                            ko.utils.arrayForEach(handler['after'], pushBinding);
+                        }
+                        orderedBindings.push({
+                            key: bindingKey,
+                            valueAccessor: bindings[bindingKey],
+                            handler: handler
+                        });
                     }
-                    orderedBindings.push({
-                        key: bindingKey,
-                        valueAccessor: bindings[bindingKey],
-                        handler: handler
-                    });
                 }
+            }
+            for (var bindingKey in bindings) {
+                pushBinding(bindingKey);
             }
 
             if (orderedBindings.length) {
@@ -206,9 +216,6 @@
                     // Then run all the updates in a single computed wrapper
                     wrapBindingCall(function() {
                         ko.utils.arrayForEach(orderedBindings, callUpdate);
-
-                        // Ensure there's a dependency on each binding
-                        // allBindingsAccessor();  Causes specs to fail that check the number of times a binding is accessed
                     });
                 }
             }

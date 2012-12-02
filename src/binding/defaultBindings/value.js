@@ -1,4 +1,5 @@
 ko.bindingHandlers['value'] = {
+    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindingsAccessor) {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
@@ -58,18 +59,19 @@ ko.bindingHandlers['value'] = {
             var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
             applyValueAction();
 
-            // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
-            // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
-            // to apply the value as well.
-            var alsoApplyAsynchronously = valueIsSelectOption;
-            if (alsoApplyAsynchronously)
-                setTimeout(applyValueAction, 0);
+            if (valueIsSelectOption) {
+                if (newValue !== ko.selectExtensions.readValue(element)) {
+                    // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+                    // because you're not allowed to have a model value that disagrees with a visible UI selection.
+                    ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
+                } else {
+                    // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
+                    // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
+                    // to apply the value as well.
+                    setTimeout(applyValueAction, 0);
+                }
+            }
         }
-
-        // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
-        // because you're not allowed to have a model value that disagrees with a visible UI selection.
-        if (valueIsSelectOption && (element.length > 0))
-            ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, /* preferModelValue */ false);
     }
 };
 ko.expressionRewriting.twoWayBindings['value'] = true;

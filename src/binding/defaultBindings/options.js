@@ -1,22 +1,8 @@
-function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, preferModelValue) {
-    if (preferModelValue) {
-        if (modelValue !== ko.selectExtensions.readValue(element))
-            ko.selectExtensions.writeValue(element, modelValue);
-    }
-
-    // No matter which direction we're syncing in, we want the end result to be equality between dropdown value and model value.
-    // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
-    // change the model value to match the dropdown.
-    if (modelValue !== ko.selectExtensions.readValue(element))
-        ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
-};
-
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
         if (ko.utils.tagNameLower(element) !== "select")
             throw new Error("options binding applies only to SELECT elements");
 
-        var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
             return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
         }), function (node) {
@@ -88,12 +74,11 @@ ko.bindingHandlers['options'] = {
 
             element.scrollTop = previousScrollTop;
 
-            if (selectWasPreviouslyEmpty && ('value' in allBindingsAccessor)) {
-                // Ensure consistency between model value and selected option.
-                // If the dropdown is being populated for the first time here (or was otherwise previously empty),
-                // the dropdown selection state is meaningless, so we preserve the model value.
-                ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindingsAccessor('value')), /* preferModelValue */ true);
-            }
+            // Ensure consistency between model value and selected option.
+            // If the dropdown was changes so that selection is no longer tha same,
+            // notify the value or selectedOptions binding.
+            if (countSelectionsRetained < previousSelectedValues.length)
+                ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
 
             // Workaround for IE9 bug
             ko.utils.ensureSelectElementIsRenderedCorrectly(element);
