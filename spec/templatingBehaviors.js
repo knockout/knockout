@@ -354,8 +354,13 @@ describe('Templating', function() {
                 return (node.tagName == 'EM') || originalBindingProvider.nodeHasBindings(node, bindingContext);
             },
             getBindings: function(node, bindingContext) {
-                if (node.tagName == 'EM')
-                    return { text: ++model.numBindings };
+                if (node.tagName == 'EM') {
+                    return {
+                        text: ko.bindingValueWrap(function() {
+                            return ++model.numBindings;
+                        })
+                    };
+                }
                 return originalBindingProvider.getBindings(node, bindingContext);
             }
         };

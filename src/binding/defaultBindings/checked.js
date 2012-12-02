@@ -1,4 +1,5 @@
 ko.bindingHandlers['checked'] = {
+    'after': ['value', 'attr'],
     'init': function (element, valueAccessor, allBindingsAccessor) {
         var updateHandler = function() {
             var valueToWrite;
@@ -45,3 +46,4 @@ ko.bindingHandlers['checked'] = {
         }
     }
 };
+ko.expressionRewriting.twoWayBindings['checked'] = true;

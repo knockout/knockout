@@ -1,4 +1,5 @@
 ko.bindingHandlers['selectedOptions'] = {
+    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindingsAccessor) {
         ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor(), valueToWrite = [];
@@ -22,3 +23,4 @@ ko.bindingHandlers['selectedOptions'] = {
         }
     }
 };
+ko.expressionRewriting.twoWayBindings['selectedOptions'] = true;
