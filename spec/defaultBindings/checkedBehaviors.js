@@ -173,4 +173,24 @@ describe('Binding: Checked', function() {
         model.myObservableArray.remove("My value");
         expect(testNode.childNodes[0].checked).toEqual(false);
     });
+
+    it('When the radio button \'value\' attribute is set via attr binding, should set initial checked state correctly (attr before checked)', function() {
+        var myobservable = new ko.observable("this radio button value");
+        testNode.innerHTML = "<input type='radio' data-bind='attr:{value:\"this radio button value\"}, checked:someProp' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+
+        expect(testNode.childNodes[0].checked).toEqual(true);
+        myobservable("another value");
+        expect(testNode.childNodes[0].checked).toEqual(false);
+    });
+
+    it('When the radio button \'value\' attribute is set via attr binding, should set initial checked state correctly (checked before attr)', function() {
+        var myobservable = new ko.observable("this radio button value");
+        testNode.innerHTML = "<input type='radio' data-bind='checked:someProp, attr:{value:\"this radio button value\"}' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+
+        expect(testNode.childNodes[0].checked).toEqual(true);
+        myobservable("another value");
+        expect(testNode.childNodes[0].checked).toEqual(false);
+    });
 });
