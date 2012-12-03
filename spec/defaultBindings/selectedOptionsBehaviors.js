@@ -46,6 +46,32 @@ describe('Binding: Selected Options', function() {
         expect(selection()[1] === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     });
 
+    it('Should update the model when selection in the SELECT node changes for non-observable property values', function () {
+        function setMultiSelectOptionSelectionState(optionElement, state) {
+            // Workaround an IE 6 bug (http://benhollis.net/experiments/browserdemos/ie6-adding-options.html)
+            if (/MSIE 6/i.test(navigator.userAgent))
+                optionElement.setAttribute('selected', state);
+            else
+                optionElement.selected = state;
+        }
+
+        var cObject = {};
+        var values = new ko.observableArray(["A", "B", cObject]);
+        var selection = ["B"];
+        var myModel = { myValues: values, mySelection: selection };
+        testNode.innerHTML = "<select multiple='multiple' data-bind='options:myValues, selectedOptions:mySelection'></select>";
+        ko.applyBindings(myModel, testNode);
+
+        expect(myModel.mySelection).toEqual(["B"]);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0], true);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[1], false);
+        setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+
+        expect(myModel.mySelection).toEqual(["A", cObject]);
+        expect(myModel.mySelection[1] === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
+    });
+
     it('Should update the model when selection in the SELECT node inside an optgroup changes', function () {
         function setMultiSelectOptionSelectionState(optionElement, state) {
             // Workaround an IE 6 bug (http://benhollis.net/experiments/browserdemos/ie6-adding-options.html)
