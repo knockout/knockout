@@ -209,12 +209,7 @@ ko.utils = new (function () {
         },
 
         anyDomNodeIsAttachedToDocument: function(nodes) {
-            for (var i = 0, j = nodes.length; i < j; i++) {
-                if (ko.utils.domNodeIsAttachedToDocument(nodes[i])) {
-                    return true;
-                }
-            }
-            return false;
+            return !!ko.utils.arrayFirst(nodes, ko.utils.domNodeIsAttachedToDocument);
         },
 
         tagNameLower: function(element) {
