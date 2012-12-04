@@ -5,62 +5,65 @@ describe('Expression Rewriting', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("a: 1, b: 2, \"quotedKey\": 3, 'aposQuotedKey': 4");
         expect(result.length).toEqual(4);
         expect(result[0].key).toEqual("a");
-        expect(result[0].value).toEqual(" 1");
-        expect(result[1].key).toEqual(" b");
-        expect(result[1].value).toEqual(" 2");
-        expect(result[2].key).toEqual(" \"quotedKey\"");
-        expect(result[2].value).toEqual(" 3");
-        expect(result[3].key).toEqual(" 'aposQuotedKey'");
-        expect(result[3].value).toEqual(" 4");
+        expect(result[0].value).toEqual("1");
+        expect(result[1].key).toEqual("b");
+        expect(result[1].value).toEqual("2");
+        expect(result[2].key).toEqual("quotedKey");
+        expect(result[2].value).toEqual("3");
+        expect(result[3].key).toEqual("aposQuotedKey");
+        expect(result[3].value).toEqual("4");
     });
 
     it('Should ignore any outer braces', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("{a: 1}");
         expect(result.length).toEqual(1);
         expect(result[0].key).toEqual("a");
-        expect(result[0].value).toEqual(" 1");
+        expect(result[0].value).toEqual("1");
     });
 
     it('Should be able to parse object literals containing string literals', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\\' brace} bracket] quot\"'");
         expect(result.length).toEqual(2);
         expect(result[0].key).toEqual("a");
-        expect(result[0].value).toEqual(" \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
-        expect(result[1].key).toEqual(" b");
-        expect(result[1].value).toEqual(" 'escapedApos\\\' brace} bracket] quot\"'");
+        expect(result[0].value).toEqual("\"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
+        expect(result[1].key).toEqual("b");
+        expect(result[1].value).toEqual("'escapedApos\\\' brace} bracket] quot\"'");
     });
 
     it('Should be able to parse object literals containing child objects, arrays, function literals, and newlines', function() {
+        // The parsing may or may not keep unnecessary spaces. So to avoid confusion, avoid unnecessary spaces.
         var result = ko.expressionRewriting.parseObjectLiteral(
-            "myObject : { someChild: { }, someChildArray: [1,2,3], \"quotedChildProp\": 'string value' },\n"
-          + "someFn: function(a, b, c) { var regex = /}/; var str='/})({'; return {}; },"
-          + "myArray : [{}, function() { }, \"my'Str\", 'my\"Str']"
+            "myObject:{someChild:{},someChildArray:[1,2,3],\"quotedChildProp\":'string value'},\n"
+          + "someFn:function(a,b,c){var regex=/}/;var str='/})({';return{};},"
+          + "myArray:[{},function(){},\"my'Str\",'my\"Str']"
         );
         expect(result.length).toEqual(3);
-        expect(result[0].key).toEqual("myObject ");
-        expect(result[0].value).toEqual(" { someChild: { }, someChildArray: [1,2,3], \"quotedChildProp\": 'string value' }");
-        expect(result[1].key).toEqual("\nsomeFn");
-        expect(result[1].value).toEqual(" function(a, b, c) { var regex = /}/; var str='/})({'; return {}; }");
-        expect(result[2].key).toEqual("myArray ");
-        expect(result[2].value).toEqual(" [{}, function() { }, \"my'Str\", 'my\"Str']");
+        expect(result[0].key).toEqual("myObject");
+        expect(result[0].value).toEqual("{someChild:{},someChildArray:[1,2,3],\"quotedChildProp\":'string value'}");
+        expect(result[1].key).toEqual("someFn");
+        expect(result[1].value).toEqual("function(a,b,c){var regex=/}/;var str='/})({';return{};}");
+        expect(result[2].key).toEqual("myArray");
+        expect(result[2].value).toEqual("[{},function(){},\"my'Str\",'my\"Str']");
     });
 
     it('Should be able to cope with malformed syntax (things that aren\'t key-value pairs)', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }");
-        expect(result.length).toEqual(4);
+        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }, good5:5");
+        expect(result.length).toEqual(5);
         expect(result[0].unknown).toEqual("malformed1");
-        expect(result[1].unknown).toEqual(" 'mal:formed2'");
-        expect(result[2].key).toEqual(" good");
+        expect(result[1].unknown).toEqual("mal:formed2");
+        expect(result[2].key).toEqual("good");
         expect(result[2].value).toEqual("3");
-        expect(result[3].unknown).toEqual(" { malformed: 4 }");
+        expect(result[4].key).toEqual("good5");
+        expect(result[4].value).toEqual("5");
+        // There's not really a good 'should' value for "{ malformed: 4 }", so don't check
     });
 
     it('Should ensure all keys are wrapped in quotes', function() {
         var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b': 2, \"c\": 3");
-        expect(rewritten).toEqual("'a': 1, 'b': 2, \"c\": 3");
+        expect(rewritten).toEqual("'a':1,'b':2,'c':3");
     });
 
-    it('Should convert JSON values to property accessors', function () {
+    it('Should convert writable values to property accessors', function () {
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
@@ -111,7 +114,7 @@ describe('Expression Rewriting', function() {
 
     it('Should be able to eval rewritten literals that contain unquoted keywords as keys', function() {
         var rewritten = ko.expressionRewriting.preProcessBindings("if: true");
-        expect(rewritten).toEqual("'if': true");
+        expect(rewritten).toEqual("'if':true");
         var evaluated = eval("({" + rewritten + "})");
         expect(evaluated['if']).toEqual(true);
     });
