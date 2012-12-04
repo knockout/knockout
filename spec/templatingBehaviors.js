@@ -445,6 +445,24 @@ describe('Templating', function() {
         expect(testNode.childNodes[0]).toContainHtml("<div>new</div>inner <span>123</span>x");
     });
 
+    it('Data binding \'foreach\' should handle templates in which the very first node has a binding but it does not reference any observables', function() {
+        // Represents https://github.com/SteveSanderson/knockout/issues/739
+        // Previously, the rewriting (which introduces a comment node before the bound node) was interfering
+        // with the array-to-DOM-node mapping state tracking
+        ko.setTemplateEngine(new dummyTemplateEngine({ mytemplate: "<div data-bind='attr: {}'>[js:name()]</div>" }));
+        testNode.innerHTML = "<div data-bind=\"template: { name: 'mytemplate', foreach: items }\"></div>";
+
+        // Bind against array, referencing an observable property
+        var myItem = { name: ko.observable("a") };
+        ko.applyBindings({ items: [myItem] });
+        expect(testNode.childNodes[0]).toContainHtml("<div>a</div>");
+
+        // Modify the observable property and check that UI is updated
+        // Previously with the bug, it wasn't updated because the removal of the memo comment caused the array-to-DOM-node computed to be disposed
+        myItem.name("b");
+        expect(testNode.childNodes[0]).toContainHtml("<div>b</div>");
+    });
+
     it('Data binding \'foreach\' option should apply bindings with an $index in the context', function () {
         var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
         ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "The item # is <span data-bind='text: $index'></span>" }));
