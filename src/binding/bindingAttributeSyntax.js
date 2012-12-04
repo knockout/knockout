@@ -1,6 +1,11 @@
 (function () {
     ko.bindingHandlers = {};
 
+    // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
+    ko['getBindingHandler'] = function(bindingKey) {
+        return ko.bindingHandlers[bindingKey];
+    };
+
     ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
         if (parentBindingContext) {
             ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
@@ -123,7 +128,7 @@
                     if (initPhase === 0) {
                         initPhase = 1;
                         ko.utils.objectForEach(parsedBindings, function(bindingKey) {
-                            var binding = ko.bindingHandlers[bindingKey];
+                            var binding = ko['getBindingHandler'](bindingKey);
                             if (binding && node.nodeType === 8)
                                 validateThatBindingIsAllowedForVirtualElements(bindingKey);
 
@@ -145,7 +150,7 @@
                     // ... then run all the updates, which might trigger changes even on the first evaluation
                     if (initPhase === 2) {
                         ko.utils.objectForEach(parsedBindings, function(bindingKey) {
-                            var binding = ko.bindingHandlers[bindingKey];
+                            var binding = ko['getBindingHandler'](bindingKey);
                             if (binding && typeof binding["update"] == "function") {
                                 var handlerUpdateFn = binding["update"];
                                 handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);

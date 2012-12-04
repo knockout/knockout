@@ -67,46 +67,57 @@ ko.expressionRewriting = (function () {
         return result;
     }
 
+    // Two-way bindings include a write function that allow the handler to update the value even if it's not an observable.
+    var twoWayBindings = {};
+
+    function preProcessBindings(bindingsStringOrKeyValueArray, bindingOptions) {
+        bindingOptions = bindingOptions || {};
+
+        function processKeyValue(key, val) {
+            var writableVal;
+            function callPreprocessHook(obj) {
+                return (obj && obj['preprocess']) ? (val = obj['preprocess'](val, key, processKeyValue)) : true;
+            }
+            if (!callPreprocessHook(ko['getBindingHandler'](key)))
+                return;
+
+            if (twoWayBindings[key] && (writableVal = getWriteableValue(val))) {
+                // For two-way bindings, provide a write method in case the value
+                // isn't a writable observable.
+                propertyAccessorResultStrings.push("'" + key + "':function(_z){" + writableVal + "=_z}");
+            }
+
+            // Values are wrapped in a function so that each value can be accessed independently
+            if (makeValueAccessors) {
+                val = 'function(){return ' + val + '}';
+            }
+            resultStrings.push("'" + key + "':" + val);
+        }
+
+        var resultStrings = [],
+            propertyAccessorResultStrings = [],
+            makeValueAccessors = bindingOptions['valueAccessors'],
+            keyValueArray = typeof bindingsStringOrKeyValueArray === "string" ?
+                parseObjectLiteral(bindingsStringOrKeyValueArray) : bindingsStringOrKeyValueArray;
+
+        ko.utils.arrayForEach(keyValueArray, function(keyValue) {
+            processKeyValue(keyValue.key || keyValue['unknown'], keyValue.value);
+        });
+
+        if (propertyAccessorResultStrings.length)
+            processKeyValue('_ko_property_writers', "{" + propertyAccessorResultStrings.join(",") + "}");
+
+        return resultStrings.join(",");
+    }
+
     return {
         bindingRewriteValidators: [],
 
+        twoWayBindings: twoWayBindings,
+
         parseObjectLiteral: parseObjectLiteral,
 
-        preProcessBindings: function (objectLiteralStringOrKeyValueArray) {
-            var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string"
-                ? ko.expressionRewriting.parseObjectLiteral(objectLiteralStringOrKeyValueArray)
-                : objectLiteralStringOrKeyValueArray;
-            var resultStrings = [], propertyAccessorResultStrings = [];
-
-            var keyValueEntry;
-            for (var i = 0; keyValueEntry = keyValueArray[i]; i++) {
-                if (resultStrings.length > 0)
-                    resultStrings.push(",");
-
-                if (keyValueEntry['key']) {
-                    var quotedKey = "'" + keyValueEntry['key'] + "'", val = keyValueEntry['value'];
-                    resultStrings.push(quotedKey);
-                    resultStrings.push(":");
-                    resultStrings.push(val);
-
-                    if (val = getWriteableValue(val)) {
-                        if (propertyAccessorResultStrings.length > 0)
-                            propertyAccessorResultStrings.push(", ");
-                        propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
-                    }
-                } else if (keyValueEntry['unknown']) {
-                    resultStrings.push(keyValueEntry['unknown']);
-                }
-            }
-
-            var combinedResult = resultStrings.join("");
-            if (propertyAccessorResultStrings.length > 0) {
-                var allPropertyAccessors = propertyAccessorResultStrings.join("");
-                combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
-            }
-
-            return combinedResult;
-        },
+        preProcessBindings: preProcessBindings,
 
         keyValueArrayContainsKey: function(keyValueArray, key) {
             for (var i = 0; i < keyValueArray.length; i++)
@@ -138,6 +149,7 @@ ko.expressionRewriting = (function () {
 
 ko.exportSymbol('expressionRewriting', ko.expressionRewriting);
 ko.exportSymbol('expressionRewriting.bindingRewriteValidators', ko.expressionRewriting.bindingRewriteValidators);
+ko.exportSymbol('expressionRewriting.twoWayBindings', ko.expressionRewriting.twoWayBindings);
 ko.exportSymbol('expressionRewriting.parseObjectLiteral', ko.expressionRewriting.parseObjectLiteral);
 ko.exportSymbol('expressionRewriting.preProcessBindings', ko.expressionRewriting.preProcessBindings);
 

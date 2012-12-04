@@ -64,12 +64,20 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should convert writable values to property accessors', function () {
+        // This now only works for bindings that marked as two-way; so mark bindings a - j as such
+        var w = ko.expressionRewriting.twoWayBindings;
+        w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = true;
+
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
             'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
             'j: boss.firstName + boss.lastName'
         );
+
+        // Clear the two-way flag
+        w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = false;
+
         var assistant = { firstName: "john", lastName: "english" };
         var model = {
             firstName: "bob", lastName: "smith",
@@ -117,5 +125,20 @@ describe('Expression Rewriting', function() {
         expect(rewritten).toEqual("'if':true");
         var evaluated = eval("({" + rewritten + "})");
         expect(evaluated['if']).toEqual(true);
+    });
+
+    it('Should eval keys without a value as if the value is undefined', function() {
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, b");
+        var parsedRewritten = eval("({" + rewritten + "})");
+        expect(parsedRewritten.a).toEqual(1);
+        expect('b' in parsedRewritten).toBeTruthy();
+        expect(parsedRewritten.b).toBeUndefined();
+    });
+
+    it('Should return accessor functions for each value when called with the valueAccessors option', function() {
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1", {valueAccessors:true});
+        expect(rewritten).toEqual("'a':function(){return 1}");
+        var evaluated = eval("({" + rewritten + "})");
+        expect(evaluated['a']()).toEqual(1);
     });
 });

@@ -22,3 +22,4 @@ ko.bindingHandlers['selectedOptions'] = {
         }
     }
 };
+ko.expressionRewriting.twoWayBindings['selectedOptions'] = true;
