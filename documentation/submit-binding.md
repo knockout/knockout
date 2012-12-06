@@ -12,7 +12,7 @@ When you use the `submit` binding on a form, Knockout will prevent the browser's
     <form data-bind="submit: doSomething">
         ... form contents go here ...
         <button type="submit">Submit</button>
-    </div>
+    </form>
     
     <script type="text/javascript">
         var viewModel = {
