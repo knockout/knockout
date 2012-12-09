@@ -61,4 +61,26 @@ describe('Binding: Hasfocus', function() {
     it('Should be aliased as hasFocus as well as hasfocus', function() {
         expect(ko.bindingHandlers.hasFocus).toEqual(ko.bindingHandlers.hasfocus);
     });
+
+    it('Should not unnecessarily focus or blur an element that is already focused/blurred', function() {
+        // This is the closest we can get to representing issue #698 as a spec
+        var model = { isFocused: ko.observable({}) };
+        testNode.innerHTML = "<input data-bind='hasfocus: isFocused' />";
+        ko.applyBindings(model, testNode);
+
+        // The elem is already focused, so changing the model value to a different truthy value
+        // shouldn't cause any additional focus events
+        var didFocusAgain = false;
+        ko.utils.registerEventHandler(testNode.childNodes[0], "focusin", function() { didFocusAgain = true });
+        model.isFocused.valueHasMutated();
+        expect(didFocusAgain).toEqual(false);
+
+        // Similarly, when the elem is already blurred, changing the model value to a different
+        // falsey value shouldn't cause any additional blur events
+        model.isFocused(false);
+        var didBlurAgain = false;
+        ko.utils.registerEventHandler(testNode.childNodes[0], "focusout", function() { didBlurAgain = true });
+        model.isFocused(null);
+        expect(didBlurAgain).toEqual(false);
+    });
 });
