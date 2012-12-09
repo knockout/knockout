@@ -1,4 +1,5 @@
 var hasfocusUpdatingProperty = '__ko_hasfocusUpdating';
+var hasfocusLastValue = '__ko_hasfocusLastValue';
 ko.bindingHandlers['hasfocus'] = {
     'init': function(element, valueAccessor, allBindingsAccessor) {
         var handleElementFocusChange = function(isFocused) {
@@ -15,6 +16,9 @@ ko.bindingHandlers['hasfocus'] = {
             }
             var modelValue = valueAccessor();
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
+
+            //cache the latest value, so we can avoid unnecessarily calling focus/blur in the update function
+            element[hasfocusLastValue] = isFocused;
             element[hasfocusUpdatingProperty] = false;
         };
         var handleElementFocusIn = handleElementFocusChange.bind(null, true);
@@ -26,8 +30,8 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
     },
     'update': function(element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        if (!element[hasfocusUpdatingProperty]) {
+        var value = !!ko.utils.unwrapObservable(valueAccessor()); //force boolean to compare with last value
+        if (!element[hasfocusUpdatingProperty] && element[hasfocusLastValue] !== value) {
             value ? element.focus() : element.blur();
             ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
         }
