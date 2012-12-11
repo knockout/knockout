@@ -1,16 +1,14 @@
 describe("Throttled observables", function() {
+    beforeEach(function() { waits(1); }); // Workaround for spurious timing-related failures on IE8 (issue #736)
 
     it("Should notify subscribers asynchronously after writes stop for the specified timeout duration", function() {
-        var observable, notifiedValues;
+        var observable = ko.observable('A').extend({ throttle: 50 });
+        var notifiedValues = [];
+        observable.subscribe(function(value) {
+            notifiedValues.push(value);
+        });
 
-        waits(10); // Was getting spurious failures (blocks running out of order, mainly on IE) if the first item queued wasn't a "wait"
         runs(function() {
-            observable = ko.observable('A').extend({ throttle: 50 });
-            notifiedValues = [];
-            observable.subscribe(function(value) {
-                notifiedValues.push(value);
-            });
-
             // Mutate a few times
             observable('B');
             observable('C');
@@ -39,6 +37,7 @@ describe("Throttled observables", function() {
 });
 
 describe("Throttled dependent observables", function() {
+    beforeEach(function() { waits(1); }); // Workaround for spurious timing-related failures on IE8 (issue #736)
 
     it("Should notify subscribers asynchronously after dependencies stop updating for the specified timeout duration", function() {
         var underlying = ko.observable();
@@ -52,14 +51,15 @@ describe("Throttled dependent observables", function() {
 
         // Check initial state
         expect(asyncDepObs()).toBeUndefined();
+        runs(function() {
+            // Mutate
+            underlying('New value');
+            expect(asyncDepObs()).toBeUndefined(); // Should not update synchronously
+            expect(notifiedValues.length).toEqual(0);
+        });
 
-        // Mutate
-        underlying('New value');
-        expect(asyncDepObs()).toBeUndefined(); // Should not update synchronously
-        expect(notifiedValues.length).toEqual(0);
-
-        // After 50ms, still shouldn't have evaluated
-        waits(50);
+        // After 20ms, still shouldn't have evaluated
+        waits(20);
         runs(function() {
             expect(asyncDepObs()).toBeUndefined(); // Should not update until throttle timeout
             expect(notifiedValues.length).toEqual(0);
@@ -68,7 +68,7 @@ describe("Throttled dependent observables", function() {
         // Now wait for throttle timeout
         waitsFor(function() {
             return notifiedValues.length > 0;
-        }, 60);
+        }, 110);
         runs(function() {
             expect(asyncDepObs()).toEqual('New value');
             expect(notifiedValues.length).toEqual(1);
@@ -84,12 +84,14 @@ describe("Throttled dependent observables", function() {
             return someDependency();
         }).extend({ throttle: 100 });
 
-        // Mutate a few times synchronously
-        expect(evaluationCount).toEqual(1); // Evaluates synchronously when first created, like all dependent observables
-        someDependency("A");
-        someDependency("B");
-        someDependency("C");
-        expect(evaluationCount).toEqual(1); // Should not re-evaluate synchronously when dependencies update
+        runs(function() {
+            // Mutate a few times synchronously
+            expect(evaluationCount).toEqual(1); // Evaluates synchronously when first created, like all dependent observables
+            someDependency("A");
+            someDependency("B");
+            someDependency("C");
+            expect(evaluationCount).toEqual(1); // Should not re-evaluate synchronously when dependencies update
+        });
 
         // Also mutate async
         waits(10);
