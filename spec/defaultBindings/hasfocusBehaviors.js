@@ -1,5 +1,6 @@
 describe('Binding: Hasfocus', function() {
     beforeEach(jasmine.prepareTestNode);
+    beforeEach(function() { waits(1); }); // Workaround for spurious focus-timing-related failures on IE8 (issue #736)
 
     it('Should respond to changes on an observable value by blurring or focusing the element', function() {
         var currentState;
