@@ -194,7 +194,7 @@ In the vast majority of cases, Knockout's native templating and the `foreach`, `
 By default, Knockout comes with support for [jquery.tmpl](http://api.jquery.com/jquery.tmpl/). To use it, you need to reference the following libraries, in this order:
 
     <!-- First jQuery -->     <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-    <!-- Then jQuery.tmpl --> <script src="http://github.com/downloads/SteveSanderson/knockout/jquery.tmpl.js"></script>
+    <!-- Then jQuery.tmpl --> <script src="jquery.tmpl.js"></script>
     <!-- Then Knockout -->    <script src="knockout-x.y.z.js"></script>
 
 Then, you can use jQuery.tmpl syntax in your templates. For example,
