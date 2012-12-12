@@ -120,18 +120,26 @@ body { font-family: arial; font-size: 14px; }
 	background: url(../img/download-button-bg.png);
 	width: 173px; height: 51px;
 	display: block;
-	margin-top: 0.6em;	
+	margin-top: 0.6em;
+	text-decoration: none !important;
 }
 .download-button p {
 	color: #005500;
 	font-size: 17px;
-	padding: 0.6em 0 0 9px;
+	padding: 10px 0 0 9px;
+	margin: 0px;
 }
 .download-button p.smallprint {
 	font-size: 12px;
 	padding: 0.1em 0 0 11px;
 }
 .download-button:hover p { text-decoration: underline; }
+
+/* Downloads */
+.download-panel { background-color: #EBB60F; padding: 8px; border-radius: 8px; margin-top: -20px; }
+.download-panel .download-button { padding-top: 3px; background-repeat: no-repeat; margin: auto; }
+.download-panel .download-button p { padding-top: 3px; }
+.download-debug-panel { font-size: 0.85em; margin: 1em; line-height: 1.3em; color: gray; }
 
 /* Columns */
 div.leftCol { position: absolute; width: 16em; padding-top: 1em; }
@@ -162,7 +170,7 @@ div.leftCol li.active, div.leftCol li.active a, div.leftCol li.active code, div.
 .homepageExample p { margin: 1.3em 0 0.8em 0; }
 
 /* Set a minimum height for the documentation content so the menu doesn't extend below the content */
-.documentation > .content { min-height: 1650px; }
+.documentation > .content { min-height: 1750px; }
 
 
 /* Footer */
