@@ -11,7 +11,7 @@ For more details, see
 
 ##Downloading or building Knockout
 
-You can [download released versions of Knockout](https://github.com/SteveSanderson/knockout/downloads) from Github.
+You can [download released versions of Knockout](http://knockoutjs.com/downloads/) from the project's website.
 
 Or, if you prefer to build the source yourself, clone the repo from Github, and then:
 
