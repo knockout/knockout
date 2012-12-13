@@ -2404,6 +2404,8 @@ ko.bindingHandlers['hasfocus'] = {
         }
     }
 };
+
+ko.bindingHandlers['hasFocus'] = ko.bindingHandlers['hasfocus']; // Make "hasFocus" an alias
 ko.bindingHandlers['html'] = {
     'init': function() {
         // Prevent binding on the dynamically-injected HTML (as developers are unlikely to expect that, and it has security implications)
@@ -3111,6 +3113,33 @@ ko.exportSymbol('__tr_ambtns', ko.templateRewriting.applyMemoizedBindingsToNextS
         ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
     }
 
+    function downloadTemplate(url, templateName, cb) {
+        var req = new XMLHttpRequest();
+        req.open("GET", url, true);
+        req.onreadystatechange = function () {
+            if (req.readyState != 4 || req.status != 200) return;
+
+            var templ = document.getElementById(templateName);
+            templ.text = req.responseText
+            templ.setAttribute('data-downloaded', 'true');
+            cb();
+        };
+        req.send();
+    };
+
+    function createBlankTemplate(templateName) {
+        var templ = document.createElement('script');
+        templ.id = templateName;
+        templ.type = 'text/html';
+        templ.setAttribute('data-downloaded', 'false');
+        document.body.appendChild(templ);
+    };
+
+    function isTemplateDownloaded(templateName) {
+        var templ = document.getElementById(templateName);
+        return (templ && templ.getAttribute('data-downloaded') === 'true')
+    }
+
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
@@ -3121,17 +3150,22 @@ ko.exportSymbol('__tr_ambtns', ko.templateRewriting.applyMemoizedBindingsToNextS
                     container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             }
+            //Suport init url templates
+            if(typeof bindingValue != 'string' && bindingValue['url'])
+                createBlankTemplate(bindingValue['url'].replace(/\W/g, ''))
             return { 'controlsDescendantBindings': true };
         },
         'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var templateName = ko.utils.unwrapObservable(valueAccessor()),
                 options = {},
                 shouldDisplay = true,
-                dataValue,
-                templateComputed = null;
+                dataValue = null,
+                templateComputed = null,
+                templateUrl = null;
 
             if (typeof templateName != "string") {
                 options = templateName;
+                templateUrl = options['url'];
                 templateName = options['name'];
 
                 // Support "if"/"ifnot" conditions
@@ -3143,19 +3177,30 @@ ko.exportSymbol('__tr_ambtns', ko.templateRewriting.applyMemoizedBindingsToNextS
                 dataValue = ko.utils.unwrapObservable(options['data']);
             }
 
-            if ('foreach' in options) {
-                // Render once for each data point (treating data set as empty if shouldDisplay==false)
-                var dataArray = (shouldDisplay && options['foreach']) || [];
-                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
-            } else if (!shouldDisplay) {
-                ko.virtualElements.emptyNode(element);
-            } else {
-                // Render once for this single data point (or use the viewModel if no data was provided)
-                var innerBindingContext = ('data' in options) ?
-                    bindingContext['createChildContext'](dataValue, options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
-                    bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
-                templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
+            function bindTemplate(templateName)
+            {
+                if ('foreach' in options) {
+                    // Render once for each data point (treating data set as empty if shouldDisplay==false)
+                    var dataArray = (shouldDisplay && options['foreach']) || [];
+                    templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
+                } else if (!shouldDisplay) {
+                    ko.virtualElements.emptyNode(element);
+                } else {
+                    // Render once for this single data point (or use the viewModel if no data was provided)
+                    var innerBindingContext = ('data' in options) ?
+                        bindingContext['createChildContext'](dataValue, options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
+                        bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
+                    templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
+                }
             }
+
+            //generate a friendly id from url, and check if already downloaded
+            if (shouldDisplay && templateUrl && (templateName = templateUrl.replace(/\W/g, ''), !isTemplateDownloaded(templateName)))
+                downloadTemplate(templateUrl, templateName, function() {
+                    bindTemplate(templateName);
+                });
+            else
+                bindTemplate(templateName);
 
             // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
             disposeOldComputedAndStoreNewOne(element, templateComputed);
@@ -3549,7 +3594,7 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);
         };
 
         this['addTemplate'] = function(templateName, templateMarkup) {
-            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
+            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "<" + "/script>");
         };
 
         if (jQueryTmplVersion > 0) {
