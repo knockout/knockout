@@ -251,4 +251,53 @@ describe('Observable', function() {
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
     });
+
+    if(Object.defineProperty) /* EcmaScript 5 code */
+    it('should be possible register dependency inside get property', function () {
+        var obj = {
+            get name() {
+                this.__name.registerDependency();
+                return this._name;
+            },
+            set name(value) {
+                this.__name.valueWillMutate();
+                this._name = value;
+                this.__name.valueHasMutated();
+            },
+            __name    : new ko.observable()
+        };
+
+        obj.__nameComp = new ko.computed(function () {
+            return this.name + " - tested"; /*dependency of get property name*/
+        }, obj);
+
+        obj.name = "abraão";
+
+        expect(obj.__nameComp()).toEqual("abraão - tested");
+    });
+
+    it('should be possible register dependency inside member function ', function () {
+        var obj = {
+            name: function(value) {
+                if(!value){
+                    this.__name.registerDependency();
+                    return this._name;
+                } else {
+                    this.__name.valueWillMutate();
+                    this._name = value;
+                    this.__name.valueHasMutated();
+                    return this;
+                }
+            },
+            __name: new ko.observable()
+        };
+
+        obj.__nameComp = new ko.computed(function () {
+            return this.name() + " - tested"; /*dependency of get property name*/
+        }, obj);
+
+        obj.name("abraão");
+
+        expect(obj.__nameComp()).toEqual("abraão - tested");
+    });
 });
