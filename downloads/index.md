@@ -25,16 +25,13 @@ Simply reference the JavaScript file using a `<script>` tag somewhere on your HT
 
 Of course, update the `src` attribute to match the location where you put the downloaded file. Next, if you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](../documentation/observables.html).
 
-
-
-
 ### Content Delivery Networks (CDNs)
 
 To give your users the fastest download speeds, you might instead prefer to reference `knockout.js` on one of the following third-party CDNs:
 
 * **Microsoft Ajax CDN** ([about](http://www.asp.net/ajaxlibrary/CDN.ashx))
 
-  * [Knockout version 2.1.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.1.0.js) (*warning: out of date - update coming soon*)
+  * [Knockout version 2.2.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.0.js)
 
 * **CDNJS** ([about](http://cdnjs.com/))
 
