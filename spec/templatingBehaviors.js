@@ -867,4 +867,38 @@ describe('Templating', function() {
         // Since the actual template markup was invalid, we don't really care what the
         // resulting DOM looks like. We are only verifying there were no exceptions.
     });
+
+    it('Should support downloading templates from a url', function() {
+        var server = sinon.fakeServer.create();
+        server.respondWith('templates/temp1.htm', [200,
+            { "Content-Type": "text/html" },
+            "<div>a template</div>"]
+        );
+        testNode.innerHTML = "<div data-bind='template: { url: \"templates/temp1.htm\"}'></div>";
+        ko.applyBindings(null, testNode);
+        //flush requests
+        server.respond();
+        expect(testNode.childNodes[0]).toContainHtml("<div>a template</div>");
+        server.restore();
+    });
+
+    it('Should defer downloading url templates if the "\if\" condition is specified', function() {
+        var server = sinon.fakeServer.create();
+        testNode.innerHTML = "<div data-bind='template: { url: \"templates/temp2.htm\", if: shouldShow}'></div>";
+        var viewModel = {shouldShow: ko.observable(false)};
+        ko.applyBindings(viewModel, testNode);
+        //flush requests (should not be any)
+        server.respond();
+
+        expect(testNode.childNodes[0]).toContainHtml('');
+        server.respondWith('templates/temp2.htm', [200,
+            { "Content-Type": "text/html" },
+            "<div>an if template</div>"]
+        );
+        viewModel.shouldShow(true);
+        //flush requests (should be 1)
+        server.respond();
+        expect(testNode.childNodes[0]).toContainHtml("<div>an if template</div>");
+        server.restore();
+    });
 })

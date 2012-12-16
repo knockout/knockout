@@ -46,4 +46,11 @@ describe('Binding: Text', function() {
         expect(testNode).toContainText("xxx ");
         expect(testNode).toContainHtml("xxx <!--ko text: undefined--><!--/ko-->");
     });
+
+    it('Should apply string interpolation if the model value applied is an array', function() {
+        var model = { textProps: ko.observableArray(['2', ko.observable('4'), '8'])};
+        testNode.innerHTML = '<span data-bind="text:textProps">The values {0} * {1} = {2}</span>';
+        ko.applyBindings(model, testNode);
+        expect(testNode).toContainText('The values 2 * 4 = 8');
+    });
 });
