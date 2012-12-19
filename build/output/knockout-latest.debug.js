@@ -250,6 +250,10 @@ ko.utils = new (function () {
             return ko.utils.domNodeIsContainedBy(node, node.ownerDocument);
         },
 
+        anyDomNodeIsAttachedToDocument: function(nodes) {
+            return !!ko.utils.arrayFirst(nodes, ko.utils.domNodeIsAttachedToDocument);
+        },
+
         tagNameLower: function(element) {
             // For HTML elements, tagName will always be upper case; for XHTML elements, it'll be lower case.
             // Possible future optimization: If we know it's an element from an XHTML document (not HTML),
@@ -993,7 +997,7 @@ ko.observable = function (initialValue) {
         }
         else {
             // Read
-            ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
+            observable.registerDependency(); // The caller only needs to be notified of changes if they did a "read" operation
             return _latestValue;
         }
     }
@@ -1002,11 +1006,13 @@ ko.observable = function (initialValue) {
     observable.peek = function() { return _latestValue };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.registerDependency = function () { ko.dependencyDetection.registerDependency(observable); }
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
+    ko.exportProperty(observable, "registerDependency", observable.registerDependency);
 
     return observable;
 }
@@ -2370,6 +2376,7 @@ ko.bindingHandlers['foreach'] = {
 ko.expressionRewriting.bindingRewriteValidators['foreach'] = false; // Can't rewrite control flow bindings
 ko.virtualElements.allowedBindings['foreach'] = true;
 var hasfocusUpdatingProperty = '__ko_hasfocusUpdating';
+var hasfocusLastValue = '__ko_hasfocusLastValue';
 ko.bindingHandlers['hasfocus'] = {
     'init': function(element, valueAccessor, allBindingsAccessor) {
         var handleElementFocusChange = function(isFocused) {
@@ -2386,6 +2393,9 @@ ko.bindingHandlers['hasfocus'] = {
             }
             var modelValue = valueAccessor();
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
+
+            //cache the latest value, so we can avoid unnecessarily calling focus/blur in the update function
+            element[hasfocusLastValue] = isFocused;
             element[hasfocusUpdatingProperty] = false;
         };
         var handleElementFocusIn = handleElementFocusChange.bind(null, true);
@@ -2397,13 +2407,15 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
     },
     'update': function(element, valueAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
-        if (!element[hasfocusUpdatingProperty]) {
+        var value = !!ko.utils.unwrapObservable(valueAccessor()); //force boolean to compare with last value
+        if (!element[hasfocusUpdatingProperty] && element[hasfocusLastValue] !== value) {
             value ? element.focus() : element.blur();
             ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
         }
     }
 };
+
+ko.bindingHandlers['hasFocus'] = ko.bindingHandlers['hasfocus']; // Make "hasFocus" an alias
 ko.bindingHandlers['html'] = {
     'init': function() {
         // Prevent binding on the dynamically-injected HTML (as developers are unlikely to expect that, and it has security implications)
@@ -3337,7 +3349,7 @@ ko.exportSymbol('utils.compareArrays', ko.utils.compareArrays);
             // of which nodes would be deleted if valueToMap was itself later removed
             mappedNodes.splice(0, mappedNodes.length);
             ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
-        }, null, { disposeWhenNodeIsRemoved: containerNode, disposeWhen: function() { return (mappedNodes.length == 0) || !ko.utils.domNodeIsAttachedToDocument(mappedNodes[0]) } });
+        }, null, { disposeWhenNodeIsRemoved: containerNode, disposeWhen: function() { return !ko.utils.anyDomNodeIsAttachedToDocument(mappedNodes); } });
         return { mappedNodes : mappedNodes, dependentObservable : (dependentObservable.isActive() ? dependentObservable : undefined) };
     }
 
@@ -3549,7 +3561,7 @@ ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);
         };
 
         this['addTemplate'] = function(templateName, templateMarkup) {
-            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "</script>");
+            document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "<" + "/script>");
         };
 
         if (jQueryTmplVersion > 0) {

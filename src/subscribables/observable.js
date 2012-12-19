@@ -18,7 +18,7 @@ ko.observable = function (initialValue) {
         }
         else {
             // Read
-            ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
+            observable.registerDependency(); // The caller only needs to be notified of changes if they did a "read" operation
             return _latestValue;
         }
     }
@@ -27,11 +27,13 @@ ko.observable = function (initialValue) {
     observable.peek = function() { return _latestValue };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.registerDependency = function () { ko.dependencyDetection.registerDependency(observable); }
     ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
+    ko.exportProperty(observable, "registerDependency", observable.registerDependency);
 
     return observable;
 }

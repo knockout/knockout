@@ -1,5 +1,6 @@
 *.suo
 *.swp
+*.csproj
 *.csproj.user
 bin
 obj
