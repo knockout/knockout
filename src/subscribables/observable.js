@@ -6,11 +6,17 @@ ko.observable = function (initialValue) {
     function observable() {
         if (arguments.length > 0) {
             // Write
+            var argv = arguments[0];
+
+            // Handle function given as value
+            if (typeof argv === 'function') {
+                argv = argv(_latestValue);
+            }
 
             // Ignore writes if the value hasn't changed
-            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, argv)) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                _latestValue = argv;
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }

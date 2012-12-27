@@ -15,6 +15,14 @@ describe('Observable', function() {
         instance(123);
     });
 
+    it('Should be able to write values as the result of a function', function () {
+        var instance = new ko.observable('a');
+        instance(function (old) {
+            return old.toUpperCase();
+        });
+        expect(instance()).toEqual('A');
+    })
+
     it('Should be able to write to multiple observable properties on a model object using chaining syntax', function() {
         var model = {
             prop1: new ko.observable(),
