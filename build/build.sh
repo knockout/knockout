@@ -5,7 +5,7 @@ handle_fail() {
     exit 1
 }
 
-tools/check-trailing-space-linux || handle_fail
+tools/check-trailing-space.sh || handle_fail
 
 OutDebugFile='output/knockout-latest.debug.js'
 OutMinFile='output/knockout-latest.js'
