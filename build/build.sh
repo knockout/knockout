@@ -46,7 +46,7 @@ sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
 # Delete the odd files left behind on Mac
 rm -f output/*.js~
 
-echo; echo "Build succeeded"
-
 # Run tests in Phantomjs if available
-command -v phantomjs >/dev/null && (cd ..; echo; phantomjs spec/runner.phantom.js)
+command -v phantomjs >/dev/null && (cd ..; echo; phantomjs spec/runner.phantom.js || handle_fail)
+
+echo; echo "Build succeeded"
