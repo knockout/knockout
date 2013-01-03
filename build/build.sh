@@ -5,6 +5,9 @@ handle_fail() {
     exit 1
 }
 
+# Ensure we're in the build directory
+cd `dirname $0`
+
 tools/check-trailing-space.sh || handle_fail
 
 OutDebugFile='output/knockout-latest.debug.js'

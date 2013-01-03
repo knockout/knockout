@@ -1,6 +1,3 @@
 language: node_js
-before_script:
-  - "cd build"
 script:
-  - "./build.sh"
-
+  - "build/build.sh"
