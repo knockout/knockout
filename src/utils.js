@@ -105,6 +105,17 @@ ko.utils = new (function () {
             return array;
         },
 
+        addOrRemoveItem: function(array, value, included) {
+            var existingEntryIndex = array.indexOf ? array.indexOf(value) : utils.arrayIndexOf(array, value);
+            if (existingEntryIndex < 0) {
+                if (included)
+                    array.push(value);
+            } else {
+                if (!included)
+                    array.splice(existingEntryIndex, 1);
+            }
+        },
+
         extend: function (target, source) {
             if (source) {
                 for(var prop in source) {
@@ -288,17 +299,10 @@ ko.utils = new (function () {
 
         toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
             if (classNames) {
-                var cssClassNameRegex = /[\w-]+/g,
+                var cssClassNameRegex = /\S+/g,
                     currentClassNames = node.className.match(cssClassNameRegex) || [];
                 ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                    var indexOfClass = ko.utils.arrayIndexOf(currentClassNames, className);
-                    if (indexOfClass >= 0) {
-                        if (!shouldHaveClass)
-                            currentClassNames.splice(indexOfClass, 1);
-                    } else {
-                        if (shouldHaveClass)
-                            currentClassNames.push(className);
-                    }
+                    ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
                 });
                 node.className = currentClassNames.join(" ");
             }
