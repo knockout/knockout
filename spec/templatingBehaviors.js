@@ -418,7 +418,7 @@ describe('Templating', function() {
 
         // Bind against initial array containing one entry. UI just shows "original"
         var myArray = ko.observableArray(["original"]);
-        ko.applyBindings({ items: myArray });
+        ko.applyBindings({ items: myArray }, testNode);
         expect(testNode.childNodes[0]).toContainHtml("<div>original</div>");
 
         // Now replace the entire array contents with one different entry.
@@ -437,7 +437,7 @@ describe('Templating', function() {
 
         // Bind against initial array containing one entry.
         var myArray = ko.observableArray(["original"]);
-        ko.applyBindings({ items: myArray });
+        ko.applyBindings({ items: myArray }, testNode);
         expect(testNode.childNodes[0]).toContainHtml("<div>original</div>inner <span>123</span>x");
 
         // Now replace the entire array contents with one different entry.
@@ -454,7 +454,7 @@ describe('Templating', function() {
 
         // Bind against array, referencing an observable property
         var myItem = { name: ko.observable("a") };
-        ko.applyBindings({ items: [myItem] });
+        ko.applyBindings({ items: [myItem] }, testNode);
         expect(testNode.childNodes[0]).toContainHtml("<div>a</div>");
 
         // Modify the observable property and check that UI is updated
@@ -803,6 +803,7 @@ describe('Templating', function() {
             testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\" }'></div>";
 
             var didThrow = false;
+            ko.utils.domData.clear(testNode);
             try { ko.applyBindings({ someData: { childProp: 'abc' } }, testNode) }
             catch (ex) {
                 didThrow = true;
