@@ -95,7 +95,7 @@
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!bindings) {
             if (alreadyBound) {
-                throw Error("Knockout doesn't support applying bindings multiple times.");
+                throw Error("You cannot apply bindings multiple times to the same element.");
             }
             ko.utils.domData.set(node, boundElementDomDataKey, true);
         }

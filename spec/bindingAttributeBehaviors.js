@@ -449,7 +449,7 @@ describe('Binding attribute syntax', function() {
         try { ko.applyBindings({}, testNode); }
         catch (ex) {
             didThrow = true;
-            expect(ex.message).toEqual("Knockout doesn't support applying bindings multiple times.");
+            expect(ex.message).toEqual("You cannot apply bindings multiple times to the same element.");
         }
         if (!didThrow)
             throw new Error("Did not prevent multiple applyBindings calls");
