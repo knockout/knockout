@@ -264,6 +264,7 @@ describe('Binding: Value', function() {
         expect(observable()).toEqual("A");
 
         // ... and with value specified before options
+        ko.utils.domData.clear(testNode);
         testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
         observable(undefined);
         expect(observable()).toEqual(undefined);
