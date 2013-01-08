@@ -10,7 +10,7 @@
     // IE 9 cannot reliably read the "nodeValue" property of a comment node (see https://github.com/SteveSanderson/knockout/issues/186)
     // but it does give them a nonstandard alternative property called "text" that it can read reliably. Other browsers don't have that property.
     // So, use node.text where available, and node.nodeValue elsewhere
-    var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
+    var commentNodesHaveTextProperty = document && document.createComment("test").text === "<!--test-->";
 
     var startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*ko(?:\s+(.+\s*\:[\s\S]*))?\s*-->$/ : /^\s*ko(?:\s+(.+\s*\:[\s\S]*))?\s*$/;
     var endCommentRegex =   commentNodesHaveTextProperty ? /^<!--\s*\/ko\s*-->$/ : /^\s*\/ko\s*$/;

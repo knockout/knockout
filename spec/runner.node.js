@@ -1,28 +1,18 @@
+console.log("Running Knockout tests in Node.js");
+
 var fs = require('fs');
 var jasmine = require('./lib/jasmine-1.2.0/jasmine');
 
 // export jasmine globals
 for (var key in jasmine) {
-  global[key] = jasmine[key];
+    global[key] = jasmine[key];
 }
 
 // add our jasmine extensions to the exported globals
 require('./lib/jasmine.extensions');
 
 // export ko globals
-if (process.argv.length > 2) {
-  global.ko = require(process.argv[2]);
-} else {
-  // equivalent of  ../build/knockout-raw.js
-  global.DEBUG = true;
-  global.ko = global.koExports = {};
-  global.knockoutDebugCallback = function(sources) {
-    eval(sources.reduce(function(all, source) {
-      return all + '\n' + fs.readFileSync(source);
-    }, ''));
-  };
-  require('../build/fragments/source-references');
-}
+global.ko = require('../build/output/knockout-latest.js');
 
 // reference behaviors that should work out of browser
 require('./arrayEditDetectionBehaviors');
@@ -40,28 +30,28 @@ var env = jasmine.jasmine.getEnv();
 
 // create reporter to return results
 function failureFilter(item) {
-  return !item.passed();
+    return !item.passed();
 }
 env.addReporter({
-  reportRunnerResults:function (runner) {
-    var results = runner.results();
-      runner.suites().map(function (suite) {
-        // hack around suite results not having a description
-        var suiteResults = suite.results();
-        suiteResults.description = suite.description;
-        return suiteResults;
-      }).filter(failureFilter).forEach(function (suite) {
-          console.error(suite.description);
-          suite.getItems().filter(failureFilter).forEach(function (spec) {
-            console.error('\t' + spec.description);
-            spec.getItems().filter(failureFilter).forEach(function (expectation) {
-              console.error('\t\t' + expectation.message);
+    reportRunnerResults:function (runner) {
+        var results = runner.results();
+        runner.suites().map(function (suite) {
+            // hack around suite results not having a description
+            var suiteResults = suite.results();
+            suiteResults.description = suite.description;
+            return suiteResults;
+        }).filter(failureFilter).forEach(function (suite) {
+            console.error(suite.description);
+            suite.getItems().filter(failureFilter).forEach(function (spec) {
+                console.error('\t' + spec.description);
+                spec.getItems().filter(failureFilter).forEach(function (expectation) {
+                    console.error('\t\t' + expectation.message);
+                });
             });
-          });
         });
-    console.log("Total:" + results.totalCount + " Passed:" + results.passedCount + " Failed:" + results.failedCount);
-    process.exit(results.failedCount);
-  }
+        console.log("Total:" + results.totalCount + " Passed:" + results.passedCount + " Failed:" + results.failedCount);
+        process.exit(results.failedCount);
+    }
 });
 
 // good to go

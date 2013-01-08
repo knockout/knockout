@@ -153,7 +153,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     // plus adds a "disposeWhen" callback that, on each evaluation, disposes if the node was removed by some other means.)
     if (disposeWhenNodeIsRemoved && isActive()) {
         dispose = function() {
-            ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, arguments.callee);
+            ko.utils.domNodeDisposal.removeDisposeCallback(disposeWhenNodeIsRemoved, dispose);
             disposeAllSubscriptionsToDependencies();
         };
         ko.utils.domNodeDisposal.addDisposeCallback(disposeWhenNodeIsRemoved, dispose);
