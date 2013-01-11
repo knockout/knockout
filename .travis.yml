@@ -5,4 +5,6 @@ before_script:
   - "cd .."
 script:
   - "phantomjs spec/runner.phantom.js"
+  - "node spec/runner.node.js"
+
 
