@@ -52,10 +52,9 @@ ko.subscribable['fn'] = {
 
     getSubscriptionsCount: function () {
         var total = 0;
-        for (var eventName in this._subscriptions) {
-            if (this._subscriptions.hasOwnProperty(eventName))
-                total += this._subscriptions[eventName].length;
-        }
+        ko.utils.objectForEach(this._subscriptions, function(subscriptions, eventName) {
+            total += subscriptions.length;
+        });
         return total;
     },
 

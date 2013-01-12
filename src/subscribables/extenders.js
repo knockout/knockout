@@ -31,12 +31,12 @@ ko.extenders = {
 function applyExtenders(requestedExtenders) {
     var target = this;
     if (requestedExtenders) {
-        for (var key in requestedExtenders) {
+        ko.utils.objectForEach(requestedExtenders, function(value, key) {
             var extenderHandler = ko.extenders[key];
             if (typeof extenderHandler == 'function') {
-                target = extenderHandler(target, requestedExtenders[key]);
+                target = extenderHandler(target, value);
             }
-        }
+        });
     }
     return target;
 }
