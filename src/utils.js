@@ -1,18 +1,25 @@
-ko.utils = new (function () {
+ko.utils = (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+
+    var objectForEach = function(obj, action) {
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                action(obj[prop], prop);
+            }
+        }
+    };
 
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
     var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
     knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
     knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
-    for (var eventType in knownEvents) {
-        var knownEventsForType = knownEvents[eventType];
+    objectForEach(knownEvents, function(knownEventsForType, eventType) {
         if (knownEventsForType.length) {
             for (var i = 0, j = knownEventsForType.length; i < j; i++)
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
-    }
+    });
     var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
@@ -115,6 +122,8 @@ ko.utils = new (function () {
             }
             return target;
         },
+
+        objectForEach: objectForEach,
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
@@ -434,24 +443,24 @@ ko.utils = new (function () {
             form.style.display = "none";
             form.action = url;
             form.method = "post";
-            for (var key in data) {
+            objectForEach(data, function(value, key) {
                 var input = document.createElement("input");
                 input.name = key;
-                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
+                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(value));
                 form.appendChild(input);
-            }
-            for (var key in params) {
+            });
+            objectForEach(params, function(value, key) {
                 var input = document.createElement("input");
                 input.name = key;
-                input.value = params[key];
+                input.value = value;
                 form.appendChild(input);
-            }
+            });
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         }
     }
-})();
+}());
 
 ko.exportSymbol('utils', ko.utils);
 ko.exportSymbol('utils.arrayForEach', ko.utils.arrayForEach);
