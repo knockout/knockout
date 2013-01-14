@@ -5,10 +5,16 @@ handle_fail() {
     exit 1
 }
 
-tools/check-trailing-space-linux || handle_fail
+# Ensure we're in the build directory
+cd `dirname $0`
+
+tools/check-trailing-space.sh || handle_fail
 
 OutDebugFile='output/knockout-latest.debug.js'
 OutMinFile='output/knockout-latest.js'
+
+# Delete output and temporary files (ensures we can writ to them)
+rm -f $OutDebugFile $OutMinFile $OutDebugFile.temp $OutMinFile.temp
 
 # Combine the source files
 SourceFiles=`grep js < fragments/source-references.js | # Find JS references
@@ -42,4 +48,8 @@ sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
 
 # Delete the odd files left behind on Mac
 rm -f output/*.js~
+
+# Run tests in Phantomjs if available
+command -v phantomjs >/dev/null && (cd ..; echo; phantomjs spec/runner.phantom.js || handle_fail)
+
 echo; echo "Build succeeded"

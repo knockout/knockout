@@ -13,10 +13,15 @@ For more details, see
 
 You can [download released versions of Knockout](http://knockoutjs.com/downloads/) from the project's website.
 
-Or, if you prefer to build the source yourself, clone the repo from Github, and then:
+Or, if you prefer to build the source yourself, clone the repo from Github, and then run `./build/build.sh`.
 
-* To build on Linux or Mac, run `cd build` then `./build-linux`
-* To build on Windows, run `build\build-windows.bat`
+If you're running Windows, you must execute `./build/build.sh` from inside Git Bash, *not* the built-in Windows command prompt. If you have [Git for Windows](http://git-scm.com/downloads) installed, then you already have Git Bash installed.
+
+## Running the tests
+
+If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `build.sh` script will automatically run the specification suite and report its results.
+
+Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
 ##License
 
