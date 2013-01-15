@@ -437,4 +437,55 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({ myObservable: observable }, testNode);
         expect(hasUpdatedSecondBinding).toEqual(true);
     });
+
+    it('Should not allow multiple applyBindings calls for the same element', function() {
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+
+        // First call is fine
+        ko.applyBindings({}, testNode);
+
+        // Second call throws an error
+        var didThrow = false;
+        try { ko.applyBindings({}, testNode); }
+        catch (ex) {
+            didThrow = true;
+            expect(ex.message).toEqual("You cannot apply bindings multiple times to the same element.");
+        }
+        if (!didThrow)
+            throw new Error("Did not prevent multiple applyBindings calls");
+    });
+
+    it('Should allow multiple applyBindings calls for the same element if cleanNode is used', function() {
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+
+        // First call
+        ko.applyBindings({}, testNode);
+
+        // cleanNode called before second call
+        ko.cleanNode(testNode);
+        ko.applyBindings({}, testNode);
+        // Should not throw any errors
+    });
+
+    it('Should allow multiple applyBindings calls for the same element if subsequent call provides a binding', function() {
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+
+        // First call uses data-bind
+        ko.applyBindings({}, testNode);
+
+        // Second call provides a binding
+        ko.applyBindingsToNode(testNode, { visible: false }, {});
+        // Should not throw any errors
+    });
+
+    it('Should allow multiple applyBindings calls for the same element if initial call provides a binding', function() {
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+
+        // First call provides a binding
+        ko.applyBindingsToNode(testNode, { visible: false }, {});
+
+        // Second call uses data-bind
+        ko.applyBindings({}, testNode);
+        // Should not throw any errors
+    });
 });
