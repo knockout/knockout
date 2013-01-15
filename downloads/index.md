@@ -12,7 +12,7 @@ Get the latest stable production build of Knockout.js:
 </div>
 
 <div class="download-debug-panel">
-	Also available: <a href='knockout-2.2.0.debug.js'>debug build</a>.
+	Also available: <a href='knockout-2.2.1.debug.js'>debug build</a>.
 	<strong>Note:</strong> This is only intended to help you understand how Knockout works. Don't use it for normal application
 	development, because it exposes additional unsupported private APIs.
 </div>
@@ -39,6 +39,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v2.2.1](knockout-2.2.1.js) ([debug](knockout-2.2.1.debug.js)) --- January 15th, 2013
 * [v2.2.0](knockout-2.2.0.js) ([debug](knockout-2.2.0.debug.js)) --- October 28th, 2012
 * [v2.2.0 Release Candidate](knockout-2.2.0rc.js) ([debug](knockout-2.2.0rc.debug.js)) --- October 1st, 2012
 * [v2.1.0](knockout-2.1.0.js) ([debug](knockout-2.1.0.debug.js)) --- May 7th, 2012
