@@ -63,9 +63,9 @@
             if (typeof rootObject['toJSON'] == 'function')
                 visitorCallback('toJSON');
         } else {
-            ko.utils.objectForEach(rootObject, function(dummy, propertyName) {
+            for (var propertyName in rootObject) {
                 visitorCallback(propertyName);
-            });
+            }
         }
     };
 
