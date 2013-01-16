@@ -53,8 +53,13 @@ ko.utils = new (function () {
                  return Array.prototype.indexOf.call(array, item);
                 };
             return function (array, item) {
-                for (var i = 0, j = array.length; i < j; i++)
-                    if (array[i] === item)
+                var t = Object(array);
+                var len = t.length >>> 0;
+                if (len === 0) {
+                    return -1;
+                }
+                for (var i = 0; i < len; i++)
+                    if (i in t && t[i] === item)
                         return i;
                 return -1;
             }
