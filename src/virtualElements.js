@@ -170,7 +170,7 @@
                         if (unbalancedTags) {
                             // Fix up the DOM by moving the unbalanced tags to where they most likely were intended to be placed - *after* the child
                             var nodeToInsertBefore = childNode.nextSibling;
-                            for (var i = 0; i < unbalancedTags.length; i++) {
+                            for (var i = 0, len = unbalancedTags.length; i < len; i++) {
                                 if (nodeToInsertBefore)
                                     elementVerified.insertBefore(unbalancedTags[i], nodeToInsertBefore);
                                 else

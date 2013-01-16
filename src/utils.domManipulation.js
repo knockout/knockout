@@ -83,7 +83,7 @@
             } else {
                 // ... otherwise, use KO's own parsing logic.
                 var parsedNodes = ko.utils.parseHtmlFragment(html);
-                for (var i = 0; i < parsedNodes.length; i++)
+                for (var i = 0, len = parsedNodes.length; i < len; i++)
                     node.appendChild(parsedNodes[i]);
             }
         }
