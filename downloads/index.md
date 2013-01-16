@@ -31,7 +31,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 * **Microsoft Ajax CDN** ([about](http://www.asp.net/ajaxlibrary/CDN.ashx))
 
-  * [Knockout version 2.2.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.0.js)
+  * [Knockout version 2.2.1](http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js)
 
 * **CDNJS** ([about](http://cdnjs.com/))
 
