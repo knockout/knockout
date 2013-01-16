@@ -47,14 +47,18 @@ ko.utils = new (function () {
                 action(array[i]);
         },
 
-        arrayIndexOf: function (array, item) {
+        arrayIndexOf: (function () {
             if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
-            for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] === item)
-                    return i;
-            return -1;
-        },
+                return function (array, item) {
+                 return Array.prototype.indexOf.call(array, item);
+                };
+            return function (array, item) {
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (array[i] === item)
+                        return i;
+                return -1;
+            }
+        })(),
 
         arrayFirst: function (array, predicate, predicateOwner) {
             for (var i = 0, j = array.length; i < j; i++)
