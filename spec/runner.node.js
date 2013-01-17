@@ -12,7 +12,21 @@ for (var key in jasmine) {
 require('./lib/jasmine.extensions');
 
 // export ko globals
-global.ko = require('../build/output/knockout-latest.js');
+if (process.argv.length > 2 && process.argv[2] == '--source') {
+    // equivalent of  ../build/knockout-raw.js
+    global.DEBUG = true;
+    global.ko = global.koExports = {};
+    global.knockoutDebugCallback = function(sources) {
+        sources.unshift('build/fragments/extern-pre.js');
+        sources.push('build/fragments/extern-post.js');
+        eval(sources.reduce(function(all, source) {
+            return all + '\n' + fs.readFileSync(source);
+        }, ''));
+    };
+    require('../build/fragments/source-references');
+} else {
+    global.ko = require('../build/output/knockout-latest.js');
+}
 
 // reference behaviors that should work out of browser
 require('./arrayEditDetectionBehaviors');
