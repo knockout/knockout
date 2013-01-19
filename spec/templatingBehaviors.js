@@ -107,6 +107,12 @@ describe('Templating', function() {
         expect(testNode.innerHTML).toEqual("ABC");
     });
 
+    it('Should be able to render an empty template', function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ emptyTemplate: "" }));
+        ko.renderTemplate("emptyTemplate", null, null, testNode);
+        expect(testNode.childNodes.length).toEqual(0);
+    });
+
     it('Should be able to access newly rendered/inserted elements in \'afterRender\' callaback', function () {
         var passedElement, passedDataItem;
         var myCallback = function(elementsArray, dataItem) {
