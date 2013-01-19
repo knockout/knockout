@@ -177,11 +177,11 @@ ko.expressionRewriting = (function () {
         // checkIfDifferent:    If true, and if the property being written is a writable observable, the value will only be written if
         //                      it is !== existing value on that writable observable
         writeValueToProperty: function(property, allBindingsAccessor, key, value, checkIfDifferent) {
-            if (!property || !ko.isWriteableObservable(property)) {
+            if (!property || !ko.isObservable(property)) {
                 var propWriters = allBindingsAccessor()['_ko_property_writers'];
                 if (propWriters && propWriters[key])
                     propWriters[key](value);
-            } else if (!checkIfDifferent || property.peek() !== value) {
+            } else if (ko.isWriteableObservable(property) && (!checkIfDifferent || property.peek() !== value)) {
                 property(value);
             }
         }
