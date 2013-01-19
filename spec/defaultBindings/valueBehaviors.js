@@ -80,6 +80,21 @@ describe('Binding: Value', function() {
         expect(isValid()).toEqual(true);
     });
 
+    it('Should ignore node changes when bound to a read-only observable', function() {
+        var computedValue = ko.computed(function() { return 'zzz' });
+        var vm = { prop: computedValue };
+
+        testNode.innerHTML = "<input data-bind='value: prop' />";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0].value).toEqual("zzz");
+
+        // Change the input value and trigger change event; verify that the view model wasn't changed
+        testNode.childNodes[0].value = "yyy";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        expect(vm.prop).toEqual(computedValue);
+        expect(computedValue()).toEqual('zzz');
+    });
+
     it('For non-observable property values, should catch the node\'s onchange and write values back to the property', function () {
         var model = { modelProperty123: 456 };
         testNode.innerHTML = "<input data-bind='value: modelProperty123' />";
