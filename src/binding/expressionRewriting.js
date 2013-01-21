@@ -192,6 +192,7 @@ ko.exportSymbol('expressionRewriting', ko.expressionRewriting);
 ko.exportSymbol('expressionRewriting.bindingRewriteValidators', ko.expressionRewriting.bindingRewriteValidators);
 ko.exportSymbol('expressionRewriting.parseObjectLiteral', ko.expressionRewriting.parseObjectLiteral);
 ko.exportSymbol('expressionRewriting.preProcessBindings', ko.expressionRewriting.preProcessBindings);
+ko.exportSymbol('expressionRewriting.writeValueToProperty', ko.expressionRewriting.writeValueToProperty);
 
 // For backward compatibility, define the following aliases. (Previously, these function names were misleading because
 // they referred to JSON specifically, even though they actually work with arbitrary JavaScript object literal expressions.)
