@@ -57,7 +57,7 @@ It's important to understand that the `if` binding really is vital to make this 
  
    The expression you wish to evaluate. If it evaluates to `true` (or a true-ish value), the contained markup will be present in the document, and any `data-bind` attributes on it will be applied. If your expression evaluates to `false`, the contained markup will be removed from your document without first applying any bindings to it.
 
-   If your expression involves any observable values, the expression will be re-evaluated whenever any of them change. Correspondingly, the markup within your `if` block can be added or removed dynamically as the result of the expression changes. `data-bind` attributes will be applied to a new copy of the contained markup whenever it is re-added.
+   If your expression involves any observable values, the expression will be re-evaluated whenever any of them change. Correspondingly, the markup within your `if` block can be added or removed dynamically as the result of the expression changes. `data-bind` attributes will be applied to **a new copy of the contained markup** whenever it is re-added.
      
  * Additional parameters 
 
