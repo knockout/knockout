@@ -1,4 +1,4 @@
-var attrHtmlToJavascriptMap = { 'class': 'className', 'for': 'htmlFor' };
+var attrHtmlToJavascriptMap = { 'class': 'className', 'for': 'htmlFor', 'type': 'type' };
 ko.bindingHandlers['attr'] = {
     'update': function(element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
