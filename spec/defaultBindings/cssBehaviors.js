@@ -36,17 +36,31 @@ describe('Binding: CSS class name', function() {
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
     });
 
-    it('Should set/change dynamic CSS class(es) if string is specified', function() {
-        var observable1 = new ko.observable("");
-        testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: someModelProperty'>Hallo</div>";
-        ko.applyBindings({ someModelProperty: observable1 }, testNode);
+    it('Should set/change dynamic CSS class(es) if string is specified', function () {
+    	var observable1 = new ko.observable("");
+    	testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: someModelProperty'>Hallo</div>";
+    	ko.applyBindings({ someModelProperty: observable1 }, testNode);
 
-        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
-        observable1("my-Rule");
-        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
-        observable1("another_Rule  my-Rule");
-        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 another_Rule my-Rule");
-        observable1(undefined);
-        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    	observable1("my-Rule");
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
+    	observable1("another_Rule  my-Rule");
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 another_Rule my-Rule");
+    	observable1(undefined);
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    });
+
+    it('Should set/change dynamic CSS class(es) if function is specified', function () {
+    	var observable1 = new ko.observable("");
+    	testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: function() { return someModelProperty(); }'>Hallo</div>";
+    	ko.applyBindings({ someModelProperty: observable1 }, testNode);
+
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+    	observable1("my-Rule");
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
+    	observable1("another_Rule  my-Rule");
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 another_Rule my-Rule");
+    	observable1(undefined);
+    	expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
     });
 });
