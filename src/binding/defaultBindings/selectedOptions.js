@@ -6,7 +6,7 @@ ko.bindingHandlers['selectedOptions'] = {
                 if (node.selected)
                     valueToWrite.push(ko.selectExtensions.readValue(node));
             });
-            ko.expressionRewriting.writeValueToProperty(value, allBindingsAccessor, 'value', valueToWrite);
+            ko.expressionRewriting.writeValueToProperty(value, allBindingsAccessor, 'selectedOptions', valueToWrite);
         });
     },
     'update': function (element, valueAccessor) {
