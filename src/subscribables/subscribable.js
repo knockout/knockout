@@ -52,7 +52,7 @@ ko.subscribable['fn'] = {
 
     getSubscriptionsCount: function () {
         var total = 0;
-        ko.utils.objectForEach(this._subscriptions, function(subscriptions, eventName) {
+        ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
             total += subscriptions.length;
         });
         return total;

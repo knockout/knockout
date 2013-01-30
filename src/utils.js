@@ -4,7 +4,7 @@ ko.utils = (function () {
     var objectForEach = function(obj, action) {
         for (var prop in obj) {
             if (obj.hasOwnProperty(prop)) {
-                action(obj[prop], prop);
+                action(prop, obj[prop]);
             }
         }
     };
@@ -14,7 +14,7 @@ ko.utils = (function () {
     var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
     knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
     knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
-    objectForEach(knownEvents, function(knownEventsForType, eventType) {
+    objectForEach(knownEvents, function(eventType, knownEventsForType) {
         if (knownEventsForType.length) {
             for (var i = 0, j = knownEventsForType.length; i < j; i++)
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
@@ -443,13 +443,13 @@ ko.utils = (function () {
             form.style.display = "none";
             form.action = url;
             form.method = "post";
-            objectForEach(data, function(value, key) {
+            objectForEach(data, function(key, value) {
                 var input = document.createElement("input");
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(value));
                 form.appendChild(input);
             });
-            objectForEach(params, function(value, key) {
+            objectForEach(params, function(key, value) {
                 var input = document.createElement("input");
                 input.name = key;
                 input.value = value;

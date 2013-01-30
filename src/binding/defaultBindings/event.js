@@ -16,7 +16,7 @@ function makeEventHandlerShortcut(eventName) {
 ko.bindingHandlers['event'] = {
     'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
         var eventsToHandle = valueAccessor() || {};
-        ko.utils.objectForEach(eventsToHandle, function(dummy, eventName) {
+        ko.utils.objectForEach(eventsToHandle, function(eventName) {
             if (typeof eventName == "string") {
                 ko.utils.registerEventHandler(element, eventName, function (event) {
                     var handlerReturnValue;
