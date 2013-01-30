@@ -443,12 +443,13 @@ ko.utils = (function () {
             form.style.display = "none";
             form.action = url;
             form.method = "post";
-            objectForEach(data, function(key, value) {
+            for (var key in data) {
+                // Since 'data' this is a model object, we include all properties including those inherited from its prototype
                 var input = document.createElement("input");
                 input.name = key;
-                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(value));
+                input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
-            });
+            }
             objectForEach(params, function(key, value) {
                 var input = document.createElement("input");
                 input.name = key;
