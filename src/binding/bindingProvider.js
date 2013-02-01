@@ -36,7 +36,7 @@
                 var bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, this.bindingCache);
                 return bindingFunction(bindingContext, node);
             } catch (ex) {
-                throw new Error("Unable to parse bindings.\nMessage: " + ex + ";\nBindings value: " + bindingsString);
+                throw new Error("Unable to parse bindings.\nMessage: " + ex.message + ";\nBindings value: " + bindingsString);
             }
         }
     });
