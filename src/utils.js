@@ -39,8 +39,16 @@ ko.utils = new (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
 
+    function randomMax8HexChars() {
+        return (((1 + Math.random()) * 0x100000000) | 0).toString(16).substring(1);
+    }
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
+
+        generateRandomId: function() {
+                return randomMax8HexChars() + randomMax8HexChars();
+        },
 
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)

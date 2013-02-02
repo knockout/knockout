@@ -2,12 +2,6 @@
 ko.memoization = (function () {
     var memos = {};
 
-    function randomMax8HexChars() {
-        return (((1 + Math.random()) * 0x100000000) | 0).toString(16).substring(1);
-    }
-    function generateRandomId() {
-        return randomMax8HexChars() + randomMax8HexChars();
-    }
     function findMemoNodes(rootNode, appendToArray) {
         if (!rootNode)
             return;
@@ -25,7 +19,7 @@ ko.memoization = (function () {
         memoize: function (callback) {
             if (typeof callback != "function")
                 throw new Error("You can only pass a function to ko.memoization.memoize()");
-            var memoId = generateRandomId();
+            var memoId = ko.utils.generateRandomId();
             memos[memoId] = callback;
             return "<!--[ko_memo:" + memoId + "]-->";
         },
