@@ -1,9 +1,9 @@
 ko.observableArray = function (initialValues) {
-    if (arguments.length == 0) {
+    if ((initialValues === undefined) || (initialValues === null)) {
         // Zero-parameter constructor initializes to empty array
         initialValues = [];
     }
-    if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
+    if (!('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
 
     var result = ko.observable(initialValues);
