@@ -69,24 +69,6 @@ describe('Binding: Checked', function() {
         expect(model.someProp).toEqual(true);
     });
 
-    it('Should update observable properties on the underlying model when the checkbox is clicked', function () {
-        var myobservable = new ko.observable(false);
-        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
-        ko.applyBindings({ someProp: myobservable }, testNode);
-
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
-        expect(myobservable()).toEqual(true);
-    });
-
-    it('Should update non-observable properties on the underlying model when the checkbox is clicked', function () {
-        var model = { someProp: false };
-        testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp' />";
-        ko.applyBindings(model, testNode);
-
-        ko.utils.triggerEvent(testNode.childNodes[0], "click");
-        expect(model.someProp).toEqual(true);
-    });
-
     it('Should make a radio button checked if and only if its value matches the bound model property', function () {
         var myobservable = new ko.observable("another value");
         testNode.innerHTML = "<input type='radio' value='This Radio Button Value' data-bind='checked:someProp' />";
