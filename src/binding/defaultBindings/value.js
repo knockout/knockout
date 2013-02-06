@@ -29,7 +29,15 @@ ko.bindingHandlers['value'] = {
                     valueUpdateHandler();
                 }
             });
+
+	    // Workaround for LastPass form filler in IE9. Allows ViewModel to update properly.
+	    ko.utils.registerEventHandler(element, "propertychange", function () {
+                if (propertyChangedFired) {
+                    valueUpdateHandler();
+                }
+            });
         }
+
 
         ko.utils.arrayForEach(eventsToCatch, function(eventName) {
             // The syntax "after<eventname>" means "run the handler asynchronously after the event"
