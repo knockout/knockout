@@ -64,7 +64,8 @@
                 visitorCallback('toJSON');
         } else {
             for (var propertyName in rootObject)
-                visitorCallback(propertyName);
+                if ( !(typeof rootObject[propertyName] === 'function') || ko.isObservable(rootObject[propertyName]) )
+                    visitorCallback(propertyName);
         }
     };
 

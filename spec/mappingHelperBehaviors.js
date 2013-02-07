@@ -76,7 +76,6 @@ describe('Mapping helpers', function() {
         expect(result.due instanceof Date).toEqual(true);
         expect(result.due).toEqual(date);
 
-        console.log(string instanceof String, result.string instanceof String);
         expect(result.string instanceof String).toEqual(true);
         expect(result.string).toEqual(string);
 
@@ -85,6 +84,19 @@ describe('Mapping helpers', function() {
 
         expect(result.booleanValue instanceof Boolean).toEqual(true);
         expect(result.booleanValue).toEqual(booleanValue);
+    });
+
+    it('ko.toJS shouldn\'t serialize functions', function() {
+        var obj = {
+            include: ko.observable("I should be serialized"),
+            exclude: function(){
+                return "I shouldn't be serialized"
+            }
+        };
+
+        var result = ko.toJS(obj);
+        expect(result.include).toEqual("I should be serialized");
+        expect(result.exclude).toEqual(undefined);
     });
 
     it('ko.toJSON should unwrap everything and then stringify', function() {
