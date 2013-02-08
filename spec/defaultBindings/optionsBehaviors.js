@@ -89,8 +89,11 @@ describe('Binding: Options', function() {
 
     it('Should retain as much selection as possible when changing the SELECT node\'s options', function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
-        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'><option>A</option><option selected='selected'>B</option><option selected='selected'>X</option></select>";
+        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'></select>";
         ko.applyBindings({ myValues: observable }, testNode);
+        testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        observable.valueHasMutated();
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
