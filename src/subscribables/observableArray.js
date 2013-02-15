@@ -90,11 +90,11 @@ ko.observableArray['fn'] = {
         }
     },
     'pushAll': function(items) {
-        if(!(items instanceof Array)) return [];
+        if(!(items instanceof Array)) return this.peek().length;
         this.valueWillMutate();
         ko.utils.arrayPushAll(this.peek(), items);
         this.valueHasMutated();
-        return this.peek();
+        return this.peek().length;
     }
 }
 

@@ -268,14 +268,14 @@ describe('Observable Array', function() {
         expect(testObservableArray()).toEqual(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]);
     });
 
-    it('Should return the modified array on pushAll', function() {
+    it('Should return the Array length', function() {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
-        expect(testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"])).toEqual(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]);
+        expect(testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"])).toEqual(6);
     });
 
-    it('Should return a empty array and not modify the current if input argument is not an instance of Array', function() {
+    it('Should not modify the current if input argument is not an instance of Array', function() {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
-        expect(testObservableArray.pushAll("Delta")).toEqual([]);
+        testObservableArray.pushAll("Delta");
         expect(testObservableArray()).toEqual(["Alpha", "Beta", "Gamma"]);
     });
 
