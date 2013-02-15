@@ -116,16 +116,36 @@ ko.utils = new (function () {
             }
         },
 
-        extend: function (target, source) {
-            if (source) {
-                for(var prop in source) {
-                    if(source.hasOwnProperty(prop)) {
-                        target[prop] = source[prop];
+        extend: (function () {
+            var support__proto__ = { __proto__: [] } instanceof Array;
+            var extend = function extend (target, source) {
+                if (source) {
+                    for(var prop in source) {
+                        if(source.hasOwnProperty(prop)) {
+                            target[prop] = source[prop];
+                        }
                     }
                 }
+                return target;
             }
-            return target;
-        },
+
+            if (support__proto__) {
+                return function (target, source) {
+                    if (source && typeof target === 'function') {
+                        // We have a function that we want to add methods to
+                        // it. We just put the source in the prototype chain.
+                        // Note that this will change the source prototype.
+                        source.__proto__ = target.__proto__;
+                        target.__proto__ = source;
+                        return target;
+                    }
+
+                    return extend(target, source);
+                }
+            }
+
+            return extend;
+        })(),
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
