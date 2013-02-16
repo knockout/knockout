@@ -2,8 +2,14 @@ ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
+        var elementIsInputFile = ko.utils.tagNameLower(element) === "input" && ko.utils.tagHasAttributeValue(element,"type","file");
         var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
         var propertyChangedFired = false;
+
+        //don't attempt to bind to an input[type="file"]
+        //https://github.com/SteveSanderson/knockout/issues/849
+        if(elementIsInputFile)
+            return;
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
