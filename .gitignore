@@ -11,5 +11,6 @@ desktop.ini
 .eprj
 perf/*
 *.orig
+*~
 
 .DS_Store

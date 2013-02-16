@@ -162,10 +162,12 @@
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
             if (!mapData.mappedNodes) {
-                var newMapData = mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable);
+                var newMapData = mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable),
+                    beforeAddItems = [];
                 ko.utils.extend(mapData, newMapData);
                 // Invoke callback to process new nodes
-                callCallback(options['beforeAdd'], [newMapData]);
+                beforeAddItems[mapData.indexObservable()] = mapData;
+                callCallback(options['beforeAdd'], beforeAddItems);
             }
 
             // Put nodes in the right place if they aren't there already
@@ -190,7 +192,7 @@
 
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
-        callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
+        callCallback(options['afterAdd'], itemsForAfterAddCallbacks, true);
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
