@@ -106,7 +106,7 @@
                 for (var i = 0, n = items.length; i < n; i++) {
                     if (items[i]) {
                         ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
-                            callback(node, i, items[i].arrayEntry);
+                            callback(node, i, items[i].arrayEntry, isFirstExecution);
                         });
                     }
                 }
@@ -161,8 +161,12 @@
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
-            if (!mapData.mappedNodes)
-                ko.utils.extend(mapData, mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable));
+            if (!mapData.mappedNodes) {
+                var newMapData = mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable);
+                ko.utils.extend(mapData, newMapData);
+                // Invoke callback to process new nodes
+                callCallback(options['beforeAdd'], [newMapData]);
+            }
 
             // Put nodes in the right place if they aren't there already
             for (var j = 0; node = mapData.mappedNodes[j]; nextNode = node.nextSibling, lastNode = node, j++) {
