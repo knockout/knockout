@@ -2,8 +2,14 @@ ko.bindingHandlers['value'] = {
     'init': function (element, valueAccessor, allBindingsAccessor) {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
+        var elementIsInputFile = ko.utils.tagNameLower(element) === "input" && ko.utils.tagHasAttributeValue(element,"type","file");
         var requestedEventsToCatch = allBindingsAccessor()["valueUpdate"];
         var propertyChangedFired = false;
+
+        //don't attempt to bind to an input[type="file"]
+        //https://github.com/SteveSanderson/knockout/issues/849
+        if(elementIsInputFile)
+            return;
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -45,9 +51,15 @@ ko.bindingHandlers['value'] = {
     },
     'update': function (element, valueAccessor) {
         var valueIsSelectOption = ko.utils.tagNameLower(element) === "select";
+        var elementIsInputFile = ko.utils.tagNameLower(element) === "input" && ko.utils.tagHasAttributeValue(element,"type","file");
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue != elementValue);
+
+        //don't attempt to bind to an input[type="file"]
+        //https://github.com/SteveSanderson/knockout/issues/849
+        if(elementIsInputFile)
+            return;
 
         // JavaScript's 0 == "" behavious is unfortunate here as it prevents writing 0 to an empty text box (loose equality suggests the values are the same).
         // We don't want to do a strict equality comparison as that is more confusing for developers in certain cases, so we specifically special case 0 != "" here.

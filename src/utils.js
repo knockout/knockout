@@ -230,6 +230,11 @@ ko.utils = new (function () {
             return element && element.tagName && element.tagName.toLowerCase();
         },
 
+        tagHasAttributeValue:function(element,attribute,value){
+
+            return element && element.attributes && element.attributes[attribute] && element.attributes[attribute].value===value;
+        },
+
         registerEventHandler: function (element, eventType, handler) {
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!mustUseAttachEvent && typeof jQuery != "undefined") {
