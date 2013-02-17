@@ -12,5 +12,6 @@ desktop.ini
 perf/*
 *.orig
 *~
+*.nupkg
 
 .DS_Store
