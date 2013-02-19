@@ -15,6 +15,8 @@
                         : element.value;
                 case 'select':
                     return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
+                case 'input':
+                    return element.getAttribute('type') === 'file' ? element.files : element.value;
                 default:
                     return element.value;
             }

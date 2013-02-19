@@ -198,6 +198,22 @@ describe('Binding: Value', function() {
         expect(myobservable()).toEqual("some user-entered value");
     });
 
+    it('For input of type file, should bind the FileList object associated with the input', function () {
+        var myobservable = new ko.observable();
+        testNode.innerHTML = "<input type='file' data-bind='value:someProp' name='files' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        expect(myobservable()).toEqual(testNode.childNodes[0].files);
+    });
+
+    it('For input of type file with multiple attribute, should bind the FileList object associated with the input', function () {
+        var myobservable = new ko.observable();
+        testNode.innerHTML = "<input type='file' name='files' data-bind='value:someProp' multiple />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        expect(myobservable()).toEqual(testNode.childNodes[0].files);
+    });
+
     it('For select boxes, should update selectedIndex when the model changes (options specified before value)', function() {
         var observable = new ko.observable('B');
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
