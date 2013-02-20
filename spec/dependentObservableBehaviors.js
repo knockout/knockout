@@ -338,6 +338,28 @@ describe('Dependent Observable', function() {
         expect(timesEvaluated).toEqual(1);
     });
 
+    it('Should perform dependency detection when subscribed to when constructed with "deferEvaluation"', function() {
+        var data = ko.observable(1),
+            computed = ko.computed({ read: data, deferEvaluation: true }),
+            result = ko.observable();
+
+        // initially computed has no dependencies since it has not been evaluated
+        expect(computed.getDependenciesCount()).toEqual(0);
+
+        // Now subscribe to computed
+        computed.subscribe(result);
+
+        // The dependency should now be tracked
+        expect(computed.getDependenciesCount()).toEqual(1);
+
+        // But the subscription should not have sent down the initial value
+        expect(result()).toEqual(undefined);
+
+        // Updating data should trigger the subscription
+        data(42);
+        expect(result()).toEqual(42);
+    });
+
     it('Should prevent recursive calling of read function', function() {
         var observable = ko.observable(0),
             computed = ko.dependentObservable(function() {
