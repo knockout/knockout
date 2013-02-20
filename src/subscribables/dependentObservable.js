@@ -136,6 +136,18 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     dependentObservable.isActive = isActive;
 
     ko.subscribable.call(dependentObservable);
+
+    // If deferred, then wrap subscribe() in a function which will evaluate before subscribing
+    if (options['deferEvaluation'] === true) {
+        var originalSubscribe = dependentObservable['subscribe'],
+            newSubscribe = function () {
+                peek();
+                return originalSubscribe.apply(this, arguments);
+            };
+        dependentObservable.subscribe = newSubscribe;
+        ko.exportProperty(dependentObservable, 'subscribe', newSubscribe);
+    }
+
     ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
