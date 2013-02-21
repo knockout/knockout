@@ -523,6 +523,34 @@ describe('Dependent Observable', function() {
         expect(computed.customFunction2).toBe(customFunction2);
     });
 
+    it('Should not evaluate (and hence dependency detection) after it has been disposed', function () {
+        var evaluateCount = 0,
+            o = ko.observable(0),
+            c = ko.computed(function () { return ++evaluateCount + o(); });
+
+        expect(evaluateCount).toEqual(1);
+        c.dispose();
+
+        // this should not cause a new evaluation
+        o(1);
+        expect(evaluateCount).toEqual(1);
+        expect(c()).toEqual(1);
+    });
+
+    it('Should not evaluate (and hence dependency detection) after it has been disposed if created with "deferEvaluation"', function () {
+        var evaluateCount = 0,
+            o = ko.observable(0),
+            c = ko.computed({ read: function () { return ++evaluateCount + o(); }, deferEvaluation: true });
+
+        expect(evaluateCount).toEqual(0);
+        c.dispose();
+
+        // this should not cause a new evaluation
+        o(1);
+        expect(evaluateCount).toEqual(0);
+        expect(c()).toEqual(undefined);
+    });
+
     describe('Context', function() {
         it('Should accurately report initial evaluation', function() {
             var observable = ko.observable(1),
