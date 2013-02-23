@@ -184,7 +184,7 @@
 
             if (typeof templateName != "string") {
                 options = templateName;
-                templateName = options['name'];
+                templateName = ko.utils.unwrapObservable(options['name']);
 
                 // Support "if"/"ifnot" conditions
                 if ('if' in options)
