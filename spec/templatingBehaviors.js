@@ -243,6 +243,21 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("Second template output");
     });
 
+    it('Should be able to pick template via an observable model property when specified as "name"', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First template output",
+            secondTemplate: "Second template output"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        testNode.innerHTML = "<div data-bind='template: { name: chosenTemplate }'></div>";
+        ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("First template output");
+
+        chosenTemplate("secondTemplate");
+        expect(testNode.childNodes[0].innerHTML).toEqual("Second template output");
+    });
+
     it('Should be able to pick template as a function of the data item using data-bind syntax, with the binding context available as a second parameter', function () {
         var templatePicker = function(dataItem, bindingContext) {
             // Having the entire binding context available means you can read sibling or parent level properties
