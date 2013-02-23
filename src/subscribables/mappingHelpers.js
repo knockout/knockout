@@ -63,8 +63,9 @@
             if (typeof rootObject['toJSON'] == 'function')
                 visitorCallback('toJSON');
         } else {
-            for (var propertyName in rootObject)
+            for (var propertyName in rootObject) {
                 visitorCallback(propertyName);
+            }
         }
     };
 
