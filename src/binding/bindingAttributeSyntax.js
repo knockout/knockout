@@ -122,7 +122,7 @@
                     // First run all the inits, so bindings can register for notification on changes
                     if (initPhase === 0) {
                         initPhase = 1;
-                        for (var bindingKey in parsedBindings) {
+                        ko.utils.objectForEach(parsedBindings, function(bindingKey) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && node.nodeType === 8)
                                 validateThatBindingIsAllowedForVirtualElements(bindingKey);
@@ -138,19 +138,19 @@
                                     bindingHandlerThatControlsDescendantBindings = bindingKey;
                                 }
                             }
-                        }
+                        });
                         initPhase = 2;
                     }
 
                     // ... then run all the updates, which might trigger changes even on the first evaluation
                     if (initPhase === 2) {
-                        for (var bindingKey in parsedBindings) {
+                        ko.utils.objectForEach(parsedBindings, function(bindingKey) {
                             var binding = ko.bindingHandlers[bindingKey];
                             if (binding && typeof binding["update"] == "function") {
                                 var handlerUpdateFn = binding["update"];
                                 handlerUpdateFn(node, makeValueAccessor(bindingKey), parsedBindingsAccessor, viewModel, bindingContextInstance);
                             }
-                        }
+                        });
                     }
                 }
             },
