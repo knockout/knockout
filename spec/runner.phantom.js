@@ -69,6 +69,9 @@ function waitFor(testFx, onReady, timeOutMillis) {
 
 var page = require('webpage').create();
 
+console.log("Running Knockout tests in Phantom.js");
+
+
 // Route "console.log()" calls from within the Page context to the main Phantom context (i.e. current "this")
 page.onConsoleMessage = function(msg) {
     console.log(msg);

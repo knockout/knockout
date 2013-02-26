@@ -52,4 +52,7 @@ rm -f output/*.js~
 # Run tests in Phantomjs if available
 command -v phantomjs >/dev/null && (cd ..; echo; phantomjs spec/runner.phantom.js || handle_fail)
 
+# Run tests in Nodejs if available
+command -v node >/dev/null && (cd ..; echo; node spec/runner.node.js || handle_fail)
+
 echo; echo "Build succeeded"
