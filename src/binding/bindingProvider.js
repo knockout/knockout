@@ -37,7 +37,7 @@
                 return bindingFunction(bindingContext, node);
             } catch (ex) {
                 ex.message = "Unable to parse bindings.\nBindings value: " + bindingsString + "\nMessage: " + ex.message;
-            	throw ex;
+                throw ex;
             }
         }
     });
