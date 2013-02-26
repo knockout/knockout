@@ -113,7 +113,7 @@ ko.utils = (function () {
         },
 
         addOrRemoveItem: function(array, value, included) {
-            var existingEntryIndex = array.indexOf ? array.indexOf(value) : utils.arrayIndexOf(array, value);
+            var existingEntryIndex = array.indexOf ? array.indexOf(value) : ko.utils.arrayIndexOf(array, value);
             if (existingEntryIndex < 0) {
                 if (included)
                     array.push(value);
