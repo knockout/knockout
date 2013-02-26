@@ -17,11 +17,15 @@ Or, if you prefer to build the source yourself, clone the repo from Github, and 
 
 If you're running Windows, you must execute `./build/build.sh` from inside Git Bash, *not* the built-in Windows command prompt. If you have [Git for Windows](http://git-scm.com/downloads) installed, then you already have Git Bash installed.
 
+It is also avalaible as a npm package: `npm install knockout`.
+
 ## Running the tests
 
 If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `build.sh` script will automatically run the specification suite and report its results.
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
+
+If you installed the npm package you can run `npm test`.
 
 ##License
 
