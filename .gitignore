@@ -13,3 +13,4 @@ perf/*
 *.orig
 
 .DS_Store
+npm-debug.log
