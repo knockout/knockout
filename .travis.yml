@@ -1,3 +1,2 @@
 language: node_js
-script:
-  - "build/build.sh"
+
