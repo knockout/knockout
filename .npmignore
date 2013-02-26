@@ -1,0 +1,25 @@
+# From .gitignore
+
+*.suo
+*.swp
+*.csproj.user
+bin
+obj
+*.pdb
+_ReSharper*
+*.ReSharper.user
+*.ReSharper
+desktop.ini
+.eprj
+perf/*
+*.orig
+
+.DS_Store
+npm-debug.log
+
+# NPM specifics
+
+.travis.yml
+src
+spec
+build
