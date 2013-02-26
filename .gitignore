@@ -13,3 +13,6 @@ perf/*
 *.orig
 
 .DS_Store
+
+# VIM backup files
+*~
