@@ -1,3 +1,5 @@
+# From .gitignore
+
 *.suo
 *.swp
 *.csproj.user
@@ -14,3 +16,10 @@ perf/*
 
 .DS_Store
 npm-debug.log
+
+# NPM specifics
+
+.travis.yml
+src
+spec
+build
