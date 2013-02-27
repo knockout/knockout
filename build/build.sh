@@ -42,8 +42,8 @@ cp fragments/version-header.js $OutMinFile
 cat $OutMinFile.temp                >> $OutMinFile
 rm $OutMinFile.temp
 
-# Inject the version number string
-Version=`cat fragments/version.txt`
+# Pull the version number out of package.json and inject it into the built output files
+Version=`sed -n 's/.*"version":\s*"\([^"]*\)".*/\1/p' ../package.json`
 sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
 
 # Delete the odd files left behind on Mac
