@@ -5,7 +5,7 @@
   "version": "2.2.1",
   "license": "MIT",
   "author": "The Knockout.js team",
-  "main": "build/output/knockout-latest.js",
+  "main": "build/output/knockout-latest.debug.js",
   "scripts": {
     "prepublish": "build/build.sh",
     "test": "node spec/runner.node.js"
