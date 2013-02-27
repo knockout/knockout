@@ -25,8 +25,6 @@ If you have [phantomjs](http://phantomjs.org/download.html) installed, then the 
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
-Or, for Node.js developers using the npm package, you can run `npm test`.
-
 ##License
 
 MIT license - [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)
