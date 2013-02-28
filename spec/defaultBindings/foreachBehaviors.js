@@ -1,6 +1,12 @@
 describe('Binding: Foreach', function() {
     beforeEach(jasmine.prepareTestNode);
 
+    beforeEach(function () {
+        // Spy on jQuery
+        window.jQuery = jasmine.createSpy('jQuery');
+        window.jQuery.cleanData = jasmine.createSpy('jQuery.cleanData');
+    });
+
     it('Should remove descendant nodes from the document (and not bind them) if the value is falsey', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
         expect(testNode.childNodes[0].childNodes.length).toEqual(1);
@@ -61,6 +67,8 @@ describe('Binding: Foreach', function() {
         ]);
         ko.applyBindings({ someItems: someItems }, testNode);
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+        // The template element should be cleaned
+        expect(jQuery.cleanData.calls.length).toEqual(1);
 
         // Add items at the beginning...
         someItems.unshift({ childProp: 'zeroth child' });
@@ -77,6 +85,9 @@ describe('Binding: Foreach', function() {
         // Also remove from beginning...
         someItems.shift();
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">middle child</span><span data-bind="text: childprop">second child</span><span data-bind="text: childprop">last child</span>');
+
+        // The removed element should be cleaned
+        expect(jQuery.cleanData.calls.length).toEqual(2);
 
         // ... and middle
         someItems.splice(1, 1);
@@ -154,6 +165,8 @@ describe('Binding: Foreach', function() {
         }, testNode);
 
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span>');
+        // jQuery.cleanData should be called as the template element gets cleaned
+        expect(jQuery.cleanData.calls.length).toEqual(1);
 
         // Try adding
         someItems.push({ childprop: 'added child'});
@@ -173,6 +186,8 @@ describe('Binding: Foreach', function() {
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
         expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        // jQuery cleanData should not be invoked on the element being removed, as it is the beforeRemove callback's responsibility to remove nodes and their resources
+        expect(jQuery.cleanData.calls.length).toEqual(1);
     });
 
     it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
