@@ -1,25 +1,32 @@
-ko.utils = new (function () {
+ko.utils = (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
+
+    var objectForEach = function(obj, action) {
+        for (var prop in obj) {
+            if (obj.hasOwnProperty(prop)) {
+                action(prop, obj[prop]);
+            }
+        }
+    };
 
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
-    var keyEventTypeName = /Firefox\/2/i.test(navigator.userAgent) ? 'KeyboardEvent' : 'UIEvents';
+    var keyEventTypeName = (navigator && /Firefox\/2/i.test(navigator.userAgent)) ? 'KeyboardEvent' : 'UIEvents';
     knownEvents[keyEventTypeName] = ['keyup', 'keydown', 'keypress'];
     knownEvents['MouseEvents'] = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
-    for (var eventType in knownEvents) {
-        var knownEventsForType = knownEvents[eventType];
+    objectForEach(knownEvents, function(eventType, knownEventsForType) {
         if (knownEventsForType.length) {
             for (var i = 0, j = knownEventsForType.length; i < j; i++)
                 knownEventTypesByEventName[knownEventsForType[i]] = eventType;
         }
-    }
+    });
     var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
     // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
     // If there is a future need to detect specific versions of IE10+, we will amend this.
-    var ieVersion = (function() {
+    var ieVersion = document && (function() {
         var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
 
         // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
@@ -106,7 +113,7 @@ ko.utils = new (function () {
         },
 
         addOrRemoveItem: function(array, value, included) {
-            var existingEntryIndex = array.indexOf ? array.indexOf(value) : utils.arrayIndexOf(array, value);
+            var existingEntryIndex = array.indexOf ? array.indexOf(value) : ko.utils.arrayIndexOf(array, value);
             if (existingEntryIndex < 0) {
                 if (included)
                     array.push(value);
@@ -126,6 +133,8 @@ ko.utils = new (function () {
             }
             return target;
         },
+
+        objectForEach: objectForEach,
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
@@ -402,8 +411,8 @@ ko.utils = new (function () {
             if (typeof jsonString == "string") {
                 jsonString = ko.utils.stringTrim(jsonString);
                 if (jsonString) {
-                    if (window.JSON && window.JSON.parse) // Use native parsing where available
-                        return window.JSON.parse(jsonString);
+                    if (JSON && JSON.parse) // Use native parsing where available
+                        return JSON.parse(jsonString);
                     return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
                 }
             }
@@ -411,7 +420,7 @@ ko.utils = new (function () {
         },
 
         stringifyJson: function (data, replacer, space) {   // replacer and space are optional
-            if ((typeof JSON == "undefined") || (typeof JSON.stringify == "undefined"))
+            if (!JSON || !JSON.stringify)
                 throw new Error("Cannot find JSON.stringify(). Some browsers (e.g., IE < 8) don't support it natively, but you can overcome this by adding a script reference to json2.js, downloadable from http://www.json.org/json2.js");
             return JSON.stringify(ko.utils.unwrapObservable(data), replacer, space);
         },
@@ -439,23 +448,24 @@ ko.utils = new (function () {
             form.action = url;
             form.method = "post";
             for (var key in data) {
+                // Since 'data' this is a model object, we include all properties including those inherited from its prototype
                 var input = document.createElement("input");
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
-            for (var key in params) {
+            objectForEach(params, function(key, value) {
                 var input = document.createElement("input");
                 input.name = key;
-                input.value = params[key];
+                input.value = value;
                 form.appendChild(input);
-            }
+            });
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
         }
     }
-})();
+}());
 
 ko.exportSymbol('utils', ko.utils);
 ko.exportSymbol('utils.arrayForEach', ko.utils.arrayForEach);

@@ -113,7 +113,7 @@ describe('Templating', function() {
         expect(testNode.childNodes.length).toEqual(0);
     });
 
-    it('Should be able to access newly rendered/inserted elements in \'afterRender\' callaback', function () {
+    it('Should be able to access newly rendered/inserted elements in \'afterRender\' callback', function () {
         var passedElement, passedDataItem;
         var myCallback = function(elementsArray, dataItem) {
             expect(elementsArray.length).toEqual(1);
@@ -143,7 +143,7 @@ describe('Templating', function() {
         expect(testNode.innerHTML).toEqual("Value = B");
     });
 
-    it('Should not rerender DOM element if observable accessed in \'afterRender\' callaback is changed', function () {
+    it('Should not rerender DOM element if observable accessed in \'afterRender\' callback is changed', function () {
         var observable = new ko.observable("A"), count = 0;
         var myCallback = function(elementsArray, dataItem) {
             observable();   // access observable in callback
@@ -236,6 +236,21 @@ describe('Templating', function() {
 
         var chosenTemplate = ko.observable("firstTemplate");
         testNode.innerHTML = "<div data-bind='template: chosenTemplate'></div>";
+        ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("First template output");
+
+        chosenTemplate("secondTemplate");
+        expect(testNode.childNodes[0].innerHTML).toEqual("Second template output");
+    });
+
+    it('Should be able to pick template via an observable model property when specified as "name"', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First template output",
+            secondTemplate: "Second template output"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        testNode.innerHTML = "<div data-bind='template: { name: chosenTemplate }'></div>";
         ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
         expect(testNode.childNodes[0].innerHTML).toEqual("First template output");
 
