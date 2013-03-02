@@ -13,8 +13,10 @@ function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, 
 
 ko.bindingHandlers['options'] = {
     'update': function (element, valueAccessor, allBindingsAccessor) {
-        if (ko.utils.tagNameLower(element) !== "select")
-            throw new Error("options binding applies only to SELECT elements");
+        var tagName = ko.utils.tagNameLower(element); 
+        var tagName = ko.utils.tagNameLower(element);
+        if (tagName !== "select" && tagName !== "datalist")
+            throw new Error("options binding applies only to SELECT or DATALIST elements");
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {

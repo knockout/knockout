@@ -3,12 +3,20 @@ describe('Binding: Options', function() {
 
     // Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
 
-    it('Should only be applicable to SELECT nodes', function () {
+    it('Should only be applicable to SELECT and DATALIST nodes', function () {
         var threw = false;
         testNode.innerHTML = "<input data-bind='options:{}' />";
         try { ko.applyBindings({}, testNode); }
         catch (ex) { threw = true; }
         expect(threw).toEqual(true);
+    });
+    
+    it('Should be applicable to DATALIST nodes', function () {
+        var threw = false;
+        testNode.innerHTML = "<datalist data-bind='options:{}' />";
+        try { ko.applyBindings({}, testNode); }
+        catch (ex) { threw = true; }
+        expect(threw).toEqual(false);
     });
 
     it('Should set the SELECT node\'s options set to match the model value', function () {
