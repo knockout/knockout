@@ -114,4 +114,38 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
     };
 });
 
+var filter = Array.prototype.filter;
+
+if (!filter) {
+    // Source: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/filter
+    filter = function(fun /*, thisp */) {
+    "use strict";
+
+    if (this == null)
+      throw new TypeError();
+
+    var t = Object(this);
+    var len = t.length >>> 0;
+    if (typeof fun != "function")
+      throw new TypeError();
+
+    var res = [];
+    var thisp = arguments[1];
+    for (var i = 0; i < len; i++) {
+      if (i in t) {
+        var val = t[i]; // in case fun mutates this
+        if (fun.call(thisp, val, i, t))
+          res.push(val);
+      }
+    }
+
+    return res;
+  };
+}
+
+ko.observableArray['fn']['filter'] = function () {
+    var underlyingArray = this();
+    return filter.apply(underlyingArray, arguments);
+};
+
 ko.exportSymbol('observableArray', ko.observableArray);

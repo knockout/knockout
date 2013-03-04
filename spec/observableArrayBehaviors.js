@@ -260,4 +260,13 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
+
+    it('Should expose a filter method for extracting a subset of data', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var filtered = testObservableArray.filter(function (item) {
+            return item[0] === "A";
+        });
+
+        expect(filtered[0]).toEqual("Alpha");
+    });
 })
