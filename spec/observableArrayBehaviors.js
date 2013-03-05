@@ -269,4 +269,15 @@ describe('Observable Array', function() {
 
         expect(filtered[0]).toEqual("Alpha");
     });
+
+    it('Should expose a map method for extracting a transformed result', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var filtered = testObservableArray.map(function (item) {
+            return {
+                name: item
+            };
+        });
+
+        expect(filtered[0].name).toEqual("Alpha");
+    });
 })
