@@ -228,4 +228,88 @@ ko.observableArray['fn']['map'] = function () {
     return map.apply(underlyingArray, arguments);
 };
 
+var reduce = Array.prototype.reduce;
+
+if (!reduce) {
+    reduce = function (accumulator) {
+    "use strict";
+    if (this===null || this===undefined) throw new TypeError("Object is null or undefined");
+    var i = 0, l = this.length >> 0, curr;
+
+    if(typeof accumulator !== "function") // ES5 : "If IsCallable(callbackfn) is false, throw a TypeError exception."
+      throw new TypeError("First argument is not callable");
+
+    if(arguments.length < 2) {
+      if (l === 0) throw new TypeError("Array length is 0 and no second argument");
+      curr = this[0];
+      i = 1; // start accumulating at the second element
+    } else {
+      curr = arguments[1];
+    }
+
+    while (i < l) {
+      if(i in this) curr = accumulator.call(undefined, curr, this[i], i, this);
+      ++i;
+    }
+
+    return curr;
+  };
+}
+
+ko.observableArray['fn']['reduce'] = function () {
+    var underlyingArray = this();
+    return reduce.apply(underlyingArray, arguments);
+};
+
+var reduceRight = Array.prototype.reduceRight;
+
+if (!reduceRight) {
+    reduceRight = function (callbackfn /*, initialValue */) {
+    "use strict";
+
+    if (this == null)
+      throw new TypeError();
+
+    var t = Object(this);
+    var len = t.length >>> 0;
+    if (typeof callbackfn != "function")
+      throw new TypeError();
+
+    // no value to return if no initial value, empty array
+    if (len === 0 && arguments.length === 1)
+      throw new TypeError();
+
+    var k = len - 1;
+    var accumulator;
+    if (arguments.length >= 2) {
+      accumulator = arguments[1];
+    } else {
+      do {
+        if (k in this) {
+          accumulator = this[k--];
+          break;
+        }
+
+        // if array contains no values, no initial value to return
+        if (--k < 0)
+          throw new TypeError();
+      }
+      while (true);
+    }
+
+    while (k >= 0) {
+      if (k in t)
+        accumulator = callbackfn.call(undefined, accumulator, t[k], k, t);
+      k--;
+    }
+
+    return accumulator;
+  };
+}
+
+ko.observableArray['fn']['reduceRight'] = function () {
+    var underlyingArray = this();
+    return reduceRight.apply(underlyingArray, arguments);
+};
+
 ko.exportSymbol('observableArray', ko.observableArray);

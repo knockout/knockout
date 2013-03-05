@@ -280,4 +280,22 @@ describe('Observable Array', function() {
 
         expect(filtered[0].name).toEqual("Alpha");
     });
+
+    it('Should expose a reduce method for collapsing the array', function () {
+        testObservableArray([1, 2, 3]);
+        var result = testObservableArray.reduce(function (prev, curr) {
+            return prev + curr;
+        });
+
+        expect(result).toEqual(6);
+    });
+
+    it('Should expose a reduceRight method for collapsing the array', function () {
+        testObservableArray([[0, 1], [2, 3], [4, 5]]);
+        var result = testObservableArray.reduceRight(function (a, b) {
+            return a.concat(b);
+        });
+
+        expect(result[0]).toEqual(4);
+    });
 })
