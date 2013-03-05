@@ -298,4 +298,22 @@ describe('Observable Array', function() {
 
         expect(result[0]).toEqual(4);
     });
+
+    it('Should expose an every method for matching all items', function () {
+        testObservableArray([12, 24, 42, 130, 44]);
+        var result = testObservableArray.every(function (element, index, array) {
+            return (element >= 10);
+        });
+
+        expect(result).toEqual(true);
+    });
+
+    it('Should expose a some method for matching some items', function () {
+        testObservableArray([12, 5, 8, 1, 4]);
+        var result = testObservableArray.some(function (element, index, array) {
+            return (element >= 10);
+        });
+
+        expect(result).toEqual(true);
+    });
 })

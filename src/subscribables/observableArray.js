@@ -312,4 +312,62 @@ ko.observableArray['fn']['reduceRight'] = function () {
     return reduceRight.apply(underlyingArray, arguments);
 };
 
+var every = Array.prototype.every;
+
+if (!every) {
+    every = function(fun /*, thisp */) {
+        "use strict";
+
+        if (this == null)
+          throw new TypeError();
+
+        var t = Object(this);
+        var len = t.length >>> 0;
+        if (typeof fun != "function")
+          throw new TypeError();
+
+        var thisp = arguments[1];
+        for (var i = 0; i < len; i++) {
+          if (i in t && !fun.call(thisp, t[i], i, t))
+            return false;
+        }
+
+        return true;
+    };
+}
+
+ko.observableArray['fn']['every'] = function () {
+    var underlyingArray = this();
+    return every.apply(underlyingArray, arguments);
+};
+
+var some = Array.prototype.some;
+
+if (!some) {
+    some = function(fun /*, thisp */) {
+        "use strict";
+
+        if (this == null)
+          throw new TypeError();
+
+        var t = Object(this);
+        var len = t.length >>> 0;
+        if (typeof fun != "function")
+          throw new TypeError();
+
+        var thisp = arguments[1];
+        for (var i = 0; i < len; i++) {
+          if (i in t && fun.call(thisp, t[i], i, t))
+            return true;
+        }
+
+        return false;
+    };
+}
+
+ko.observableArray['fn']['some'] = function () {
+    var underlyingArray = this();
+    return some.apply(underlyingArray, arguments);
+};
+
 ko.exportSymbol('observableArray', ko.observableArray);
