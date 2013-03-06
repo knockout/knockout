@@ -1,6 +1,4 @@
 ko.utils = (function () {
-    var stringTrimRegex = /^[\s\xa0]+|[\s\xa0]+$/g;
-
     var objectForEach = function(obj, action) {
         for (var prop in obj) {
             if (obj.hasOwnProperty(prop)) {
@@ -192,7 +190,10 @@ ko.utils = (function () {
         },
 
         stringTrim: function (string) {
-            return (string || "").replace(stringTrimRegex, "");
+            return string === null || string === undefined ? '' :
+                string.trim ?
+                    string.trim() :
+                    string.toString().replace(/^[\s\xa0]+|[\s\xa0]+$/g, '');
         },
 
         stringTokenize: function (string, delimiter) {
