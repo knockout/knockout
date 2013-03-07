@@ -1,0 +1,18 @@
+{
+  "name": "knockout",
+  "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
+  "url": "http://knockoutjs.com/",
+  "version": "2.2.1",
+  "license": "MIT",
+  "author": "The Knockout.js team",
+  "main": "build/output/knockout-latest.debug.js",
+  "scripts": {
+    "prepublish": "bash build/build.sh",
+    "test": "node spec/runner.node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SteveSanderson/knockout.git"
+  },
+  "bugs": "https://github.com/SteveSanderson/knockout/issues"
+}

@@ -1,0 +1,4 @@
+# Only package the build output for npm. Developers who want sources/tests can get them from the KO repo.
+*
+!build/output/knockout-latest.js
+!build/output/knockout-latest.debug.js
