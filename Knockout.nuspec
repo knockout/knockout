@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>aknudsen.knockoutjs</id>
-    <version>2.2.4</version>
+    <version>2.2.5</version>
     <authors>Steve Sanderson</authors>
     <owners>Steve Sanderson</owners>
     <licenseUrl>http://opensource.org/licenses/mit-license.php</licenseUrl>
