@@ -1,4 +1,4 @@
-// Knockout JavaScript library v2.2.3
+// Knockout JavaScript library v2.2.0
 // (c) Steven Sanderson - http://knockoutjs.com/
 // License: MIT (http://www.opensource.org/licenses/mit-license.php)
 
@@ -44,7 +44,7 @@ ko.exportSymbol = function(koPath, object) {
 ko.exportProperty = function(owner, publicName, object) {
   owner[publicName] = object;
 };
-ko.version = "2.2.3";
+ko.version = "2.2.0";
 
 ko.exportSymbol('version', ko.version);
 ko.utils = (function () {
