@@ -242,42 +242,6 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     });
 
-    it('Should be able to supply afterAdd and beforeRemove callbacks', function() {
-        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: childprop'></span></div>";
-        var someItems = ko.observableArray([{ childprop: 'first child' }]);
-        var afterAddCallbackData = [], beforeRemoveCallbackData = [];
-        ko.applyBindings({
-            someItems: someItems,
-            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
-            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
-        }, testNode);
-
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span>');
-        // jQuery.cleanData should be called as the template element gets cleaned
-        expect(jQuery.cleanData.calls.length).toEqual(1);
-
-        // Try adding
-        someItems.push({ childprop: 'added child'});
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-        expect(afterAddCallbackData.length).toEqual(1);
-        expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[1]);
-        expect(afterAddCallbackData[0].index).toEqual(1);
-        expect(afterAddCallbackData[0].value.childprop).toEqual("added child");
-        expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-
-        // Try removing
-        someItems.shift();
-        expect(beforeRemoveCallbackData.length).toEqual(1);
-        expect(beforeRemoveCallbackData[0].elem).toContainText("first child");
-        expect(beforeRemoveCallbackData[0].index).toEqual(0);
-        expect(beforeRemoveCallbackData[0].value.childprop).toEqual("first child");
-        // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
-        expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-        // jQuery cleanData should not be invoked on the element being removed, as it is the beforeRemove callback's responsibility to remove nodes and their resources
-        expect(jQuery.cleanData.calls.length).toEqual(1);
-    });
-
     it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
