@@ -64,7 +64,7 @@ describe('Binding attribute syntax', function() {
     });
 
     it('Should tolerate arbitrary literals as the values for a handler', function () {
-        testNode.innerHTML = "<div data-bind='stringLiteral: \"hello\", numberLiteral: 123, boolLiteral: true, objectLiteral: {}, functionLiteral: function() { }'></div>";
+        testNode.innerHTML = "<div data-bind='stringLiteral: \"hello\", numberLiteral: 123, boolLiteralTrue: true, boolLiteralFalse: false, objectLiteral: {}, functionLiteral: function() { }, nullLiteral: null, undefinedLiteral: undefined'></div>";
         ko.applyBindings(null, testNode); // No exception means success
     });
 
