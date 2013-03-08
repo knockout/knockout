@@ -235,7 +235,7 @@ describe('Binding: Checked', function() {
         var object1 = {id:ko.observable(1)},
             object2 = {id:ko.observable(2)},
             model = { values: [1], choices: [object1, object2] };
-        testNode.innerHTML = "<div data-bind='foreach: choices'><input type='checkbox' data-bind='checked:$parent.values, checkedValue:id' /></div>";
+        testNode.innerHTML = "<div data-bind='foreach: choices'><input type='checkbox' data-bind='checkedValue:id, checked:$parent.values' /></div>";
         ko.applyBindings(model, testNode);
 
         expect(model.values).toEqual([1]);
@@ -276,4 +276,30 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].checked).toEqual(false);
         expect(testNode.childNodes[1].checked).toEqual(true);
     });
+
+    it('Should be able to use observables as value of radio buttons using \'checkedValue\'', function () {
+        var object1 = {id:ko.observable(1)},
+            object2 = {id:ko.observable(2)},
+            model = { value: 1, choices: [object1, object2] };
+        var myobservable = new ko.observable(false);
+        testNode.innerHTML = "<div data-bind='foreach: choices'><input type='radio' data-bind='checkedValue:id, checked:$parent.value' /></div>";
+        ko.applyBindings(model, testNode);
+
+        expect(model.value).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+
+        // Update the value observable
+        object1.id(3);
+
+        // The current behavior is to uncheck the radio button
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(false);
+        expect(model.value).toEqual(1);
+
+        // But the correct behavior might be to keep it checked and update the model "value"
+        // Implementing this correct behavior will probably require independent bindings (#321) or binding ordering
+        //expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        //expect(model.value).toEqual(3);
+    });
+
 });
