@@ -31,7 +31,7 @@ ko.bindingHandlers['options'] = {
         var caption = {};
         var previousSelectedValues;
         if (element.multiple) {
-            previousSelectedValues = ko.utils.arrayMap(ko.utils.arrayFilter(element.childNodes, function (node) {
+            previousSelectedValues = ko.utils.arrayMap(element.selectedOptions || ko.utils.arrayFilter(element.childNodes, function (node) {
                     return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
                 }), function (node) {
                     return ko.selectExtensions.readValue(node);
