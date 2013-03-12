@@ -35,6 +35,18 @@ jasmine.Matchers.prototype.toHaveOwnProperties = function (expectedProperties) {
     return this.env.equals_(ownProperties, expectedProperties);
 };
 
+jasmine.Matchers.prototype.toHaveTexts = function (expectedTexts) {
+    var texts = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.innerText || node.textContent; });
+    this.actual = texts;   // Fix explanatory message
+    return this.env.equals_(texts, expectedTexts);
+};
+
+jasmine.Matchers.prototype.toHaveValues = function (expectedValues) {
+    var values = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.value; });
+    this.actual = values;   // Fix explanatory message
+    return this.env.equals_(values, expectedValues);
+};
+
 jasmine.Matchers.prototype.toHaveSelectedValues = function (expectedValues) {
     var selectedNodes = ko.utils.arrayFilter(this.actual.childNodes, function (node) { return node.selected; }),
         selectedValues = ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
