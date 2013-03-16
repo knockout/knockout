@@ -113,7 +113,7 @@ ko.bindingHandlers['options'] = {
             ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings['value']), /* preferModelValue */ true);
         }
 
-        // Workaround for IE9 bug
+        // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
 
         if (Math.abs(previousScrollTop - element.scrollTop) > 20)
