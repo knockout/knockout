@@ -1,9 +1,11 @@
 ko.utils = (function () {
     var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
 
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
     var objectForEach = function(obj, action) {
         for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
+            if (hasOwnProperty.call(obj, prop)) {
                 action(prop, obj[prop]);
             }
         }
@@ -126,7 +128,7 @@ ko.utils = (function () {
         extend: function (target, source) {
             if (source) {
                 for(var prop in source) {
-                    if(source.hasOwnProperty(prop)) {
+                    if(hasOwnProperty.call(source, prop)) {
                         target[prop] = source[prop];
                     }
                 }

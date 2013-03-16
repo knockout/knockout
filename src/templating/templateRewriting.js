@@ -3,11 +3,13 @@ ko.templateRewriting = (function () {
     var memoizeDataBindingAttributeSyntaxRegex = /(<[a-z]+\d*(\s+(?!data-bind=)[a-z0-9\-]+(=(\"[^\"]*\"|\'[^\']*\'))?)*\s+)data-bind=(["'])([\s\S]*?)\5/gi;
     var memoizeVirtualContainerBindingSyntaxRegex = /<!--\s*ko\b\s*([\s\S]*?)\s*-->/g;
 
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
     function validateDataBindValuesForRewriting(keyValueArray) {
         var allValidators = ko.expressionRewriting.bindingRewriteValidators;
         for (var i = 0; i < keyValueArray.length; i++) {
             var key = keyValueArray[i]['key'];
-            if (allValidators.hasOwnProperty(key)) {
+            if (hasOwnProperty.call(allValidators, key)) {
                 var validator = allValidators[key];
 
                 if (typeof validator === "function") {
