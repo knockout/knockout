@@ -198,147 +198,6 @@ describe('Binding: Value', function() {
         expect(myobservable()).toEqual("some user-entered value");
     });
 
-    it('For select boxes, should update selectedIndex when the model changes (options specified before value)', function() {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(1);
-        expect(observable()).toEqual('B');
-
-        observable('A');
-        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
-        expect(observable()).toEqual('A');
-    });
-
-    it('For select boxes, should update selectedIndex when the model changes (value specified before options)', function() {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(1);
-        expect(observable()).toEqual('B');
-
-        observable('A');
-        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
-        expect(observable()).toEqual('A');
-    });
-
-    it('For select boxes, should display the caption when the model value changes to undefined', function() {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
-        observable(undefined);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
-    });
-
-    it('For select boxes, should update the model value when the UI is changed (setting it to undefined when the caption is selected)', function () {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        var dropdown = testNode.childNodes[0];
-
-        dropdown.selectedIndex = 1;
-        ko.utils.triggerEvent(dropdown, "change");
-        expect(observable()).toEqual("A");
-
-        dropdown.selectedIndex = 0;
-        ko.utils.triggerEvent(dropdown, "change");
-        expect(observable()).toEqual(undefined);
-    });
-
-    it('For select boxes, should be able to associate option values with arbitrary objects (not just strings)', function() {
-        var x = {}, y = {};
-        var selectedValue = ko.observable(y);
-        testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
-        var dropdown = testNode.childNodes[0];
-        ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
-
-        // Check the UI displays the entry corresponding to the chosen value
-        expect(dropdown.selectedIndex).toEqual(1);
-
-        // Check that when we change the model value, the UI is updated
-        selectedValue(x);
-        expect(dropdown.selectedIndex).toEqual(0);
-
-        // Check that when we change the UI, this changes the model value
-        dropdown.selectedIndex = 1;
-        ko.utils.triggerEvent(dropdown, "change");
-        expect(selectedValue()).toEqual(y);
-    });
-
-    it('For select boxes, should automatically initialize the model property to match the first option value if no option value matches the current model property value', function() {
-        // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
-        //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
-        //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
-        //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
-        var observable = new ko.observable(); // Undefined by default
-
-        // Should work with options specified before value
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(observable()).toEqual("A");
-
-        // ... and with value specified before options
-        ko.utils.domData.clear(testNode);
-        testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
-        observable(undefined);
-        expect(observable()).toEqual(undefined);
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(observable()).toEqual("A");
-    });
-
-    it('For nonempty select boxes, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI', function() {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(1);
-
-        observable('D'); // This change should be rejected, as there's no corresponding option in the UI
-        expect(observable()).not.toEqual('D');
-    });
-
-    it('For select boxes, option values can be numerical, and are not implicitly converted to strings', function() {
-        var observable = new ko.observable(30);
-        testNode.innerHTML = "<select data-bind='options:[10,20,30,40], value:myObservable'></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-
-        // First check that numerical model values will match a dropdown option
-        expect(testNode.childNodes[0].selectedIndex).toEqual(2); // 3rd element, zero-indexed
-
-        // Then check that dropdown options map back to numerical model values
-        testNode.childNodes[0].selectedIndex = 1;
-        ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        expect(typeof observable()).toEqual("number");
-        expect(observable()).toEqual(20);
-    });
-
-    it('For select boxes with values attributes, should always use value (and not text)', function() {
-        var observable = new ko.observable('A');
-        testNode.innerHTML = "<select data-bind='value:myObservable'><option value=''>A</option><option value='A'>B</option></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        var dropdown = testNode.childNodes[0];
-        expect(dropdown.selectedIndex).toEqual(1);
-
-        dropdown.selectedIndex = 0;
-        ko.utils.triggerEvent(dropdown, "change");
-        expect(observable()).toEqual("");
-    });
-
-    it('For select boxes with text values but no value property, should use text value', function() {
-        var observable = new ko.observable('B');
-        testNode.innerHTML = "<select data-bind='value:myObservable'><option>A</option><option>B</option><option>C</option></select>";
-        ko.applyBindings({ myObservable: observable }, testNode);
-        var dropdown = testNode.childNodes[0];
-        expect(dropdown.selectedIndex).toEqual(1);
-
-        dropdown.selectedIndex = 0;
-        ko.utils.triggerEvent(dropdown, "change");
-        expect(observable()).toEqual("A");
-
-        observable('C');
-        expect(dropdown.selectedIndex).toEqual(2);
-    });
-
     it('On IE < 10, should handle autofill selection by treating "propertychange" followed by "blur" as a change event', function() {
         // This spec describes the awkward choreography of events needed to detect changes to text boxes on IE < 10,
         // because it doesn't fire regular "change" events when the user selects an autofill entry. It isn't applicable
@@ -378,5 +237,148 @@ describe('Binding: Value', function() {
             ko.utils.triggerEvent(testNode.childNodes[0], "change");
             expect(numUpdates).toEqual(3);
         }
+    });
+
+    describe('For select boxes', function() {
+        it('Should update selectedIndex when the model changes (options specified before value)', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(observable()).toEqual('B');
+
+            observable('A');
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual('A');
+        });
+
+        it('Should update selectedIndex when the model changes (value specified before options)', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(observable()).toEqual('B');
+
+            observable('A');
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual('A');
+        });
+
+        it('Should display the caption when the model value changes to undefined', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable(undefined);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        });
+
+        it('Should update the model value when the UI is changed (setting it to undefined when the caption is selected)', function () {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            var dropdown = testNode.childNodes[0];
+
+            dropdown.selectedIndex = 1;
+            ko.utils.triggerEvent(dropdown, "change");
+            expect(observable()).toEqual("A");
+
+            dropdown.selectedIndex = 0;
+            ko.utils.triggerEvent(dropdown, "change");
+            expect(observable()).toEqual(undefined);
+        });
+
+        it('Should be able to associate option values with arbitrary objects (not just strings)', function() {
+            var x = {}, y = {};
+            var selectedValue = ko.observable(y);
+            testNode.innerHTML = "<select data-bind='options: myOptions, value: selectedValue'></select>";
+            var dropdown = testNode.childNodes[0];
+            ko.applyBindings({ myOptions: [x, y], selectedValue: selectedValue }, testNode);
+
+            // Check the UI displays the entry corresponding to the chosen value
+            expect(dropdown.selectedIndex).toEqual(1);
+
+            // Check that when we change the model value, the UI is updated
+            selectedValue(x);
+            expect(dropdown.selectedIndex).toEqual(0);
+
+            // Check that when we change the UI, this changes the model value
+            dropdown.selectedIndex = 1;
+            ko.utils.triggerEvent(dropdown, "change");
+            expect(selectedValue()).toEqual(y);
+        });
+
+        it('Should automatically initialize the model property to match the first option value if no option value matches the current model property value', function() {
+            // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
+            //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
+            //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
+            //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
+            var observable = new ko.observable(); // Undefined by default
+
+            // Should work with options specified before value
+            testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(observable()).toEqual("A");
+
+            // ... and with value specified before options
+            ko.utils.domData.clear(testNode);
+            testNode.innerHTML = "<select data-bind='value:myObservable, options:[\"A\", \"B\"]'></select>";
+            observable(undefined);
+            expect(observable()).toEqual(undefined);
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(observable()).toEqual("A");
+        });
+
+        it('When non-empty, should reject model values that don\'t match any option value, resetting the model value to whatever is visibly selected in the UI', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+
+            observable('D'); // This change should be rejected, as there's no corresponding option in the UI
+            expect(observable()).not.toEqual('D');
+        });
+
+        it('Should support numerical option values, which are not implicitly converted to strings', function() {
+            var observable = new ko.observable(30);
+            testNode.innerHTML = "<select data-bind='options:[10,20,30,40], value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            // First check that numerical model values will match a dropdown option
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2); // 3rd element, zero-indexed
+
+            // Then check that dropdown options map back to numerical model values
+            testNode.childNodes[0].selectedIndex = 1;
+            ko.utils.triggerEvent(testNode.childNodes[0], "change");
+            expect(typeof observable()).toEqual("number");
+            expect(observable()).toEqual(20);
+        });
+
+        it('Should always use value (and not text) when options have value attributes', function() {
+            var observable = new ko.observable('A');
+            testNode.innerHTML = "<select data-bind='value:myObservable'><option value=''>A</option><option value='A'>B</option></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            var dropdown = testNode.childNodes[0];
+            expect(dropdown.selectedIndex).toEqual(1);
+
+            dropdown.selectedIndex = 0;
+            ko.utils.triggerEvent(dropdown, "change");
+            expect(observable()).toEqual("");
+        });
+
+        it('Should use text value when options have text values but no value attribute', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='value:myObservable'><option>A</option><option>B</option><option>C</option></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+            var dropdown = testNode.childNodes[0];
+            expect(dropdown.selectedIndex).toEqual(1);
+
+            dropdown.selectedIndex = 0;
+            ko.utils.triggerEvent(dropdown, "change");
+            expect(observable()).toEqual("A");
+
+            observable('C');
+            expect(dropdown.selectedIndex).toEqual(2);
+        });
     });
 });
