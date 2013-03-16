@@ -34,6 +34,15 @@ describe('Binding: Value', function() {
         expect(testNode.childNodes[0].value).toEqual("456");
     });
 
+    it('For observable values, should update on change if new value is \'strictly\' different from previous value', function() {
+        var myobservable = new ko.observable("+123");
+        testNode.innerHTML = "<input data-bind='value:someProp' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        expect(testNode.childNodes[0].value).toEqual("+123");
+        myobservable(123);
+        expect(testNode.childNodes[0].value).toEqual("123");
+    });
+
     it('For writeable observable values, should catch the node\'s onchange and write values back to the observable', function () {
         var myobservable = new ko.observable(123);
         testNode.innerHTML = "<input data-bind='value:someProp' />";
