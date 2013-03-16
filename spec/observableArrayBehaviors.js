@@ -31,8 +31,8 @@ describe('Observable Array', function() {
 
         // Try allowed args
         expect((new ko.observableArray([1,2,3]))().length).toEqual(3);
-        expect((new ko.observableArray(null))()).toEqual(null);
-        expect((new ko.observableArray(undefined))()).toEqual(undefined);
+        expect((new ko.observableArray(null))().length).toEqual(0);
+        expect((new ko.observableArray(undefined))().length).toEqual(0);
     });
 
     it('Should be able to write values to it', function () {
