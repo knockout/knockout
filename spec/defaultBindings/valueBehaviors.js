@@ -264,13 +264,52 @@ describe('Binding: Value', function() {
             expect(observable()).toEqual('A');
         });
 
-        it('Should display the caption when the model value changes to undefined', function() {
+        it('Should display the caption when the model value changes to undefined, null, or \"\" when using \'options\' binding', function() {
             var observable = new ko.observable('B');
             testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable'></select>";
             ko.applyBindings({ myObservable: observable }, testNode);
+
+            // Caption is selected when observable changed to undefined
             expect(testNode.childNodes[0].selectedIndex).toEqual(2);
             observable(undefined);
             expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
+            // Caption is selected when observable changed to null
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable(null);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
+            // Caption is selected when observable changed to ""
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable("");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
+        });
+
+        it('Should display the caption when the model value changes to undefined, null, or \"\" when options specified directly', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select data-bind='value:myObservable'><option value=''>Select...</option><option>A</option><option>B</option></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            // Caption is selected when observable changed to undefined
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable(undefined);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
+            // Caption is selected when observable changed to null
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable(null);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
+            // Caption is selected when observable changed to ""
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+            observable("");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+
         });
 
         it('Should update the model value when the UI is changed (setting it to undefined when the caption is selected)', function () {

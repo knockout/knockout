@@ -42,11 +42,19 @@
                     }
                     break;
                 case 'select':
+                    if (value === "")
+                        value = undefined;
+                    if (value === null || value === undefined)
+                        element.selectedIndex = -1;
                     for (var i = element.options.length - 1; i >= 0; i--) {
                         if (ko.selectExtensions.readValue(element.options[i]) == value) {
                             element.selectedIndex = i;
                             break;
                         }
+                    }
+                    // for drop-down select, ensure first is selected
+                    if (!(element.size > 1) && element.selectedIndex === -1) {
+                        element.selectedIndex = 0;
                     }
                     break;
                 default:
