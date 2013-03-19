@@ -24,7 +24,7 @@
         visitedObjects = visitedObjects || new objectLookup();
 
         rootObject = mapInputCallback(rootObject);
-        var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined) && (!(rootObject instanceof Date));
+        var canHaveProperties = (typeof rootObject == "object") && (rootObject !== null) && (rootObject !== undefined) && (!(rootObject instanceof Date)) && (!(rootObject instanceof String)) && (!(rootObject instanceof Number)) && (!(rootObject instanceof Boolean));
         if (!canHaveProperties)
             return rootObject;
 
@@ -63,28 +63,32 @@
             if (typeof rootObject['toJSON'] == 'function')
                 visitorCallback('toJSON');
         } else {
-            for (var propertyName in rootObject) {
-                visitorCallback(propertyName);
-            }
+            for (var propertyName in rootObject)
+                if ( !(typeof rootObject[propertyName] === 'function') || ko.isObservable(rootObject[propertyName]) )
+                    visitorCallback(propertyName);
         }
     };
 
     function objectLookup() {
-        var keys = [];
-        var values = [];
-        this.save = function(key, value) {
-            var existingIndex = ko.utils.arrayIndexOf(keys, key);
+        this.keys = [];
+        this.values = [];
+    };
+
+    objectLookup.prototype = {
+        constructor: objectLookup,
+        save: function(key, value) {
+            var existingIndex = ko.utils.arrayIndexOf(this.keys, key);
             if (existingIndex >= 0)
-                values[existingIndex] = value;
+                this.values[existingIndex] = value;
             else {
-                keys.push(key);
-                values.push(value);
+                this.keys.push(key);
+                this.values.push(value);
             }
-        };
-        this.get = function(key) {
-            var existingIndex = ko.utils.arrayIndexOf(keys, key);
-            return (existingIndex >= 0) ? values[existingIndex] : undefined;
-        };
+        },
+        get: function(key) {
+            var existingIndex = ko.utils.arrayIndexOf(this.keys, key);
+            return (existingIndex >= 0) ? this.values[existingIndex] : undefined;
+        }
     };
 })();
 
