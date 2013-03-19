@@ -14,9 +14,9 @@ ko.bindingHandlers['hasfocus'] = {
             if ("activeElement" in ownerDoc) {
                 var active;
                 try {
-                    active = document.activeElement;
+                    active = ownerDoc.activeElement;
                 } catch(e) {
-                    active = document.body;
+                    active = ownerDoc.body;
                 }
                 isFocused = (active === element);
             }
