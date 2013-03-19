@@ -12,7 +12,13 @@ ko.bindingHandlers['hasfocus'] = {
             element[hasfocusUpdatingProperty] = true;
             var ownerDoc = element.ownerDocument;
             if ("activeElement" in ownerDoc) {
-                isFocused = (ownerDoc.activeElement === element);
+                var active;
+                try {
+                    active = document.activeElement;
+                } catch(e) {
+                    active = document.body;
+                }
+                isFocused = (active === element);
             }
             var modelValue = valueAccessor();
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'hasfocus', isFocused, true);
