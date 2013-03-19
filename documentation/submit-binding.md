@@ -22,7 +22,11 @@ When you use the `submit` binding on a form, Knockout will prevent the browser's
         };
     </script>
 
-As illustrated in this example, KO passes the form element as a parameter to your submit handler function. You can ignore that parameter if you want, but for an example of when it's useful to have a reference to that element, see the docs for [the `ko.postJson` utility](post-json.html).
+As illustrated in this example, KO passes the form element as a parameter to your submit handler function. You can ignore that parameter if you want, or there are various ways you might want to use it, for example:
+
+ * Extracting additional data or state from the form elements
+
+ * Triggering UI-level validation using a library such as [jQuery Validation](https://github.com/jzaefferer/jquery-validation), using code similar to the following snippet: `if ($(formElement).valid()) { /* do something */ }`.
 
 ### Why not just put a `click` handler on the submit button?
 
