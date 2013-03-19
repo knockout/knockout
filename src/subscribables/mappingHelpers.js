@@ -64,6 +64,7 @@
                 visitorCallback('toJSON');
         } else {
 <<<<<<< HEAD
+<<<<<<< HEAD
             for (var propertyName in rootObject) {
                 visitorCallback(propertyName);
             }
@@ -72,6 +73,11 @@
                 if ( !(typeof rootObject[propertyName] === 'function') || ko.isObservable(rootObject[propertyName]) )
                     visitorCallback(propertyName);
 >>>>>>> 3cf90eb... ko.toJS should not serialize functions, fixes #251
+=======
+            for (var propertyName in rootObject)
+                if ( !(typeof rootObject[propertyName] === 'function') || ko.isObservable(rootObject[propertyName]) )
+                    visitorCallback(propertyName);
+>>>>>>> toJS
         }
     };
 
