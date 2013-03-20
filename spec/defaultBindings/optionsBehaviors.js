@@ -112,6 +112,12 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveTexts([]);
     });
 
+    it('Should include a caption even if it\'s blank', function() {
+        testNode.innerHTML = "<select data-bind='options: [\"A\",\"B\"], optionsCaption: \"\"'></select>";
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts(["", "A", "B"]);
+    });
+
     it('Should allow the caption to be given by an observable, and update it when the model value changes (without affecting selection)', function() {
         var myCaption = ko.observable("Initial caption");
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: myCaption'></select>";
@@ -125,6 +131,11 @@ describe('Binding: Options', function() {
         myCaption("New caption");
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["New caption", "A", "B"]);
+
+        // Show that caption will be blank if value is null
+        myCaption(null);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(testNode.childNodes[0]).toHaveTexts(["", "A", "B"]);
     });
 
     it('Should allow the option text to be given by an observable and update it when the model changes without affecting selection', function() {
