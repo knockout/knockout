@@ -15,8 +15,7 @@ describe('Binding: Options', function() {
         var observable = new ko.observableArray(["A", "B", "C"]);
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: observable }, testNode);
-        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
-        expect(displayedOptions).toEqual(["A", "B", "C"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["A", "B", "C"]);
     });
 
     it('Should accept optionsText and optionsValue params to display subproperties of the model values', function() {
@@ -26,10 +25,8 @@ describe('Binding: Options', function() {
         ]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: \"name\", optionsValue: \"id\"'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
-        var displayedValues = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
-        expect(displayedText).toEqual(["bob", "frank"]);
-        expect(displayedValues).toEqual(["6", "13"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["bob", "frank"]);
+        expect(testNode.childNodes[0]).toHaveValues(["6", "13"]);
     });
 
     it('Should accept function in optionsText param to display subproperties of the model values', function() {
@@ -50,8 +47,7 @@ describe('Binding: Options', function() {
         ]);
         testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: function (v) { return v.name + \" (\" + v.job + \")\"; }'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
-        expect(values).toEqual(["bob (manager)", "frank (coder & tester)"]);
+        expect(testNode.childNodes[0]).toHaveValues(["bob (manager)", "frank (coder & tester)"]);
         var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
         expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
     });
@@ -63,8 +59,7 @@ describe('Binding: Options', function() {
         ]);
         testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: \"name\"'></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
-        expect(values).toEqual(["frank"]);
+        expect(testNode.childNodes[0]).toHaveValues(["frank"]);
     });
 
     it('Should include items marked as destroyed if optionsIncludeDestroyed is set', function() {
@@ -74,8 +69,7 @@ describe('Binding: Options', function() {
         ]);
         testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: \"name\", optionsIncludeDestroyed: true'></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var values = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.value; });
-        expect(values).toEqual(["bob", "frank"]);
+        expect(testNode.childNodes[0]).toHaveValues(["bob", "frank"]);
     });
 
     it('Should update the SELECT node\'s options if the model changes', function () {
@@ -83,40 +77,82 @@ describe('Binding: Options', function() {
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: observable }, testNode);
         observable.splice(1, 1);
-        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
-        expect(displayedOptions).toEqual(["A", "C"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["A", "C"]);
     });
 
     it('Should retain as much selection as possible when changing the SELECT node\'s options', function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
-        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'><option>A</option><option selected='selected'>B</option><option selected='selected'>X</option></select>";
+        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'></select>";
         ko.applyBindings({ myValues: observable }, testNode);
+        testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        observable(["B", "C", "A"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+    });
+
+    it('Should retain selection when replacing the options data with new object that have the same "value"', function () {
+        var observable = new ko.observableArray([{x:"A"}, {x:"B"}, {x:"C"}]);
+        testNode.innerHTML = "<select data-bind='options:myValues, optionsValue:\"x\"' multiple='multiple'></select>";
+        ko.applyBindings({ myValues: observable }, testNode);
+        testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        observable([{x:"A"}, {x:"C"}, {x:"B"}]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
     it('Should place a caption at the top of the options list and display it when the model value is undefined', function() {
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: \"Select one...\"'></select>";
         ko.applyBindings({}, testNode);
-        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
-        expect(displayedOptions).toEqual(["Select one...", "A", "B"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["Select one...", "A", "B"]);
+    });
+
+    it('Should not include the caption if the options value is null', function() {
+        testNode.innerHTML = "<select data-bind='options: null, optionsCaption: \"Select one...\"'></select>";
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts([]);
+    });
+
+    it('Should include a caption even if it\'s blank', function() {
+        testNode.innerHTML = "<select data-bind='options: [\"A\",\"B\"], optionsCaption: \"\"'></select>";
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts(["", "A", "B"]);
     });
 
     it('Should allow the caption to be given by an observable, and update it when the model value changes (without affecting selection)', function() {
-        var myCaption = ko.observable("Initial caption"),
-            mySelectedValue = ko.observable("B");
-        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: myCaption, value: mySelectedValue'></select>";
-        ko.applyBindings({ myCaption: myCaption, mySelectedValue: mySelectedValue }, testNode);
+        var myCaption = ko.observable("Initial caption");
+        testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: myCaption'></select>";
+        ko.applyBindings({ myCaption: myCaption }, testNode);
+        testNode.childNodes[0].options[2].selected = true;
 
-        var displayedOptions = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
-        expect(mySelectedValue()).toEqual("B");
-        expect(displayedOptions).toEqual(["Initial caption", "A", "B"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["Initial caption", "A", "B"]);
 
         // Also show we can update the caption without affecting selection
         myCaption("New caption");
-        var displayedOptions2 = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerHTML; });
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
-        expect(mySelectedValue()).toEqual("B");
-        expect(displayedOptions2).toEqual(["New caption", "A", "B"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["New caption", "A", "B"]);
+
+        // Show that caption will be blank if value is null
+        myCaption(null);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(testNode.childNodes[0]).toHaveTexts(["", "A", "B"]);
+    });
+
+    it('Should allow the option text to be given by an observable and update it when the model changes without affecting selection', function() {
+        var people = [
+            { name: ko.observable('Annie'), id: 'A' },
+            { name: ko.observable('Bert'), id: 'B' }
+        ];
+        testNode.innerHTML = "<select data-bind=\"options: people, optionsText: 'name', optionsValue: 'id', optionsCaption: '-'\"></select>";
+        ko.applyBindings({people: people}, testNode);
+        testNode.childNodes[0].options[2].selected = true;
+
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bert"]);
+
+        // Also show we can update the caption without affecting selection
+        people[1].name("Bob");
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bob"]);
     });
 });
