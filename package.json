@@ -14,5 +14,18 @@
     "type": "git",
     "url": "https://github.com/SteveSanderson/knockout.git"
   },
-  "bugs": "https://github.com/SteveSanderson/knockout/issues"
+  "bugs": "https://github.com/SteveSanderson/knockout/issues",
+  "testling": {
+    "preprocess": "build/build.sh",
+    "html": "spec/runner.html?src=build/output/knockout-latest.js",
+    "browsers": [
+      "ie/6..latest",
+      "chrome/20..latest",
+      "firefox/3..latest",
+      "safari/5.0.5..latest",
+      "opera/11.0..latest",
+      "iphone/6..latest",
+      "ipad/6..latest"
+    ]
+  }
 }
