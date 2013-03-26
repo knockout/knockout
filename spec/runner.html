@@ -24,8 +24,13 @@
 
         <!-- knockout -->
         <script type="text/javascript">
-            // An external runner, such as PhantomJS, can prepopulate window.koFilename (e.g., to run tests against the minified build)
-            jasmine.addScriptReference(window.koFilename || "../build/knockout-raw.js");
+            // By default, we run the tests against knockout-raw.js, but you can specify an alternative test
+            // subject as a querystring parameter, e.g., runner.html?src=build/output/knockout-latest.js.
+            // This is used by our automated test runners (PhantomJS and Testling CI).
+            (function() {
+                var koFilenameParam = location.href.match(/[?&]src=([^&]+)/);
+                jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "build/knockout-raw.js"));
+            })();
         </script>
 
         <!-- specs -->
