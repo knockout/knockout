@@ -36,8 +36,7 @@ describe('Binding: Options', function() {
         ]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsText: function (v) { return v[\"name\"] + \" (\" + v[\"job\"] + \")\"; }'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
-        expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["bob (manager)", "frank (coder & tester)"]);
     });
 
     it('Should accept a function in optionsValue param to select subproperties of the model values (and use that for the option text)', function() {
@@ -48,8 +47,7 @@ describe('Binding: Options', function() {
         testNode.innerHTML = "<select data-bind='options: myValues, optionsValue: function (v) { return v.name + \" (\" + v.job + \")\"; }'><option>should be deleted</option></select>";
         ko.applyBindings({ myValues: modelValues }, testNode);
         expect(testNode.childNodes[0]).toHaveValues(["bob (manager)", "frank (coder & tester)"]);
-        var displayedText = ko.utils.arrayMap(testNode.childNodes[0].childNodes, function (node) { return node.innerText || node.textContent; });
-        expect(displayedText).toEqual(["bob (manager)", "frank (coder & tester)"]);
+        expect(testNode.childNodes[0]).toHaveTexts(["bob (manager)", "frank (coder & tester)"]);
     });
 
     it('Should exclude any items marked as destroyed', function() {
