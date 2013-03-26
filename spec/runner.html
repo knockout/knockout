@@ -12,6 +12,7 @@
         <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
         <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
         <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-tap.js"></script>
 
         <!-- our jasmine extensions -->
         <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
@@ -79,6 +80,7 @@
             jasmineEnv.addReporter(htmlReporter);
             jasmineEnv.specFilter = htmlReporter.specFilter;
 
+            jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
             jasmineEnv.execute();
 
           })();
