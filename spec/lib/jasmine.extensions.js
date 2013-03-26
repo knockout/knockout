@@ -18,8 +18,12 @@ jasmine.Matchers.prototype.toContainHtml = function (expectedHtml) {
     return cleanedHtml === expectedHtml;
 };
 
+jasmine.nodeText = function(node) {
+    return 'textContent' in node ? node.textContent : node.innerText;
+}
+
 jasmine.Matchers.prototype.toContainText = function (expectedText) {
-    var actualText = 'textContent' in this.actual ? this.actual.textContent : this.actual.innerText;
+    var actualText = jasmine.nodeText(this.actual);
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
     this.actual = cleanedActualText;    // Fix explanatory message
     return cleanedActualText === expectedText;
@@ -36,7 +40,7 @@ jasmine.Matchers.prototype.toHaveOwnProperties = function (expectedProperties) {
 };
 
 jasmine.Matchers.prototype.toHaveTexts = function (expectedTexts) {
-    var texts = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.innerText || node.textContent; });
+    var texts = ko.utils.arrayMap(this.actual.childNodes, jasmine.nodeText);
     this.actual = texts;   // Fix explanatory message
     return this.env.equals_(texts, expectedTexts);
 };
