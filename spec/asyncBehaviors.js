@@ -2,7 +2,7 @@ describe("Throttled observables", function() {
     beforeEach(function() { waits(1); }); // Workaround for spurious timing-related failures on IE8 (issue #736)
 
     it("Should notify subscribers asynchronously after writes stop for the specified timeout duration", function() {
-        var observable = ko.observable('A').extend({ throttle: 50 });
+        var observable = ko.observable('A').extend({ throttle: 100 });
         var notifiedValues = [];
         observable.subscribe(function(value) {
             notifiedValues.push(value);
@@ -17,7 +17,7 @@ describe("Throttled observables", function() {
         });
 
         // Wait
-        waits(20);
+        waits(10);
         runs(function() {
             // Mutate more
             observable('E');
@@ -28,7 +28,7 @@ describe("Throttled observables", function() {
         // Wait until after timeout
         waitsFor(function() {
             return notifiedValues.length > 0;
-        }, 60);
+        }, 150);
         runs(function() {
             expect(notifiedValues.length).toEqual(1);
             expect(notifiedValues[0]).toEqual("F");
@@ -58,8 +58,8 @@ describe("Throttled dependent observables", function() {
             expect(notifiedValues.length).toEqual(0);
         });
 
-        // After 20ms, still shouldn't have evaluated
-        waits(20);
+        // Still shouldn't have evaluated
+        waits(10);
         runs(function() {
             expect(asyncDepObs()).toBeUndefined(); // Should not update until throttle timeout
             expect(notifiedValues.length).toEqual(0);
@@ -68,7 +68,7 @@ describe("Throttled dependent observables", function() {
         // Now wait for throttle timeout
         waitsFor(function() {
             return notifiedValues.length > 0;
-        }, 110);
+        }, 150);
         runs(function() {
             expect(asyncDepObs()).toEqual('New value');
             expect(notifiedValues.length).toEqual(1);
@@ -103,7 +103,7 @@ describe("Throttled dependent observables", function() {
         // Now wait for throttle timeout
         waitsFor(function() {
             return evaluationCount > 1;
-        }, 110);
+        }, 150);
         runs(function() {
             expect(evaluationCount).toEqual(2); // Finally, it's evaluated
             expect(asyncDepObs()).toEqual("D");
