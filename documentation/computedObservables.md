@@ -226,7 +226,7 @@ A computed observable can be constructed using one of the following forms:
 1. `ko.computed( evaluator [, targetObject, options] )` --- This form supports the most common case of creating a computed observable.
   * `evaluator` --- A function that is used to evaluate the computed observable's current value.
   * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](#managing_this) for more information.
-  * `options` --- A object with further properties for the computed observable. See the full list below.
+  * `options` --- An object with further properties for the computed observable. See the full list below.
 
 1. `ko.computed( options )` --- This single parameter form for creating a computed observable accepts a JavaScript object with any of the following properties.
   * `read` --- Required. A function that is used to evaluate the computed observable's current value.
