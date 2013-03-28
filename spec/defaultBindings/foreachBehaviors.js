@@ -410,8 +410,12 @@ describe('Binding: Foreach', function() {
             someitems: [ 'Alpha', 'Beta' ]
         };
         ko.applyBindings(viewModel, testNode);
-        // Either of the following two results are acceptable.
-        if (testNode.innerHTML.toLowerCase().match(/<\/li>/g).length == 3) {
+        var match = testNode.innerHTML.toLowerCase().match(/<\/li>/g);
+        // Any of the following results are acceptable.
+        if (!match) {
+            // Opera 11.5 doesn't add any closing </li> tags
+            expect(testNode).toContainHtml('<ul><li>header item<!-- ko foreach: someitems --><li data-bind="text: $data">alpha<li data-bind="text: $data">beta<!-- /ko --></ul>');
+        } else if (match.length == 3) {
             // Modern browsers implicitly re-add the closing </li> tags
             expect(testNode).toContainHtml('<ul><li>header item</li><!-- ko foreach: someitems --><li data-bind="text: $data">alpha</li><li data-bind="text: $data">beta</li><!-- /ko --></ul>');
         } else {

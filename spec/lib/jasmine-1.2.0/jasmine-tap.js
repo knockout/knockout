@@ -45,27 +45,29 @@
             var errorMessage = '';
 
             var results = spec.results();
-            var passed = results.passed();
+            if (!results.skipped) {
+                var passed = results.passed();
 
-            this.passed_asserts += results.passedCount;
-            this.executed_asserts += results.totalCount;
+                this.passed_asserts += results.passedCount;
+                this.executed_asserts += results.totalCount;
 
-            if (passed) {
-                this.passed_specs++;
-                resultText = "ok";
-            } else {
-                var items = results.getItems();
-                var i = 0;
-                var expectationResult, stackMessage;
-                while (expectationResult = items[i++]) {
-                    if (expectationResult.trace) {
-                        stackMessage = expectationResult.trace.stack? expectationResult.trace.stack : expectationResult.message;
-                        errorMessage += '\n  '+ stackMessage;
+                if (passed) {
+                    this.passed_specs++;
+                    resultText = "ok";
+                } else {
+                    var items = results.getItems();
+                    var i = 0;
+                    var expectationResult, stackMessage;
+                    while (expectationResult = items[i++]) {
+                        if (expectationResult.trace) {
+                            stackMessage = expectationResult.trace.stack? expectationResult.trace.stack : expectationResult.message;
+                            errorMessage += '\n  '+ stackMessage;
+                        }
                     }
                 }
-            }
 
-            this.log(resultText +" "+ (spec.id + 1) +" - "+ spec.suite.description +" : "+ spec.description + errorMessage);
+                this.log(resultText +" "+ (spec.id + 1) +" - "+ spec.suite.description +" : "+ spec.description + errorMessage);
+            }
         },
 
         reportRunnerResults: function(runner) {
