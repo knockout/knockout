@@ -86,17 +86,29 @@ describe('Mapping helpers', function() {
         expect(result.booleanValue).toEqual(booleanValue);
     });
 
-    it('ko.toJS shouldn\'t serialize functions', function() {
+    it('ko.toJS should preserve function properties by default', function() {
+        var functionInstance = function() { return "I shouldn't be included" },
+            obj = {
+                include1: ko.observable("I should be included"),
+                include2: functionInstance
+            };
+
+        var result = ko.toJS(obj);
+        expect(result.include1).toEqual("I should be included");
+        expect(result.include2).toBe(functionInstance);
+    });
+
+    it('ko.toJS should exclude functions if you pass false as the second arg', function() {
         var obj = {
-            include: ko.observable("I should be serialized"),
+            include: ko.observable("I should be included"),
             exclude: function(){
-                return "I shouldn't be serialized"
+                return "I shouldn't be included"
             }
         };
 
-        var result = ko.toJS(obj);
-        expect(result.include).toEqual("I should be serialized");
-        expect(result.exclude).toEqual(undefined);
+        var result = ko.toJS(obj, false);
+        expect(result.include).toEqual("I should be included");
+        expect('exclude' in result).toEqual(false);
     });
 
     it('ko.toJSON should unwrap everything and then stringify', function() {
