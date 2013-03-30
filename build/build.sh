@@ -42,17 +42,23 @@ cp fragments/version-header.js $OutMinFile
 cat $OutMinFile.temp                >> $OutMinFile
 rm $OutMinFile.temp
 
-# Inject the version number string
-Version=`cat fragments/version.txt`
+# Pull the version number out of package.json and inject it into the built output files
+Version=`sed -n 's/.*"version":\s*"\([^"]*\)".*/\1/p' ../package.json`
 sed -i~ -e "s/##VERSION##/$Version/g" $OutDebugFile $OutMinFile
 
 # Delete the odd files left behind on Mac
 rm -f output/*.js~
 
 # Run tests in Phantomjs if available
-command -v phantomjs >/dev/null && (cd ..; echo; phantomjs spec/runner.phantom.js || handle_fail)
+if command -v phantomjs >/dev/null
+then
+  (cd ..; echo; phantomjs spec/runner.phantom.js) || handle_fail
+fi
 
 # Run tests in Nodejs if available
-command -v node >/dev/null && (cd ..; echo; node spec/runner.node.js || handle_fail)
+if command -v node >/dev/null
+then
+  (cd ..; echo; node spec/runner.node.js) || handle_fail
+fi
 
 echo; echo "Build succeeded"

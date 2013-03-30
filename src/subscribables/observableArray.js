@@ -1,15 +1,13 @@
 ko.observableArray = function (initialValues) {
-    if (arguments.length == 0) {
-        // Zero-parameter constructor initializes to empty array
-        initialValues = [];
-    }
-    if ((initialValues !== null) && (initialValues !== undefined) && !('length' in initialValues))
+    initialValues = initialValues || [];
+
+    if (typeof initialValues != 'object' || !('length' in initialValues))
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
 
     var result = ko.observable(initialValues);
     ko.utils.extend(result, ko.observableArray['fn']);
     return result;
-}
+};
 
 ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
@@ -89,7 +87,7 @@ ko.observableArray['fn'] = {
             this.valueHasMutated();
         }
     }
-}
+};
 
 // Populate ko.observableArray.fn with read/write functions from native arrays
 // Important: Do not add any additional functions here that may reasonably be used to *read* data from the array

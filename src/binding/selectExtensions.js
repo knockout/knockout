@@ -11,7 +11,7 @@
                     if (element[hasDomDataExpandoProperty] === true)
                         return ko.utils.domData.get(element, ko.bindingHandlers.options.optionValueDomDataKey);
                     return ko.utils.ieVersion <= 7
-                        ? (element.getAttributeNode('value').specified ? element.value : element.text)
+                        ? (element.getAttributeNode('value') && element.getAttributeNode('value').specified ? element.value : element.text)
                         : element.value;
                 case 'select':
                     return element.selectedIndex >= 0 ? ko.selectExtensions.readValue(element.options[element.selectedIndex]) : undefined;
@@ -42,11 +42,19 @@
                     }
                     break;
                 case 'select':
+                    if (value === "")
+                        value = undefined;
+                    if (value === null || value === undefined)
+                        element.selectedIndex = -1;
                     for (var i = element.options.length - 1; i >= 0; i--) {
                         if (ko.selectExtensions.readValue(element.options[i]) == value) {
                             element.selectedIndex = i;
                             break;
                         }
+                    }
+                    // for drop-down select, ensure first is selected
+                    if (!(element.size > 1) && element.selectedIndex === -1) {
+                        element.selectedIndex = 0;
                     }
                     break;
                 default:

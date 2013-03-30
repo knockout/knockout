@@ -1,0 +1,1 @@
+# This file is needed, because otherwise the .gitignore causes npm not to package the build output

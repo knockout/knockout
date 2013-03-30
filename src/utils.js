@@ -1,6 +1,4 @@
 ko.utils = (function () {
-    var stringTrimRegex = /^(\s|\u00A0)+|(\s|\u00A0)+$/g;
-
     var objectForEach = function(obj, action) {
         for (var prop in obj) {
             if (obj.hasOwnProperty(prop)) {
@@ -192,7 +190,10 @@ ko.utils = (function () {
         },
 
         stringTrim: function (string) {
-            return (string || "").replace(stringTrimRegex, "");
+            return string === null || string === undefined ? '' :
+                string.trim ?
+                    string.trim() :
+                    string.toString().replace(/^[\s\xa0]+|[\s\xa0]+$/g, '');
         },
 
         stringTokenize: function (string, delimiter) {
@@ -259,11 +260,17 @@ ko.utils = (function () {
                 jQuery(element)['bind'](eventType, handler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
-            else if (typeof element.attachEvent != "undefined")
-                element.attachEvent("on" + eventType, function (event) {
-                    handler.call(element, event);
+            else if (typeof element.attachEvent != "undefined") {
+                var attachEventHandler = function (event) { handler.call(element, event); },
+                    attachEventName = "on" + eventType;
+                element.attachEvent(attachEventName, attachEventHandler);
+
+                // IE does not dispose attachEvent handlers automatically (unlike with addEventListener)
+                // so to avoid leaks, we have to remove them manually. See bug #856
+                ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                    element.detachEvent(attachEventName, attachEventHandler);
                 });
-            else
+            } else
                 throw new Error("Browser doesn't support addEventListener or attachEvent");
         },
 
@@ -322,21 +329,17 @@ ko.utils = (function () {
             if ((value === null) || (value === undefined))
                 value = "";
 
-            if (element.nodeType === 3) {
-                element.data = value;
+            // We need there to be exactly one child: a text node.
+            // If there are no children, more than one, or if it's not a text node,
+            // we'll clear everything and create a single text node.
+            var innerTextNode = ko.virtualElements.firstChild(element);
+            if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
+                ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
             } else {
-                // We need there to be exactly one child: a text node.
-                // If there are no children, more than one, or if it's not a text node,
-                // we'll clear everything and create a single text node.
-                var innerTextNode = ko.virtualElements.firstChild(element);
-                if (!innerTextNode || innerTextNode.nodeType != 3 || ko.virtualElements.nextSibling(innerTextNode)) {
-                    ko.virtualElements.setDomNodeChildren(element, [document.createTextNode(value)]);
-                } else {
-                    innerTextNode.data = value;
-                }
-
-                ko.utils.forceRefresh(element);
+                innerTextNode.data = value;
             }
+
+            ko.utils.forceRefresh(element);
         },
 
         setElementName: function(element, name) {
@@ -366,7 +369,8 @@ ko.utils = (function () {
         ensureSelectElementIsRenderedCorrectly: function(selectElement) {
             // Workaround for IE9 rendering bug - it doesn't reliably display all the text in dynamically-added select boxes unless you force it to re-render by updating the width.
             // (See https://github.com/SteveSanderson/knockout/issues/312, http://stackoverflow.com/questions/5908494/select-only-shows-first-char-of-selected-option)
-            if (ieVersion >= 9) {
+            // Also fixes IE7 and IE8 bug that causes selects to be zero width if enclosed by 'if' or 'with'. (See issue #839)
+            if (ieVersion) {
                 var originalWidth = selectElement.style.width;
                 selectElement.style.width = 0;
                 selectElement.style.width = originalWidth;
@@ -490,6 +494,7 @@ ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
+ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {
     // Function.prototype.bind is a standard part of ECMAScript 5th Edition (December 2009, http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-262.pdf)

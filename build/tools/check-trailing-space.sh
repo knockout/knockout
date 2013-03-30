@@ -3,7 +3,7 @@
 # Check that all files have trailing spaces stripped
 OutTrailingSpaceListFile='output/knockout-files-to-clean.txt'
 cd ..
-grep -nrI '[ ]$' `find * | grep -E "\.(js|html|css|bat|ps1)$"` | grep -v "^build/output/" > build/$OutTrailingSpaceListFile
+grep -nrI '[ ]$' `/usr/bin/find * | grep -E "\.(js|html|css|bat|ps1)$"` | grep -v "^build/output/" > build/$OutTrailingSpaceListFile
 cd build
 if [ -s $OutTrailingSpaceListFile ]
 then
