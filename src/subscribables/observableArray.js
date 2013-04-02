@@ -86,7 +86,9 @@ ko.observableArray['fn'] = {
             this.peek()[index] = newItem;
             this.valueHasMutated();
         }
-    }
+    },
+
+    'isObservableArray': true
 };
 
 // Populate ko.observableArray.fn with read/write functions from native arrays

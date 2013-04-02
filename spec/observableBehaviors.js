@@ -251,4 +251,10 @@ describe('Observable', function() {
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
     });
+
+    it('Should return false when you call isObservableArray', function() {
+        var instance = new ko.observable();
+        expect(instance.isObservableArray).toBeFalsy();
+        expect(instance.isObservableArray).toBeUndefined();
+    });
 });

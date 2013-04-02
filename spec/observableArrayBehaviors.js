@@ -260,4 +260,40 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
-})
+
+    it('Should return true when you call isObservableArray', function() {
+        expect(testObservableArray.isObservableArray).toBeTruthy();
+    });
+
+    it('Should throw an exception if value passed to observable array is not of array, null or undefined', function() {
+        var threw;
+
+        // should not throw exception
+        try { threw = false; testObservableArray([]); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+        try { threw = false; testObservableArray([5,6,7]); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+        try { threw = false; testObservableArray([{'size': 10}]); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+        try { threw = false; testObservableArray(null); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+        try { threw = false; testObservableArray(undefined); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+        try { threw = false; testObservableArray(); } catch(ex) { threw = true }
+        expect(threw).toEqual(false);
+
+        // should throw exception
+        try { threw = false; testObservableArray('test value'); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+        try { threw = false; testObservableArray(true); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+        try { threw = false; testObservableArray(10); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+        try { threw = false; testObservableArray({'size': 10}); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+        try { threw = false; testObservableArray(new Date()); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+        try { threw = false; testObservableArray(function(){return true;}); } catch(ex) { threw = true }
+        expect(threw).toEqual(true);
+    });
+});
