@@ -76,7 +76,6 @@ describe('Mapping helpers', function() {
         expect(result.due instanceof Date).toEqual(true);
         expect(result.due).toEqual(date);
 
-        console.log(string instanceof String, result.string instanceof String);
         expect(result.string instanceof String).toEqual(true);
         expect(result.string).toEqual(string);
 
@@ -85,6 +84,31 @@ describe('Mapping helpers', function() {
 
         expect(result.booleanValue instanceof Boolean).toEqual(true);
         expect(result.booleanValue).toEqual(booleanValue);
+    });
+
+    it('ko.toJS should preserve function properties by default', function() {
+        var functionInstance = function() { return "I shouldn't be included" },
+            obj = {
+                include1: ko.observable("I should be included"),
+                include2: functionInstance
+            };
+
+        var result = ko.toJS(obj);
+        expect(result.include1).toEqual("I should be included");
+        expect(result.include2).toBe(functionInstance);
+    });
+
+    it('ko.toJS should exclude functions if you pass false as the second arg', function() {
+        var obj = {
+            include: ko.observable("I should be included"),
+            exclude: function(){
+                return "I shouldn't be included"
+            }
+        };
+
+        var result = ko.toJS(obj, false);
+        expect(result.include).toEqual("I should be included");
+        expect('exclude' in result).toEqual(false);
     });
 
     it('ko.toJSON should unwrap everything and then stringify', function() {
