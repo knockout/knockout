@@ -34,14 +34,14 @@ describe('Expression Rewriting', function() {
         // The parsing may or may not keep unnecessary spaces. So to avoid confusion, avoid unnecessary spaces.
         var result = ko.expressionRewriting.parseObjectLiteral(
             "myObject:{someChild:{},someChildArray:[1,2,3],\"quotedChildProp\":'string value'},\n"
-          + "someFn:function(a,b,c){var regex=/}/;var str='/})({';return{};},"
+          + "someFn:function(a,b,c){var regex=/{/;var str='/})({';return{};},"
           + "myArray:[{},function(){},\"my'Str\",'my\"Str']"
         );
         expect(result.length).toEqual(3);
         expect(result[0].key).toEqual("myObject");
         expect(result[0].value).toEqual("{someChild:{},someChildArray:[1,2,3],\"quotedChildProp\":'string value'}");
         expect(result[1].key).toEqual("someFn");
-        expect(result[1].value).toEqual("function(a,b,c){var regex=/}/;var str='/})({';return{};}");
+        expect(result[1].value).toEqual("function(a,b,c){var regex=/{/;var str='/})({';return{};}");
         expect(result[2].key).toEqual("myArray");
         expect(result[2].value).toEqual("[{},function(){},\"my'Str\",'my\"Str']");
     });
@@ -140,5 +140,17 @@ describe('Expression Rewriting', function() {
         expect(rewritten).toEqual("'a':function(){return 1}");
         var evaluated = eval("({" + rewritten + "})");
         expect(evaluated['a']()).toEqual(1);
+    });
+
+    // The parser incorrectly processes sets of division symbols as regular expression delimiters (see #913)
+    xit('Should be able to parse and evaluate object literals containing division', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("a:2/1,b:6/2,c:0");
+        expect(result).toEqual([{key:'a', value: '2/1'}, {key: 'b', value: '6/2'}, {key: 'c', value: '0'}]);
+        var rewritten = ko.expressionRewriting.preProcessBindings(result, {valueAccessors:true});
+        expect(rewritten).toEqual("'a':function(){return 2/1},'b':function(){return 6/2},'c':function(){return 0}");
+        var evaluated = eval("({" + rewritten + "})");
+        expect(evaluated.a()).toEqual(2);
+        expect(evaluated.b()).toEqual(3);
+        expect(evaluated.c()).toEqual(0);
     });
 });

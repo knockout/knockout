@@ -3,6 +3,7 @@ ko.expressionRewriting = (function () {
 
     // Matches something that can be assigned to--either an isolated identifier or something ending with a property accessor
     // This is designed to be simple and avoid false negatives, but could produce false positives (e.g., a+b.c).
+    // This also will not properly handle nested brackets (e.g., obj1[obj2['prop']]; see #911).
     var javaScriptAssignmentTarget = /^(?:[$_a-z][$\w]*|(.+)(\.\s*[$_a-z][$\w]*|\[.+\]))$/i;
 
     function getWriteableValue(expression) {
@@ -12,12 +13,26 @@ ko.expressionRewriting = (function () {
         return match === null ? false : match[1] ? ('Object(' + match[1] + ')' + match[2]) : expression;
     }
 
+    // The following regular expressions will be used to split an object-literal string into tokens
+
+        // These two match strings, either with double quotes or single quotes
     var stringDouble = '(?:"(?:[^"\\\\]|\\\\.)*")',
         stringSingle = "(?:'(?:[^'\\\\]|\\\\.)*')",
+        // Matches a regular expression (text enclosed by slashes), but will also erroneously match sets
+        // of divisions as a regular expression.
         stringRegexp = '(?:/(?:[^/\\\\]|\\\\.)*/)',
+        // These characters have special meaning to the parser and must not appear in the middle of a
+        // token, except as part of a string.
         specials = ',"\'{}()/:[\\]',
+        // Match text (at least two characters) that does not contain any of the above special characters,
+        // although some of the special characters are allowed to start it (all but the colon and comma).
+        // The text can contain spaces, but leading or trailing spaces are skipped.
         everyThingElse = '(?:[^\\s:,][^' + specials + ']*[^\\s' + specials + '])',
+        // Match any non-space character not matched already. This will match colons and commas, since they're
+        // not matched by "everyThingElse", but will also match any other single character that wasn't already
+        // matched (for example: in "a: 1, b: 2", each of the non-space characters will be matched by oneNotSpace).
         oneNotSpace = '[^\\s]',
+        // Create the actual regular expression by or-ing the above strings. The order is important.
         bindingToken = RegExp('(?:' + stringDouble + '|' + stringSingle + '|' + stringRegexp + '|' + everyThingElse + '|' + oneNotSpace + ')', 'g');
 
     function parseObjectLiteral(objectLiteralString) {
