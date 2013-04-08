@@ -76,7 +76,6 @@ describe('Mapping helpers', function() {
         expect(result.due instanceof Date).toEqual(true);
         expect(result.due).toEqual(date);
 
-        console.log(string instanceof String, result.string instanceof String);
         expect(result.string instanceof String).toEqual(true);
         expect(result.string).toEqual(string);
 
