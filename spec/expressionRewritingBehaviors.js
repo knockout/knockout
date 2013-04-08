@@ -46,16 +46,25 @@ describe('Expression Rewriting', function() {
         expect(result[2].value).toEqual("[{},function(){},\"my'Str\",'my\"Str']");
     });
 
+    it('Should be able to parse object literals containing division and regular expressions', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("div: null/5, regexpFunc: function(){var regex=/{/g;return /123/;}");
+        expect(result.length).toEqual(2);
+        expect(result[0].key).toEqual("div");
+        expect(result[0].value).toEqual("null/5");
+        expect(result[1].key).toEqual("regexpFunc");
+        expect(result[1].value).toEqual("function(){var regex=/{/g;return/123/;}");
+    });
+
     it('Should be able to cope with malformed syntax (things that aren\'t key-value pairs)', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }, good5:5");
-        expect(result.length).toEqual(5);
+        expect(result.length).toEqual(4);
         expect(result[0].unknown).toEqual("malformed1");
         expect(result[1].unknown).toEqual("mal:formed2");
         expect(result[2].key).toEqual("good");
         expect(result[2].value).toEqual("3");
-        expect(result[4].key).toEqual("good5");
-        expect(result[4].value).toEqual("5");
-        // There's not really a good 'should' value for "{ malformed: 4 }", so don't check
+        // "{ malformed: 4 }" gets skipped because there's no valid key value
+        expect(result[3].key).toEqual("good5");
+        expect(result[3].value).toEqual("5");
     });
 
     it('Should ensure all keys are wrapped in quotes', function() {
@@ -142,15 +151,16 @@ describe('Expression Rewriting', function() {
         expect(evaluated['a']()).toEqual(1);
     });
 
-    // The parser incorrectly processes sets of division symbols as regular expression delimiters (see #913)
-    xit('Should be able to parse and evaluate object literals containing division', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("a:2/1,b:6/2,c:0");
-        expect(result).toEqual([{key:'a', value: '2/1'}, {key: 'b', value: '6/2'}, {key: 'c', value: '0'}]);
+    it('Should be able to parse and evaluate object literals containing division', function() {
+        // Test a variety of expressions that include a division
+        // The final regex ensures that each of the divisions is run through the code that distinguishes between the two types of slashes
+        var result = ko.expressionRewriting.parseObjectLiteral("a: null/1, b: 2/1, c: (6) / 2, d: '2'/2, r: /a regex/");
+        expect(result).toEqual([{key:'a', value: 'null/1'}, {key: 'b', value: '2/1'}, {key: 'c', value: '(6)/2'}, {key: 'd', value: '\'2\'/2'}, {key: 'r', value: '/a regex/'}]);
         var rewritten = ko.expressionRewriting.preProcessBindings(result, {valueAccessors:true});
-        expect(rewritten).toEqual("'a':function(){return 2/1},'b':function(){return 6/2},'c':function(){return 0}");
         var evaluated = eval("({" + rewritten + "})");
-        expect(evaluated.a()).toEqual(2);
-        expect(evaluated.b()).toEqual(3);
-        expect(evaluated.c()).toEqual(0);
+        expect(evaluated.a()).toEqual(0);
+        expect(evaluated.b()).toEqual(2);
+        expect(evaluated.c()).toEqual(3);
+        expect(evaluated.d()).toEqual(1);
     });
 });
