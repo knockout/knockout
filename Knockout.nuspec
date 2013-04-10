@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>aknudsen.knockoutjs</id>
+    <version>2.2.5</version>
+    <authors>Steve Sanderson, Arve Knudsen</authors>
+    <owners>Steve Sanderson</owners>
+    <licenseUrl>http://opensource.org/licenses/mit-license.php</licenseUrl>
+    <projectUrl>http://knockoutjs.com/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A JavaScript MVVM library to to help you create rich, dynamic user interfaces with clean maintainable code - fork by Arve Knudsen</description>
+    <releaseNotes>Don't clean jQuery node data in presence of beforeRemove callback.</releaseNotes>
+    <copyright>Copyright 2013</copyright>
+    <tags>knockout mvvm javascript</tags>
+  </metadata>
+  <files>
+    <file src="knockout-*.js" target="Content\Scripts"/> 
+  </files>
+</package>

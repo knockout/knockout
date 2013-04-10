@@ -106,11 +106,17 @@
                 for (var i = 0, n = items.length; i < n; i++) {
                     if (items[i]) {
                         ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
-                            callback(node, i, items[i].arrayEntry);
+                            callback(node, i, items[i].arrayEntry, isFirstExecution);
                         });
                     }
                 }
             }
+        }
+
+        // Clean node, but only Knockout data as the beforeRemove callback is
+        // responsible for tearing the node down
+        function cleanNode(node) {
+            ko.cleanNode(node, false);
         }
 
         for (var i = 0, editScriptItem, movedIndex; editScriptItem = editScript[i]; i++) {
@@ -156,13 +162,19 @@
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
-        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? cleanNode : ko.removeNode);
 
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
             // Get nodes for newly added items
-            if (!mapData.mappedNodes)
-                ko.utils.extend(mapData, mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable));
+            if (!mapData.mappedNodes) {
+                var newMapData = mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable),
+                    beforeAddItems = [];
+                ko.utils.extend(mapData, newMapData);
+                // Invoke callback to process new nodes
+                beforeAddItems[mapData.indexObservable()] = mapData;
+                callCallback(options['beforeAdd'], beforeAddItems);
+            }
 
             // Put nodes in the right place if they aren't there already
             for (var j = 0; node = mapData.mappedNodes[j]; nextNode = node.nextSibling, lastNode = node, j++) {
@@ -186,7 +198,7 @@
 
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
-        callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
+        callCallback(options['afterAdd'], itemsForAfterAddCallbacks, true);
 
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);

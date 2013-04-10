@@ -11,6 +11,8 @@ desktop.ini
 .eprj
 perf/*
 *.orig
+*~
+*.nupkg
 
 .DS_Store
 npm-debug.log
