@@ -60,11 +60,30 @@ describe('Mapping helpers', function() {
         expect(result.someProp.owner).toEqual(result);
     });
 
-    it('ko.toJS should treat Date instances as primitives (and not walk their subproperties)', function () {
+    it('ko.toJS should treat Date, Number, String and Boolean instances as primitives (and not walk their subproperties)', function () {
         var date = new Date();
-        var result = ko.toJS({ due: ko.observable(date) });
+        var string = new String();
+        var number = new Number();
+        var booleanValue = new Boolean(); // 'boolean' is a resever word in Javascript
+
+        var result = ko.toJS({
+            due: ko.observable(date),
+            string: ko.observable(string),
+            number: ko.observable(number),
+            booleanValue: ko.observable(booleanValue)
+        });
+
         expect(result.due instanceof Date).toEqual(true);
         expect(result.due).toEqual(date);
+
+        expect(result.string instanceof String).toEqual(true);
+        expect(result.string).toEqual(string);
+
+        expect(result.number instanceof Number).toEqual(true);
+        expect(result.number).toEqual(number);
+
+        expect(result.booleanValue instanceof Boolean).toEqual(true);
+        expect(result.booleanValue).toEqual(booleanValue);
     });
 
     it('ko.toJSON should unwrap everything and then stringify', function() {
