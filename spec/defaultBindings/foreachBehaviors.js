@@ -54,13 +54,15 @@ describe('Binding: Foreach', function() {
 
     // Define jQuery to test interaction with that
     describe('With jQuery present', function () {
-        var origJQuery;
+        var origJQuery, jQuery;
 
         beforeEach(function () {
             // Spy on jQuery
             origJQuery = window.jQuery;
-            window.jQuery = jasmine.createSpy('jQuery');
+            jQuery = window.jQuery = jasmine.createSpy('jQuery');
             window.jQuery.cleanData = jasmine.createSpy('jQuery.cleanData');
+            expect(typeof jQuery).toBe("function", "jQuery spy should be a function");
+            expect(typeof jQuery.cleanData).toBe("function", "jQuery.cleanData spy should be a function");
         });
 
         afterEach(function () {
