@@ -19,6 +19,11 @@
             return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext, node) : null;
         },
 
+        'getBindingAccessors': function(node, bindingContext) {
+            var bindingsString = this['getBindingsString'](node, bindingContext);
+            return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext, node, {'valueAccessors':true}) : null;
+        },
+
         // The following function is only used internally by this default provider.
         // It's not part of the interface definition for a general binding provider.
         'getBindingsString': function(node, bindingContext) {
@@ -31,9 +36,9 @@
 
         // The following function is only used internally by this default provider.
         // It's not part of the interface definition for a general binding provider.
-        'parseBindingsString': function(bindingsString, bindingContext, node) {
+        'parseBindingsString': function(bindingsString, bindingContext, node, options) {
             try {
-                var bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, this.bindingCache);
+                var bindingFunction = createBindingsStringEvaluatorViaCache(bindingsString, this.bindingCache, options);
                 return bindingFunction(bindingContext, node);
             } catch (ex) {
                 ex.message = "Unable to parse bindings.\nBindings value: " + bindingsString + "\nMessage: " + ex.message;
@@ -44,17 +49,17 @@
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
 
-    function createBindingsStringEvaluatorViaCache(bindingsString, cache) {
-        var cacheKey = bindingsString;
+    function createBindingsStringEvaluatorViaCache(bindingsString, cache, options) {
+        var cacheKey = bindingsString + (options && options['valueAccessors'] || '');
         return cache[cacheKey]
-            || (cache[cacheKey] = createBindingsStringEvaluator(bindingsString));
+            || (cache[cacheKey] = createBindingsStringEvaluator(bindingsString, options));
     }
 
-    function createBindingsStringEvaluator(bindingsString) {
+    function createBindingsStringEvaluator(bindingsString, options) {
         // Build the source for a function that evaluates "expression"
         // For each scope variable, add an extra level of "with" nesting
         // Example result: with(sc1) { with(sc0) { return (expression) } }
-        var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString),
+        var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString, options),
             functionBody = "with($context){with($data||{}){return{" + rewrittenBindings + "}}}";
         return new Function("$context", "$element", functionBody);
     }

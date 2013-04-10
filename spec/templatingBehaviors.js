@@ -366,7 +366,7 @@ describe('Templating', function() {
         expect(viewModel.didCallMyFunction).toEqual(true);
     });
 
-    it('Data binding syntax should permit nested templates, and only bind inner templates once', function() {
+    it('Data binding syntax should permit nested templates, and only bind inner templates once when using getBindings', function() {
         // Will verify that bindings are applied only once for both inline (rewritten) bindings,
         // and external (non-rewritten) ones
         var originalBindingProvider = ko.bindingProvider.instance;
@@ -375,9 +375,48 @@ describe('Templating', function() {
                 return (node.tagName == 'EM') || originalBindingProvider.nodeHasBindings(node, bindingContext);
             },
             getBindings: function(node, bindingContext) {
-                if (node.tagName == 'EM')
-                    return { text: ++model.numBindings };
+                if (node.tagName == 'EM') {
+                    return {
+                        text: ko.bindingValueIsAccessor(function() {    // the value must be wrapped in an accessor function
+                            return ++model.numBindings;
+                        })
+                    };
+                }
                 return originalBindingProvider.getBindings(node, bindingContext);
+            }
+        };
+
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            outerTemplate: "Outer <div data-bind='template: { name: \"innerTemplate\", bypassDomNodeWrap: true }'></div>",
+            innerTemplate: "Inner via inline binding: <span data-bind='text: ++numBindings'></span>"
+                         + "Inner via external binding: <em></em>"
+        }));
+        var model = { numBindings: 0 };
+        testNode.innerHTML = "<div data-bind='template: { name: \"outerTemplate\", bypassDomNodeWrap: true }'></div>";
+        ko.applyBindings(model, testNode);
+        expect(model.numBindings).toEqual(2);
+        expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>2</span>inner via external binding: <em>1</em></div>");
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
+
+    it('Data binding syntax should permit nested templates, and only bind inner templates once when using getBindingAccessors', function() {
+        // Will verify that bindings are applied only once for both inline (rewritten) bindings,
+        // and external (non-rewritten) ones
+        var originalBindingProvider = ko.bindingProvider.instance;
+        ko.bindingProvider.instance = {
+            nodeHasBindings: function(node, bindingContext) {
+                return (node.tagName == 'EM') || originalBindingProvider.nodeHasBindings(node, bindingContext);
+            },
+            getBindingAccessors: function(node, bindingContext) {
+                if (node.tagName == 'EM') {
+                    return {
+                        text: function() {
+                            return ++model.numBindings;
+                        }
+                    };
+                }
+                return originalBindingProvider.getBindingAccessors(node, bindingContext);
             }
         };
 

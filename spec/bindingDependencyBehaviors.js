@@ -117,4 +117,77 @@ describe('Binding dependencies', function() {
         ko.applyBindings({ myObservable: observable }, testNode);
         expect(hasUpdatedSecondBinding).toEqual(true);
     });
+
+    it('Should be able to get all updates to observables in both init and update', function() {
+        var lastBoundValueInit, lastBoundValueUpdate;
+        ko.bindingHandlers.testInit = {
+            init: function(element, valueAccessor) {
+                ko.dependentObservable(function() {
+                    lastBoundValueInit = ko.utils.unwrapObservable(valueAccessor());
+                });
+            }
+        };
+        ko.bindingHandlers.testUpdate = {
+            update: function(element, valueAccessor) {
+                lastBoundValueUpdate = ko.utils.unwrapObservable(valueAccessor());
+            }
+        };
+        testNode.innerHTML = "<div data-bind='testInit: myProp()'></div><div data-bind='testUpdate: myProp()'></div>";
+        var vm = ko.observable({ myProp: ko.observable("initial value") });
+        ko.applyBindings(vm, testNode);
+        expect(lastBoundValueInit).toEqual("initial value");
+        expect(lastBoundValueUpdate).toEqual("initial value");
+
+        // update value of observable
+        vm().myProp("second value");
+        expect(lastBoundValueInit).toEqual("second value");
+        expect(lastBoundValueUpdate).toEqual("second value");
+
+        // update value of observable to another observable
+        vm().myProp(ko.observable("third value"));
+        expect(lastBoundValueInit).toEqual("third value");
+        expect(lastBoundValueUpdate).toEqual("third value");
+
+        // update view model with brand-new property
+        /* TODO: fix observable view models
+        vm({ myProp: function() {return "fourth value"; }});
+        expect(lastBoundValueInit).toEqual("fourth value");
+        expect(lastBoundValueUpdate).toEqual("fourth value");*/
+    });
+
+    // This is a temporary spec that should fail once the independent bindings fix is included
+    it('Should update all bindings if a binding unwraps an observable in dependent mode', function() {
+        var countUpdates = 0, observable = ko.observable(1);
+        ko.bindingHandlers.countingHandler = {
+            update: function() { countUpdates++; }
+        }
+        ko.bindingHandlers.unwrappingHandler = {
+            update: function(element, valueAccessor) { valueAccessor(); }
+        }
+        testNode.innerHTML = "<div data-bind='countingHandler: true, unwrappingHandler: myObservable()'></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        expect(countUpdates).toEqual(1);
+        observable(3);
+        expect(countUpdates).toEqual(2);
+    });
+
+    it('Should access latest value from extra binding when normal binding is updated', function() {
+        delete ko.bindingHandlers.nonexistentHandler;
+        var observable = ko.observable(), updateValue;
+        var vm = {myObservable: observable, myNonObservable: "first value"};
+        ko.bindingHandlers.existentHandler = {
+            update: function(element, valueAccessor, allBindingsAccessor) {
+                valueAccessor()();  // create dependency
+                updateValue = allBindingsAccessor().nonexistentHandler;
+            }
+        }
+        testNode.innerHTML = "<div data-bind='existentHandler: myObservable, nonexistentHandler: myNonObservable'></div>";
+
+        ko.applyBindings(vm, testNode);
+        expect(updateValue).toEqual("first value");
+        vm.myNonObservable = "second value";
+        observable.notifySubscribers();
+        expect(updateValue).toEqual("second value");
+    });
 });
