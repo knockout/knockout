@@ -185,6 +185,10 @@
     ko.applyBindings = function (viewModel, rootNode) {
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
             throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
+			
+		if(typeof rootNode === 'undefined' && arguments.length === 2)
+			console.warn('The rootNode parameter is `undefined` and will default to window.document.body');
+			
         rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
 
         applyBindingsToNodeAndDescendantsInternal(viewModel, rootNode, true);
