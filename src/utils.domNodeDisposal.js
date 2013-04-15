@@ -1,4 +1,3 @@
-
 ko.utils.domNodeDisposal = new (function () {
     var domDataKey = "__ko_domNodeDisposal__" + (new Date).getTime();
     var cleanableNodeTypes = { 1: true, 8: true, 9: true };       // Element, Comment, Document
@@ -32,6 +31,10 @@ ko.utils.domNodeDisposal = new (function () {
         ko.utils.domData.clear(node);
 
         if (cleanAllData) {
+            // Access jQuery via explicit string as window.jQuery is subject to minification and thus
+            // won't be stubbable by tests
+            var jQuery = window["jQuery"];
+
             // Special support for jQuery here because it's so commonly used.
             // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
             // so notify it to tear down any resources associated with the node & descendants here.
@@ -92,7 +95,7 @@ ko.utils.domNodeDisposal = new (function () {
             if (node.parentNode)
                 node.parentNode.removeChild(node);
         }
-    }
+    };
 })();
 ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
 ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience
