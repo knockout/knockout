@@ -72,9 +72,11 @@ describe('Expression Rewriting', function() {
         expect(rewritten).toEqual("'a':1,'b':2,'c':3");
     });
 
-    it('Should convert writable values to property accessors', function () {
-        // This now only works for bindings that marked as two-way; so mark bindings a - j as such
-        var w = ko.expressionRewriting.twoWayBindings;
+    it('(Private API) Should convert writable values to property accessors', function () {
+        // Note that both _twoWayBindings and _ko_property_writers are undocumented private APIs.
+        // We reserve the right to remove or change either or both of these, especially if we
+        // create an official public property writers API.
+        var w = ko.expressionRewriting._twoWayBindings;
         w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = true;
 
         var rewritten = ko.expressionRewriting.preProcessBindings(
