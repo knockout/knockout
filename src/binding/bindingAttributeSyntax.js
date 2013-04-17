@@ -33,21 +33,9 @@
         return ko.utils.extend(clone, properties);
     };
 
-    // ko.bindingValueWrap is used to mark that a particular value of a binding
-    // is actually a value-accessor function.
-    ko.bindingValueIsAccessor = function(valueFunction) {
-        valueFunction['__ko_marked'] = ko.bindingValueIsAccessor;
-        return valueFunction;
-    };
-
-    // Check if a binding value is actually a marked value-accessor function.
-    ko.isBindingValueAccessor = function(value) {
-        return (value && value['__ko_marked'] === ko.bindingValueIsAccessor);
-    }
-
     // Returns the valueAccesor function for a binding value
     function wrapValue(value) {
-        return ko.isBindingValueAccessor(value) ? value : function() {
+        return function() {
             return value;
         };
     }
@@ -63,7 +51,7 @@
     // by ko.applyBindingsToNode and getBindingsAndMakeAccessors.
     function makeAccessorsFromFunction(callback) {
         return ko.utils.objectMap(ko.dependencyDetection.ignore(callback), function(value, key) {
-            return (ko.isBindingValueAccessor(value) && value) || function() {
+            return function() {
                 return callback()[key];
             };
         });
@@ -266,8 +254,6 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
-    ko.exportSymbol('bindingValueIsAccessor', ko.bindingValueIsAccessor);
-    ko.exportSymbol('isBindingValueAccessor', ko.isBindingValueAccessor);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);
