@@ -53,7 +53,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             dispose();
             return;
         }
-
+        
+        var valueHasChanged = true;
+        
         _isBeingEvaluated = true;
         try {
             // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
@@ -76,15 +78,24 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                     _subscriptionsToDependencies.splice(i, 1)[0].dispose();
             }
             _hasBeenEvaluated = true;
-
-            dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+            
+            // Do not notify subscribers if the value hasn't changed
+            if((dependentObservable['equalityComparer']) && dependentObservable['equalityComparer'](_latestValue, newValue)) {
+                valueHasChanged = false;
+            }
+            
+            if(valueHasChanged) {
+                dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+            }
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
         } finally {
             ko.dependencyDetection.end();
         }
-
-        dependentObservable["notifySubscribers"](_latestValue);
+        
+        if(valueHasChanged) {
+            dependentObservable["notifySubscribers"](_latestValue);
+        }
         _isBeingEvaluated = false;
         if (!_subscriptionsToDependencies.length)
             dispose();
@@ -173,7 +184,12 @@ ko.isComputed = function(instance) {
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'] = {
+    "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
+        var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+        return oldValueIsPrimitive ? (a === b) : false;
+    }
+};
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
