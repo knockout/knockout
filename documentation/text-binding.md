@@ -85,7 +85,7 @@ The `<!--ko-->` and `<!--/ko-->` comments act as start/end markers, defining a "
 
 ### Note 4: About an IE 6 whitespace quirk
 
-IE 6 has a strange quirk whereby it sometimes ignores whitespace that immediately follows an empty span. This is nothing directly to do with Knockout, but in case you do want write:
+IE 6 has a strange quirk whereby it sometimes ignores whitespace that immediately follows an empty span. This has nothing directly to do with Knockout, but in case you do want to write:
 
     Welcome, <span data-bind="text: userName"></span> to our web site.
 

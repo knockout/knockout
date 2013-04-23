@@ -151,7 +151,7 @@ Pass a function reference (either a function literal, or give the name of a func
         // You can add custom post-processing logic here
     }
 
-If you are using `foreach` and only want to be notified about elements are specifically being added or are being removed, you can use `afterAdd` and `beforeRemove` instead. For details, see documentation for the [`foreach` binding](foreach-binding.html).
+If you are using `foreach` and only want to be notified about elements that are specifically being added or are being removed, you can use `afterAdd` and `beforeRemove` instead. For details, see documentation for the [`foreach` binding](foreach-binding.html).
 
 ### Note 5: Dynamically choosing which template is used
 
