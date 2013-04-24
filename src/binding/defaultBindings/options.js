@@ -20,6 +20,9 @@ ko.bindingHandlers['options'] = {
         while (element.length > 0) {
             element.remove(0);
         }
+
+        // Ensures that the binding processor doesn't try to bind the options
+        return { 'controlsDescendantBindings': true };
     },
     'update': function (element, valueAccessor, allBindingsAccessor) {
         var selectWasPreviouslyEmpty = element.length == 0;
