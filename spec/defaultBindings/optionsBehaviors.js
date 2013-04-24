@@ -153,4 +153,24 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bob"]);
     });
+
+    it('Should call an optionsAfterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
+        testNode.innerHTML = "<select data-bind=\"options: someItems, optionsText: 'childprop', optionsAfterRender: callback\"></select>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+
+        // Change the array, but don't update the observableArray so that the options binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        expect(testNode.childNodes[0]).toContainText('first child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        expect(testNode.childNodes[0]).toContainText('first child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        expect(testNode.childNodes[0]).toContainText('first childhidden child');
+        expect(callbacks).toEqual(2);
+    });
 });

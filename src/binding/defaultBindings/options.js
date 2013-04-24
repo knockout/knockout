@@ -20,6 +20,9 @@ ko.bindingHandlers['options'] = {
         while (element.length > 0) {
             element.remove(0);
         }
+
+        // Ensures that the binding processor doesn't try to bind the options
+        return { 'controlsDescendantBindings': true };
     },
     'update': function (element, valueAccessor, allBindingsAccessor) {
         var selectWasPreviouslyEmpty = element.length == 0;
@@ -101,7 +104,15 @@ ko.bindingHandlers['options'] = {
             }
         }
 
-        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, null, setSelectionCallback);
+        var callback = setSelectionCallback;
+        if (allBindings['optionsAfterRender']) {
+            callback = function(arrayEntry, newOptions) {
+                setSelectionCallback(arrayEntry, newOptions);
+                ko.dependencyDetection.ignore(allBindings['optionsAfterRender'], null, [newOptions[0], arrayEntry !== caption ? arrayEntry : undefined]);
+            }
+        }
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, null, callback);
 
         // Clear previousSelectedValues so that future updates to individual objects don't get stale data
         previousSelectedValues = null;
