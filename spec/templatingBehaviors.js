@@ -378,7 +378,7 @@ describe('Templating', function() {
                 if (node.tagName == 'EM') {
                     return {
                         text: function() {
-                            return ++model.numBindings;
+                            return ++model.numExternalBindings;
                         }
                     };
                 }
@@ -388,14 +388,46 @@ describe('Templating', function() {
 
         ko.setTemplateEngine(new dummyTemplateEngine({
             outerTemplate: "Outer <div data-bind='template: { name: \"innerTemplate\", bypassDomNodeWrap: true }'></div>",
-            innerTemplate: "Inner via inline binding: <span data-bind='text: ++numBindings'></span>"
+            innerTemplate: "Inner via inline binding: <span data-bind='text: ++numRewrittenBindings'></span>"
                          + "Inner via external binding: <em></em>"
         }));
-        var model = { numBindings: 0 };
+        var model = { numRewrittenBindings: 0, numExternalBindings: 0 };
         testNode.innerHTML = "<div data-bind='template: { name: \"outerTemplate\", bypassDomNodeWrap: true }'></div>";
         ko.applyBindings(model, testNode);
-        expect(model.numBindings).toEqual(2);
-        expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>2</span>inner via external binding: <em>1</em></div>");
+        expect(model.numRewrittenBindings).toEqual(1);
+        expect(model.numExternalBindings).toEqual(1);
+        expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>1</span>inner via external binding: <em>1</em></div>");
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
+
+    it('Data binding syntax should permit nested templates, and only bind inner templates once when using getBindings', function() {
+        // Will verify that bindings are applied only once for both inline (rewritten) bindings,
+        // and external (non-rewritten) ones. Because getBindings actually gets called twice, we need
+        // to expect two calls (but still it's a single binding).
+        var originalBindingProvider = ko.bindingProvider.instance;
+        ko.bindingProvider.instance = {
+            nodeHasBindings: function(node, bindingContext) {
+                return (node.tagName == 'EM') || originalBindingProvider.nodeHasBindings(node, bindingContext);
+            },
+            getBindings: function(node, bindingContext) {
+                if (node.tagName == 'EM')
+                    return { text: ++model.numExternalBindings };
+                return originalBindingProvider.getBindings(node, bindingContext);
+            }
+        };
+
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            outerTemplate: "Outer <div data-bind='template: { name: \"innerTemplate\", bypassDomNodeWrap: true }'></div>",
+            innerTemplate: "Inner via inline binding: <span data-bind='text: ++numRewrittenBindings'></span>"
+                         + "Inner via external binding: <em></em>"
+        }));
+        var model = { numRewrittenBindings: 0, numExternalBindings: 0 };
+        testNode.innerHTML = "<div data-bind='template: { name: \"outerTemplate\", bypassDomNodeWrap: true }'></div>";
+        ko.applyBindings(model, testNode);
+        expect(model.numRewrittenBindings).toEqual(1);
+        expect(model.numExternalBindings).toEqual(2);
+        expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>1</span>inner via external binding: <em>2</em></div>");
 
         ko.bindingProvider.instance = originalBindingProvider;
     });
