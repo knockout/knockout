@@ -24,7 +24,7 @@ ko.templateRewriting = (function () {
     function constructMemoizedTagReplacement(dataBindAttributeValue, tagToRetain, nodeName, templateEngine) {
         var dataBindKeyValueArray = ko.expressionRewriting.parseObjectLiteral(dataBindAttributeValue);
         validateDataBindValuesForRewriting(dataBindKeyValueArray);
-        var rewrittenDataBindAttributeValue = ko.expressionRewriting.preProcessBindings(dataBindKeyValueArray);
+        var rewrittenDataBindAttributeValue = ko.expressionRewriting.preProcessBindings(dataBindKeyValueArray, {'valueAccessors':true});
 
         // For no obvious reason, Opera fails to evaluate rewrittenDataBindAttributeValue unless it's wrapped in an additional
         // anonymous function, even though Opera's built-in debugger can evaluate it anyway. No other browser requires this
@@ -54,7 +54,7 @@ ko.templateRewriting = (function () {
             return ko.memoization.memoize(function (domNode, bindingContext) {
                 var nodeToBind = domNode.nextSibling;
                 if (nodeToBind && nodeToBind.nodeName.toLowerCase() === nodeName) {
-                    ko.applyBindingsToNode(nodeToBind, bindings, bindingContext);
+                    ko.applyBindingAccessorsToNode(nodeToBind, bindings(bindingContext, nodeToBind), bindingContext);
                 }
             });
         }
