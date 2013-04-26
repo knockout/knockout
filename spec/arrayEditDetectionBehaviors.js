@@ -43,7 +43,7 @@ describe('Compare Arrays', function() {
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         expect(compareResult).toEqual([
             { status: "added", value: 123, index: 0 },
-             { status: "retained", value: "A" },
+            { status: "retained", value: "A" },
             { status: "deleted", value: "B", index: 1 },
             { status: "added", value: "E", index: 2, moved: 4 },
             { status: "retained", value: "C" },
@@ -71,5 +71,26 @@ describe('Compare Arrays', function() {
             { status: "added", value: "I", index: 3},
             { status: "added", value: "J", index: 4}
         ]);
+    });
+
+    it('Should work with a provided compare function', function () {
+    	var oldArray = [{ id: 123, txt: "ABC" }, { id: 456, txt: "DEF" }, { id: 147, txt: "JKL" }];
+    	var newArray = [{ id: 789, txt: "GHI" }, { id: 123, txt: "ABC" }, { id: 147, txt: "JKL" }];
+    	var compareResult = ko.utils.compareArrays(oldArray, newArray, undefined, function (a, b) { return a.id === b.id; });
+    	expect(compareResult).toEqual([
+            { status: "added", value: { id: 789, txt: "GHI" }, index: 0 },
+            { status: "retained", value: { id: 123, txt: "ABC" } },
+            { status: "deleted", value: { id: 456, txt: "DEF" }, index: 1 },
+            { status: "retained", value: { id: 147, txt: "JKL" } }
+    	]);
+    });
+
+    it('Should use compare function only to identify differences', function () {
+    	var oldArray = [{ id: 123, txt: "ABC" }];
+    	var newArray = [{ id: 123, txt: "GHI" }];
+    	var compareResult = ko.utils.compareArrays(oldArray, newArray, undefined, function (a, b) { return a.id === b.id; });
+    	expect(compareResult).toEqual([
+            { status: "retained", value: { id: 123, txt: "GHI" } }
+    	]);
     });
 });

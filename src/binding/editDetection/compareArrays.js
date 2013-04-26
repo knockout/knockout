@@ -3,17 +3,19 @@ ko.utils.compareArrays = (function () {
     var statusNotInOld = 'added', statusNotInNew = 'deleted';
 
     // Simple calculation based on Levenshtein distance.
-    function compareArrays(oldArray, newArray, dontLimitMoves) {
+    function compareArrays(oldArray, newArray, dontLimitMoves, compareFunction) {
         oldArray = oldArray || [];
         newArray = newArray || [];
 
+        compareFunction = compareFunction || function (a, b) { return a === b; };
+
         if (oldArray.length <= newArray.length)
-            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, dontLimitMoves);
+            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, dontLimitMoves, compareFunction);
         else
-            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves);
+            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves, compareFunction);
     }
 
-    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, dontLimitMoves) {
+    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, dontLimitMoves, compareFunction) {
         var myMin = Math.min,
             myMax = Math.max,
             editDistanceMatrix = [],
@@ -34,7 +36,7 @@ ko.utils.compareArrays = (function () {
                     thisRow[bigIndex] = smlIndex + 1;
                 else if (!smlIndex)  // Top row - transform empty array into new array via additions
                     thisRow[bigIndex] = bigIndex + 1;
-                else if (smlArray[smlIndex - 1] === bigArray[bigIndex - 1])
+                else if (compareFunction(smlArray[smlIndex - 1], bigArray[bigIndex - 1]))
                     thisRow[bigIndex] = lastRow[bigIndex - 1];                  // copy value (no edit)
                 else {
                     var northDistance = lastRow[bigIndex] || maxDistance;       // not in big (deletion)
@@ -73,7 +75,7 @@ ko.utils.compareArrays = (function () {
             // Go through the items that have been added and deleted and try to find matches between them.
             for (failedCompares = a = 0; (dontLimitMoves || failedCompares < limitFailedCompares) && (notInSmlItem = notInSml[a]); a++) {
                 for (d = 0; notInBigItem = notInBig[d]; d++) {
-                    if (notInSmlItem['value'] === notInBigItem['value']) {
+                    if (compareFunction(notInSmlItem['value'], notInBigItem['value'])) {
                         notInSmlItem['moved'] = notInBigItem['index'];
                         notInBigItem['moved'] = notInSmlItem['index'];
                         notInBig.splice(d,1);       // This item is marked as moved; so remove it from notInBig list
