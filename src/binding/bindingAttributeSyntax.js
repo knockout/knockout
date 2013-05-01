@@ -144,10 +144,17 @@
 
         var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
-            function allBindingAccessors() {
+            // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
+            function allBindings() {
                 return ko.utils.objectMap(bindings, unwrapValue);
             }
-            ko.utils.extend(allBindingAccessors, bindings);
+            // The following is the 3.x allBindings API
+            allBindings['get'] = function(key) {
+                return bindings[key] && unwrapValue(bindings[key]);
+            };
+            allBindings['has'] = function(key) {
+                return key in bindings;
+            };
 
             ko.dependentObservable(
                 function () {
@@ -163,7 +170,7 @@
 
                             if (binding && typeof binding["init"] == "function") {
                                 var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindingAccessors, viewModel, bindingContext);
+                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
 
                                 // If this binding handler claims to control descendant bindings, make a note of this
                                 if (initResult && initResult['controlsDescendantBindings']) {
@@ -182,7 +189,7 @@
                             var binding = ko['getBindingHandler'](bindingKey);
                             if (binding && typeof binding["update"] == "function") {
                                 var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, bindings[bindingKey], allBindingAccessors, viewModel, bindingContext);
+                                handlerUpdateFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
                             }
                         });
                     }
