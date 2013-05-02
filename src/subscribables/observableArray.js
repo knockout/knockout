@@ -16,7 +16,7 @@ ko.observableArray['fn'] = {
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
         for (var i = 0; i < underlyingArray.length; i++) {
             var value = underlyingArray[i];
-            if (predicate(value)) {
+            if (predicate(value, i, underlyingArray)) {
                 if (removedValues.length === 0) {
                     this.valueWillMutate();
                 }
