@@ -2,19 +2,19 @@
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 function makeEventHandlerShortcut(eventName) {
     ko.bindingHandlers[eventName] = {
-        'init': function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        'init': function(element, valueAccessor, allBindings, viewModel) {
             var newValueAccessor = function () {
                 var result = {};
                 result[eventName] = valueAccessor();
                 return result;
             };
-            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindingsAccessor, viewModel);
+            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindings, viewModel);
         }
     }
 }
 
 ko.bindingHandlers['event'] = {
-    'init' : function (element, valueAccessor, allBindingsAccessor, viewModel) {
+    'init' : function (element, valueAccessor, allBindings, viewModel) {
         var eventsToHandle = valueAccessor() || {};
         ko.utils.objectForEach(eventsToHandle, function(eventName) {
             if (typeof eventName == "string") {
@@ -23,7 +23,6 @@ ko.bindingHandlers['event'] = {
                     var handlerFunction = valueAccessor()[eventName];
                     if (!handlerFunction)
                         return;
-                    var allBindings = allBindingsAccessor();
 
                     try {
                         // Take all the event args, and prefix with the viewmodel
@@ -39,7 +38,7 @@ ko.bindingHandlers['event'] = {
                         }
                     }
 
-                    var bubble = allBindings[eventName + 'Bubble'] !== false;
+                    var bubble = allBindings.get(eventName + 'Bubble') !== false;
                     if (!bubble) {
                         event.cancelBubble = true;
                         if (event.stopPropagation)

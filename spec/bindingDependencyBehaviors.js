@@ -177,9 +177,9 @@ describe('Binding dependencies', function() {
         var observable = ko.observable(), updateValue;
         var vm = {myObservable: observable, myNonObservable: "first value"};
         ko.bindingHandlers.existentHandler = {
-            update: function(element, valueAccessor, allBindingsAccessor) {
+            update: function(element, valueAccessor, allBindings) {
                 valueAccessor()();  // create dependency
-                updateValue = allBindingsAccessor().nonexistentHandler;
+                updateValue = allBindings.get('nonexistentHandler');
             }
         }
         testNode.innerHTML = "<div data-bind='existentHandler: myObservable, nonexistentHandler: myNonObservable'></div>";
