@@ -34,14 +34,14 @@
     };
 
     // Returns the valueAccesor function for a binding value
-    function wrapValue(value) {
+    function makeValueAccessor(value) {
         return function() {
             return value;
         };
     }
 
     // Returns the value of a valueAccessor function
-    function unwrapValue(valueAccessor) {
+    function evaluateValueAccessor(valueAccessor) {
         return valueAccessor();
     }
 
@@ -63,7 +63,7 @@
         if (typeof bindings === 'function') {
             return makeAccessorsFromFunction(bindings.bind(null, context, node));
         } else {
-            return ko.utils.objectMap(bindings, wrapValue);
+            return ko.utils.objectMap(bindings, makeValueAccessor);
         }
     }
 
@@ -144,10 +144,17 @@
 
         var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
-            function allBindingAccessors() {
-                return ko.utils.objectMap(bindings, unwrapValue);
+            // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
+            function allBindings() {
+                return ko.utils.objectMap(bindings, evaluateValueAccessor);
             }
-            ko.utils.extend(allBindingAccessors, bindings);
+            // The following is the 3.x allBindings API
+            allBindings['get'] = function(key) {
+                return bindings[key] && evaluateValueAccessor(bindings[key]);
+            };
+            allBindings['has'] = function(key) {
+                return key in bindings;
+            };
 
             ko.dependentObservable(
                 function () {
@@ -163,7 +170,7 @@
 
                             if (binding && typeof binding["init"] == "function") {
                                 var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindingAccessors, viewModel, bindingContext);
+                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
 
                                 // If this binding handler claims to control descendant bindings, make a note of this
                                 if (initResult && initResult['controlsDescendantBindings']) {
@@ -182,7 +189,7 @@
                             var binding = ko['getBindingHandler'](bindingKey);
                             if (binding && typeof binding["update"] == "function") {
                                 var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, bindings[bindingKey], allBindingAccessors, viewModel, bindingContext);
+                                handlerUpdateFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
                             }
                         });
                     }

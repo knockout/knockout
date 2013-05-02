@@ -4,7 +4,7 @@ describe('Binding attribute syntax', function() {
     it('applyBindings should accept no parameters and then act on document.body with undefined model', function() {
         var didInit = false;
         ko.bindingHandlers.test = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            init: function (element, valueAccessor, allBindings, viewModel) {
                 expect(element.id).toEqual("testElement");
                 expect(viewModel).toEqual(undefined);
                 didInit = true;
@@ -22,7 +22,7 @@ describe('Binding attribute syntax', function() {
         var didInit = false;
         var suppliedViewModel = {};
         ko.bindingHandlers.test = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            init: function (element, valueAccessor, allBindings, viewModel) {
                 expect(element.id).toEqual("testElement");
                 expect(viewModel).toEqual(suppliedViewModel);
                 didInit = true;
@@ -40,7 +40,7 @@ describe('Binding attribute syntax', function() {
         var didInit = false;
         var suppliedViewModel = {};
         ko.bindingHandlers.test = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            init: function (element, valueAccessor, allBindings, viewModel) {
                 expect(element.id).toEqual("testElement");
                 expect(viewModel).toEqual(suppliedViewModel);
                 didInit = true;
@@ -82,17 +82,17 @@ describe('Binding attribute syntax', function() {
     it('Should invoke registered handlers\' init() then update() methods passing binding data', function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {
-            init: function (element, valueAccessor, allBindingsAccessor) {
+            init: function (element, valueAccessor, allBindings) {
                 methodsInvoked.push("init");
                 expect(element.id).toEqual("testElement");
                 expect(valueAccessor()).toEqual("Hello");
-                expect(allBindingsAccessor().another).toEqual(123);
+                expect(allBindings.get('another')).toEqual(123);
             },
-            update: function (element, valueAccessor, allBindingsAccessor) {
+            update: function (element, valueAccessor, allBindings) {
                 methodsInvoked.push("update");
                 expect(element.id).toEqual("testElement");
                 expect(valueAccessor()).toEqual("Hello");
-                expect(allBindingsAccessor().another).toEqual(123);
+                expect(allBindings.get('another')).toEqual(123);
             }
         }
         testNode.innerHTML = "<div id='testElement' data-bind='test:\"Hello\", another:123'></div>";
@@ -155,7 +155,7 @@ describe('Binding attribute syntax', function() {
 
     it('Should be able to extend a binding context, adding new custom properties, without mutating the original binding context', function() {
         ko.bindingHandlers.addCustomProperty = {
-            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                 ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
                 return { controlsDescendantBindings : true };
             }
@@ -174,7 +174,7 @@ describe('Binding attribute syntax', function() {
 
     it('Binding contexts should inherit any custom properties from ancestor binding contexts', function() {
         ko.bindingHandlers.addCustomProperty = {
-            init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                 ko.applyBindingsToDescendants(bindingContext.extend({ '$customProp': 'my value' }), element);
                 return { controlsDescendantBindings : true };
             }
@@ -291,7 +291,7 @@ describe('Binding attribute syntax', function() {
 
     it('Should be able to set and access correct context in custom containerless binding', function() {
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 ko.applyBindingsToDescendants(innerContext, element);
                 return { 'controlsDescendantBindings': true };
@@ -308,7 +308,7 @@ describe('Binding attribute syntax', function() {
     it('Should be able to set and access correct context in nested containerless binding', function() {
         delete ko.bindingHandlers.nonexistentHandler;
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 ko.applyBindingsToDescendants(innerContext, element);
                 return { 'controlsDescendantBindings': true };
@@ -324,7 +324,7 @@ describe('Binding attribute syntax', function() {
 
     it('Should be able to access custom context variables in child context', function() {
         ko.bindingHandlers.bindChildrenWithCustomContext = {
-            init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                 var innerContext = bindingContext.createChildContext({ myCustomData: 123 });
                 innerContext.customValue = 'xyz';
                 ko.applyBindingsToDescendants(innerContext, element);

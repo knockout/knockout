@@ -21,13 +21,12 @@ ko.bindingHandlers['options'] = {
             element.remove(0);
         }
     },
-    'update': function (element, valueAccessor, allBindingsAccessor) {
+    'update': function (element, valueAccessor, allBindings) {
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousScrollTop = element.scrollTop;
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
-        var allBindings = allBindingsAccessor();
-        var includeDestroyed = allBindings['optionsIncludeDestroyed'];
+        var includeDestroyed = allBindings.get('optionsIncludeDestroyed');
         var caption = {};
         var previousSelectedValues;
         if (element.multiple) {
@@ -50,7 +49,7 @@ ko.bindingHandlers['options'] = {
             });
 
             // If caption is included, add it to the array
-            if ('optionsCaption' in allBindings) {
+            if (allBindings['has']('optionsCaption')) {
                 filteredArray.unshift(caption);
             }
         } else {
@@ -78,15 +77,15 @@ ko.bindingHandlers['options'] = {
             }
             var option = document.createElement("option");
             if (arrayEntry === caption) {
-                ko.utils.setHtml(option, allBindings['optionsCaption']);
+                ko.utils.setHtml(option, allBindings.get('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
             } else {
                 // Apply a value to the option element
-                var optionValue = applyToObject(arrayEntry, allBindings['optionsValue'], arrayEntry);
+                var optionValue = applyToObject(arrayEntry, allBindings.get('optionsValue'), arrayEntry);
                 ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue);
+                var optionText = applyToObject(arrayEntry, allBindings.get('optionsText'), optionValue);
                 ko.utils.setTextContent(option, optionText);
             }
             return [option];
@@ -106,11 +105,11 @@ ko.bindingHandlers['options'] = {
         // Clear previousSelectedValues so that future updates to individual objects don't get stale data
         previousSelectedValues = null;
 
-        if (selectWasPreviouslyEmpty && ('value' in allBindings)) {
+        if (selectWasPreviouslyEmpty && allBindings['has']('value')) {
             // Ensure consistency between model value and selected option.
             // If the dropdown is being populated for the first time here (or was otherwise previously empty),
             // the dropdown selection state is meaningless, so we preserve the model value.
-            ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings['value']), /* preferModelValue */ true);
+            ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings.get('value')), /* preferModelValue */ true);
         }
 
         // Workaround for IE bug
