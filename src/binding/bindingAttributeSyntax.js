@@ -34,14 +34,14 @@
     };
 
     // Returns the valueAccesor function for a binding value
-    function wrapValue(value) {
+    function makeValueAccessor(value) {
         return function() {
             return value;
         };
     }
 
     // Returns the value of a valueAccessor function
-    function unwrapValue(valueAccessor) {
+    function evaluateValueAccessor(valueAccessor) {
         return valueAccessor();
     }
 
@@ -63,7 +63,7 @@
         if (typeof bindings === 'function') {
             return makeAccessorsFromFunction(bindings.bind(null, context, node));
         } else {
-            return ko.utils.objectMap(bindings, wrapValue);
+            return ko.utils.objectMap(bindings, makeValueAccessor);
         }
     }
 
@@ -146,11 +146,11 @@
         if (bindings) {
             // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
             function allBindings() {
-                return ko.utils.objectMap(bindings, unwrapValue);
+                return ko.utils.objectMap(bindings, evaluateValueAccessor);
             }
             // The following is the 3.x allBindings API
             allBindings['get'] = function(key) {
-                return bindings[key] && unwrapValue(bindings[key]);
+                return bindings[key] && evaluateValueAccessor(bindings[key]);
             };
             allBindings['has'] = function(key) {
                 return key in bindings;
