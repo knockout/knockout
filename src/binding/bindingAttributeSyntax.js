@@ -117,9 +117,6 @@
 
     var boundElementDomDataKey = '__ko_boundElement';
     function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
-        // Need to be sure that inits are only run once, and updates never run until all the inits have been run
-        var initPhase = 0; // 0 = before all inits, 1 = during inits, 2 = after all inits
-
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!bindings) {
@@ -156,47 +153,40 @@
                 return key in bindings;
             };
 
-            ko.dependentObservable(
-                function () {
-                    var viewModel = bindingContext['$data'];
-
-                    // First run all the inits, so bindings can register for notification on changes
-                    if (initPhase === 0) {
-                        initPhase = 1;
-                        ko.utils.objectForEach(bindings, function(bindingKey) {
-                            var binding = ko['getBindingHandler'](bindingKey);
-                            if (binding && node.nodeType === 8)
-                                validateThatBindingIsAllowedForVirtualElements(bindingKey);
-
-                            if (binding && typeof binding["init"] == "function") {
-                                var handlerInitFn = binding["init"];
-                                var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
-
-                                // If this binding handler claims to control descendant bindings, make a note of this
-                                if (initResult && initResult['controlsDescendantBindings']) {
-                                    if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                        throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
-                                    bindingHandlerThatControlsDescendantBindings = bindingKey;
-                                }
-                            }
-                        });
-                        initPhase = 2;
+            // Go through the bindings, calling init and update for each
+            ko.utils.objectForEach(bindings, function(bindingKey) {
+                // Run init, ignoring any dependencies
+                ko.dependencyDetection.ignore(function() {
+                    var binding = ko['getBindingHandler'](bindingKey);
+                    if (binding && node.nodeType === 8) {
+                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
                     }
+                    if (binding && typeof binding["init"] == "function") {
+                        var handlerInitFn = binding["init"];
+                        var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
 
-                    // ... then run all the updates, which might trigger changes even on the first evaluation
-                    if (initPhase === 2) {
-                        ko.utils.objectForEach(bindings, function(bindingKey) {
-                            var binding = ko['getBindingHandler'](bindingKey);
-                            if (binding && typeof binding["update"] == "function") {
-                                var handlerUpdateFn = binding["update"];
-                                handlerUpdateFn(node, bindings[bindingKey], allBindings, viewModel, bindingContext);
-                            }
-                        });
+                        // If this binding handler claims to control descendant bindings, make a note of this
+                        if (initResult && initResult['controlsDescendantBindings']) {
+                            if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                                throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                            bindingHandlerThatControlsDescendantBindings = bindingKey;
+                        }
                     }
-                },
-                null,
-                { disposeWhenNodeIsRemoved : node }
-            );
+                });
+
+                // Run update in its own computed wrapper
+                ko.dependentObservable(
+                    function() {
+                        var binding = ko['getBindingHandler'](bindingKey);
+                        if (binding && typeof binding["update"] == "function") {
+                            var handlerUpdateFn = binding["update"];
+                            handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
+                        }
+                    },
+                    null,
+                    { disposeWhenNodeIsRemoved: node }
+                );
+            });
         }
 
         return {
