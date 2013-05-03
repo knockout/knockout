@@ -203,4 +203,22 @@ describe('Binding dependencies', function() {
         observable.notifySubscribers();
         expect(updateValue).toEqual("second value");
     });
+
+    it('Should update a binding when its observable is modified in a sibling binding', function() {
+        // Represents an issue brought up in the forum: https://groups.google.com/d/topic/knockoutjs/ROyhN7T2WJw/discussion
+        var latestValue, observable1 = ko.observable(1), observable2 = ko.observable();
+        ko.bindingHandlers.updatedHandler = {
+            update: function() { latestValue = observable2(); }
+        }
+        ko.bindingHandlers.modifyingHandler = {
+            update: function() { observable2(observable1()); }
+        }
+        // The order of the bindings matters: this tests that a later binding will update an earlier binding
+        testNode.innerHTML = "<div data-bind='updatedHandler: true, modifyingHandler: true'></div>";
+
+        ko.applyBindings({}, testNode);
+        expect(latestValue).toEqual(1);
+        observable1(2);
+        expect(latestValue).toEqual(2);
+    });
 });
