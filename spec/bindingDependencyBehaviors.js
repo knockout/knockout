@@ -155,8 +155,7 @@ describe('Binding dependencies', function() {
         expect(lastBoundValueUpdate).toEqual("fourth value");*/
     });
 
-    // This is a temporary spec that should fail once the independent bindings fix is included
-    it('Should update all bindings if a binding unwraps an observable in dependent mode', function() {
+    it('Should not update sibling bindings if a binding is updated', function() {
         var countUpdates = 0, observable = ko.observable(1);
         ko.bindingHandlers.countingHandler = {
             update: function() { countUpdates++; }
@@ -169,7 +168,21 @@ describe('Binding dependencies', function() {
         ko.applyBindings({ myObservable: observable }, testNode);
         expect(countUpdates).toEqual(1);
         observable(3);
-        expect(countUpdates).toEqual(2);
+        expect(countUpdates).toEqual(1);
+    });
+
+    it('Should not subscribe to observables accessed in init function', function() {
+        var observable = ko.observable('A');
+        ko.bindingHandlers.test = {
+            init: function(element, valueAccessor) {
+                var value = valueAccessor();
+                value();
+            }
+        }
+        testNode.innerHTML = "<div data-bind='if: true'><div data-bind='test: myObservable'></div></div>";
+
+        ko.applyBindings({ myObservable: observable }, testNode);
+        expect(observable.getSubscriptionsCount()).toEqual(0);
     });
 
     it('Should access latest value from extra binding when normal binding is updated', function() {
@@ -189,5 +202,23 @@ describe('Binding dependencies', function() {
         vm.myNonObservable = "second value";
         observable.notifySubscribers();
         expect(updateValue).toEqual("second value");
+    });
+
+    it('Should update a binding when its observable is modified in a sibling binding', function() {
+        // Represents an issue brought up in the forum: https://groups.google.com/d/topic/knockoutjs/ROyhN7T2WJw/discussion
+        var latestValue, observable1 = ko.observable(1), observable2 = ko.observable();
+        ko.bindingHandlers.updatedHandler = {
+            update: function() { latestValue = observable2(); }
+        }
+        ko.bindingHandlers.modifyingHandler = {
+            update: function() { observable2(observable1()); }
+        }
+        // The order of the bindings matters: this tests that a later binding will update an earlier binding
+        testNode.innerHTML = "<div data-bind='updatedHandler: true, modifyingHandler: true'></div>";
+
+        ko.applyBindings({}, testNode);
+        expect(latestValue).toEqual(1);
+        observable1(2);
+        expect(latestValue).toEqual(2);
     });
 });

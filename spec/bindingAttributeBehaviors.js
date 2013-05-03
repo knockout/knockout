@@ -79,7 +79,7 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(null, testNode); // No exception means success
     });
 
-    it('Should invoke registered handlers\' init() then update() methods passing binding data', function () {
+    it('Should invoke registered handlers\'s init() then update() methods passing binding data', function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {
             init: function (element, valueAccessor, allBindings) {
@@ -100,6 +100,21 @@ describe('Binding attribute syntax', function() {
         expect(methodsInvoked.length).toEqual(2);
         expect(methodsInvoked[0]).toEqual("init");
         expect(methodsInvoked[1]).toEqual("update");
+    });
+
+    it('Should invoke each handlers\'s init() and update() before running the next one', function () {
+        var methodsInvoked = [];
+        ko.bindingHandlers.test1 = ko.bindingHandlers.test2 = {
+            init: function (element, valueAccessor) {
+                methodsInvoked.push("init" + valueAccessor());
+            },
+            update: function (element, valueAccessor) {
+                methodsInvoked.push("update" + valueAccessor());
+            }
+        };
+        testNode.innerHTML = "<div data-bind='test1:\"1\", test2:\"2\"'></div>";
+        ko.applyBindings(null, testNode);
+        expect(methodsInvoked).toEqual(['init1', 'update1', 'init2', 'update2']);
     });
 
     it('Should be able to use $element in binding value', function() {
