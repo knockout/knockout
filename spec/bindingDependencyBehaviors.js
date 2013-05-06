@@ -221,4 +221,62 @@ describe('Binding dependencies', function() {
         observable1(2);
         expect(latestValue).toEqual(2);
     });
+
+    describe('Order', function() {
+        var bindingOrder;
+        beforeEach(function() {
+            bindingOrder = [];
+
+            function makeBinding(name) {
+                return { init: function() { bindingOrder.push(name); } };
+            }
+            ko.bindingHandlers.test1 = makeBinding(1);
+            ko.bindingHandlers.test2 = makeBinding(2);
+            ko.bindingHandlers.test3 = makeBinding(3);
+        });
+
+        it('Should default to the order in the binding', function() {
+            testNode.innerHTML = "<div data-bind='test1, test2, test3'></div>";
+            ko.applyBindings(null, testNode);
+            expect(bindingOrder).toEqual([1,2,3]);
+        });
+
+        it('Should be based on binding\'s "after" values, which override the default binding order', function() {
+            ko.bindingHandlers.test2.after = ['test1'];
+            ko.bindingHandlers.test3.after = ['test2'];
+            testNode.innerHTML = "<div data-bind='test3, test2, test1'></div>";
+            ko.applyBindings(null, testNode);
+            expect(bindingOrder).toEqual([1,2,3]);
+        });
+
+        it('Should leave bindings without an "after" value where they are', function() {
+            // This test is set up to be unambiguous, because only test1 and test2 are reorderd
+            // (they have the dependency between them) and test3 is left alone.
+            ko.bindingHandlers.test2.after = ['test1'];
+            testNode.innerHTML = "<div data-bind='test2, test1, test3'></div>";
+            ko.applyBindings(null, testNode);
+            expect(bindingOrder).toEqual([1,2,3]);
+        });
+
+        it('Should leave bindings without an "after" value where they are (extended)', function() {
+            // This test is ambiguous, because test3 could either be before test1 or after test2.
+            // So we accept either result.
+            ko.bindingHandlers.test2.after = ['test1'];
+            testNode.innerHTML = "<div data-bind='test2, test3, test1'></div>";
+            ko.applyBindings(null, testNode);
+            expect(bindingOrder).toEqualOneOf([[1,2,3], [3,1,2]]);
+        });
+
+        it('Should throw an error if bindings have a cyclic dependency', function() {
+            ko.bindingHandlers.test1.after = ['test3'];
+            ko.bindingHandlers.test2.after = ['test1'];
+            ko.bindingHandlers.test3.after = ['test2'];
+            testNode.innerHTML = "<div data-bind='test1, test2, test3'></div>";
+
+            var didThrow = false;
+            try { ko.applyBindings(null, testNode) }
+            catch(ex) { didThrow = true; expect(ex.message).toContain('No valid ordering for binding') }
+            expect(didThrow).toEqual(true);
+        })
+    });
 });

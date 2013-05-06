@@ -153,16 +153,42 @@
                 return key in bindings;
             };
 
+            // Go through the bindings and put them in the right order
+            var orderedBindings = [], bindingsOrdered = {};
+            ko.utils.objectForEach(bindings, function pushBinding(bindingKey) {
+                if (!bindingsOrdered[bindingKey]) {
+                    var binding = ko['getBindingHandler'](bindingKey);
+                    if (binding) {
+                        bindingsOrdered[bindingKey] = 6;     // mark this binding temporarily
+                        // First add dependencies (if any) of the current binding
+                        if (binding['after']) {
+                            ko.utils.arrayForEach(binding['after'], function(bindingKey) {
+                                if (bindings[bindingKey]) {
+                                    if (bindingsOrdered[bindingKey] === 6) {
+                                        // The binding has a tempoary mark: must be a cyclic dependency
+                                        throw Error("No valid ordering for binding " + bindingKey);
+                                    } else {
+                                        pushBinding(bindingKey);
+                                    }
+                                }
+                            });
+                        }
+                        // Next add the current binding
+                        orderedBindings.push(bindingKey);
+                    }
+                    bindingsOrdered[bindingKey] = 8;     // mark this binding permanently
+                }
+            });
+
             // Go through the bindings, calling init and update for each
-            ko.utils.objectForEach(bindings, function(bindingKey) {
+            ko.utils.arrayForEach(orderedBindings, function(bindingKey) {
+                if (node.nodeType === 8) {
+                    validateThatBindingIsAllowedForVirtualElements(bindingKey);
+                }
                 // Run init, ignoring any dependencies
                 ko.dependencyDetection.ignore(function() {
-                    var binding = ko['getBindingHandler'](bindingKey);
-                    if (binding && node.nodeType === 8) {
-                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
-                    }
-                    if (binding && typeof binding["init"] == "function") {
-                        var handlerInitFn = binding["init"];
+                    var handlerInitFn = ko['getBindingHandler'](bindingKey)["init"];
+                    if (typeof handlerInitFn == "function") {
                         var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
 
                         // If this binding handler claims to control descendant bindings, make a note of this
@@ -177,9 +203,8 @@
                 // Run update in its own computed wrapper
                 ko.dependentObservable(
                     function() {
-                        var binding = ko['getBindingHandler'](bindingKey);
-                        if (binding && typeof binding["update"] == "function") {
-                            var handlerUpdateFn = binding["update"];
+                        var handlerUpdateFn = ko['getBindingHandler'](bindingKey)["update"];
+                        if (typeof handlerUpdateFn == "function") {
                             handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
                         }
                     },
