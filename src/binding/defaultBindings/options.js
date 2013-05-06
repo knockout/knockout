@@ -1,16 +1,3 @@
-function ensureDropdownSelectionIsConsistentWithModelValue(element, modelValue, preferModelValue) {
-    if (preferModelValue) {
-        if (modelValue !== ko.selectExtensions.readValue(element))
-            ko.selectExtensions.writeValue(element, modelValue);
-    }
-
-    // No matter which direction we're syncing in, we want the end result to be equality between dropdown value and model value.
-    // If they aren't equal, either we prefer the dropdown value, or the model value couldn't be represented, so either way,
-    // change the model value to match the dropdown.
-    if (modelValue !== ko.selectExtensions.readValue(element))
-        ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
-};
-
 ko.bindingHandlers['options'] = {
     'init': function(element) {
         if (ko.utils.tagNameLower(element) !== "select")
@@ -22,7 +9,6 @@ ko.bindingHandlers['options'] = {
         }
     },
     'update': function (element, valueAccessor, allBindings) {
-        var selectWasPreviouslyEmpty = element.length == 0;
         var previousScrollTop = element.scrollTop;
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
@@ -91,12 +77,16 @@ ko.bindingHandlers['options'] = {
             return [option];
         }
 
+        var countSelectionsRetained = 0;
         function setSelectionCallback(arrayEntry, newOptions) {
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
             if (previousSelectedValues) {
                 var isSelected = ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[0])) >= 0;
                 ko.utils.setOptionNodeSelectionState(newOptions[0], isSelected);
+                if (isSelected) {
+                    countSelectionsRetained++;
+                }
             }
         }
 
@@ -105,12 +95,11 @@ ko.bindingHandlers['options'] = {
         // Clear previousSelectedValues so that future updates to individual objects don't get stale data
         previousSelectedValues = null;
 
-        if (selectWasPreviouslyEmpty && allBindings['has']('value')) {
-            // Ensure consistency between model value and selected option.
-            // If the dropdown is being populated for the first time here (or was otherwise previously empty),
-            // the dropdown selection state is meaningless, so we preserve the model value.
-            ensureDropdownSelectionIsConsistentWithModelValue(element, ko.utils.peekObservable(allBindings.get('value')), /* preferModelValue */ true);
-        }
+        // Ensure consistency between model value and selected option.
+        // If the dropdown was changed so that selection is no longer the same,
+        // notify the value or selectedOptions binding.
+        if (previousSelectedValues && countSelectionsRetained < previousSelectedValues.length)
+            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
 
         // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
