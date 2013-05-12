@@ -124,6 +124,9 @@
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
+            //If the current index of the array is empty simply skip it
+            if (arrayValue === undefined) return;
+
             // Support selecting template as a function of the data being rendered
             arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue), options['as']);
             arrayItemContext['$index'] = index;
