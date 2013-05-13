@@ -162,6 +162,7 @@
             // Support selecting template as a function of the data being rendered
             arrayItemContext = parentBindingContext['createChildContext'](ko.utils.unwrapObservable(arrayValue), options['as'], function(context) {
                 context['$index'] = index;
+                context['$item'] = arrayValue;
             });
             var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
