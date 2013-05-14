@@ -174,20 +174,23 @@
                             });
                         }
                         // Next add the current binding
-                        orderedBindings.push(bindingKey);
+                        orderedBindings.push({ key: bindingKey, handler: binding });
                     }
                     bindingsOrdered[bindingKey] = 8;     // mark this binding permanently
                 }
             });
 
             // Go through the bindings, calling init and update for each
-            ko.utils.arrayForEach(orderedBindings, function(bindingKey) {
+            ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
+                var bindingKey = bindingKeyAndHandler.key,
+                    bindingHandler = bindingKeyAndHandler.handler;
+
                 if (node.nodeType === 8) {
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
                 }
                 // Run init, ignoring any dependencies
                 ko.dependencyDetection.ignore(function() {
-                    var handlerInitFn = ko['getBindingHandler'](bindingKey)["init"];
+                    var handlerInitFn = bindingHandler["init"];
                     if (typeof handlerInitFn == "function") {
                         var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
 
@@ -203,7 +206,7 @@
                 // Run update in its own computed wrapper
                 ko.dependentObservable(
                     function() {
-                        var handlerUpdateFn = ko['getBindingHandler'](bindingKey)["update"];
+                        var handlerUpdateFn = bindingHandler["update"];
                         if (typeof handlerUpdateFn == "function") {
                             handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
                         }
