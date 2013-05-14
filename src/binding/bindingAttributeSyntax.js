@@ -129,9 +129,9 @@
                 var binding = ko['getBindingHandler'](bindingKey);
                 if (binding) {
                     bindingsConsidered[bindingKey] = temporaryMarkForTopologicalSort;
-                    cyclicDependencyStack.push(bindingKey);
                     // First add dependencies (if any) of the current binding
                     if (binding['after']) {
+                        cyclicDependencyStack.push(bindingKey);
                         ko.utils.arrayForEach(binding['after'], function(bindingKey) {
                             if (bindings[bindingKey]) {
                                 if (bindingsConsidered[bindingKey] === temporaryMarkForTopologicalSort) {
@@ -142,10 +142,10 @@
                                 }
                             }
                         });
+                        cyclicDependencyStack.pop();
                     }
                     // Next add the current binding
                     result.push({ key: bindingKey, handler: binding });
-                    cyclicDependencyStack.pop();
                 }
                 bindingsConsidered[bindingKey] = permanentMarkForTopologicalSort;
             }
