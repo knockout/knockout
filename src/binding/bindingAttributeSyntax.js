@@ -115,7 +115,10 @@
         }
     }
 
-    var boundElementDomDataKey = '__ko_boundElement';
+    var boundElementDomDataKey = '__ko_boundElement',
+        temporaryMarkForTopologicalSort = {},
+        permanentMarkForTopologicalSort = {};
+
     function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
@@ -154,19 +157,20 @@
             };
 
             // Go through the bindings and put them in the right order
-            var orderedBindings = [], bindingsOrdered = {};
+            var orderedBindings = [], bindingsOrdered = {}, cyclicDependencyStack = [];
             ko.utils.objectForEach(bindings, function pushBinding(bindingKey) {
                 if (!bindingsOrdered[bindingKey]) {
                     var binding = ko['getBindingHandler'](bindingKey);
                     if (binding) {
-                        bindingsOrdered[bindingKey] = 6;     // mark this binding temporarily
+                        bindingsOrdered[bindingKey] = temporaryMarkForTopologicalSort;
+                        cyclicDependencyStack.push(bindingKey);
                         // First add dependencies (if any) of the current binding
                         if (binding['after']) {
                             ko.utils.arrayForEach(binding['after'], function(bindingKey) {
                                 if (bindings[bindingKey]) {
-                                    if (bindingsOrdered[bindingKey] === 6) {
-                                        // The binding has a tempoary mark: must be a cyclic dependency
-                                        throw Error("No valid ordering for binding " + bindingKey);
+                                    if (bindingsOrdered[bindingKey] === temporaryMarkForTopologicalSort) {
+                                        // The binding has a temporary mark: must be a cyclic dependency
+                                        throw Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
                                     } else {
                                         pushBinding(bindingKey);
                                     }
@@ -175,8 +179,9 @@
                         }
                         // Next add the current binding
                         orderedBindings.push({ key: bindingKey, handler: binding });
+                        cyclicDependencyStack.pop();
                     }
-                    bindingsOrdered[bindingKey] = 8;     // mark this binding permanently
+                    bindingsOrdered[bindingKey] = permanentMarkForTopologicalSort;
                 }
             });
 

@@ -233,6 +233,7 @@ describe('Binding dependencies', function() {
             ko.bindingHandlers.test1 = makeBinding(1);
             ko.bindingHandlers.test2 = makeBinding(2);
             ko.bindingHandlers.test3 = makeBinding(3);
+            ko.bindingHandlers.test4 = makeBinding(4);
         });
 
         it('Should default to the order in the binding', function() {
@@ -268,14 +269,16 @@ describe('Binding dependencies', function() {
         });
 
         it('Should throw an error if bindings have a cyclic dependency', function() {
+            // We also verify that test4 and unknownBinding don't appear in the error message, because they aren't part of the cycle
             ko.bindingHandlers.test1.after = ['test3'];
             ko.bindingHandlers.test2.after = ['test1'];
-            ko.bindingHandlers.test3.after = ['test2'];
-            testNode.innerHTML = "<div data-bind='test1, test2, test3'></div>";
+            ko.bindingHandlers.test3.after = ['test4', 'test2'];
+            ko.bindingHandlers.test4.after = [];
+            testNode.innerHTML = "<div data-bind='test1, unknownBinding, test2, test4, test3'></div>";
 
             var didThrow = false;
             try { ko.applyBindings(null, testNode) }
-            catch(ex) { didThrow = true; expect(ex.message).toContain('No valid ordering for binding') }
+            catch(ex) { didThrow = true; expect(ex.message).toContain('Cannot combine the following bindings, because they have a cyclic dependency: test1, test3, test2') }
             expect(didThrow).toEqual(true);
         })
     });
