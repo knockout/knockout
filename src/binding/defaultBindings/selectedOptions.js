@@ -1,4 +1,5 @@
 ko.bindingHandlers['selectedOptions'] = {
+    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
         ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor(), valueToWrite = [];
