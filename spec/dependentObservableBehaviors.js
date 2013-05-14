@@ -364,4 +364,33 @@ describe('Dependent Observable', function() {
         expect(computedInner.getDependenciesCount()).toEqual(1);
         expect(computedOuter.getDependenciesCount()).toEqual(1);
     });
+
+    it('Should be able to re-evaluate a computed that previously threw an exception', function() {
+        var observable = ko.observable(true),
+            computed = ko.computed(function() {
+                if (!observable()) {
+                    throw Error("Some dummy error");
+                } else {
+                    return observable();
+                }
+            });
+
+        // Initially the computed value is true (executed sucessfully -> same value as observable)
+        expect(computed()).toEqual(true);
+
+        var didThrow = false;
+        try {
+            // Update observable to cause computed to throw an exception
+            observable(false);
+        } catch(e) {
+            didThrow = true;
+        }
+        expect(didThrow).toEqual(true);
+        // The value of the computed is now undefined, although currently it keeps the previous value
+        expect(computed()).toEqual(true);
+
+        // Update observable to cause computed to re-evaluate
+        observable(1);
+        expect(computed()).toEqual(1);
+    });
 })
