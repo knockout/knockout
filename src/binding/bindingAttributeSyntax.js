@@ -115,30 +115,26 @@
         }
     }
 
-    var boundElementDomDataKey = '__ko_boundElement',
-        temporaryMarkForTopologicalSort = {},
-        permanentMarkForTopologicalSort = {};
+    var boundElementDomDataKey = '__ko_boundElement';
 
     function topologicalSortBindings(bindings) {
         // Depth-first sort
         var result = [],                // The list of key/handler pairs that we will return
-            bindingsConsidered = {},    // A temporary record of which bindings are already in 'result' or are in the current recursive search
+            bindingsConsidered = {},    // A temporary record of which bindings are already in 'result'
             cyclicDependencyStack = []; // Keeps track of a depth-search so that, if there's a cycle, we know which bindings caused it
         ko.utils.objectForEach(bindings, function pushBinding(bindingKey) {
             if (!bindingsConsidered[bindingKey]) {
                 var binding = ko['getBindingHandler'](bindingKey);
                 if (binding) {
-                    bindingsConsidered[bindingKey] = temporaryMarkForTopologicalSort;
                     // First add dependencies (if any) of the current binding
                     if (binding['after']) {
                         cyclicDependencyStack.push(bindingKey);
-                        ko.utils.arrayForEach(binding['after'], function(bindingKey) {
-                            if (bindings[bindingKey]) {
-                                if (bindingsConsidered[bindingKey] === temporaryMarkForTopologicalSort) {
-                                    // The binding has a temporary mark: must be a cyclic dependency
+                        ko.utils.arrayForEach(binding['after'], function(bindingDependencyKey) {
+                            if (bindings[bindingDependencyKey]) {
+                                if (ko.utils.arrayIndexOf(cyclicDependencyStack, bindingDependencyKey) !== -1) {
                                     throw Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
                                 } else {
-                                    pushBinding(bindingKey);
+                                    pushBinding(bindingDependencyKey);
                                 }
                             }
                         });
@@ -147,7 +143,7 @@
                     // Next add the current binding
                     result.push({ key: bindingKey, handler: binding });
                 }
-                bindingsConsidered[bindingKey] = permanentMarkForTopologicalSort;
+                bindingsConsidered[bindingKey] = true;
             }
         });
 
