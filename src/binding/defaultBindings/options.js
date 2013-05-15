@@ -26,7 +26,7 @@ ko.bindingHandlers['options'] = {
     },
     'update': function (element, valueAccessor, allBindingsAccessor) {
         var selectWasPreviouslyEmpty = element.length == 0;
-        var previousScrollTop = element.scrollTop;
+        var previousScrollTop = (!selectWasPreviouslyEmpty && element.multiple) ? element.scrollTop : null;
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var allBindings = allBindingsAccessor();
@@ -127,7 +127,7 @@ ko.bindingHandlers['options'] = {
         // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
 
-        if (Math.abs(previousScrollTop - element.scrollTop) > 20)
+        if (previousScrollTop && Math.abs(previousScrollTop - element.scrollTop) > 20)
             element.scrollTop = previousScrollTop;
     }
 };
