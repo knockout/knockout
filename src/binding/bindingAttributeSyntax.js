@@ -116,6 +116,40 @@
     }
 
     var boundElementDomDataKey = '__ko_boundElement';
+
+    function topologicalSortBindings(bindings) {
+        // Depth-first sort
+        var result = [],                // The list of key/handler pairs that we will return
+            bindingsConsidered = {},    // A temporary record of which bindings are already in 'result'
+            cyclicDependencyStack = []; // Keeps track of a depth-search so that, if there's a cycle, we know which bindings caused it
+        ko.utils.objectForEach(bindings, function pushBinding(bindingKey) {
+            if (!bindingsConsidered[bindingKey]) {
+                var binding = ko['getBindingHandler'](bindingKey);
+                if (binding) {
+                    // First add dependencies (if any) of the current binding
+                    if (binding['after']) {
+                        cyclicDependencyStack.push(bindingKey);
+                        ko.utils.arrayForEach(binding['after'], function(bindingDependencyKey) {
+                            if (bindings[bindingDependencyKey]) {
+                                if (ko.utils.arrayIndexOf(cyclicDependencyStack, bindingDependencyKey) !== -1) {
+                                    throw Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
+                                } else {
+                                    pushBinding(bindingDependencyKey);
+                                }
+                            }
+                        });
+                        cyclicDependencyStack.pop();
+                    }
+                    // Next add the current binding
+                    result.push({ key: bindingKey, handler: binding });
+                }
+                bindingsConsidered[bindingKey] = true;
+            }
+        });
+
+        return result;
+    }
+
     function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
@@ -153,16 +187,21 @@
                 return key in bindings;
             };
 
-            // Go through the bindings, calling init and update for each
-            ko.utils.objectForEach(bindings, function(bindingKey) {
+            // First put the bindings into the right order
+            var orderedBindings = topologicalSortBindings(bindings);
+
+            // Go through the sorted bindings, calling init and update for each
+            ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
+                var bindingKey = bindingKeyAndHandler.key,
+                    bindingHandler = bindingKeyAndHandler.handler;
+
+                if (node.nodeType === 8) {
+                    validateThatBindingIsAllowedForVirtualElements(bindingKey);
+                }
                 // Run init, ignoring any dependencies
                 ko.dependencyDetection.ignore(function() {
-                    var binding = ko['getBindingHandler'](bindingKey);
-                    if (binding && node.nodeType === 8) {
-                        validateThatBindingIsAllowedForVirtualElements(bindingKey);
-                    }
-                    if (binding && typeof binding["init"] == "function") {
-                        var handlerInitFn = binding["init"];
+                    var handlerInitFn = bindingHandler["init"];
+                    if (typeof handlerInitFn == "function") {
                         var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
 
                         // If this binding handler claims to control descendant bindings, make a note of this
@@ -177,9 +216,8 @@
                 // Run update in its own computed wrapper
                 ko.dependentObservable(
                     function() {
-                        var binding = ko['getBindingHandler'](bindingKey);
-                        if (binding && typeof binding["update"] == "function") {
-                            var handlerUpdateFn = binding["update"];
+                        var handlerUpdateFn = bindingHandler["update"];
+                        if (typeof handlerUpdateFn == "function") {
                             handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
                         }
                     },

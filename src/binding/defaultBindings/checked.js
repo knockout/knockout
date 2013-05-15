@@ -7,6 +7,7 @@ function checkedValue(element, allBindings) {
 }
 
 ko.bindingHandlers['checked'] = {
+    'after': ['value', 'attr'],
     'init': function (element, valueAccessor, allBindings) {
         var updateHandler = function() {
             var valueToWrite;
