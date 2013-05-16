@@ -244,17 +244,17 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
 
-        // Update the value observable; should update that checkbox
+        // Update the value observable of the selected item; should update the selected values and leave checked values unchanged
         object1.id(3);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+        expect(model.values).toEqual([3]);
 
-        // Represents current behavior, that the array is unchanged and the checkbox is unchecked
-        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(false);
-        expect(model.values).toEqual([1]);
-
-        // But the correct behavior might be to keep it checked and update the array
-        // Implementing this correct behavior will probably require independent bindings (#321) and/or binding ordering
-        //expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
-        //expect(model.values).toEqual([3]);
+        // Update the value observable of the unselected item; should do nothing
+        object2.id(4);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+        expect(model.values).toEqual([3]);
     });
 
     it('When a \'checkedValue\' is specified, should use that as the radio button\'s value', function () {
@@ -293,17 +293,17 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
 
-        // Update the value observable
+        // Update the value observable of the selected item; should update the selected value and leave checked values unchanged
         object1.id(3);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+        expect(model.value).toEqual(3);
 
-        // The current behavior is to uncheck the radio button
-        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(false);
-        expect(model.value).toEqual(1);
-
-        // But the correct behavior might be to keep it checked and update the model "value"
-        // Implementing this correct behavior will probably require independent bindings (#321) and/or binding ordering
-        //expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
-        //expect(model.value).toEqual(3);
+        // Update the value observable of the unselected item; should do nothing
+        object2.id(4);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+        expect(model.value).toEqual(3);
     });
 
 });
