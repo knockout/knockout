@@ -37,7 +37,7 @@ ko.bindingHandlers['checked'] = {
             // This updates the view value from the model value.
             // It runs in response to changes in the bound (checked) value.
             var modelValue = ko.utils.unwrapObservable(valueAccessor()),
-                elemValue = useCheckedValue && ko.dependencyDetection.ignore(checkedValue);
+                elemValue = useCheckedValue && checkedValue();
             if (isValueArray) {
                 // When bound to an array, the checkbox being checked represents its value being present in that array
                 element.checked = ko.utils.arrayIndexOf(modelValue, elemValue) >= 0;

@@ -244,17 +244,23 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
 
-        // Update the value observable of the selected item; should update the selected values and leave checked values unchanged
+        // Update the value observable of the checked item; should update the selected values and leave checked values unchanged
         object1.id(3);
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
         expect(model.values).toEqual([3]);
 
-        // Update the value observable of the unselected item; should do nothing
+        // Update the value observable of the unchecked item; should do nothing
         object2.id(4);
+        expect(model.values).toEqual([3]);
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+
+        // Update the value observable of the unchecked item to the current model value; should set to checked
+        object2.id(3);
         expect(model.values).toEqual([3]);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(true);
     });
 
     it('When a \'checkedValue\' is specified, should use that as the radio button\'s value', function () {
@@ -293,17 +299,23 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
 
-        // Update the value observable of the selected item; should update the selected value and leave checked values unchanged
+        // Update the value observable of the checked item; should update the selected value and leave checked values unchanged
         object1.id(3);
+        expect(model.value).toEqual(3);
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
-        expect(model.value).toEqual(3);
 
-        // Update the value observable of the unselected item; should do nothing
+        // Update the value observable of the unchecked item; should do nothing
         object2.id(4);
+        expect(model.value).toEqual(3);
         expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(false);
+
+        // Update the value observable of the unchecked item to the current model value; should set to checked
+        object2.id(3);
         expect(model.value).toEqual(3);
+        expect(testNode.childNodes[0].childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].childNodes[1].checked).toEqual(true);
     });
 
 });
