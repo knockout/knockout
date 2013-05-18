@@ -22,7 +22,7 @@ To register a binding, add it as a subproperty of `ko.bindingHandlers`:
             // Update the DOM element based on the supplied values here.
         }
     };
-   
+
 ... and then you can use it on any number of DOM elements:
 
     <div data-bind="yourBindingName: someValue"> </div>
@@ -34,8 +34,8 @@ Note: you don't actually have to provide both `init` *and* `update` callbacks --
 Whenever the associated observable changes, KO will call your `update` callback, passing the following parameters:
 
  * `element` --- The DOM element involved in this binding
- * `valueAccessor` --- A JavaScript function that you can call to get the current model property that is involved in this binding. Call this without passing any parameters (i.e., call `valueAccessor()`) to get the current model property value.
- * `allBindingsAccessor` --- A JavaScript function that you can call to get *all* the model properties bound to this DOM element. Like `valueAccessor`, call it without any parameters to get the current bound model properties. 
+ * `valueAccessor` --- A JavaScript function that you can call to get the current model property that is involved in this binding. Call this without passing any parameters (i.e., call `valueAccessor()`) to get the current model property value. To easily accept both observable and plain values, call `ko.unwrap` on the returned value.
+ * `allBindingsAccessor` --- A JavaScript function that you can call to get *all* the model properties bound to this DOM element. Like `valueAccessor`, call it without any parameters to get the current bound model properties.
  * `viewModel` --- The view model object that was passed to `ko.applyBindings`. Inside a nested binding context, this parameter will be set to the current data item (e.g., inside a `with: person` binding, `viewModel` will be set to `person`).
  * `bindingContext` --- An object that holds the [binding context](http://knockoutjs.com/documentation/binding-context.html) available to this element's bindings. This object includes special properties including `$parent`, `$parents`, and `$root` that can be used to access data that is bound against ancestors of this context.
 
@@ -45,26 +45,26 @@ For example, you might have been controlling an element's visibility using the `
         update: function(element, valueAccessor, allBindingsAccessor) {
             // First get the latest data that we're bound to
             var value = valueAccessor(), allBindings = allBindingsAccessor();
-            
+
             // Next, whether or not the supplied model property is observable, get its current value
-            var valueUnwrapped = ko.utils.unwrapObservable(value); 
-            
+            var valueUnwrapped = ko.unwrap(value);
+
             // Grab some more data from another binding property
             var duration = allBindings.slideDuration || 400; // 400ms is default duration unless otherwise specified
-            
+
             // Now manipulate the DOM element
-            if (valueUnwrapped == true) 
+            if (valueUnwrapped == true)
                 $(element).slideDown(duration); // Make the element visible
-            else 
+            else
                 $(element).slideUp(duration);   // Make the element invisible
         }
     };
 
 Now you can use this binding as follows:
-   
+
     <div data-bind="slideVisible: giftWrap, slideDuration:600">You have selected the option</div>
     <label><input type="checkbox" data-bind="checked: giftWrap" /> Gift wrap</label>
-    
+
     <script type="text/javascript">
         var viewModel = {
             giftWrap: ko.observable(true)
@@ -87,7 +87,7 @@ Continuing the previous example, you might want `slideVisible` to set the elemen
 
     ko.bindingHandlers.slideVisible = {
         init: function(element, valueAccessor) {
-            var value = ko.utils.unwrapObservable(valueAccessor()); // Get the current value of the current property we're bound to
+            var value = ko.unwrap(valueAccessor()); // Get the current value of the current property we're bound to
             $(element).toggle(value); // jQuery will hide/show the element depending on whether "value" or true or false
         },
         update: function(element, valueAccessor, allBindingsAccessor) {
@@ -112,11 +112,11 @@ You can use the `init` callback as a place to register an event handler that wil
             $(element).blur(function() {
                 var value = valueAccessor();
                 value(false);
-            });           
+            });
         },
         update: function(element, valueAccessor) {
             var value = valueAccessor();
-            if (ko.utils.unwrapObservable(value))
+            if (ko.unwrap(value))
                 element.focus();
             else
                 element.blur();
@@ -126,11 +126,11 @@ You can use the `init` callback as a place to register an event handler that wil
 Now you can both read and write the "focusedness" of an element by binding it to an observable:
 
     <p>Name: <input data-bind="hasFocus: editingName" /></p>
-    
+
     <!-- Showing that we can both read and write the focus state -->
     <div data-bind="visible: editingName">You're editing the name</div>
     <button data-bind="enable: !editingName(), click:function() { editingName(true) }">Edit name</button>
-    
+
     <script type="text/javascript">
         var viewModel = {
             editingName: ko.observable()
