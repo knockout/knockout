@@ -28,7 +28,7 @@ Or, if you don't want to use jQuery, you can use any other mechanism for loading
 
 ### Converting View Model Data to Plain JSON
 
-Your view models *are* JavaScript objects, so in a sense, you could just serialize them as JSON using any standard JSON serializer, such as `JSON.serialize()` (a native function in modern browsers), or the [`json2.js`](https://github.com/douglascrockford/JSON-js/blob/master/json2.js) library. However, your view models probably contain observables, computed observables, and observable arrays, which are implemented as JavaScript functions and therefore won't always serialize cleanly without additional work on your behalf.
+Your view models *are* JavaScript objects, so in a sense, you could just serialize them as JSON using any standard JSON serializer, such as [JSON.stringify](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/JSON/stringify) (a native function in modern browsers), or the [`json2.js`](https://github.com/douglascrockford/JSON-js/blob/master/json2.js) library. However, your view models probably contain observables, computed observables, and observable arrays, which are implemented as JavaScript functions and therefore won't always serialize cleanly without additional work on your behalf.
 
 To make it easy to serialize view model data, including observables and the like, Knockout includes two helper functions:
 
@@ -68,7 +68,7 @@ Or, if you just want the plain JavaScript object graph *before* serialization, u
     //      hasALotOfPets: true
     //   }
 
-Note that `ko.toJSON` accepts the same arguments as [JSON.stringify](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/JSON/stringify). For example, it can be useful to have a "live" representation of your view model data when debugging a Knockout application. To generate a nicely formatted display for this purpose, you can pass the *spaces* argument into `ko.toJSON` and bind against your view model like:
+Note that `ko.toJSON` accepts the same arguments as [JSON.stringify](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/JSON/stringify). For example, it can be useful to have a "live" representation of your view model data when debugging a Knockout application. To generate a nicely formatted display for this purpose, you can pass the *spaces* argument into `ko.toJSON` and bind against your view model like:
 
     <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
 

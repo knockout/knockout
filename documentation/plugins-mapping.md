@@ -195,7 +195,7 @@ This will alert `Grahamfoo!`.
 	
 ###### Ignoring certain properties using "ignore"
 
-If you want the mapping plugin to ignore some properties of your JS object (i.e. to not map them), you can specify a array of propertynames to ignore:
+If you want the mapping plugin to ignore some properties of your JS object (i.e. to not map them), you can specify an array of propertynames to ignore:
 
 	var mapping = {
 		'ignore': ["propertyToIgnore", "alsoIgnoreThis"]
@@ -234,6 +234,60 @@ The `copy` array you specify in the mapping options is combined with the default
 
 	var oldOptions = ko.mapping.defaultOptions().copy;
     ko.mapping.defaultOptions().copy = ["alwaysCopyThis"];
+	
+###### Observing only certain properties using "observe"
+
+If you want the mapping plugin to only create observables of some properties of your JS object and copy the rest, you can specify an array of propertynames to observe:
+
+	var mapping = {
+		'observe': ["propertyToObserve"]
+	}
+	var viewModel = ko.mapping.fromJS(data, mapping);
+
+The `observe` array you specify in the mapping options is combined with the default `observe` array, which by default is empty. You can manipulate this default array like this:
+
+	var oldOptions = ko.mapping.defaultOptions().observe;
+    ko.mapping.defaultOptions().observe = ["onlyObserveThis"];
+	
+The arrays `ignore` and `include` still work as normal. The array `copy` can be used for efficiency to copy array or object properties including children. If an array or object property is not specified in `copy` or `observe` then it is recursively mapped:
+
+	var data = {
+		a: "a",
+		b: [{ b1: "v1" }, { b2: "v2" }] 
+	};
+
+	var result = ko.mapping.fromJS(data, { observe: "a" });
+	var result2 = ko.mapping.fromJS(data, { observe: "a", copy: "b" }); //will be faster to map.
+
+Both `result` and `result2` will be:
+
+	{
+		a: observable("a"),
+		b: [{ b1: "v1" }, { b2: "v2" }] 
+	}
+
+Drilling down into arrays/objects works but copy and observe can conflict:
+
+	var data = {
+		a: "a",
+		b: [{ b1: "v1" }, { b2: "v2" }] 
+	};
+	var result = ko.mapping.fromJS(data, { observe: "b[0].b1"});
+	var result2 = ko.mapping.fromJS(data, { observe: "b[0].b1", copy: "b" });
+
+The `result` will be:
+
+	{
+		a: "a",
+		b: [{ b1: observable("v1") }, { b2: "v2" }] 
+	}
+
+While `result2` will be:
+
+	{
+		a: "a",
+		b: [{ b1: "v1" }, { b2: "v2" }] 
+	}
 	
 ###### Specifying the update target
 

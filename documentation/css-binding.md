@@ -75,7 +75,7 @@ If you want to apply the CSS class `my-class`, you *can't* write this:
 
     <div data-bind="css: { my-class: someValue }">...</div>
 
-... because `my-class` isn't a legal identifier name at that point. The solution is simple: just wrap the identifier name in quotes so that it becomes a string literal. This is legal in a JavaScript object literal (technically, according to the JSON spec, you should always do this anyway, though in practice you don't have to). For example,
+... because `my-class` isn't a legal identifier name at that point. The solution is simple: just wrap the identifier name in quotes so that it becomes a string literal, which is legal in a JavaScript object literal. For example,
 
     <div data-bind="css: { 'my-class': someValue }">...</div>
 

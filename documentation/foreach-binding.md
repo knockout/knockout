@@ -38,7 +38,7 @@ This example uses `foreach` to produce a read-only table with a row for each arr
 
 ### Example 2: Live example with add/remove
 
-The following example show that, if your array is observable, then the UI will be kept in sync with changes to that array.
+The following example shows that, if your array is observable, then the UI will be kept in sync with changes to that array.
 
 {% capture live_example_view %}
 <h4>People</h4>

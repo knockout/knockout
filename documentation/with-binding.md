@@ -88,7 +88,7 @@ ko.applyBindings(new AppViewModel());
 
    If the expression you supply evaluates to `null` or `undefined`, descendant elements will *not* be bound at all, but will instead be removed from the document.
 
-   If the expression you supply involves any observable values, the expression will be re-evaluated whenever any of those observables change. Then, descendant elements will be cleared out, and a new copy of the markup will be added to your document and bound in the context of the new evaluation result.
+   If the expression you supply involves any observable values, the expression will be re-evaluated whenever any of those observables change. Then, descendant elements will be cleared out, and **a new copy of the markup** will be added to your document and bound in the context of the new evaluation result.
 
  * Additional parameters
 

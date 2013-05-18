@@ -118,7 +118,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
 ### Note: Selection is preserved when setting/changing options
 
-When the `options` binding changes the set of options in your `<select>` element, KO will leave the user's selection unchanged where possible. So, for a single-select drop-down list, the previously selected option value will still be selected, and for a multi-select list, all the previously selected option values will still be selected (unless, of course, you're removed one or more of those options).
+When the `options` binding changes the set of options in your `<select>` element, KO will leave the user's selection unchanged where possible. So, for a single-select drop-down list, the previously selected option value will still be selected, and for a multi-select list, all the previously selected option values will still be selected (unless, of course, you've removed one or more of those options).
 	
 That's because the `options` binding tries to be independent of the `value` binding (which controls selection for a single-select list) and the `selectedOptions` binding (which controls selection for a multi-select list).
 
