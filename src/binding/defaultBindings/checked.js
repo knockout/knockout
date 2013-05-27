@@ -40,8 +40,7 @@ ko.bindingHandlers['checked'] = {
                     oldElemValue = elemValue;
                 } else {
                     // When we're responding to the user having checked/unchecked a checkbox,
-                    // or checked a radio button, so just add/remove the element value
-                    // to the model array
+                    // add/remove the element value to the model array.
                     ko.utils.addOrRemoveItem(modelValue, elemValue, isChecked);
                 }
             } else {
@@ -56,7 +55,6 @@ ko.bindingHandlers['checked'] = {
 
             if (isValueArray) {
                 // When a checkbox is bound to an array, being checked represents its value being present in that array
-                // Note that we 
                 element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
             } else if (isCheckbox) {
                 // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish
