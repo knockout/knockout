@@ -7,9 +7,13 @@ ko.bindingHandlers['options'] = {
         while (element.length > 0) {
             element.remove(0);
         }
+
+        // Ensures that the binding processor doesn't try to bind the options
+        return { 'controlsDescendantBindings': true };
     },
     'update': function (element, valueAccessor, allBindings) {
-        var previousScrollTop = element.scrollTop;
+        var selectWasPreviouslyEmpty = element.length == 0;
+        var previousScrollTop = (!selectWasPreviouslyEmpty && element.multiple) ? element.scrollTop : null;
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var includeDestroyed = allBindings.get('optionsIncludeDestroyed');
@@ -90,7 +94,15 @@ ko.bindingHandlers['options'] = {
             }
         }
 
-        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, null, setSelectionCallback);
+        var callback = setSelectionCallback;
+        if (allBindings['has']('optionsAfterRender')) {
+            callback = function(arrayEntry, newOptions) {
+                setSelectionCallback(arrayEntry, newOptions);
+                ko.dependencyDetection.ignore(allBindings.get('optionsAfterRender'), null, [newOptions[0], arrayEntry !== caption ? arrayEntry : undefined]);
+            }
+        }
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, null, callback);
 
         // Clear previousSelectedValues so that future updates to individual objects don't get stale data
         previousSelectedValues = null;
@@ -104,7 +116,7 @@ ko.bindingHandlers['options'] = {
         // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
 
-        if (Math.abs(previousScrollTop - element.scrollTop) > 20)
+        if (previousScrollTop && Math.abs(previousScrollTop - element.scrollTop) > 20)
             element.scrollTop = previousScrollTop;
     }
 };
