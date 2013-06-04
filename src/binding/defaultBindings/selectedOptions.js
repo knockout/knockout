@@ -20,5 +20,6 @@ ko.bindingHandlers['selectedOptions'] = {
                 ko.utils.setOptionNodeSelectionState(node, isSelected);
             });
         }
+	    ensureDropdownSelectionIsConsistentWithModelValue(element, newValue, false);
     }
 };
