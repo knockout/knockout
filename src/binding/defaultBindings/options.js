@@ -53,7 +53,7 @@ ko.bindingHandlers['options'] = {
             });
 
             // If caption is included, add it to the array
-            if ('optionsCaption' in allBindings) {
+            if (allBindings['optionsCaption'] === "" || allBindings['optionsCaption']) {
                 filteredArray.unshift(caption);
             }
         } else {
