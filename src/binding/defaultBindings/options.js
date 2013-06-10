@@ -31,7 +31,8 @@ ko.bindingHandlers['options'] = {
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var allBindings = allBindingsAccessor();
         var includeDestroyed = allBindings['optionsIncludeDestroyed'];
-        var caption = {};
+        var captionPlaceholder = {};
+        var captionValue;
         var previousSelectedValues;
         if (element.multiple) {
             previousSelectedValues = ko.utils.arrayMap(element.selectedOptions || ko.utils.arrayFilter(element.childNodes, function (node) {
@@ -54,7 +55,11 @@ ko.bindingHandlers['options'] = {
 
             // If caption is included, add it to the array
             if ('optionsCaption' in allBindings) {
-                filteredArray.unshift(caption);
+                captionValue = ko.utils.unwrapObservable(allBindings['optionsCaption']);
+                // If caption value is null or undefined, don't show a caption
+                if (captionValue !== null && captionValue !== undefined) {
+                    filteredArray.unshift(captionPlaceholder);
+                }
             }
         } else {
             // If a falsy value is provided (e.g. null), we'll simply empty the select element
@@ -80,8 +85,8 @@ ko.bindingHandlers['options'] = {
                 previousSelectedValues = oldOptions[0].selected && [ ko.selectExtensions.readValue(oldOptions[0]) ];
             }
             var option = document.createElement("option");
-            if (arrayEntry === caption) {
-                ko.utils.setHtml(option, allBindings['optionsCaption']);
+            if (arrayEntry === captionPlaceholder) {
+                ko.utils.setHtml(option, captionValue);
                 ko.selectExtensions.writeValue(option, undefined);
             } else {
                 // Apply a value to the option element
@@ -108,7 +113,7 @@ ko.bindingHandlers['options'] = {
         if (allBindings['optionsAfterRender']) {
             callback = function(arrayEntry, newOptions) {
                 setSelectionCallback(arrayEntry, newOptions);
-                ko.dependencyDetection.ignore(allBindings['optionsAfterRender'], null, [newOptions[0], arrayEntry !== caption ? arrayEntry : undefined]);
+                ko.dependencyDetection.ignore(allBindings['optionsAfterRender'], null, [newOptions[0], arrayEntry !== captionPlaceholder ? arrayEntry : undefined]);
             }
         }
 
