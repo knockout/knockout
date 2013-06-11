@@ -116,6 +116,12 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveTexts(['A', 'B']);
     });
 
+    it('Should not include the caption if the optionsCaption value is undefined', function() {
+      testNode.innerHTML = "<select data-bind='options: [\"A\", \"B\"], optionsCaption: test'></select>";
+      ko.applyBindings({ test: ko.observable() }, testNode);
+      expect(testNode.childNodes[0]).toHaveTexts(['A', 'B']);
+    });
+
     it('Should include a caption even if it\'s blank', function() {
         testNode.innerHTML = "<select data-bind='options: [\"A\",\"B\"], optionsCaption: \"\"'></select>";
         ko.applyBindings({}, testNode);
