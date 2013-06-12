@@ -331,6 +331,12 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].value).toEqual("hello");
     });
 
+    it('Should handle data-bind attributes with spaces around equals sign from inside templates and reference variables', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<input data-bind = 'value:message' />" }));
+        ko.renderTemplate("someTemplate", null, { templateRenderingVariablesInScope: { message: "hello"} }, testNode);
+        expect(testNode.childNodes[0].value).toEqual("hello");
+    });
+
     it('Data binding syntax should be able to use $element in binding value', function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: $element.tagName'></div>" }));
         ko.renderTemplate("someTemplate", null, null, testNode);
