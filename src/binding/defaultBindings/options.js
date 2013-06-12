@@ -12,6 +12,10 @@ ko.bindingHandlers['options'] = {
         return { 'controlsDescendantBindings': true };
     },
     'update': function (element, valueAccessor, allBindings) {
+        function selectedOptions() {
+            return element['selectedOptions'] || ko.utils.arrayFilter(element.options, function (node) { return node.selected; });
+        }
+
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousScrollTop = (!selectWasPreviouslyEmpty && element.multiple) ? element.scrollTop : null;
 
@@ -20,13 +24,9 @@ ko.bindingHandlers['options'] = {
         var caption = {};
         var previousSelectedValues;
         if (element.multiple) {
-            previousSelectedValues = ko.utils.arrayMap(element.selectedOptions || ko.utils.arrayFilter(element.childNodes, function (node) {
-                    return node.tagName && (ko.utils.tagNameLower(node) === "option") && node.selected;
-                }), function (node) {
-                    return ko.selectExtensions.readValue(node);
-                });
-        } else if (element.selectedIndex >= 0) {
-            previousSelectedValues = [ ko.selectExtensions.readValue(element.options[element.selectedIndex]) ];
+            previousSelectedValues = ko.utils.arrayMap(selectedOptions(), ko.selectExtensions.readValue);
+        } else {
+            previousSelectedValues = element.selectedIndex >= 0 ? [ ko.selectExtensions.readValue(element.options[element.selectedIndex]) ] : [];
         }
 
         if (unwrappedArray) {
@@ -61,9 +61,11 @@ ko.bindingHandlers['options'] = {
         // The first is when the whole array is being updated directly from this binding handler.
         // The second is when an observable value for a specific array entry is updated.
         // oldOptions will be empty in the first case, but will be filled with the previously generated option in the second.
+        var itemUpdate = false;
         function optionForArrayItem(arrayEntry, index, oldOptions) {
             if (oldOptions.length) {
-                previousSelectedValues = oldOptions[0].selected && [ ko.selectExtensions.readValue(oldOptions[0]) ];
+                previousSelectedValues = oldOptions[0].selected ? [ ko.selectExtensions.readValue(oldOptions[0]) ] : [];
+                itemUpdate = true;
             }
             var option = document.createElement("option");
             if (arrayEntry === caption) {
@@ -81,16 +83,16 @@ ko.bindingHandlers['options'] = {
             return [option];
         }
 
-        var countSelectionsRetained = 0;
         function setSelectionCallback(arrayEntry, newOptions) {
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
             // That's why we first added them without selection. Now it's time to set the selection.
-            if (previousSelectedValues) {
+            if (previousSelectedValues.length) {
                 var isSelected = ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[0])) >= 0;
                 ko.utils.setOptionNodeSelectionState(newOptions[0], isSelected);
-                if (isSelected) {
-                    countSelectionsRetained++;
-                }
+
+                // If this option was changed from being selected during a single-item update, notify the change
+                if (itemUpdate && !isSelected)
+                    ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
             }
         }
 
@@ -104,13 +106,24 @@ ko.bindingHandlers['options'] = {
 
         ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, null, callback);
 
-        // Clear previousSelectedValues so that future updates to individual objects don't get stale data
-        previousSelectedValues = null;
+        // Determine if the selection has changed as a result of updating the options list
+        var selectionChanged;
+        if (element.multiple) {
+            // For a multiple-select box, compare the new selection count to the previous one
+            // But if nothing was selected before, the selection can't have changed
+            selectionChanged = previousSelectedValues.length && selectedOptions().length < previousSelectedValues.length;
+        } else {
+            // For a single-select box, compare the current value to the previous value
+            // But if nothing was selected before or nothing is selected now, just look for a change in selection
+            selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
+                ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
+                : (previousSelectedValues.length || element.selectedIndex >= 0);
+        }
 
         // Ensure consistency between model value and selected option.
         // If the dropdown was changed so that selection is no longer the same,
         // notify the value or selectedOptions binding.
-        if (previousSelectedValues && countSelectionsRetained < previousSelectedValues.length)
+        if (selectionChanged)
             ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
 
         // Workaround for IE bug
