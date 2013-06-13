@@ -1,4 +1,4 @@
-(function () {
+    (function () {
     ko.bindingHandlers = {};
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
@@ -6,31 +6,78 @@
         return ko.bindingHandlers[bindingKey];
     };
 
-    ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
-        if (parentBindingContext) {
-            ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
-            this['$parentContext'] = parentBindingContext;
-            this['$parent'] = parentBindingContext['$data'];
-            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
-            this['$parents'].unshift(this['$parent']);
-        } else {
-            this['$parents'] = [];
-            this['$root'] = dataItem;
-            // Export 'ko' in the binding context so it will be available in bindings and templates
-            // even if 'ko' isn't exported as a global, such as when using an AMD loader.
-            // See https://github.com/SteveSanderson/knockout/issues/490
-            this['ko'] = ko;
+    ko.bindingContext = function(dataItemOrAccessor, parentContext, dataItemAlias, extendCallback) {
+        function updateContext() {
+            var dataItem = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
+            if (parentContext) {
+                // Register a dependency on the parent context
+                if (parentContext._subscribable)
+                    parentContext._subscribable();
+                // Inherit $root and any custom properties
+                ko.utils.extend(self, parentContext);
+                // Update our properties
+                if (subscribable) {
+                    self['$dataFn'] = self._subscribable = subscribable;
+                }
+            } else {
+                self['$parents'] = [];
+                self['$root'] = dataItem;
+                // Export 'ko' in the binding context so it will be available in bindings and templates
+                // even if 'ko' isn't exported as a global, such as when using an AMD loader.
+                // See https://github.com/SteveSanderson/knockout/issues/490
+                self['ko'] = ko;
+            }
+            self['$data'] = dataItem;
+            if (dataItemAlias)
+                self[dataItemAlias] = dataItem;
+            if (extendCallback)
+                extendCallback(self, parentContext, dataItem);
+            return self['$data'];
         }
-        this['$data'] = dataItem;
-        if (dataItemAlias)
-            this[dataItemAlias] = dataItem;
+        function disposeWhen() {
+            return !ko.utils.anyDomNodeIsAttachedToDocument(nodes);
+        }
+
+        var self = this,
+            isFunc = typeof(dataItemOrAccessor) == "function",
+            nodes = [],
+            subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen });
+
+        if (subscribable.isActive()) {
+            self['$dataFn'] = self._subscribable = subscribable;
+
+            // Add properties to *subscribable* instead of *self* because any properties added to *self* may be overwritten on updates
+            subscribable._addNode = function(node) {
+                nodes.push(node);
+                ko.utils.domNodeDisposal.addDisposeCallback(node, function(node) {
+                    ko.utils.arrayRemoveItem(nodes, node);
+                    if (!nodes.length) {
+                        subscribable.dispose();
+                        self._subscribable = subscribable = undefined;
+                    }
+                });
+                // Make sure that our parent context is watching at least one node
+                if (parentContext && parentContext._subscribable && !parentContext._subscribable._nodes.length) {
+                    parentContext._subscribable._addNode(node);
+                }
+            };
+            subscribable._nodes = nodes;
+        } else {
+            self['$dataFn'] = function() { return self['$data']; }
+        }
     }
-    ko.bindingContext.prototype['createChildContext'] = function (dataItem, dataItemAlias) {
-        return new ko.bindingContext(dataItem, this, dataItemAlias);
+    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias) {
+        return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function(self, parentContext) {
+            self['$parentContext'] = parentContext;
+            self['$parent'] = parentContext['$data'];
+            self['$parents'] = (parentContext['$parents'] || []).slice(0);
+            self['$parents'].unshift(self['$parent']);
+        });
     };
     ko.bindingContext.prototype['extend'] = function(properties) {
-        var clone = ko.utils.extend(new ko.bindingContext(), this);
-        return ko.utils.extend(clone, properties);
+        return new ko.bindingContext(this['$dataFn'], this, null, function(self) {
+            ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
+        });
     };
 
     // Returns the valueAccesor function for a binding value
@@ -170,18 +217,36 @@
         if (!bindings) {
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
-            bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
+
+            var bindingsUpdater = ko.dependentObservable(
+                function() {
+                    return (bindings = getBindings.call(provider, node, bindingContext));
+                },
+                null, { disposeWhenNodeIsRemoved: node }
+            );
+
+            if (!bindings || !bindingsUpdater.isActive())
+                bindingsUpdater = null;
         }
 
         var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
+            var getValueAccessor = bindingsUpdater
+                ? function(bindingKey) {
+                    return function() {
+                        return evaluateValueAccessor(bindingsUpdater()[bindingKey]);
+                    };
+                } : function(bindingKey) {
+                    return bindings[bindingKey];
+                };
+
             // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
             function allBindings() {
-                return ko.utils.objectMap(bindings, evaluateValueAccessor);
+                return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
             }
             // The following is the 3.x allBindings API
             allBindings['get'] = function(key) {
-                return bindings[key] && evaluateValueAccessor(bindings[key]);
+                return bindings[key] && evaluateValueAccessor(getValueAccessor(key));
             };
             allBindings['has'] = function(key) {
                 return key in bindings;
@@ -202,7 +267,7 @@
                 ko.dependencyDetection.ignore(function() {
                     var handlerInitFn = bindingHandler["init"];
                     if (typeof handlerInitFn == "function") {
-                        var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
+                        var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
                         // If this binding handler claims to control descendant bindings, make a note of this
                         if (initResult && initResult['controlsDescendantBindings']) {
@@ -218,7 +283,7 @@
                     function() {
                         var handlerUpdateFn = bindingHandler["update"];
                         if (typeof handlerUpdateFn == "function") {
-                            handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
+                            handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
                         }
                     },
                     null,
@@ -234,16 +299,19 @@
 
     var storedBindingContextDomDataKey = "__ko_bindingContext__";
     ko.storedBindingContextForNode = function (node, bindingContext) {
-        if (arguments.length == 2)
+        if (arguments.length == 2) {
             ko.utils.domData.set(node, storedBindingContextDomDataKey, bindingContext);
-        else
+            if (bindingContext._subscribable)
+                bindingContext._subscribable._addNode(node);
+        } else {
             return ko.utils.domData.get(node, storedBindingContextDomDataKey);
+        }
     }
 
-    function getBindingContext(viewModelOrBindingContext, options) {
+    function getBindingContext(viewModelOrBindingContext) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
-            : new ko.bindingContext(ko.utils.peekObservable(viewModelOrBindingContext));
+            : new ko.bindingContext(viewModelOrBindingContext);
     }
 
     ko.applyBindingAccessorsToNode = function (node, bindings, viewModelOrBindingContext) {

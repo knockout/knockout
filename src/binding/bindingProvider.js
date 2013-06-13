@@ -60,7 +60,7 @@
         // For each scope variable, add an extra level of "with" nesting
         // Example result: with(sc1) { with(sc0) { return (expression) } }
         var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString, options),
-            functionBody = "with($context){with($data||{}){return{" + rewrittenBindings + "}}}";
+            functionBody = "with($context){with($dataFn()||{}){return{" + rewrittenBindings + "}}}";
         return new Function("$context", "$element", functionBody);
     }
 })();
