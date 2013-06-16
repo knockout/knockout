@@ -25,7 +25,10 @@ ko.observable = function (initialValue) {
     observable.peek = function() { return _latestValue };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
-    ko.utils.extend(observable, ko.observable['fn']);
+
+    if (!ko.utils.tryToSetPrototypeOf(observable, ko.observable['fn'])) {
+        ko.utils.extend(observable, ko.observable['fn']);
+    }
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
@@ -40,6 +43,8 @@ ko.observable['fn'] = {
 
 var protoProperty = ko.observable.protoProperty = "__ko_proto__";
 ko.observable['fn'][protoProperty] = ko.observable;
+
+ko.utils.tryToSetPrototypeOf(ko.observable['fn'], ko.subscribable['fn']);
 
 ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;

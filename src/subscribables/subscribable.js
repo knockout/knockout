@@ -13,7 +13,10 @@ ko.subscription.prototype.dispose = function () {
 ko.subscribable = function () {
     this._subscriptions = {};
 
-    ko.utils.extend(this, ko.subscribable['fn']);
+    if (!ko.utils.tryToSetPrototypeOf(this, ko.subscribable['fn'])) {
+        ko.utils.extend(this, ko.subscribable['fn']);
+    }
+
     ko.exportProperty(this, 'subscribe', this.subscribe);
     ko.exportProperty(this, 'extend', this.extend);
     ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
@@ -68,6 +71,7 @@ ko.subscribable['fn'] = {
     extend: applyExtenders
 };
 
+ko.utils.tryToSetPrototypeOf(ko.subscribable['fn'], Function.prototype);
 
 ko.isSubscribable = function (instance) {
     return instance != null && typeof instance.subscribe == "function" && typeof instance["notifySubscribers"] == "function";
