@@ -689,8 +689,8 @@ describe('Templating', function() {
             ko.applyBindings(myVm, testNode);
             expect(testNode.childNodes[0]).toContainText("The 0 item A has 0.1,1.2,2.3, The 1 item B has 0.4,1.5,2.6, The 2 item C has 0.7,1.8,2.9, ");
 
-            myVm({items: ['C', 'B', 'A'], itemValues: { 'A': [10, 20, 30], 'B': [40, 50, 60], 'C': [70, 80, 90] }});
-            expect(testNode.childNodes[0]).toContainText("The 0 item C has 0.70,1.80,2.90, The 1 item B has 0.40,1.50,2.60, The 2 item A has 0.10,1.20,2.30, ");
+            myVm({items: ['C', 'B', 'A'], itemValues: { 'A': [1, 2, 30], 'B': [4, 5, 60], 'C': [7, 8, 90] }});
+            expect(testNode.childNodes[0]).toContainText("The 0 item C has 0.7,1.8,2.90, The 1 item B has 0.4,1.5,2.60, The 2 item A has 0.1,1.2,2.30, ");
         });
 
     });
