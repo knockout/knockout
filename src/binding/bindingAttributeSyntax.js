@@ -87,11 +87,6 @@
                         self._subscribable = subscribable = undefined;
                     }
                 });
-                // Make sure that the parent context is watching at least one node; otherwise the parent context might
-                // get disponsed right away.
-                if (parentContext && parentContext._subscribable && !parentContext._subscribable._nodes.length) {
-                    parentContext._subscribable._addNode(node);
-                }
             };
         } else {
             self['$dataFn'] = function() { return self['$data']; }
@@ -103,13 +98,15 @@
     // But this does not mean that the $data value of the child context will also get updated. If the child
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
-    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias) {
+    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback) {
         return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function(self, parentContext) {
             // Extend the context hierarchy by setting the appropriate pointers
             self['$parentContext'] = parentContext;
             self['$parent'] = parentContext['$data'];
             self['$parents'] = (parentContext['$parents'] || []).slice(0);
             self['$parents'].unshift(self['$parent']);
+            if (extendCallback)
+                extendCallback(self);
         });
     };
 
@@ -239,10 +236,10 @@
         return result;
     }
 
-    function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
+    function applyBindingsToNodeInternal(node, sourceBindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
-        if (!bindings) {
+        if (!sourceBindings) {
             if (alreadyBound) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
@@ -256,7 +253,10 @@
             ko.storedBindingContextForNode(node, bindingContext);
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
-        if (!bindings) {
+        var bindings;
+        if (sourceBindings && typeof sourceBindings !== 'function') {
+            bindings = sourceBindings;
+        } else {
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
@@ -265,7 +265,7 @@
             // the binding context is updated.
             var bindingsUpdater = ko.dependentObservable(
                 function() {
-                    bindings = getBindings.call(provider, node, bindingContext);
+                    bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
                     // Register a dependency on the binding context
                     if (bindings && bindingContext._subscribable)
                         bindingContext._subscribable();

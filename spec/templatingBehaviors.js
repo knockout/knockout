@@ -438,7 +438,7 @@ describe('Templating', function() {
         ko.bindingProvider.instance = originalBindingProvider;
     });
 
-    Describe('Data binding \'foreach\' option', function() {
+    describe('Data binding \'foreach\' option', function() {
         it('Should render for each item in an array but doesn\'t rerender everything if you push or splice', function () {
             var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
             ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>The item is [js: personName]</div>" }));
@@ -673,6 +673,24 @@ describe('Templating', function() {
             };
             ko.applyBindings({ myCollection: myArray, getTemplateModelProperty: getTemplate, anotherProperty: 123 }, testNode);
             expect(testNode.childNodes[0]).toContainHtml("<div>template1output, firstitemvalue</div><div>template2output, seconditemvalue</div>");
+        });
+
+        it('Should update all child contexts and bindings when used with a top-level observable view model', function() {
+            var myVm = ko.observable({items: ['A', 'B', 'C'], itemValues: { 'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9] }});
+            var engine = new dummyTemplateEngine({
+                itemTemplate: "The <span data-bind='text: $index'></span> item <span data-bind='text: $data'></span> has <div data-bind='template: { name: \"valueTemplate\", foreach: $root.itemValues[$data] }'></div> ",
+                valueTemplate: "<span data-bind='text: $index'></span>.<span data-bind='text: $data'></span>,"
+            });
+            engine.createJavaScriptEvaluatorBlock = function (script) { return "[[js:" + script + "]]"; };  // because we're using a binding with brackets
+            ko.setTemplateEngine(engine);
+
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: items }'></div>";
+
+            ko.applyBindings(myVm, testNode);
+            expect(testNode.childNodes[0]).toContainText("The 0 item A has 0.1,1.2,2.3, The 1 item B has 0.4,1.5,2.6, The 2 item C has 0.7,1.8,2.9, ");
+
+            myVm({items: ['C', 'B', 'A'], itemValues: { 'A': [10, 20, 30], 'B': [40, 50, 60], 'C': [70, 80, 90] }});
+            expect(testNode.childNodes[0]).toContainText("The 0 item C has 0.70,1.80,2.90, The 1 item B has 0.40,1.50,2.60, The 2 item A has 0.10,1.20,2.30, ");
         });
 
     });
