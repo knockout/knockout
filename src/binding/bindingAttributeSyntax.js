@@ -260,12 +260,16 @@
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
-            // When an obsevable view model is used, the binding context will expose an observable $dataFn value. A binding
-            // provider that supports observable view models should use bindingContext.$dataFn to access the view model, thus
-            // triggering a dependency here.
+            // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
+            // Get the binding from the provider within a computed observable so that we can update the bindings whenever
+            // the binding context is updated.
             var bindingsUpdater = ko.dependentObservable(
                 function() {
-                    return (bindings = getBindings.call(provider, node, bindingContext));
+                    bindings = getBindings.call(provider, node, bindingContext);
+                    // Register a dependency on the binding context
+                    if (bindings && bindingContext._subscribable)
+                        bindingContext._subscribable();
+                    return bindings;
                 },
                 null, { disposeWhenNodeIsRemoved: node }
             );

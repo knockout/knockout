@@ -59,10 +59,8 @@
         // Build the source for a function that evaluates "expression"
         // For each scope variable, add an extra level of "with" nesting
         // Example result: with(sc1) { with(sc0) { return (expression) } }
-        // This binding evaluator function uses "$dataFn()" so that the bindings have a dependency
-        // on a binding context that's updatable.
         var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString, options),
-            functionBody = "with($context){with($dataFn()||{}){return{" + rewrittenBindings + "}}}";
+            functionBody = "with($context){with($data||{}){return{" + rewrittenBindings + "}}}";
         return new Function("$context", "$element", functionBody);
     }
 })();
