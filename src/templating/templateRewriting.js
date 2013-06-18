@@ -54,7 +54,7 @@ ko.templateRewriting = (function () {
             return ko.memoization.memoize(function (domNode, bindingContext) {
                 var nodeToBind = domNode.nextSibling;
                 if (nodeToBind && nodeToBind.nodeName.toLowerCase() === nodeName) {
-                    ko.applyBindingAccessorsToNode(nodeToBind, bindings(bindingContext, nodeToBind), bindingContext);
+                    ko.applyBindingAccessorsToNode(nodeToBind, bindings, bindingContext);
                 }
             });
         }
