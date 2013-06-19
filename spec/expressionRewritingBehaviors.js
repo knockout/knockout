@@ -148,7 +148,7 @@ describe('Expression Rewriting', function() {
 
     it('Should return accessor functions for each value when called with the valueAccessors option', function() {
         var rewritten = ko.expressionRewriting.preProcessBindings("a: 1", {valueAccessors:true});
-        expect(rewritten).toEqual("'a':function(){return 1}");
+        expect(rewritten).toEqual("'a':function(){return 1 }");
         var evaluated = eval("({" + rewritten + "})");
         expect(evaluated['a']()).toEqual(1);
     });

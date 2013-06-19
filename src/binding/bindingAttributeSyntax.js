@@ -1,4 +1,4 @@
-(function () {
+    (function () {
     ko.bindingHandlers = {};
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
@@ -6,31 +6,117 @@
         return ko.bindingHandlers[bindingKey];
     };
 
-    ko.bindingContext = function(dataItem, parentBindingContext, dataItemAlias) {
-        if (parentBindingContext) {
-            ko.utils.extend(this, parentBindingContext); // Inherit $root and any custom properties
-            this['$parentContext'] = parentBindingContext;
-            this['$parent'] = parentBindingContext['$data'];
-            this['$parents'] = (parentBindingContext['$parents'] || []).slice(0);
-            this['$parents'].unshift(this['$parent']);
-        } else {
-            this['$parents'] = [];
-            this['$root'] = dataItem;
-            // Export 'ko' in the binding context so it will be available in bindings and templates
-            // even if 'ko' isn't exported as a global, such as when using an AMD loader.
-            // See https://github.com/SteveSanderson/knockout/issues/490
-            this['ko'] = ko;
+    // The ko.bindingContext constructor is only called directly to create the root context. For child
+    // contexts, use bindingContext.createChildContext or bindingContext.extend.
+    ko.bindingContext = function(dataItemOrAccessor, parentContext, dataItemAlias, extendCallback) {
+
+        // The binding context object includes static properties for the current, parent, and root view models.
+        // If a view model is actually stored in an observable, the corresponding binding context object, and
+        // any child contexts, must be updated when the view model is changed.
+        function updateContext() {
+            // Most of the time, the context will directly get a view model object, but if a function is given,
+            // we call the function to retrieve the view model. If the function accesses any obsevables (or is
+            // itself an observable), the dependency is tracked, and those observables can later cause the binding
+            // context to be updated.
+            var dataItem = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
+
+            if (parentContext) {
+                // When a "parent" context is given, register a dependency on the parent context. Thus whenever the
+                // parent context is updated, this context will also be updated.
+                if (parentContext._subscribable)
+                    parentContext._subscribable();
+
+                // Copy $root and any custom properties from the parent context
+                ko.utils.extend(self, parentContext);
+
+                // Because the above copy overwrites our own properties, we need to reset them.
+                // During the first execution, "subscribable" isn't set, so don't bother doing the update then.
+                if (subscribable) {
+                    self['$dataFn'] = self._subscribable = subscribable;
+                }
+            } else {
+                self['$parents'] = [];
+                self['$root'] = dataItem;
+
+                // Export 'ko' in the binding context so it will be available in bindings and templates
+                // even if 'ko' isn't exported as a global, such as when using an AMD loader.
+                // See https://github.com/SteveSanderson/knockout/issues/490
+                self['ko'] = ko;
+            }
+            self['$data'] = dataItem;
+            if (dataItemAlias)
+                self[dataItemAlias] = dataItem;
+
+            // The extendCallback function is provided when creating a child context or extending a context.
+            // It handles the specific actions needed to finish setting up the binding context. Actions in this
+            // function could also add dependencies to this binding context.
+            if (extendCallback)
+                extendCallback(self, parentContext, dataItem);
+
+            return self['$data'];
         }
-        this['$data'] = dataItem;
-        if (dataItemAlias)
-            this[dataItemAlias] = dataItem;
+        function disposeWhen() {
+            return !ko.utils.anyDomNodeIsAttachedToDocument(nodes);
+        }
+
+        var self = this,
+            isFunc = typeof(dataItemOrAccessor) == "function",
+            nodes = [],
+            subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen });
+
+        // At this point, the binding context has been initialized, and the "subscribable" computed observable is
+        // subscribed to any observables that were accessed in the process. If there is nothing to track, the
+        // computed will be inactive, and we can safely throw it away. If it's active, the computed is stored in
+        // the context object.
+        if (subscribable.isActive()) {
+            self['$dataFn'] = self._subscribable = subscribable;
+
+            // We need to be able to dispose of this computed observable when it's no longer needed. This would be
+            // easy if we had a single node to watch, but binding contexts can be used by many different nodes, and
+            // we cannot assume that those nodes have any relation to each other. So instead we track any node that
+            // the context is attached to, and dispose the computed when all of those nodes have been cleaned.
+
+            // Add properties to *subscribable* instead of *self* because any properties added to *self* may be overwritten on updates
+            subscribable._nodes = nodes;
+            subscribable._addNode = function(node) {
+                nodes.push(node);
+                ko.utils.domNodeDisposal.addDisposeCallback(node, function(node) {
+                    ko.utils.arrayRemoveItem(nodes, node);
+                    if (!nodes.length) {
+                        subscribable.dispose();
+                        self._subscribable = subscribable = undefined;
+                    }
+                });
+            };
+        } else {
+            self['$dataFn'] = function() { return self['$data']; }
+        }
     }
-    ko.bindingContext.prototype['createChildContext'] = function (dataItem, dataItemAlias) {
-        return new ko.bindingContext(dataItem, this, dataItemAlias);
+
+    // Extend the binding context hierarchy with a new view model object. If the parent context is watching
+    // any obsevables, the new child context will automatically get a dependency on the parent context.
+    // But this does not mean that the $data value of the child context will also get updated. If the child
+    // view model also depends on the parent view model, you must provide a function that returns the correct
+    // view model on each update.
+    ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback) {
+        return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function(self, parentContext) {
+            // Extend the context hierarchy by setting the appropriate pointers
+            self['$parentContext'] = parentContext;
+            self['$parent'] = parentContext['$data'];
+            self['$parents'] = (parentContext['$parents'] || []).slice(0);
+            self['$parents'].unshift(self['$parent']);
+            if (extendCallback)
+                extendCallback(self);
+        });
     };
+
+    // Extend the binding context with new custom properties. This doesn't change the context hierarchy.
+    // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
+    // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties) {
-        var clone = ko.utils.extend(new ko.bindingContext(), this);
-        return ko.utils.extend(clone, properties);
+        return new ko.bindingContext(this['$dataFn'], this, null, function(self) {
+            ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
+        });
     };
 
     // Returns the valueAccesor function for a binding value
@@ -150,10 +236,10 @@
         return result;
     }
 
-    function applyBindingsToNodeInternal(node, bindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
+    function applyBindingsToNodeInternal(node, sourceBindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
-        if (!bindings) {
+        if (!sourceBindings) {
             if (alreadyBound) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
@@ -167,21 +253,52 @@
             ko.storedBindingContextForNode(node, bindingContext);
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
-        if (!bindings) {
+        var bindings;
+        if (sourceBindings && typeof sourceBindings !== 'function') {
+            bindings = sourceBindings;
+        } else {
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
-            bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
+
+            // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
+            // Get the binding from the provider within a computed observable so that we can update the bindings whenever
+            // the binding context is updated.
+            var bindingsUpdater = ko.dependentObservable(
+                function() {
+                    bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
+                    // Register a dependency on the binding context
+                    if (bindings && bindingContext._subscribable)
+                        bindingContext._subscribable();
+                    return bindings;
+                },
+                null, { disposeWhenNodeIsRemoved: node }
+            );
+
+            if (!bindings || !bindingsUpdater.isActive())
+                bindingsUpdater = null;
         }
 
         var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
+            // Return the value accessor for a given binding. When bindings are static (won't be updated because of a binding
+            // context update), just return the value accessor from the binding. Otherwise, return a function that always gets
+            // the latest binding value and registers a dependency on the binding updater.
+            var getValueAccessor = bindingsUpdater
+                ? function(bindingKey) {
+                    return function() {
+                        return evaluateValueAccessor(bindingsUpdater()[bindingKey]);
+                    };
+                } : function(bindingKey) {
+                    return bindings[bindingKey];
+                };
+
             // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
             function allBindings() {
-                return ko.utils.objectMap(bindings, evaluateValueAccessor);
+                return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
             }
             // The following is the 3.x allBindings API
             allBindings['get'] = function(key) {
-                return bindings[key] && evaluateValueAccessor(bindings[key]);
+                return bindings[key] && evaluateValueAccessor(getValueAccessor(key));
             };
             allBindings['has'] = function(key) {
                 return key in bindings;
@@ -202,7 +319,7 @@
                 ko.dependencyDetection.ignore(function() {
                     var handlerInitFn = bindingHandler["init"];
                     if (typeof handlerInitFn == "function") {
-                        var initResult = handlerInitFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
+                        var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
                         // If this binding handler claims to control descendant bindings, make a note of this
                         if (initResult && initResult['controlsDescendantBindings']) {
@@ -218,7 +335,7 @@
                     function() {
                         var handlerUpdateFn = bindingHandler["update"];
                         if (typeof handlerUpdateFn == "function") {
-                            handlerUpdateFn(node, bindings[bindingKey], allBindings, bindingContext['$data'], bindingContext);
+                            handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
                         }
                     },
                     null,
@@ -234,16 +351,19 @@
 
     var storedBindingContextDomDataKey = "__ko_bindingContext__";
     ko.storedBindingContextForNode = function (node, bindingContext) {
-        if (arguments.length == 2)
+        if (arguments.length == 2) {
             ko.utils.domData.set(node, storedBindingContextDomDataKey, bindingContext);
-        else
+            if (bindingContext._subscribable)
+                bindingContext._subscribable._addNode(node);
+        } else {
             return ko.utils.domData.get(node, storedBindingContextDomDataKey);
+        }
     }
 
-    function getBindingContext(viewModelOrBindingContext, options) {
+    function getBindingContext(viewModelOrBindingContext) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
-            : new ko.bindingContext(ko.utils.peekObservable(viewModelOrBindingContext));
+            : new ko.bindingContext(viewModelOrBindingContext);
     }
 
     ko.applyBindingAccessorsToNode = function (node, bindings, viewModelOrBindingContext) {

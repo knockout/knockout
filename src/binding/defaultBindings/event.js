@@ -2,19 +2,19 @@
 // e.g. click:handler instead of the usual full-length event:{click:handler}
 function makeEventHandlerShortcut(eventName) {
     ko.bindingHandlers[eventName] = {
-        'init': function(element, valueAccessor, allBindings, viewModel) {
+        'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             var newValueAccessor = function () {
                 var result = {};
                 result[eventName] = valueAccessor();
                 return result;
             };
-            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindings, viewModel);
+            return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindings, viewModel, bindingContext);
         }
     }
 }
 
 ko.bindingHandlers['event'] = {
-    'init' : function (element, valueAccessor, allBindings, viewModel) {
+    'init' : function (element, valueAccessor, allBindings, viewModel, bindingContext) {
         var eventsToHandle = valueAccessor() || {};
         ko.utils.objectForEach(eventsToHandle, function(eventName) {
             if (typeof eventName == "string") {
@@ -27,6 +27,7 @@ ko.bindingHandlers['event'] = {
                     try {
                         // Take all the event args, and prefix with the viewmodel
                         var argsForHandler = ko.utils.makeArray(arguments);
+                        viewModel = bindingContext['$data'];
                         argsForHandler.unshift(viewModel);
                         handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
                     } finally {
