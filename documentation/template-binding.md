@@ -155,7 +155,7 @@ If you are using `foreach` and only want to be notified about elements that are 
 
 ### Note 5: Dynamically choosing which template is used
 
-If you have multiple named templates, you can use a callback function to determine which one of them is used. This can be accomplished by supplying a function for the `name` option. If you're using the `foreach` template mode, Knockout will evaluate the function for each item in your array, passing that item's value as the only argument. Otherwise, the function will be given the `data` option's value or fall back to providing your whole current model object.
+If you have multiple named templates, you can pass an observable for the `name` option. As the observable's value is updated, the element's contents will be re-rendered using the appropriate template. Alternatively, you can pass a callback function to determine which template to use. If you are using the `foreach` template mode, Knockout will evaluate the function for each item in your array, passing that item's value as the only argument. Otherwise, the function will be given the `data` option's value or fall back to providing your whole current model object.
 
 For example,
 
