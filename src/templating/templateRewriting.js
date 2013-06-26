@@ -5,7 +5,7 @@ ko.templateRewriting = (function () {
 
     function validateDataBindValuesForRewriting(keyValueArray) {
         var allValidators = ko.expressionRewriting.bindingRewriteValidators;
-        for (var i = 0; i < keyValueArray.length; i++) {
+        for (var i = 0, len = keyValueArray.length; i < len; i++) {
             var key = keyValueArray[i]['key'];
             if (allValidators.hasOwnProperty(key)) {
                 var validator = allValidators[key];

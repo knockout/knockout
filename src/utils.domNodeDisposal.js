@@ -21,7 +21,7 @@ ko.utils.domNodeDisposal = new (function () {
         var callbacks = getDisposeCallbacksCollection(node, false);
         if (callbacks) {
             callbacks = callbacks.slice(0); // Clone, as the array may be modified during iteration (typically, callbacks will remove themselves)
-            for (var i = 0; i < callbacks.length; i++)
+            for (var i = 0, len = callbacks.length; i < len; i++)
                 callbacks[i](node);
         }
 

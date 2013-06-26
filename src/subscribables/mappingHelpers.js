@@ -56,7 +56,7 @@
 
     function visitPropertiesOrArrayEntries(rootObject, visitorCallback) {
         if (rootObject instanceof Array) {
-            for (var i = 0; i < rootObject.length; i++)
+            for (var i = 0, len =  rootObject.length; i < len; i++)
                 visitorCallback(i);
 
             // For arrays, also respect toJSON property for custom mappings (fixes #278)

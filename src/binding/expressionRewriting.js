@@ -161,7 +161,7 @@ ko.expressionRewriting = (function () {
         },
 
         keyValueArrayContainsKey: function(keyValueArray, key) {
-            for (var i = 0; i < keyValueArray.length; i++)
+            for (var i = 0, len = keyValueArray.length; i < len; i++)
                 if (ko.utils.stringTrim(keyValueArray[i]['key']) == key)
                     return true;
             return false;
