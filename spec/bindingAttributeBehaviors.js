@@ -406,4 +406,40 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({}, testNode);
         // Should not throw any errors
     });
+
+    it('Should not bind against text content inside <script> tags', function() {
+        // Developers won't expect or want binding to mutate the contents of <script> tags.
+        // Historically this wasn't a problem because the default binding provider only acts
+        // on elements, but now custom providers can act on text contents of elements, it's
+        // important to ensure we don't break <script> elements by mutating their contents.
+
+        // First replace the binding provider with one that's hardcoded to replace all text
+        // content with a special message, via a binding handler that operates on text nodes
+        var originalBindingProvider = ko.bindingProvider.instance;
+        ko.bindingProvider.instance = {
+            nodeHasBindings: function(node, bindingContext) {
+                return true;
+            },
+            getBindingAccessors: function(node, bindingContext) {
+                if (node.nodeType === 3) {
+                    return {
+                        replaceTextNodeContent: function() { return "replaced"; }
+                    };
+                } else {
+                    return originalBindingProvider.getBindingAccessors(node, bindingContext);
+                }
+            }
+        };
+        ko.bindingHandlers.replaceTextNodeContent = {
+            update: function(textNode, valueAccessor) { textNode.data = valueAccessor(); }
+        };
+
+        // Now check that the only text nodes whose contents are mutated are the ones
+        // *not* inside <script> tags.
+        testNode.innerHTML = "<p>Hello</p><script>alert(123);</script><p>Goodbye</p>";
+        ko.applyBindings({ sometext: 'hello' }, testNode);
+        expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
 });

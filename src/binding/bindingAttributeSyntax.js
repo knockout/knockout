@@ -1,5 +1,14 @@
-    (function () {
+(function () {
     ko.bindingHandlers = {};
+
+    // The following element types will not be recursed into during binding. In the future, we
+    // may consider adding <template> to this list, because such elements' contents are always
+    // intended to be bound in a different context from where they appear in the document.
+    var bindingDoesNotRecurseIntoElementTypes = {
+        // Don't want bindings that operate on text nodes to mutate <script> contents,
+        // because it's unexpected and a potential XSS issue
+        'script': true
+    };
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
     ko['getBindingHandler'] = function(bindingKey) {
@@ -190,7 +199,7 @@
         if (shouldApplyBindings)
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext, bindingContextMayDifferFromDomParentElement)['shouldBindDescendants'];
 
-        if (shouldBindDescendants) {
+        if (shouldBindDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
             // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
             //  * For children of a *real* element, the binding context is certainly the same as on their DOM .parentNode,
             //    hence bindingContextsMayDifferFromDomParentElement is false
