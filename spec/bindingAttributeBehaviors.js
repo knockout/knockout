@@ -442,4 +442,56 @@ describe('Binding attribute syntax', function() {
 
         ko.bindingProvider.instance = originalBindingProvider;
     });
+
+    it('Allows the use of a preProcessNode callback that can replace a set of nodes with another set of nodes', function() {
+        var originalBindingProvider = ko.bindingProvider.instance,
+            preProcessingBindingProvider = function() { };
+        preProcessingBindingProvider.prototype = originalBindingProvider;
+        ko.bindingProvider.instance = new preProcessingBindingProvider();
+        ko.bindingProvider.instance.preProcessNode = function(node) {
+            // The preProcessNode callback can return null (or falsey) if it doesn't want to replace
+            // the node, or it can return a replacement node, having already mutated the document to
+            // remove the original node and insert the new one in the same place. It is also free to
+            // insert or remove following siblings, whether or not it replaces the original node.
+            // Binding will run against all of these new nodes as if they were originally in the document.
+
+            // Example: Replace <prop1 /> with text from property prop1.
+            // This could be generalised to full support for custom element types that render templates.
+            if (node.tagName && node.tagName.toLowerCase() === "prop1") {
+                var newNode = document.createElement("span");
+                newNode.setAttribute("data-bind", "text: prop1");
+                node.parentNode.insertBefore(newNode, node);
+                node.parentNode.removeChild(node);
+                return newNode;
+            }
+
+            // Example: Replace {{ prop3 }} with text from that property.
+            // This could be generalized to full support for string interpolation in text nodes.
+            if (node.nodeType === 3 && node.data.indexOf("{{ prop3 }}") >= 0) {
+                var prefix = node.data.substring(0, node.data.indexOf("{{ prop3 }}")),
+                    suffix = node.data.substring(node.data.indexOf("{{ prop3 }}") + "{{ prop3 }}".length),
+                    newNodes = [
+                        document.createTextNode(prefix),
+                        document.createComment("ko text: prop3"),
+                        document.createComment("/ko"),
+                        document.createTextNode(suffix)
+                    ];
+                // Manually reimplement ko.utils.replaceDomNodes, since it's not available in minified build
+                for (var i = 0; i < newNodes.length; i++) {
+                    node.parentNode.insertBefore(newNodes[i], node);
+                }
+                node.parentNode.removeChild(node);
+                return newNodes[0];
+            }
+
+            // Example: Leave the node unchanged.
+            return null;
+        };
+
+        testNode.innerHTML = "<prop1></prop1>, <p data-bind='text: prop2'></p>, prefix {{ prop3 }} suffix";
+        ko.applyBindings({ prop1: 'PROP1VAL', prop2: 'PROP2VAL', prop3: 'PROP3VAL' }, testNode);
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix');
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
 });
