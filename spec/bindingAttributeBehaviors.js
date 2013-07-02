@@ -489,8 +489,21 @@ describe('Binding attribute syntax', function() {
         };
 
         testNode.innerHTML = "<prop1></prop1>, <p data-bind='text: prop2'></p>, prefix {{ prop3 }} suffix<div data-bind='foreach: prop4'> {{ prop3 }} x</div>";
-        ko.applyBindings({ prop1: 'PROP1VAL', prop2: 'PROP2VAL', prop3: 'PROP3VAL', prop4: [ {prop3: 'PROP4VAL1'}, {prop3: 'PROP4VAL2'} ] }, testNode);
+        var vm = {
+            prop1: 'PROP1VAL',
+            prop2: 'PROP2VAL',
+            prop3: ko.observable('PROP3VAL'),
+            prop4: ko.observable([ {prop3: 'PROP4VAL1'}, {prop3: 'PROP4VAL2'} ])
+        };
+        ko.applyBindings(vm, testNode);
         expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix PROP4VAL1 x PROP4VAL2 x');
+
+        // Update observables and test that DOM is updated
+        vm.prop3('NEW_PROP3VAL');
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL1 x PROP4VAL2 x');
+
+        vm.prop4([ {prop3: 'PROP4VAL3'}, {prop3: 'PROP4VAL4'} ]);
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL3 x PROP4VAL4 x');
 
         ko.bindingProvider.instance = originalBindingProvider;
     });

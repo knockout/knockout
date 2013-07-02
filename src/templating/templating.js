@@ -37,6 +37,12 @@
                             lastNode = newNodes[newNodes.length-1];
                     }
                 });
+                // Because preProcessNode can change the nodes, including the first and last nodes, replace
+                // continuousNodeArray with the latest first/last nodes (we don't actually need the inner nodes)
+                continuousNodeArray.length = 0;
+                continuousNodeArray.push(firstNode);
+                if (lastNode !== firstNode)
+                    continuousNodeArray.push(lastNode);
             }
 
             // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
