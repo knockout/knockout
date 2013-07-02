@@ -484,11 +484,22 @@ describe('Binding attribute syntax', function() {
                 return newNodes;
             }
 
+            // Example: Remove any <button> elements
+            if (node.tagName && node.tagName.toLowerCase() === "button") {
+                node.parentNode.removeChild(node);
+                return []; // Replace with empty array
+            }
+
             // Example: Leave the node unchanged.
             return null;
         };
 
-        testNode.innerHTML = "<prop1></prop1>, <p data-bind='text: prop2'></p>, prefix {{ prop3 }} suffix<div data-bind='foreach: prop4'> {{ prop3 }} x</div>";
+        testNode.innerHTML = "<prop1></prop1>, "
+                           + "<p data-bind='text: prop2'></p>, "
+                           + "prefix {{ prop3 }} suffix"
+                           + "<div data-bind='foreach: prop4'>"
+                           +     "<button>DeleteMe</button> {{ prop3 }} x<button>DeleteMe</button>"
+                           + "</div>";
         var vm = {
             prop1: 'PROP1VAL',
             prop2: 'PROP2VAL',
