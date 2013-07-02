@@ -177,16 +177,23 @@
     function applyBindingsToDescendantsInternal (bindingContext, elementOrVirtualElement, bindingContextsMayDifferFromDomParentElement) {
         var currentChild,
             nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement),
-            preProcessNode = ko.bindingProvider['instance']['preProcessNode'];
-        while (currentChild = nextInQueue) {
-            // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
-            // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
-            // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
-            // trigger insertion of <template> contents at that point in the document.
-            if (preProcessNode) {
-                currentChild = preProcessNode(currentChild) || currentChild;
-            }
+            provider = ko.bindingProvider['instance'],
+            preProcessNode = provider['preProcessNode'];
 
+        // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
+        // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
+        // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
+        // trigger insertion of <template> contents at that point in the document.
+        if (preProcessNode) {
+            while (currentChild = nextInQueue) {
+                nextInQueue = ko.virtualElements.nextSibling(currentChild);
+                preProcessNode.call(provider, currentChild);
+            }
+            // Reset nextInQueue for the next loop
+            nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
+        }
+
+        while (currentChild = nextInQueue) {
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
             applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild, bindingContextsMayDifferFromDomParentElement);

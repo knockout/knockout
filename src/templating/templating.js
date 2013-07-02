@@ -6,12 +6,11 @@
         _templateEngine = templateEngine;
     }
 
-    function invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, action) {
+    function invokeForEachNodeInContinuousRange(firstNode, lastNode, action) {
         var node, nextInQueue = firstNode, firstOutOfRangeNode = ko.virtualElements.nextSibling(lastNode);
         while (nextInQueue && ((node = nextInQueue) !== firstOutOfRangeNode)) {
             nextInQueue = ko.virtualElements.nextSibling(node);
-            if (node.nodeType === 1 || node.nodeType === 8)
-                action(node);
+            action(node);
         }
     }
 
@@ -23,15 +22,32 @@
         // (2) Unmemoizes any memos in the DOM subtree (e.g., to activate bindings that had been memoized during template rewriting)
 
         if (continuousNodeArray.length) {
-            var firstNode = continuousNodeArray[0], lastNode = continuousNodeArray[continuousNodeArray.length - 1];
+            var firstNode = continuousNodeArray[0],
+                lastNode = continuousNodeArray[continuousNodeArray.length - 1],
+                provider = ko.bindingProvider['instance'],
+                preProcessNode = provider['preProcessNode'];
+
+            if (preProcessNode) {
+                invokeForEachNodeInContinuousRange(firstNode, lastNode, function(node) {
+                    var newNodes = preProcessNode.call(provider, node);
+                    if (newNodes) {
+                        if (node === firstNode)
+                            firstNode = newNodes[0];
+                        if (node === lastNode)
+                            lastNode = newNodes[newNodes.length-1];
+                    }
+                });
+            }
 
             // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)
             // whereas a regular applyBindings won't introduce new memoized nodes
-            invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, function(node) {
-                ko.applyBindings(bindingContext, node);
+            invokeForEachNodeInContinuousRange(firstNode, lastNode, function(node) {
+                if (node.nodeType === 1 || node.nodeType === 8)
+                    ko.applyBindings(bindingContext, node);
             });
-            invokeForEachNodeOrCommentInContinuousRange(firstNode, lastNode, function(node) {
-                ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
+            invokeForEachNodeInContinuousRange(firstNode, lastNode, function(node) {
+                if (node.nodeType === 1 || node.nodeType === 8)
+                    ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
             });
         }
     }

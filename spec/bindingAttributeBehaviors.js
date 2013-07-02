@@ -462,7 +462,7 @@ describe('Binding attribute syntax', function() {
                 newNode.setAttribute("data-bind", "text: prop1");
                 node.parentNode.insertBefore(newNode, node);
                 node.parentNode.removeChild(node);
-                return newNode;
+                return [newNode];
             }
 
             // Example: Replace {{ prop3 }} with text from that property.
@@ -481,16 +481,16 @@ describe('Binding attribute syntax', function() {
                     node.parentNode.insertBefore(newNodes[i], node);
                 }
                 node.parentNode.removeChild(node);
-                return newNodes[0];
+                return newNodes;
             }
 
             // Example: Leave the node unchanged.
             return null;
         };
 
-        testNode.innerHTML = "<prop1></prop1>, <p data-bind='text: prop2'></p>, prefix {{ prop3 }} suffix";
-        ko.applyBindings({ prop1: 'PROP1VAL', prop2: 'PROP2VAL', prop3: 'PROP3VAL' }, testNode);
-        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix');
+        testNode.innerHTML = "<prop1></prop1>, <p data-bind='text: prop2'></p>, prefix {{ prop3 }} suffix<div data-bind='foreach: prop4'> {{ prop3 }} x</div>";
+        ko.applyBindings({ prop1: 'PROP1VAL', prop2: 'PROP2VAL', prop3: 'PROP3VAL', prop4: [ {prop3: 'PROP4VAL1'}, {prop3: 'PROP4VAL2'} ] }, testNode);
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix PROP4VAL1 x PROP4VAL2 x');
 
         ko.bindingProvider.instance = originalBindingProvider;
     });
