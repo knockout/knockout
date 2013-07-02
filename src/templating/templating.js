@@ -25,16 +25,16 @@
             var firstNode = continuousNodeArray[0],
                 lastNode = continuousNodeArray[continuousNodeArray.length - 1],
                 provider = ko.bindingProvider['instance'],
-                preProcessNode = provider['preProcessNode'];
+                preprocessNode = provider['preprocessNode'];
 
-            if (preProcessNode) {
-                // Because preProcessNodes can remove nodes, it's tricky to work out what is the last node in the
+            if (preprocessNode) {
+                // Because preprocessNode can remove nodes, it's tricky to work out what is the last node in the
                 // continuous array after preprocessing. We need the last node from the last nonempty set of replacement
                 // nodes. To find it, lastNodeSeenDuringPreProcessing tracks the last such candidate we've seen.
                 var lastNodeSeenDuringPreProcessing = null;
 
                 invokeForEachNodeInContinuousRange(firstNode, lastNode, function(node, nextNodeInRange) {
-                    var newNodes = preProcessNode.call(provider, node);
+                    var newNodes = preprocessNode.call(provider, node);
                     if (newNodes) {
                         if (node === firstNode)
                             firstNode = newNodes[0] || nextNodeInRange;
@@ -45,12 +45,12 @@
                 });
                 lastNode = lastNodeSeenDuringPreProcessing;
 
-                // preProcessNode might have removed all the nodes, in which case there's nothing left to activate bindings on
+                // preprocessNode might have removed all the nodes, in which case there's nothing left to activate bindings on
                 if (!firstNode) { // Note that lastNode can only be null if firstNode is, so no need to check for that
                     return;
                 }
 
-                // Because preProcessNode can change the nodes, including the first and last nodes, replace
+                // Because preprocessNode can change the nodes, including the first and last nodes, replace
                 // continuousNodeArray with the latest first/last nodes (we don't actually need the inner nodes)
                 continuousNodeArray.length = 0;
                 continuousNodeArray.push(firstNode);

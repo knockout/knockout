@@ -178,16 +178,16 @@
         var currentChild,
             nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement),
             provider = ko.bindingProvider['instance'],
-            preProcessNode = provider['preProcessNode'];
+            preprocessNode = provider['preprocessNode'];
 
         // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
         // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
         // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
         // trigger insertion of <template> contents at that point in the document.
-        if (preProcessNode) {
+        if (preprocessNode) {
             while (currentChild = nextInQueue) {
                 nextInQueue = ko.virtualElements.nextSibling(currentChild);
-                preProcessNode.call(provider, currentChild);
+                preprocessNode.call(provider, currentChild);
             }
             // Reset nextInQueue for the next loop
             nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);

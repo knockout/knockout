@@ -443,13 +443,13 @@ describe('Binding attribute syntax', function() {
         ko.bindingProvider.instance = originalBindingProvider;
     });
 
-    it('Allows the use of a preProcessNode callback that can replace a set of nodes with another set of nodes', function() {
+    it('Allows the use of a preprocessNode callback that can replace a set of nodes with another set of nodes', function() {
         var originalBindingProvider = ko.bindingProvider.instance,
-            preProcessingBindingProvider = function() { };
-        preProcessingBindingProvider.prototype = originalBindingProvider;
-        ko.bindingProvider.instance = new preProcessingBindingProvider();
-        ko.bindingProvider.instance.preProcessNode = function(node) {
-            // The preProcessNode callback can return null (or falsey) if it doesn't want to replace
+            preprocessingBindingProvider = function() { };
+        preprocessingBindingProvider.prototype = originalBindingProvider;
+        ko.bindingProvider.instance = new preprocessingBindingProvider();
+        ko.bindingProvider.instance.preprocessNode = function(node) {
+            // The preprocessNode callback can return null (or falsey) if it doesn't want to replace
             // the node, or it can return a replacement node, having already mutated the document to
             // remove the original node and insert the new one in the same place. It is also free to
             // insert or remove following siblings, whether or not it replaces the original node.
