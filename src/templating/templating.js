@@ -44,12 +44,19 @@
                     return;
                 }
 
-                // Because preprocessNode can change the nodes, including the first and last nodes, replace
-                // continuousNodeArray with the latest first/last nodes (we don't actually need the inner nodes)
+                // Because preprocessNode can change the nodes, including the first and last nodes, update continuousNodeArray to match.
+                // We need the full set, including inner nodes, because this is what gets passed to any afterRender callback
                 continuousNodeArray.length = 0;
-                continuousNodeArray.push(firstNode);
-                if (lastNode !== firstNode)
-                    continuousNodeArray.push(lastNode);
+                for(var currentNode = firstNode; currentNode;) {
+                    continuousNodeArray.push(currentNode);
+                    currentNode = currentNode.nextSibling;
+                    if (currentNode === lastNode) {
+                        if (lastNode !== firstNode) {
+                            continuousNodeArray.push(currentNode);
+                        }
+                        break;
+                    }
+                }
             }
 
             // Need to applyBindings *before* unmemoziation, because unmemoization might introduce extra nodes (that we don't want to re-bind)

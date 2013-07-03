@@ -194,6 +194,48 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('first childhidden child');
     });
 
+    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing', function() {
+        // Set up a binding provider that converts text nodes to expressions
+        var originalBindingProvider = ko.bindingProvider.instance,
+            preprocessingBindingProvider = function() { };
+        preprocessingBindingProvider.prototype = originalBindingProvider;
+        ko.bindingProvider.instance = new preprocessingBindingProvider();
+        ko.bindingProvider.instance.preprocessNode = function(node) {
+            if (node.nodeType === 3 && node.data.charAt(0) === "$") {
+                var newNodes = [
+                    document.createComment('ko text: ' + node.data),
+                    document.createComment('/ko'),
+                ];
+                for (var i = 0; i < newNodes.length; i++) {
+                    node.parentNode.insertBefore(newNodes[i], node);
+                }
+                node.parentNode.removeChild(node);
+                return newNodes;
+            }
+        };
+
+        // Now perform a foreach binding, and see that afterRender gets the output from the preprocessor
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span>[</span>$data<span>]</span></div>";
+        var someItems = ko.observableArray(['Alpha', 'Beta']),
+            callbackReceivedArrayValues = [];
+        ko.applyBindings({
+            someItems: someItems,
+            callback: function(nodes, arrayValue) {
+                expect(nodes.length).toBe(4);
+                expect(nodes[0]).toContainText('[');    // <span>[</span>
+                expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data -->
+                expect(nodes[2].nodeType).toBe(8);      // <!-- /ko -->
+                expect(nodes[3]).toContainText(']');    // <span>]</span>
+                callbackReceivedArrayValues.push(arrayValue);
+            }
+        }, testNode);
+
+        expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+        expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
+
     it('Should call an afterAdd callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
