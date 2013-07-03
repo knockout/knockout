@@ -194,7 +194,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('first childhidden child');
     });
 
-    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing', function() {
+    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function() {
         // Set up a binding provider that converts text nodes to expressions
         var originalBindingProvider = ko.bindingProvider.instance,
             preprocessingBindingProvider = function() { };
@@ -214,18 +214,19 @@ describe('Binding: Foreach', function() {
             }
         };
 
-        // Now perform a foreach binding, and see that afterRender gets the output from the preprocessor
+        // Now perform a foreach binding, and see that afterRender gets the output from the preprocessor and bindings
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span>[</span>$data<span>]</span></div>";
         var someItems = ko.observableArray(['Alpha', 'Beta']),
             callbackReceivedArrayValues = [];
         ko.applyBindings({
             someItems: someItems,
             callback: function(nodes, arrayValue) {
-                expect(nodes.length).toBe(4);
+                expect(nodes.length).toBe(5);
                 expect(nodes[0]).toContainText('[');    // <span>[</span>
                 expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data -->
-                expect(nodes[2].nodeType).toBe(8);      // <!-- /ko -->
-                expect(nodes[3]).toContainText(']');    // <span>]</span>
+                expect(nodes[2].nodeType).toBe(3);      // text node inserted by text binding
+                expect(nodes[3].nodeType).toBe(8);      // <!-- /ko -->
+                expect(nodes[4]).toContainText(']');    // <span>]</span>
                 callbackReceivedArrayValues.push(arrayValue);
             }
         }, testNode);

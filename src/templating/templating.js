@@ -24,6 +24,7 @@
         if (continuousNodeArray.length) {
             var firstNode = continuousNodeArray[0],
                 lastNode = continuousNodeArray[continuousNodeArray.length - 1],
+                parentNode = firstNode.parentNode,
                 provider = ko.bindingProvider['instance'],
                 preprocessNode = provider['preprocessNode'];
 
@@ -39,23 +40,18 @@
                     }
                 });
 
-                // preprocessNode might have removed all the nodes, in which case there's nothing left to activate bindings on
-                if (!firstNode) { // Note that lastNode can only be null if firstNode is, so no need to check for that
+                // Because preprocessNode can change the nodes, including the first and last nodes, update continuousNodeArray to match.
+                // We need the full set, including inner nodes, because the unmemoize step might remove the first node (and so the real
+                // first node needs to be in the array).
+                continuousNodeArray.length = 0;
+                if (!firstNode) { // preprocessNode might have removed all the nodes, in which case there's nothing left to do
                     return;
                 }
-
-                // Because preprocessNode can change the nodes, including the first and last nodes, update continuousNodeArray to match.
-                // We need the full set, including inner nodes, because this is what gets passed to any afterRender callback
-                continuousNodeArray.length = 0;
-                for(var currentNode = firstNode; currentNode;) {
-                    continuousNodeArray.push(currentNode);
-                    currentNode = currentNode.nextSibling;
-                    if (currentNode === lastNode) {
-                        if (lastNode !== firstNode) {
-                            continuousNodeArray.push(currentNode);
-                        }
-                        break;
-                    }
+                if (firstNode === lastNode) {
+                    continuousNodeArray.push(firstNode);
+                } else {
+                    continuousNodeArray.push(firstNode, lastNode);
+                    ko.utils.fixUpContinuousNodeArray(continuousNodeArray, parentNode);
                 }
             }
 
@@ -69,6 +65,9 @@
                 if (node.nodeType === 1 || node.nodeType === 8)
                     ko.memoization.unmemoizeDomNodeAndDescendants(node, [bindingContext]);
             });
+
+            // Make sure any changes done by applyBindings or unmemoize are reflected in the array
+            ko.utils.fixUpContinuousNodeArray(continuousNodeArray, parentNode);
         }
     }
 
