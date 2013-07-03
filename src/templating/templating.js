@@ -28,22 +28,16 @@
                 preprocessNode = provider['preprocessNode'];
 
             if (preprocessNode) {
-                // Because preprocessNode can remove nodes, it's tricky to work out what is the last node in the
-                // continuous array after preprocessing. We need the last node from the last nonempty set of replacement
-                // nodes. To find it, lastNodeSeenDuringPreProcessing tracks the last such candidate we've seen.
-                var lastNodeSeenDuringPreProcessing = null;
-
                 invokeForEachNodeInContinuousRange(firstNode, lastNode, function(node, nextNodeInRange) {
+                    var nodePreviousSibling = node.previousSibling;
                     var newNodes = preprocessNode.call(provider, node);
                     if (newNodes) {
                         if (node === firstNode)
                             firstNode = newNodes[0] || nextNodeInRange;
-                        lastNodeSeenDuringPreProcessing = newNodes[newNodes.length-1] || lastNodeSeenDuringPreProcessing;
-                    } else {
-                        lastNodeSeenDuringPreProcessing = node;
+                        if (node === lastNode)
+                            lastNode = newNodes[newNodes.length - 1] || nodePreviousSibling;
                     }
                 });
-                lastNode = lastNodeSeenDuringPreProcessing;
 
                 // preprocessNode might have removed all the nodes, in which case there's nothing left to activate bindings on
                 if (!firstNode) { // Note that lastNode can only be null if firstNode is, so no need to check for that

@@ -498,7 +498,7 @@ describe('Binding attribute syntax', function() {
                            + "<p data-bind='text: prop2'></p>, "
                            + "prefix {{ prop3 }} suffix"
                            + "<div data-bind='foreach: prop4'>"
-                           +     "<button>DeleteMe</button> {{ prop3 }} x<button>DeleteMe</button>"
+                           +     "<button>DeleteMe</button> {{ prop3 }} x<!--ko text:'x'--><!--/ko--><button>DeleteMe</button>"
                            + "</div>";
         var vm = {
             prop1: 'PROP1VAL',
@@ -507,14 +507,14 @@ describe('Binding attribute syntax', function() {
             prop4: ko.observable([ {prop3: 'PROP4VAL1'}, {prop3: 'PROP4VAL2'} ])
         };
         ko.applyBindings(vm, testNode);
-        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix PROP4VAL1 x PROP4VAL2 x');
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix PROP3VAL suffix PROP4VAL1 xx PROP4VAL2 xx');
 
         // Update observables and test that DOM is updated
         vm.prop3('NEW_PROP3VAL');
-        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL1 x PROP4VAL2 x');
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL1 xx PROP4VAL2 xx');
 
         vm.prop4([ {prop3: 'PROP4VAL3'}, {prop3: 'PROP4VAL4'} ]);
-        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL3 x PROP4VAL4 x');
+        expect(testNode).toContainText('PROP1VAL, PROP2VAL, prefix NEW_PROP3VAL suffix PROP4VAL3 xx PROP4VAL4 xx');
 
         ko.bindingProvider.instance = originalBindingProvider;
     });
