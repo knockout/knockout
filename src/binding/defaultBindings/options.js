@@ -24,13 +24,14 @@ ko.bindingHandlers['options'] = {
         // Ensures that the binding processor doesn't try to bind the options
         return { 'controlsDescendantBindings': true };
     },
-    'update': function (element, valueAccessor, allBindingsAccessor) {
+    'update': function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousScrollTop = (!selectWasPreviouslyEmpty && element.multiple) ? element.scrollTop : null;
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var allBindings = allBindingsAccessor();
         var includeDestroyed = allBindings['optionsIncludeDestroyed'];
+		var optionsBind = allBindingsAccessor()['optionsBind'];
         var caption = {};
         var previousSelectedValues;
         if (element.multiple) {
@@ -91,6 +92,13 @@ ko.bindingHandlers['options'] = {
                 // Apply some text to the option element
                 var optionText = applyToObject(arrayEntry, allBindings['optionsText'], optionValue);
                 ko.utils.setTextContent(option, optionText);
+				
+				// Apply bindings to the option element
+				if (optionsBind) {
+					var optionContext = bindingContext['createChildContext'](arrayEntry),
+					optionsParseBindings = function () { return ko.bindingProvider['instance']['parseBindingsString'](optionsBind, optionContext) };
+					ko.applyBindingsToNode(option, optionsParseBindings, optionContext);
+				}
             }
             return [option];
         }
