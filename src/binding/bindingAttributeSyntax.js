@@ -1,5 +1,14 @@
-    (function () {
+(function () {
     ko.bindingHandlers = {};
+
+    // The following element types will not be recursed into during binding. In the future, we
+    // may consider adding <template> to this list, because such elements' contents are always
+    // intended to be bound in a different context from where they appear in the document.
+    var bindingDoesNotRecurseIntoElementTypes = {
+        // Don't want bindings that operate on text nodes to mutate <script> contents,
+        // because it's unexpected and a potential XSS issue
+        'script': true
+    };
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
     ko['getBindingHandler'] = function(bindingKey) {
@@ -166,7 +175,24 @@
     }
 
     function applyBindingsToDescendantsInternal (bindingContext, elementOrVirtualElement, bindingContextsMayDifferFromDomParentElement) {
-        var currentChild, nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
+        var currentChild,
+            nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement),
+            provider = ko.bindingProvider['instance'],
+            preprocessNode = provider['preprocessNode'];
+
+        // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
+        // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
+        // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
+        // trigger insertion of <template> contents at that point in the document.
+        if (preprocessNode) {
+            while (currentChild = nextInQueue) {
+                nextInQueue = ko.virtualElements.nextSibling(currentChild);
+                preprocessNode.call(provider, currentChild);
+            }
+            // Reset nextInQueue for the next loop
+            nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
+        }
+
         while (currentChild = nextInQueue) {
             // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
             nextInQueue = ko.virtualElements.nextSibling(currentChild);
@@ -190,7 +216,7 @@
         if (shouldApplyBindings)
             shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext, bindingContextMayDifferFromDomParentElement)['shouldBindDescendants'];
 
-        if (shouldBindDescendants) {
+        if (shouldBindDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
             // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
             //  * For children of a *real* element, the binding context is certainly the same as on their DOM .parentNode,
             //    hence bindingContextsMayDifferFromDomParentElement is false

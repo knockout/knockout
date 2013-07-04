@@ -936,6 +936,38 @@ describe('Templating', function() {
         expect(initCalls).toEqual(1);
     });
 
+    it('Should be possible to combine template rewriting, foreach, and a node preprocessor', function() {
+        // This spec verifies that the use of fixUpContinuousNodeArray in templating.js correctly handles the scenario
+        // where a memoized comment node is the first node outputted by 'foreach', and it gets removed by unmemoization.
+        // In this case we rely on fixUpContinuousNodeArray to work out which remaining nodes correspond to the 'foreach'
+        // output so they can later be removed when the model array changes.
+        var originalBindingProvider = ko.bindingProvider.instance,
+            preprocessingBindingProvider = function() { };
+        preprocessingBindingProvider.prototype = originalBindingProvider;
+        ko.bindingProvider.instance = new preprocessingBindingProvider();
+        ko.bindingProvider.instance.preprocessNode = function(node) {
+            // This preprocessor doesn't change the rendered nodes. But simply having a preprocessor means
+            // that templating.js has to recompute which DOM nodes correspond to the foreach output, since
+            // you might have modified that set.
+            return [node];
+        };
+
+        try {
+            ko.setTemplateEngine(new dummyTemplateEngine({}));
+            testNode.innerHTML = "<div data-bind='template: { foreach: items }'><button data-bind='text: $data'></button> OK. </div>";
+            var items = ko.observableArray(['Alpha', 'Beta']);
+            ko.applyBindings({ items: items }, testNode);
+            expect(testNode).toContainText('Alpha OK. Beta OK. ');
+
+            // Check that 'foreach' knows which set of elements to remove when an item vanishes from the model array,
+            // even though the original 'foreach' output's first node, the memo comment, was removed during unmemoization.
+            items.shift();
+            expect(testNode).toContainText('Beta OK. ');
+        } finally {
+            ko.bindingProvider.instance = originalBindingProvider;
+        }
+    });
+
     it('Should not throw errors if trying to apply text to a non-rendered node', function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/660
         // A <span> can't go directly into a <tr>, so modern browsers will silently strip it. We need to verify this doesn't
