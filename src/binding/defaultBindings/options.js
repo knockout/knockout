@@ -17,7 +17,8 @@ ko.bindingHandlers['options'] = {
 
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var includeDestroyed = allBindings.get('optionsIncludeDestroyed');
-        var caption = {};
+        var captionPlaceholder = {};
+        var captionValue;
         var previousSelectedValues;
         if (element.multiple) {
             previousSelectedValues = ko.utils.arrayMap(element.selectedOptions || ko.utils.arrayFilter(element.childNodes, function (node) {
@@ -40,7 +41,11 @@ ko.bindingHandlers['options'] = {
 
             // If caption is included, add it to the array
             if (allBindings['has']('optionsCaption')) {
-                filteredArray.unshift(caption);
+                captionValue = ko.utils.unwrapObservable(allBindings.get('optionsCaption'));
+                // If caption value is null or undefined, don't show a caption
+                if (captionValue !== null && captionValue !== undefined) {
+                    filteredArray.unshift(captionPlaceholder);
+                }
             }
         } else {
             // If a falsy value is provided (e.g. null), we'll simply empty the select element
@@ -66,7 +71,7 @@ ko.bindingHandlers['options'] = {
                 previousSelectedValues = oldOptions[0].selected && [ ko.selectExtensions.readValue(oldOptions[0]) ];
             }
             var option = document.createElement("option");
-            if (arrayEntry === caption) {
+            if (arrayEntry === captionPlaceholder) {
                 ko.utils.setHtml(option, allBindings.get('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
             } else {
@@ -98,7 +103,7 @@ ko.bindingHandlers['options'] = {
         if (allBindings['has']('optionsAfterRender')) {
             callback = function(arrayEntry, newOptions) {
                 setSelectionCallback(arrayEntry, newOptions);
-                ko.dependencyDetection.ignore(allBindings.get('optionsAfterRender'), null, [newOptions[0], arrayEntry !== caption ? arrayEntry : undefined]);
+                ko.dependencyDetection.ignore(allBindings.get('optionsAfterRender'), null, [newOptions[0], arrayEntry !== captionPlaceholder ? arrayEntry : undefined]);
             }
         }
 
