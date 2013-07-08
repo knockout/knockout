@@ -62,7 +62,7 @@ Documentation on Binding Handlers in general can be found [here](http://knockout
 
 After you have defined the module update the input element from the HTML example above to be:
 
-    <p>First name: <input data-bind="value: firstName, hasFocus: editingName" /><span data-bind="editingName"> You're editing the name!</span></p>
+    <p>First name: <input data-bind="value: firstName, hasFocus: editingName" /><span data-bind="visible: editingName"> You're editing the name!</span></p>
 
 Include the module in the list of dependencies for your view model:
 
