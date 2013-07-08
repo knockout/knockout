@@ -1,10 +1,10 @@
 ---
 layout: documentation
-title: The "hasfocus" binding
+title: The "hasFocus" binding
 ---
 
 ### Purpose
-The `hasfocus` binding links a DOM element's focus state with a viewmodel property. It is a two-way binding, so:
+The `hasFocus` binding links a DOM element's focus state with a viewmodel property. It is a two-way binding, so:
 
  * If you set the viewmodel property to `true` or `false`, the associated element will become focused or unfocused.
  * If the user manually focuses or unfocuses the associated element, the viewmodel property will be set to `true` or `false` accordingly.
@@ -15,7 +15,7 @@ This is useful if you're building sophisticated forms in which editable elements
 This example simply displays a message if the textbox currently has focus, and uses a button to show that you can trigger focus programmatically.
 
 {% capture live_example_view %}
-<input data-bind="hasfocus: isSelected" />
+<input data-bind="hasFocus: isSelected" />
 <button data-bind="click: setIsSelected">Focus programmatically</button>
 <span data-bind="visible: isSelected">The textbox has focus</span>
 {% endcapture %}
@@ -33,14 +33,14 @@ ko.applyBindings(viewModel);
 
 ### Example 2: Click-to-edit
 
-Because the `hasfocus` binding works in both directions (setting the associated value focuses or unfocuses the element; focusing or unfocusing the element sets the associated value), it's a convenient way to toggle an "edit" mode. In this example, the UI displays either a `<span>` or an `<input>` element depending on the model's `editing` property. Unfocusing the `<input>` element sets `editing` to `false`, so the UI switches out of "edit" mode.
+Because the `hasFocus` binding works in both directions (setting the associated value focuses or unfocuses the element; focusing or unfocusing the element sets the associated value), it's a convenient way to toggle an "edit" mode. In this example, the UI displays either a `<span>` or an `<input>` element depending on the model's `editing` property. Unfocusing the `<input>` element sets `editing` to `false`, so the UI switches out of "edit" mode.
 
 {% capture live_example_id %}click_to_edit{% endcapture %}
 {% capture live_example_view %}
 <p>
 	Name: 
 	<b data-bind="visible: !editing(), text: name, click: edit">&nbsp;</b>
-	<input data-bind="visible: editing, value: name, hasfocus: editing" />
+	<input data-bind="visible: editing, value: name, hasFocus: editing" />
 </p>
 <p><em>Click the name to edit it; click elsewhere to apply changes.</em></p>
 {% endcapture %}
@@ -69,7 +69,7 @@ ko.applyBindings(new PersonViewModel("Bert Bertington"));
 
    When the user manually focuses or unfocuses the element, your value will be set to `true` or `false` accordingly.
 
-   If the value you supply is observable, the `hasfocus` binding will update the element's focus state whenever that observable value changes.
+   If the value you supply is observable, the `hasFocus` binding will update the element's focus state whenever that observable value changes.
      
  * Additional parameters 
 

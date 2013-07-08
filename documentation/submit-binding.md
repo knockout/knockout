@@ -13,11 +13,11 @@ When you use the `submit` binding on a form, Knockout will prevent the browser's
         ... form contents go here ...
         <button type="submit">Submit</button>
     </form>
-    
+
     <script type="text/javascript">
         var viewModel = {
             doSomething : function(formElement) {
-                // ... now do something	
+                // ... now do something
             }
         };
     </script>
@@ -35,14 +35,14 @@ Instead of using `submit` on the form, you *could* use `click` on the submit but
 ### Parameters
 
  * Main parameter
-   
-   The function you want to bind to the element's `submit` event. 
-   
-   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `submit: someObject.someFunction`. 
-   
+
+   The function you want to bind to the element's `submit` event.
+
+   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `submit: someObject.someFunction`.
+
    Functions on your view model are slightly special because you can reference them by name, i.e., you can write `submit: doSomething` and *don't* have to write `submit: viewModel.doSomething` (though technically that's also valid).
-   
- * Additional parameters 
+
+ * Additional parameters
 
    * None
 
