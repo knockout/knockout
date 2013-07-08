@@ -1,12 +1,13 @@
 ko.bindingHandlers['selectedOptions'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {
+    'after': ['options', 'foreach'],
+    'init': function (element, valueAccessor, allBindings) {
         ko.utils.registerEventHandler(element, "change", function () {
             var value = valueAccessor(), valueToWrite = [];
             ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
                 if (node.selected)
                     valueToWrite.push(ko.selectExtensions.readValue(node));
             });
-            ko.expressionRewriting.writeValueToProperty(value, allBindingsAccessor, 'selectedOptions', valueToWrite);
+            ko.expressionRewriting.writeValueToProperty(value, allBindings, 'selectedOptions', valueToWrite);
         });
     },
     'update': function (element, valueAccessor) {
@@ -22,3 +23,4 @@ ko.bindingHandlers['selectedOptions'] = {
         }
     }
 };
+ko.expressionRewriting.twoWayBindings['selectedOptions'] = true;
