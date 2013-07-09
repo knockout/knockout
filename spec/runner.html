@@ -1,8 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>JSSpec results</title>
-        <link rel="stylesheet" type="text/css" href="lib/JSSpec.css" />
 
         <!-- All specs should pass with or without jQuery+Modernizr being referenced -->
         <!--
@@ -10,29 +8,50 @@
         <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-1.7-development-only.js"></script>
         -->
 
+        <!-- jasmine -->
+        <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-tap.js"></script>
+
+        <!-- our jasmine extensions -->
+        <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
+        <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
+
+        <!-- knockout polyfills -->
         <script type="text/javascript" src="lib/innershiv.js"></script>
-        <script type="text/javascript" src="lib/diff_match_patch.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.js"></script>
-        <script type="text/javascript" src="lib/JSSpec.extensions.js"></script>
         <script type="text/javascript" src="lib/json2.js"></script>
+
+        <!-- knockout -->
         <script type="text/javascript">
-            // An external runner, such as PhantomJS, can prepopulate window.koFilename (e.g., to run tests against the minified build)
-            JSSpec.addScriptReference(window.koFilename || "lib/knockout-latest.js");
+            // By default, we run the tests against knockout-raw.js, but you can specify an alternative test
+            // subject as a querystring parameter, e.g., runner.html?src=build/output/knockout-latest.js.
+            // This is used by our automated test runners (PhantomJS and Testling CI).
+            (function() {
+                var koFilenameParam = location.href.match(/[?&]src=([^&]+)/);
+                jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "spec/lib/knockout-latest.js"));
+            })();
         </script>
+
+        <!-- specs -->
+        <script type="text/javascript" src="arrayEditDetectionBehaviors.js"></script>
+        <script type="text/javascript" src="arrayToDomEditDetectionBehaviors.js"></script>
+        <script type="text/javascript" src="asyncBehaviors.js"></script>
         <script type="text/javascript" src="memoizationBehaviors.js"></script>
         <script type="text/javascript" src="subscribableBehaviors.js"></script>
         <script type="text/javascript" src="observableBehaviors.js"></script>
         <script type="text/javascript" src="observableArrayBehaviors.js"></script>
         <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
+        <script type="text/javascript" src="dependentObservableDomBehaviors.js"></script>
         <script type="text/javascript" src="extenderBehaviors.js"></script>
         <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
         <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
         <script type="text/javascript" src="expressionRewritingBehaviors.js"></script>
         <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
         <script type="text/javascript" src="templatingBehaviors.js"></script>
-        <script type="text/javascript" src="editDetectionBehaviors.js"></script>
         <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
         <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
+        <script type="text/javascript" src="utilsBehaviors.js"></script>
 
         <!-- Default bindings -->
         <script type="text/javascript" src="defaultBindings/attrBehaviors.js"></script>
@@ -57,6 +76,18 @@
         <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
     </head>
     <body>
-        <div style="display:none;"><p>A</p><p>B</p></div>
+        <script type="text/javascript">
+          (function() {
+            var jasmineEnv = jasmine.getEnv();
+            jasmineEnv.updateInterval = 500;
+
+            var htmlReporter = new jasmine.HtmlReporter();
+            jasmineEnv.addReporter(htmlReporter);
+            jasmineEnv.specFilter = htmlReporter.specFilter;
+
+            jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
+            jasmineEnv.execute();
+          })();
+        </script>
     </body>
 </html>

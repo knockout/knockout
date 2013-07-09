@@ -95,10 +95,24 @@ For advanced users, if you want to register your own subscriptions to be notifie
         alert("The person's new name is " + newValue);
     });
 
-The `subscribe` function is how many parts of KO work internally. You can also terminate a subscription if you wish: first capture it as a variable, then you can call its `dispose` function, e.g.:
+The `subscribe` function is how many parts of KO work internally. Most of the time you don't need to use this, because the built-in bindings and templating system take care of managing subscriptions.
+
+The `subscribe` function accepts three parameters: `callback` is the function that is called whenever the notification happens, `target` (optional) defines the value of `this` in the callback function, and `event` (optional; default is `"change"`) is the name of the event to receive notification for.
+
+You can also terminate a subscription if you wish: first capture the return value as a variable, then you can call its `dispose` function, e.g.:
 
     var subscription = myViewModel.personName.subscribe(function(newValue) { /* do stuff */ });
     // ...then later...
     subscription.dispose(); // I no longer want notifications
 
-Most of the time you don't need to do this, because the built-in bindings and templating system take care of managing subscriptions.
+If you want to be notified of the previous value of an observable when it is changed, you can subscribe to the `beforeChange` event:
+
+    myViewModel.personName.subscribe(function(oldValue) {
+        alert("The person's previous name is " + oldValue);
+    }, null, "beforeChange");
+
+## Forcing observables to always notify subscribers
+
+When writing to an observable that contains a primitive value, the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that an observable's subscribers are always notified on a write, even if the value is the same. You would apply this extender to an observable like:
+
+    myViewModel.personName.extend({ notify: 'always' });

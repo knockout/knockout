@@ -21,7 +21,7 @@ Get the latest stable production build of Knockout.js:
 
 Simply reference the JavaScript file using a `<script>` tag somewhere on your HTML pages. For example,
 
-    <script type='text/javascript' src='knockout-2.2.1.js'></script>
+    <script type='text/javascript' src='knockout-2.3.0.js'></script>
 
 Of course, update the `src` attribute to match the location where you put the downloaded file. Next, if you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](../documentation/observables.html).
 
@@ -35,10 +35,12 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 * **CDNJS** ([about](http://cdnjs.com/))
 
-  * [Knockout version 2.2.0](http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.0/knockout-min.js)
+  * [Knockout version 2.2.1](http://cdnjs.cloudflare.com/ajax/libs/knockout/2.2.1/knockout-min.js)
 
 ### Archive of all versions
 
+* [v3.0.0 Beta](knockout-3.0.0beta.js) ([debug](knockout-3.0.0beta.debug.js)) --- July 9th, 2013
+* [v2.3.0](knockout-2.3.0.js) ([debug](knockout-2.3.0.debug.js)) --- July 9th, 2013
 * [v2.3.0 Release Candidate](knockout-2.3.0rc.js) ([debug](knockout-2.3.0rc.debug.js)) --- June 20th, 2013
 * [v2.2.1](knockout-2.2.1.js) ([debug](knockout-2.2.1.debug.js)) --- January 15th, 2013
 * [v2.2.0](knockout-2.2.0.js) ([debug](knockout-2.2.0.debug.js)) --- October 28th, 2012
