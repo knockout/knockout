@@ -1,4 +1,4 @@
-var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
+var primitiveTypes = { '[object Undefined]': true, '[object Boolean]': true, '[object Number]': true, '[object String]': true, '[object Date]': true };
 
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
@@ -38,7 +38,8 @@ ko.observable = function (initialValue) {
 
 ko.observable['fn'] = {
     "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
-        var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+        var typeName = Object.prototype.toString.call(a);
+        var oldValueIsPrimitive = (a === null) || (typeName in primitiveTypes);
         return oldValueIsPrimitive ? (a === b) : false;
     }
 };
