@@ -12,7 +12,7 @@ Get the latest stable production build of Knockout.js:
 </div>
 
 <div class="download-debug-panel">
-    Also available: <a href='knockout-2.2.1.debug.js'>debug build</a>.
+    Also available: <a href='knockout-2.3.0.debug.js'>debug build</a>.
     <strong>Note:</strong> This is only intended to help you understand how Knockout works. Don't use it for normal application
     development, because it exposes additional unsupported private APIs.
 </div>
