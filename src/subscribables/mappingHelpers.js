@@ -2,6 +2,59 @@
 (function() {
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
 
+    ko.toJSByPrototype = function(_theDataModel, rootObject){
+        var isNumber = function (obj) {
+            return (toString.call(obj) == "[object " + Number + "]") || !isNaN(obj);
+        };
+        var isString = function (obj) {
+            return "[object String]" == toString.call(obj);
+        };
+        var isObject = function (obj) {
+            return obj === Object(obj);
+        };
+        var isBoolean = function(obj) {
+            return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+        };
+        var isArray = Array.isArray || function(obj) {
+            return toString.call(obj) == '[object Array]';
+        };
+        var isFunction = function (obj) {
+            return toString.call(obj) == "[object " + Function + "]";
+        };
+        if (typeof (/./) !== 'function') {
+            isFunction = function(obj) {
+                return typeof obj === 'function';
+            };
+        }
+        var toInnerJSON = function(obj, dataModel, viewModel){
+            Object.keys(dataModel).forEach( function(key, index, array){
+                var value = dataModel[key];
+                if( isArray( value ) ){
+                    if( isFunction( viewModel[key] ) ){
+                        obj[ key ] = viewModel[key]();
+                    } else if( isArray( viewModel[key] ) ){
+                        obj[ key ] = [];
+                        viewModel[key].forEach( function(element, _index, _array){
+                            if( isFunction( element ) )
+                                obj[ key ].push( element() );
+                        } );
+                    }
+                }
+                else if( isString( value ) || isNumber( value ) || isBoolean( value ) ){
+                    if( viewModel[ key ] && isFunction( viewModel[ key ] ) ){
+                        obj[ key ] = viewModel[ key ]();
+                    }
+                }
+                else if( isObject( value ) ){
+                    obj[ key ] = {};
+                    toInnerJSON( obj[ key ], dataModel[ key ], viewModel[ key ] );
+                }
+            });
+            return obj;
+        };
+
+        return toInnerJSON( {}, _theDataModel, rootObject );
+    };
     ko.toJS = function(rootObject) {
         if (arguments.length == 0)
             throw new Error("When calling ko.toJS, pass the object you want to convert.");
