@@ -356,6 +356,18 @@ describe('Binding attribute syntax', function() {
         expect(ko.contextFor(testNode.childNodes[1].childNodes[1]).$parentContext.customValue).toEqual('xyz');
     });
 
+    it('Should be able to use value-less binding in containerless binding', function() {
+        var initCalls = 0;
+        ko.bindingHandlers.test = { init: function () { initCalls++ } };
+        ko.virtualElements.allowedBindings['test'] = true;
+
+        testNode.innerHTML = "Hello <!-- ko test -->Some text<!-- /ko --> Goodbye";
+        ko.applyBindings(null, testNode);
+
+        expect(initCalls).toEqual(1);
+        expect(testNode).toContainText("Hello Some text Goodbye");
+    });
+
     it('Should not allow multiple applyBindings calls for the same element', function() {
         testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
 
