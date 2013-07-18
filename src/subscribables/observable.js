@@ -14,6 +14,11 @@ ko.observable = function (initialValue) {
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }
+
+            // check for array value for updating observable arrays
+            if (observable.isObservableArray && arguments[0] && (typeof arguments[0] !== 'object' || !('length' in arguments[0])))
+                throw new Error("The argument passed when updating an observable array must be an array, or null, or undefined.");
+
             return this; // Permits chained assignments
         }
         else {
