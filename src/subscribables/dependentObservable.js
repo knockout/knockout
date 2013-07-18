@@ -72,8 +72,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
             // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
             for (var i = disposalCandidates.length - 1; i >= 0; i--) {
-                if (disposalCandidates[i])
-                    _subscriptionsToDependencies.splice(i, 1)[0].dispose();
+                if (disposalCandidates[i]) {
+                    var subscription = _subscriptionsToDependencies.splice(i, 1)[0];
+                    if (subscription)
+                        subscription.dispose();
+                }
             }
             _hasBeenEvaluated = true;
 
