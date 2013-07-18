@@ -16,4 +16,4 @@ It's very likely that Knockout also works on older and newer versions of these b
  * Opera Mini
  * Google Android OS browser (OS version 2.2)
 
-To get a good idea of how Knockout will run on another browser or platform, simply download [the source code](http://github.com/SteveSanderson/knockout), then open `/spec/runner.html` on the browser. This will validate more than 100 behavioral specifications and produce a report of any problems. The pass rate should be 100% on all the browsers listed above.
+To get a good idea of how Knockout will run on another browser or platform, simply navigate the browser to http://knockoutjs.com/spec/runner.html. This will validate more than 100 behavioral specifications and produce a report of any problems. The pass rate should be 100% on all the browsers listed above.
