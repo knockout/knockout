@@ -2,6 +2,54 @@
 (function() {
     var maxNestedObservableDepth = 10; // Escape the (unlikely) pathalogical case where an observable's current value is itself (or similar reference cycle)
 
+    // ES5 15.2.3.14
+// http://es5.github.com/#x15.2.3.14
+if (!Object.keys) {
+    // http://whattheheadsaid.com/2010/10/a-safer-object-keys-compatibility-implementation
+    var hasDontEnumBug = true,
+        dontEnums = [
+            "toString",
+            "toLocaleString",
+            "valueOf",
+            "hasOwnProperty",
+            "isPrototypeOf",
+            "propertyIsEnumerable",
+            "constructor"
+        ],
+        dontEnumsLength = dontEnums.length;
+
+    for (var key in {"toString": null}) {
+        hasDontEnumBug = false;
+    }
+
+    Object.keys = function keys(object) {
+
+        if (
+            (typeof object != "object" && typeof object != "function") ||
+            object === null
+        ) {
+            throw new TypeError("Object.keys called on a non-object");
+        }
+
+        var keys = [];
+        for (var name in object) {
+            if (owns(object, name)) {
+                keys.push(name);
+            }
+        }
+
+        if (hasDontEnumBug) {
+            for (var i = 0, ii = dontEnumsLength; i < ii; i++) {
+                var dontEnum = dontEnums[i];
+                if (owns(object, dontEnum)) {
+                    keys.push(dontEnum);
+                }
+            }
+        }
+        return keys;
+    };
+
+}
     ko.toJSByPrototype = function(_theDataModel, rootObject){
         var isNumber = function (obj) {
             return (toString.call(obj) == "[object " + Number + "]") || !isNaN(obj);
@@ -21,23 +69,37 @@
         var isFunction = function (obj) {
             return toString.call(obj) == "[object " + Function + "]";
         };
+        var keys = function(obj){
+            var keys = [];
+            for (var name in object) {
+                if (owns(object, name)) {
+                    keys.push(name);
+                }
+            }
+            return keys;
+        };
         if (typeof (/./) !== 'function') {
             isFunction = function(obj) {
                 return typeof obj === 'function';
             };
         }
         var toInnerJSON = function(obj, dataModel, viewModel){
-            Object.keys(dataModel).forEach( function(key, index, array){
+            var _keys = keys(),
+                index = 0;
+            for(index=0;index<_keys.length;++index){
+                var key = _keys[index];
                 var value = dataModel[key];
                 if( isArray( value ) ){
                     if( isFunction( viewModel[key] ) ){
                         obj[ key ] = viewModel[key]();
                     } else if( isArray( viewModel[key] ) ){
                         obj[ key ] = [];
-                        viewModel[key].forEach( function(element, _index, _array){
+                        var vIndex = 0;
+                        for(vIndex=0;vIndex<viewModel[key].length;++vIndex){
+                            var element = viewModel[key][vIndex];
                             if( isFunction( element ) )
                                 obj[ key ].push( element() );
-                        } );
+                        }
                     }
                 }
                 else if( isString( value ) || isNumber( value ) || isBoolean( value ) ){
@@ -49,7 +111,7 @@
                     obj[ key ] = {};
                     toInnerJSON( obj[ key ], dataModel[ key ], viewModel[ key ] );
                 }
-            });
+            }
             return obj;
         };
 
