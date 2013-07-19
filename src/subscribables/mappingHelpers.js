@@ -84,7 +84,7 @@ if (!Object.keys) {
             };
         }
         var toInnerJSON = function(obj, dataModel, viewModel){
-            var _keys = keys(),
+            var _keys = keys( dataModel ),
                 index = 0;
             for(index=0;index<_keys.length;++index){
                 var key = _keys[index];
