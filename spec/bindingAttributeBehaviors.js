@@ -467,4 +467,19 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({ sometext: 'hello' }, testNode);
         expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
     });
+
+    it('Should have "this" refer to the binding handler inside an init() or update() method', function () {
+        ko.bindingHandlers.testThisValue = {
+            init: function () {
+                expect(this.otherProperty).toBe("abc");
+            },
+            update: function () {
+                expect(this.otherProperty).toBe("abc");
+            },
+            otherProperty: "abc"
+        };
+
+        testNode.innerHTML = "<div data-bind='testThisValue: true'></div>";
+        ko.applyBindings({}, testNode);
+    });
 });
