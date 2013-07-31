@@ -49,7 +49,7 @@ ko.utils = (function () {
 
         arrayForEach: function (array, action) {
             for (var i = 0, j = array.length; i < j; i++)
-                action(array[i]);
+                action(array[i], i);
         },
 
         arrayIndexOf: function (array, item) {
@@ -63,7 +63,7 @@ ko.utils = (function () {
 
         arrayFirst: function (array, predicate, predicateOwner) {
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i]))
+                if (predicate.call(predicateOwner, array[i], i))
                     return array[i];
             return null;
         },
@@ -88,7 +88,7 @@ ko.utils = (function () {
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping(array[i]));
+                result.push(mapping(array[i], i));
             return result;
         },
 
@@ -96,7 +96,7 @@ ko.utils = (function () {
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate(array[i]))
+                if (predicate(array[i], i))
                     result.push(array[i]);
             return result;
         },
