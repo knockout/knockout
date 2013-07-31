@@ -1,54 +1,100 @@
 (function() {
 
-function checkedValue(element, allBindings) {
-    return 'checkedValue' in allBindings
-        ? ko.utils.unwrapObservable(allBindings['checkedValue'])
-        : element.value;
-}
-
 ko.bindingHandlers['checked'] = {
-    'init': function (element, valueAccessor, allBindingsAccessor) {
-        var updateHandler = function() {
-            var valueToWrite;
-            if (element.type == "checkbox") {
-                valueToWrite = element.checked;
-            } else if ((element.type == "radio") && (element.checked)) {
-                valueToWrite = checkedValue(element, allBindingsAccessor());
-            } else {
-                return; // "checked" binding only responds to checkboxes and selected radio buttons
+    'after': ['value', 'attr'],
+    'init': function (element, valueAccessor, allBindings) {
+        function checkedValue() {
+            return allBindings['has']('checkedValue')
+                ? ko.utils.unwrapObservable(allBindings.get('checkedValue'))
+                : element.value;
+        }
+
+        function updateModel() {
+            // This updates the model value from the view value.
+            // It runs in response to DOM events (click) and changes in checkedValue.
+            var isChecked = element.checked,
+                elemValue = useCheckedValue ? checkedValue() : isChecked;
+
+            // When we're first setting up this computed, don't change any model state.
+            if (!shouldSet) {
+                return;
             }
 
-            var modelValue = valueAccessor(), unwrappedValue = ko.utils.unwrapObservable(modelValue);
-            if ((element.type == "checkbox") && (unwrappedValue instanceof Array)) {
-                // For checkboxes bound to an array, we add/remove the checkbox value to that array
-                // This works for both observable and non-observable arrays
-                ko.utils.addOrRemoveItem(modelValue, checkedValue(element, allBindingsAccessor()), element.checked);
+            // We can ignore unchecked radio buttons, because some other radio
+            // button will be getting checked, and that one can take care of updating state.
+            if (isRadio && !isChecked) {
+                return;
+            }
+
+            var modelValue = ko.dependencyDetection.ignore(valueAccessor);
+            if (isValueArray) {
+                if (oldElemValue !== elemValue) {
+                    // When we're responding to the checkedValue changing, and the element is
+                    // currently checked, replace the old elem value with the new elem value
+                    // in the model array.
+                    if (isChecked) {
+                        ko.utils.addOrRemoveItem(modelValue, elemValue, true);
+                        ko.utils.addOrRemoveItem(modelValue, oldElemValue, false);
+                    }
+
+                    oldElemValue = elemValue;
+                } else {
+                    // When we're responding to the user having checked/unchecked a checkbox,
+                    // add/remove the element value to the model array.
+                    ko.utils.addOrRemoveItem(modelValue, elemValue, isChecked);
+                }
             } else {
-                ko.expressionRewriting.writeValueToProperty(modelValue, allBindingsAccessor, 'checked', valueToWrite, true);
+                ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'checked', elemValue, true);
             }
         };
-        ko.utils.registerEventHandler(element, "click", updateHandler);
+
+        function updateView() {
+            // This updates the view value from the model value.
+            // It runs in response to changes in the bound (checked) value.
+            var modelValue = ko.utils.unwrapObservable(valueAccessor());
+
+            if (isValueArray) {
+                // When a checkbox is bound to an array, being checked represents its value being present in that array
+                element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
+            } else if (isCheckbox) {
+                // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish
+                element.checked = modelValue;
+            } else {
+                // For radio buttons, being checked means that the radio button's value corresponds to the model value
+                element.checked = (checkedValue() === modelValue);
+            }
+        };
+
+        var isCheckbox = element.type == "checkbox",
+            isRadio = element.type == "radio";
+
+        // Only bind to check boxes and radio buttons
+        if (!isCheckbox && !isRadio) {
+            return;
+        }
+
+        var isValueArray = isCheckbox && (ko.utils.unwrapObservable(valueAccessor()) instanceof Array),
+            oldElemValue = isValueArray ? checkedValue() : undefined,
+            useCheckedValue = isRadio || isValueArray,
+            shouldSet = false;
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
-        if ((element.type == "radio") && !element.name)
+        if (isRadio && !element.name)
             ko.bindingHandlers['uniqueName']['init'](element, function() { return true });
-    },
-    'update': function (element, valueAccessor, allBindingsAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
 
-        if (element.type == "checkbox") {
-            if (value instanceof Array) {
-                // When bound to an array, the checkbox being checked represents its value being present in that array
-                element.checked = ko.utils.arrayIndexOf(value, checkedValue(element, allBindingsAccessor())) >= 0;
-            } else {
-                // When bound to any other value (not an array), the checkbox being checked represents the value being trueish
-                element.checked = value;
-            }
-        } else if (element.type == "radio") {
-            element.checked = (checkedValue(element, allBindingsAccessor()) === value);
-        }
+        // Set up two computeds to update the binding:
+
+        // The first responds to changes in the checkedValue value and to element clicks
+        ko.dependentObservable(updateModel, null, { disposeWhenNodeIsRemoved: element });
+        ko.utils.registerEventHandler(element, "click", updateModel);
+
+        // The second responds to changes in the model value (the one associated with the checked binding)
+        ko.dependentObservable(updateView, null, { disposeWhenNodeIsRemoved: element });
+
+        shouldSet = true;
     }
 };
+ko.expressionRewriting.twoWayBindings['checked'] = true;
 
 ko.bindingHandlers['checkedValue'] = {
     'update': function (element, valueAccessor) {

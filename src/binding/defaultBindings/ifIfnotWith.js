@@ -2,11 +2,11 @@ var withIfDomDataKey = '__ko_withIfBindingData';
 // Makes a binding like with or if
 function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
     ko.bindingHandlers[bindingKey] = {
-        'init': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             ko.utils.domData.set(element, withIfDomDataKey, {});
             return { 'controlsDescendantBindings': true };
         },
-        'update': function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        'update': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             var withIfData = ko.utils.domData.get(element, withIfDomDataKey),
                 dataValue = ko.utils.unwrapObservable(valueAccessor()),
                 shouldDisplay = !isNot !== !dataValue, // equivalent to isNot ? !dataValue : !!dataValue

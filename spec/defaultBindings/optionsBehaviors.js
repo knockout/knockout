@@ -88,7 +88,7 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
-    it('Should retain selection when replacing the options data with new object that have the same "value"', function () {
+    it('Should retain selection when replacing the options data with new objects that have the same "value"', function () {
         var observable = new ko.observableArray([{x:"A"}, {x:"B"}, {x:"C"}]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsValue:\"x\"' multiple='multiple'></select>";
         ko.applyBindings({ myValues: observable }, testNode);
@@ -96,6 +96,81 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
         observable([{x:"A"}, {x:"C"}, {x:"B"}]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+    });
+
+    it('Should trigger a change event when the options selection is populated or changed by modifying the options data (single select)', function() {
+        var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
+        testNode.innerHTML = "<select data-bind='options:myValues'></select>";
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
+            changeHandlerFireCount++;
+        });
+        ko.applyBindings({ myValues: observable }, testNode);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change the order of options; since selection is not changed, should not trigger change event
+        observable(["B", "C", "A"]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change to a new set of options; since selection is changed, should trigger change event
+        observable(["D", "E"]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Delete all options; selection is changed (to nothing), so should trigger event
+        observable([]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+        expect(changeHandlerFireCount).toEqual(3);
+
+        // Re-add options; should trigger change event
+        observable([1, 2, 3]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(4);
+    });
+
+    it('Should trigger a change event when the options selection is changed by modifying the options data (multiple select)', function() {
+        var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
+        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'></select>";
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
+            changeHandlerFireCount++;
+        });
+        ko.applyBindings({ myValues: observable }, testNode);
+        expect(changeHandlerFireCount).toEqual(0);  // Selection wasn't changed
+
+        // Select the first item and change the order of options; since selection is not changed, should not trigger change event
+        testNode.childNodes[0].options[0].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        observable(["B", "C", "A"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        expect(changeHandlerFireCount).toEqual(0);
+
+        // Select another item and then remove it from options; since selection is changed, should trigger change event
+        testNode.childNodes[0].options[0].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B","A"]);
+        observable(["C", "A"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change to a new set of options; since selection is changed (to nothing), should trigger change event
+        observable(["D", "E"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Delete all options; selection is not changed, so shouldn't trigger event
+        observable([]);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Set observable options and select them
+        observable([ko.observable("X"), ko.observable("Y")]);
+        expect(changeHandlerFireCount).toEqual(2);
+        testNode.childNodes[0].options[0].selected = testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["X","Y"]);
+
+        // Change the value of a selected item, which should deselect it and trigger a change event
+        observable()[1]("Z");
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["X"]);
+        expect(changeHandlerFireCount).toEqual(3);
     });
 
     it('Should place a caption at the top of the options list and display it when the model value is undefined', function() {
@@ -108,6 +183,18 @@ describe('Binding: Options', function() {
         testNode.innerHTML = "<select data-bind='options: null, optionsCaption: \"Select one...\"'></select>";
         ko.applyBindings({}, testNode);
         expect(testNode.childNodes[0]).toHaveTexts([]);
+    });
+
+    it('Should not include the caption if the optionsCaption value is null', function() {
+        testNode.innerHTML = "<select data-bind='options: [\"A\", \"B\"], optionsCaption: null'></select>";
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts(['A', 'B']);
+    });
+
+    it('Should not include the caption if the optionsCaption value is undefined', function() {
+      testNode.innerHTML = "<select data-bind='options: [\"A\", \"B\"], optionsCaption: test'></select>";
+      ko.applyBindings({ test: ko.observable() }, testNode);
+      expect(testNode.childNodes[0]).toHaveTexts(['A', 'B']);
     });
 
     it('Should include a caption even if it\'s blank', function() {
@@ -125,15 +212,15 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["Initial caption", "A", "B"]);
 
-        // Also show we can update the caption without affecting selection
+        // Show we can update the caption without affecting selection
         myCaption("New caption");
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["New caption", "A", "B"]);
 
-        // Show that caption will be blank if value is null
+        // Show that caption will be removed if value is null
         myCaption(null);
-        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
-        expect(testNode.childNodes[0]).toHaveTexts(["", "A", "B"]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+        expect(testNode.childNodes[0]).toHaveTexts(["A", "B"]);
     });
 
     it('Should allow the option text to be given by an observable and update it when the model changes without affecting selection', function() {
@@ -148,9 +235,29 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bert"]);
 
-        // Also show we can update the caption without affecting selection
+        // Also show we can update the text without affecting selection
         people[1].name("Bob");
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bob"]);
+    });
+
+    it('Should call an optionsAfterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
+        testNode.innerHTML = "<select data-bind=\"options: someItems, optionsText: 'childprop', optionsAfterRender: callback\"></select>";
+        var callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' }]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+
+        // Change the array, but don't update the observableArray so that the options binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        expect(testNode.childNodes[0]).toContainText('first child');
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        expect(testNode.childNodes[0]).toContainText('first child');
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        expect(testNode.childNodes[0]).toContainText('first childhidden child');
+        expect(callbacks).toEqual(2);
     });
 });

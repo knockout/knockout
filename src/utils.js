@@ -31,7 +31,7 @@ ko.utils = (function () {
         while (
             div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
             iElems[0]
-        );
+        ) {}
         return version > 4 ? version : undefined;
     }());
     var isIe6 = ieVersion === 6,
@@ -111,7 +111,7 @@ ko.utils = (function () {
         },
 
         addOrRemoveItem: function(array, value, included) {
-            var existingEntryIndex = array.indexOf ? array.indexOf(value) : ko.utils.arrayIndexOf(array, value);
+            var existingEntryIndex = ko.utils.arrayIndexOf(ko.utils.peekObservable(array), value);
             if (existingEntryIndex < 0) {
                 if (included)
                     array.push(value);
@@ -133,6 +133,18 @@ ko.utils = (function () {
         },
 
         objectForEach: objectForEach,
+
+        objectMap: function(source, mapping) {
+            if (!source)
+                return source;
+            var target = {};
+            for (var prop in source) {
+                if (source.hasOwnProperty(prop)) {
+                    target[prop] = mapping(source[prop], prop, source);
+                }
+            }
+            return target;
+        },
 
         emptyDomNode: function (domNode) {
             while (domNode.firstChild) {
@@ -179,6 +191,45 @@ ko.utils = (function () {
                     ko.removeNode(nodesToReplaceArray[i]);
                 }
             }
+        },
+
+        fixUpContinuousNodeArray: function(continuousNodeArray, parentNode) {
+            // Before acting on a set of nodes that were previously outputted by a template function, we have to reconcile
+            // them against what is in the DOM right now. It may be that some of the nodes have already been removed, or that
+            // new nodes might have been inserted in the middle, for example by a binding. Also, there may previously have been
+            // leading comment nodes (created by rewritten string-based templates) that have since been removed during binding.
+            // So, this function translates the old "map" output array into its best guess of the set of current DOM nodes.
+            //
+            // Rules:
+            //   [A] Any leading nodes that have been removed should be ignored
+            //       These most likely correspond to memoization nodes that were already removed during binding
+            //       See https://github.com/SteveSanderson/knockout/pull/440
+            //   [B] We want to output a continuous series of nodes. So, ignore any nodes that have already been removed,
+            //       and include any nodes that have been inserted among the previous collection
+
+            if (continuousNodeArray.length) {
+                // The parent node can be a virtual element; so get the real parent node
+                parentNode = (parentNode.nodeType === 8 && parentNode.parentNode) || parentNode;
+
+                // Rule [A]
+                while (continuousNodeArray.length && continuousNodeArray[0].parentNode !== parentNode)
+                    continuousNodeArray.splice(0, 1);
+
+                // Rule [B]
+                if (continuousNodeArray.length > 1) {
+                    var current = continuousNodeArray[0], last = continuousNodeArray[continuousNodeArray.length - 1];
+                    // Replace with the actual new continuous node set
+                    continuousNodeArray.length = 0;
+                    while (current !== last) {
+                        continuousNodeArray.push(current);
+                        current = current.nextSibling;
+                        if (!current) // Won't happen, except if the developer has manually removed some DOM elements (then we're in an undefined scenario)
+                            return;
+                    }
+                    continuousNodeArray.push(last);
+                }
+            }
+            return continuousNodeArray;
         },
 
         setOptionNodeSelectionState: function (optionNode, isSelected) {

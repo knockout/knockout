@@ -86,6 +86,19 @@ describe('Mapping helpers', function() {
         expect(result.booleanValue).toEqual(booleanValue);
     });
 
+    it('ko.toJS shouldn\'t serialize functions', function() {
+        var obj = {
+            include: ko.observable("I should be serialized"),
+            exclude: function(){
+                return "I shouldn't be serialized"
+            }
+        };
+
+        var result = ko.toJS(obj);
+        expect(result.include).toEqual("I should be serialized");
+        expect(result.exclude).toEqual(undefined);
+    });
+
     it('ko.toJSON should unwrap everything and then stringify', function() {
         var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);
         var result = ko.toJSON(data);

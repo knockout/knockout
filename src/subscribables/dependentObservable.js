@@ -78,14 +78,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _hasBeenEvaluated = true;
 
             dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
+            dependentObservable["notifySubscribers"](_latestValue);
+
         } finally {
             ko.dependencyDetection.end();
+            _isBeingEvaluated = false;
         }
 
-        dependentObservable["notifySubscribers"](_latestValue);
-        _isBeingEvaluated = false;
         if (!_subscriptionsToDependencies.length)
             dispose();
     }
