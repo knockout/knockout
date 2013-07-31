@@ -93,4 +93,26 @@ describe('Compare Arrays', function() {
             { status: "retained", value: { id: 123, txt: "GHI" } }
     	]);
     });
+
+    it('Should intelligently use the compare function regardless of the array length', function () {
+        var oldArray = [{ el: 123, txt: "ABC" }, { el: 456, txt: "DEF" }];
+        var newArray = [{ id: 123, txt: "GHI" }];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray, undefined, function (a, b) { return a.el === b.id; });
+        
+        /* oldArray is larger, so is the base */
+        expect(compareResult).toEqual([
+            { status: "retained", value: { el: 123, txt: "ABC" } },
+            { status: "deleted", value: { el: 456, txt: "DEF" }, index: 1 }
+        ]);
+        
+        var oldArray = [{ el: 123, txt: "ABC" }];
+        var newArray = [{ id: 123, txt: "GHI" }, { id: 456, txt: "DEF" }];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray, undefined, function (a, b) { return a.el === b.id; });
+        
+        /* newArray is larger, so is the base */
+        expect(compareResult).toEqual([
+            { status: "retained", value: { id: 123, txt: "GHI" } },
+	        { status: "added", value: { id: 456, txt: "DEF" }, index: 1 }
+        ]);
+    });
 });

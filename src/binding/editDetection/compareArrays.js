@@ -12,7 +12,7 @@ ko.utils.compareArrays = (function () {
         if (oldArray.length <= newArray.length)
             return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, dontLimitMoves, compareFunction);
         else
-            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves, compareFunction);
+            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves, function (b, a) { return compareFunction(a, b); });
     }
 
     function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, dontLimitMoves, compareFunction) {
