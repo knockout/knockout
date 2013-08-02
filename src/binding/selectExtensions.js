@@ -49,6 +49,7 @@
                     for (var i = element.options.length - 1; i >= 0; i--) {
                         if (ko.selectExtensions.readValue(element.options[i]) == value) {
                             element.selectedIndex = i;
+                            ko.utils.setOptionNodeSelectionState(element.options[i], true)
                             break;
                         }
                     }
