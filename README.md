@@ -9,19 +9,37 @@ For more details, see
  * Documentation on [the project's website](http://knockoutjs.com/documentation/introduction.html)
  * Online examples at [http://knockoutjs.com/examples/](http://knockoutjs.com/examples/)
 
-##Downloading or building Knockout
+##Downloading
 
 You can [download released versions of Knockout](http://knockoutjs.com/downloads/) from the project's website.
 
-Or, if you prefer to build the source yourself, clone the repo from Github, and then run `./build/build.sh`.
+## Building Knockout
 
-If you're running Windows, you must execute `./build/build.sh` from inside Git Bash, *not* the built-in Windows command prompt. If you have [Git for Windows](http://git-scm.com/downloads) installed, then you already have Git Bash installed.
+To build Knockout you will need [Node](http://nodejs.org/) and [Gruntjs](http://gruntjs.com/) installed. This should work for Mac or Windows as long as you have [Node](http://nodejs.org/) installed correctly.
+
+1. Download or clone the repo
+2. Open knockout in your terminal
+2. Install the dependencies `npm install`
+3. Build Knockout releases `grunt build`
 
 For Node.js developers, Knockout is also available from [npm](https://npmjs.org/): `npm install knockout`.
 
+|  Available commands  |                             Description                             |
+| :------------------- | :------------------------------------------------------------------ |
+| `default`            | Run tasks `build`, `test`                                           |
+| `build`              | Run tasks `clean`, `build`, `test`                                  |
+| `test`               | Run tasks `testPhantomjs`, `testJasmine`                            |
+| `clean`              | Clean up output files.                                              |
+| `forceClean`         | Clean up output files with `option: {force:true}`                   |
+| `buildKnockoutDebug` | Build a debug version of knockout.                                  |
+| `buildKnockoutMin`   | Build a minified version of knockout using Google Closure Compiler. |
+| `testPhantomjs`      | Run tests in Phantomjs.                                             |
+| `testJasmine`        | Run tests in Nodejs.                                                |
+
+
 ## Running the tests
 
-If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `build.sh` script will automatically run the specification suite and report its results.
+If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `grunt testPhantomjs` task will automatically run the specification suite and report its results.
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
