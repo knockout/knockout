@@ -112,6 +112,21 @@ describe('Mapping helpers', function() {
         expect(parsedResult[2].someProp).toEqual('Hey');
     });
 
+    it('ko.toJSON should respect .toJSON functions on objects', function() {
+        var data = {
+            a: { one: "one", two: "two"},
+            b: ko.observable({ one: "one", two: "two" })
+        };
+        data.a.toJSON = function() { return "a-mapped" };
+        data.b().toJSON = function() { return "b-mapped" };
+        var result = ko.toJSON(data);
+
+        // Check via parsing so the specs are independent of browser-specific JSON string formatting
+        expect(typeof result).toEqual("string");
+        var parsedResult = ko.utils.parseJson(result);
+        expect(parsedResult).toEqual({ a: "a-mapped", b: "b-mapped" });
+    });
+
     it('ko.toJSON should respect .toJSON functions on arrays', function() {
         var data = {
             a: [1, 2],
