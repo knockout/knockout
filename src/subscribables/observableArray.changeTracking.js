@@ -52,12 +52,42 @@
     };
 
     ko.observableArray.cacheDiffForKnownOperation = function(observableArray, rawArray, operationName, args) {
-        var diff;
+        var diff,
+            arrayLength = rawArray.length;
         switch (operationName) {
             case 'push':
                 diff = [];
                 for (var index = 0; index < args.length; index++) {
-                    diff.push({ status: 'added', value: args[index], index: rawArray.length + index });
+                    diff.push({ status: 'added', value: args[index], index: arrayLength + index });
+                }
+                break;
+
+            case 'pop':
+                diff = arrayLength ? [{ status: 'deleted', value: rawArray[arrayLength - 1], index: arrayLength - 1 }] : [];
+                break;
+
+            case 'shift':
+                diff = arrayLength ? [{ status: 'deleted', value: rawArray[0], index: 0 }] : [];
+                break;
+
+            case 'unshift':
+                diff = [];
+                for (var index = 0; index < args.length; index++) {
+                    diff.push({ status: 'added', value: args[index], index: index });
+                }
+                break;
+
+            case 'splice':
+                diff = [];
+                // Negative start index means 'from end of array'. After that we clamp to [0...arrayLength].
+                // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+                var startIndex = Math.min(Math.max(0, args[0] < 0 ? arrayLength + args[0] : args[0]), arrayLength),
+                    endIndex = args.length === 1 ? arrayLength : Math.min(startIndex + (args[1] || 0), arrayLength);
+                for (var index = startIndex; index < endIndex; index++) {
+                    diff.push({ status: 'deleted', value: rawArray[index], index: index });
+                }
+                for (var index = 0; index < args.length - 2; index++) {
+                    diff.push({ status: 'added', value: args[index + 2], index: startIndex + index });
                 }
                 break;
         }

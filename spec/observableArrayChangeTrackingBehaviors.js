@@ -91,6 +91,100 @@ describe('Observable Array change tracking', function() {
                 ]
             });
 
+            // Pop
+            testKnownOperation(myArray, 'pop', {
+                args: [],
+                result: ['Alpha', 'Beta', 'Gamma', 'Delta'],
+                changes: [
+                    { status: 'deleted', value: 'Epsilon', index: 4 }
+                ]
+            });
+
+            // Pop empty array
+            testKnownOperation(ko.observableArray([]).trackChanges(), 'pop', {
+                args: [], result: [], changes: []
+            });
+
+            // Shift
+            testKnownOperation(myArray, 'shift', {
+                args: [],
+                result: ['Beta', 'Gamma', 'Delta'],
+                changes: [
+                    { status: 'deleted', value: 'Alpha', index: 0 }
+                ]
+            });
+
+            // Shift empty array
+            testKnownOperation(ko.observableArray([]).trackChanges(), 'shift', {
+                args: [], result: [], changes: []
+            });
+
+            // Unshift
+            testKnownOperation(myArray, 'unshift', {
+                args: ['First', 'Second'],
+                result: ['First', 'Second', 'Beta', 'Gamma', 'Delta'],
+                changes: [
+                    { status: 'added', value: 'First', index: 0 },
+                    { status: 'added', value: 'Second', index: 1 }
+                ]
+            });
+
+            // Splice
+            testKnownOperation(myArray, 'splice', {
+                args: [2, 3, 'Another', 'YetAnother'],
+                result: ['First', 'Second', 'Another', 'YetAnother'],
+                changes: [
+                    { status: 'added', value: 'Another', index: 2 },
+                    { status: 'deleted', value: 'Beta', index: 2 },
+                    { status: 'added', value: 'YetAnother', index: 3 },
+                    { status: 'deleted', value: 'Gamma', index: 3 },
+                    { status: 'deleted', value: 'Delta', index: 4 }
+                ]
+            });
+
+            // Splice - no 'deletion count' supplied (deletes everything after start index)
+            testKnownOperation(myArray, 'splice', {
+                args: [2],
+                result: ['First', 'Second'],
+                changes: [
+                    { status: 'deleted', value: 'Another', index: 2 },
+                    { status: 'deleted', value: 'YetAnother', index: 3 }
+                ]
+            });
+
+            // Splice - deletion end index out of bounds
+            testKnownOperation(myArray, 'splice', {
+                args: [1, 50, 'X', 'Y'],
+                result: ['First', 'X', 'Y'],
+                changes: [
+                    { status: 'added', value: 'X', index: 1 },
+                    { status: 'deleted', value: 'Second', index: 1 },
+                    { status: 'added', value: 'Y', index: 2 }
+                ]
+            });
+
+            // Splice - deletion start index out of bounds
+            testKnownOperation(myArray, 'splice', {
+                args: [25, 3, 'New1', 'New2'],
+                result: ['First', 'X', 'Y', 'New1', 'New2'],
+                changes: [
+                    { status: 'added', value: 'New1', index: 3 },
+                    { status: 'added', value: 'New2', index: 4 }
+                ]
+            });
+
+            // Splice - deletion start index negative (means 'from end of array')
+            testKnownOperation(myArray, 'splice', {
+                args: [-3, 2, 'Blah', 'Another'],
+                result: ['First', 'X', 'Blah', 'Another', 'New2'],
+                changes: [
+                    { status: 'added', value: 'Blah', index: 2 },
+                    { status: 'deleted', value: 'Y', index: 2 },
+                    { status: 'added', value: 'Another', index: 3 },
+                    { status: 'deleted', value: 'New1', index: 3 }
+                ]
+            });
+
             expect(callLog.length).toBe(0); // Never needed to run the diff algorithm
         });
     });
@@ -103,7 +197,18 @@ describe('Observable Array change tracking', function() {
             });
         array[operationName].apply(array, options.args);
         subscription.dispose();
+
+        // The actual ordering isn't fully defined if there's a mixture of
+        // additions and deletions at once, so we'll sort by index and then status
+        // just so the tests can get consistent results
+        changeList.sort(compareChangeListItems);
         expect(changeList).toEqual(options.changes);
+    }
+
+    function compareChangeListItems(a, b) {
+        if (a.index < b.index) { return -1; }
+        if (a.index > b.index) { return 1; }
+        return a.status.localeCompare(b.status);
     }
 
     // There's no public API for intercepting ko.utils.compareArrays, so we'll have to
