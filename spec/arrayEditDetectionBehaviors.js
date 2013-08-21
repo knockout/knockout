@@ -72,4 +72,20 @@ describe('Compare Arrays', function() {
             { status: "added", value: "J", index: 4}
         ]);
     });
+
+    it('Should support sparse diffs', function() {
+        // A sparse diff is exactly like a regular diff, except it doesn't contain any
+        // 'retained' items. This still preserves enough information for most things
+        // you'd want to do with the changeset.
+
+        var oldArray = ["A", "B", "C", "D", "E"];
+        var newArray = [123, "A", "E", "C", "D"];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray, { sparse: true });
+        expect(compareResult).toEqual([
+            { status: "added", value: 123, index: 0 },
+            { status: "deleted", value: "B", index: 1 },
+            { status: "added", value: "E", index: 2, moved: 4 },
+            { status: "deleted", value: "E", index: 4, moved: 2 }
+        ]);
+    });
 });

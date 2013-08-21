@@ -3,17 +3,20 @@ ko.utils.compareArrays = (function () {
     var statusNotInOld = 'added', statusNotInNew = 'deleted';
 
     // Simple calculation based on Levenshtein distance.
-    function compareArrays(oldArray, newArray, dontLimitMoves) {
+    function compareArrays(oldArray, newArray, options) {
+        // For backward compatibility, if the third arg is actually a bool, interpret
+        // it as the old parameter 'dontLimitMoves'. Newer code should use { dontLimitMoves: true }.
+        options = (typeof options === 'boolean') ? { 'dontLimitMoves': options } : (options || {});
         oldArray = oldArray || [];
         newArray = newArray || [];
 
         if (oldArray.length <= newArray.length)
-            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, dontLimitMoves);
+            return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, options);
         else
-            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, dontLimitMoves);
+            return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, options);
     }
 
-    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, dontLimitMoves) {
+    function compareSmallArrayToBigArray(smlArray, bigArray, statusNotInSml, statusNotInBig, options) {
         var myMin = Math.min,
             myMax = Math.max,
             editDistanceMatrix = [],
@@ -58,10 +61,13 @@ ko.utils.compareArrays = (function () {
                     'value': smlArray[--smlIndex],
                     'index': smlIndex });
             } else {
-                editScript.push({
-                    'status': "retained",
-                    'value': bigArray[--bigIndex] });
+                --bigIndex;
                 --smlIndex;
+                if (!options['sparse']) {
+                    editScript.push({
+                        'status': "retained",
+                        'value': bigArray[bigIndex] });
+                }
             }
         }
 
@@ -71,7 +77,7 @@ ko.utils.compareArrays = (function () {
             var limitFailedCompares = smlIndexMax * 10, failedCompares,
                 a, d, notInSmlItem, notInBigItem;
             // Go through the items that have been added and deleted and try to find matches between them.
-            for (failedCompares = a = 0; (dontLimitMoves || failedCompares < limitFailedCompares) && (notInSmlItem = notInSml[a]); a++) {
+            for (failedCompares = a = 0; (options['dontLimitMoves'] || failedCompares < limitFailedCompares) && (notInSmlItem = notInSml[a]); a++) {
                 for (d = 0; notInBigItem = notInBig[d]; d++) {
                     if (notInSmlItem['value'] === notInBigItem['value']) {
                         notInSmlItem['moved'] = notInBigItem['index'];
