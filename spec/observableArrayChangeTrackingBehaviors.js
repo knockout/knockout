@@ -48,23 +48,91 @@ describe('Observable Array change tracking', function() {
     });
 
     it('Reuses cached diff results', function() {
-        // We can't directly test that it only calls ko.utils.compareArrays once, since
-        // there's no publicly exposed way to override that function (at least not in the
-        // minified version). As an approximation, verify that getChanges returns the
-        // same array instance to callers during the same mutation.
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges(),
+                changelist1,
+                changelist2;
 
-        var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges(),
-            changelist1,
-            changelist2;
+            myArray.subscribe(function() { changelist1 = myArray.getChanges(); });
+            myArray.subscribe(function() { changelist2 = myArray.getChanges(); });
+            myArray(['Gamma']);
 
-        myArray.subscribe(function() { changelist1 = myArray.getChanges(); });
-        myArray.subscribe(function() { changelist2 = myArray.getChanges(); });
+            // See that, not only did it invoke compareArrays only once, but the
+            // return values from getChanges are the same array instances
+            expect(callLog.length).toBe(1);
+            expect(changelist1).toEqual([
+                { status: 'deleted', value: 'Alpha', index: 0 },
+                { status: 'deleted', value: 'Beta', index: 1 }
+            ]);
+            expect(changelist2).toBe(changelist1);
 
-        myArray(['Gamma']);
-        expect(changelist1).toEqual([
-            { status: 'deleted', value: 'Alpha', index: 0 },
-            { status: 'deleted', value: 'Beta', index: 1 }
-        ]);
-        expect(changelist2).toBe(changelist1);
+            // Then when there's a further change, there's a further diff
+            myArray(['Delta']);
+            expect(callLog.length).toBe(2);
+            expect(changelist1).toEqual([
+                { status: 'deleted', value: 'Gamma', index: 0 },
+                { status: 'added', value: 'Delta', index: 0 }
+            ]);
+            expect(changelist2).toBe(changelist1);
+        });
     });
+
+    it('Skips the diff algorithm when the array mutation is a known operation', function() {
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges();
+
+            // Push
+            testKnownOperation(myArray, 'push', {
+                args: ['Delta', 'Epsilon'],
+                result: ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'],
+                changes: [
+                    { status: 'added', value: 'Delta', index: 3 },
+                    { status: 'added', value: 'Epsilon', index: 4 }
+                ]
+            });
+
+            expect(callLog.length).toBe(0); // Never needed to run the diff algorithm
+        });
+    });
+
+    function testKnownOperation(array, operationName, options) {
+        var changeList,
+            subscription = array.subscribe(function(newValues) {
+                expect(newValues).toEqual(options.result);
+                changeList = array.getChanges();
+            });
+        array[operationName].apply(array, options.args);
+        subscription.dispose();
+        expect(changeList).toEqual(options.changes);
+    }
+
+    // There's no public API for intercepting ko.utils.compareArrays, so we'll have to
+    // inspect the runtime to work out the private name(s) for it, and intercept them all.
+    // Then undo it all afterwards.
+    function captureCompareArraysCalls(callback) {
+        var origCompareArrays = ko.utils.compareArrays,
+            interceptedCompareArrays = function() {
+                callLog.push(Array.prototype.slice.call(arguments, 0));
+                return origCompareArrays.apply(this, arguments);
+            },
+            aliases = [],
+            callLog = [];
+
+        // Find and intercept all the aliases
+        for (var key in ko.utils) {
+            if (ko.utils[key] === origCompareArrays) {
+                aliases.push(key);
+                ko.utils[key] = interceptedCompareArrays;
+            }
+        }
+
+        try {
+            callback(callLog);
+        } finally {
+            // Undo the interceptors
+            for (var i = 0; i < aliases.length; i++) {
+                ko.utils[aliases[i]] = origCompareArrays;
+            }
+        }
+    }
 });

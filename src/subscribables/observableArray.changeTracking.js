@@ -1,5 +1,6 @@
 (function () {
-    var tracksChangesKey = '_ko_tracksChanges_' + Math.random();
+    var tracksChangesKey = '_ko_tracksChanges_' + Math.random(),
+        cachedDiffKey = '_ko_cachedDiff_' + Math.random();
 
     ko.observableArray['fn']['getChanges'] = function() {
         throw new Error('Use myArray.trackChanges() to enable change tracking before calling myArray.getChanges()');
@@ -18,14 +19,14 @@
         var previousContents = this.peek().slice(0),
             origValueHasMutated = this.valueHasMutated,
             isMutating = false;
-        this._cachedDiff = null;
+        this[cachedDiffKey] = null;
         this['valueHasMutated'] = this.valueHasMutated = function() {
             isMutating = true;
             var result = origValueHasMutated.apply(this, arguments);
             previousContents = this.peek().slice(0);
 
             // Eliminate references to the old, removed items, so they can be GCed
-            this._cachedDiff = null;
+            this[cachedDiffKey] = null;
             isMutating = false;
             return result;
         };
@@ -39,14 +40,30 @@
 
             // We try to re-use cached diffs. Also it's not meaningful to ask about a diff
             // if the array isn't currently mutating.
-            if (isMutating && !this._cachedDiff) {
-                this._cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { sparse: true });
+            if (isMutating && !this[cachedDiffKey]) {
+                this[cachedDiffKey] = ko.utils.compareArrays(previousContents, currentContents, { sparse: true });
             }
 
-            return this._cachedDiff;
+            return this[cachedDiffKey];
         };
 
         // Allow chaining
         return this;
+    };
+
+    ko.observableArray.cacheDiffForKnownOperation = function(observableArray, rawArray, operationName, args) {
+        var diff;
+        switch (operationName) {
+            case 'push':
+                diff = [];
+                for (var index = 0; index < args.length; index++) {
+                    diff.push({ status: 'added', value: args[index], index: rawArray.length + index });
+                }
+                break;
+        }
+
+        if (diff) {
+            observableArray[cachedDiffKey] = diff;
+        }
     };
 })();

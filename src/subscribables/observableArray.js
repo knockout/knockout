@@ -98,6 +98,7 @@ ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "uns
         // (for consistency with mutating regular observables)
         var underlyingArray = this.peek();
         this.valueWillMutate();
+        ko.observableArray.cacheDiffForKnownOperation(this, underlyingArray, methodName, arguments);
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
         this.valueHasMutated();
         return methodCallResult;
