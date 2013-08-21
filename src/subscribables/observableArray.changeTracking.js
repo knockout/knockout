@@ -40,7 +40,7 @@
             // We try to re-use cached diffs. Also it's not meaningful to ask about a diff
             // if the array isn't currently mutating.
             if (isMutating && !this._cachedDiff) {
-                this._cachedDiff = ko.utils.compareArrays(previousContents, currentContents);
+                this._cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { sparse: true });
             }
 
             return this._cachedDiff;

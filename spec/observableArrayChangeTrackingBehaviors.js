@@ -32,9 +32,6 @@ describe('Observable Array change tracking', function() {
         // checking that a simple 'push' comes through OK.
         myArray.push('Delta');
         expect(changelist).toEqual([
-            { status: 'retained', value: 'Alpha' },
-            { status: 'retained', value: 'Beta' },
-            { status: 'retained', value: 'Gamma' },
             { status: 'added', value: 'Delta', index: 3 }
         ]);
     });
@@ -46,9 +43,7 @@ describe('Observable Array change tracking', function() {
 
         myArray.splice(1, 1);
         expect(changelist).toEqual([
-            { status: 'retained', value: 'Alpha' },
-            { status: 'deleted', value: 'Beta', index: 1 },
-            { status: 'retained', value: 'Gamma' }
+            { status: 'deleted', value: 'Beta', index: 1 }
         ]);
     });
 
@@ -68,8 +63,7 @@ describe('Observable Array change tracking', function() {
         myArray(['Gamma']);
         expect(changelist1).toEqual([
             { status: 'deleted', value: 'Alpha', index: 0 },
-            { status: 'deleted', value: 'Beta', index: 1 },
-            { status: 'retained', value: 'Gamma' }
+            { status: 'deleted', value: 'Beta', index: 1 }
         ]);
         expect(changelist2).toBe(changelist1);
     });
