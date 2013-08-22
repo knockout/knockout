@@ -1,12 +1,19 @@
 (function () {
-    var tracksChangesKey = '_ko_tracksChanges_' + Math.random(),
-        cachedDiffKey = '_ko_cachedDiff_' + Math.random();
+    var arrayChangeEventName = 'arrayChange',
+        tracksChangesKey = '_ko_tracksChanges_' + Math.random(),
+        cachedDiffKey = '_ko_cachedDiff_' + Math.random(),
+        underlyingSubscribeFunction = ko.subscribable['fn'].subscribe;
 
-    ko.observableArray['fn']['getChanges'] = function() {
-        throw new Error('Use myArray.trackChanges() to enable change tracking before calling myArray.getChanges()');
+    // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
+    ko.observableArray['fn'].subscribe = ko.observableArray['fn']['subscribe'] = function(callback, callbackTarget, event) {
+        if (event === arrayChangeEventName) {
+            trackChanges.call(this);
+        }
+
+        return underlyingSubscribeFunction.apply(this, arguments);
     };
 
-    ko.observableArray['fn']['trackChanges'] = function() {
+    function trackChanges() {
         // Calling 'trackChanges' multiple times is the same as calling it once
         if (this[tracksChangesKey]) {
             return;
@@ -21,35 +28,30 @@
             isMutating = false;
         this[cachedDiffKey] = null;
         this['valueHasMutated'] = this.valueHasMutated = function() {
-            isMutating = true;
             var result = origValueHasMutated.apply(this, arguments);
-            previousContents = this.peek().slice(0);
 
-            // Eliminate references to the old, removed items, so they can be GCed
-            this[cachedDiffKey] = null;
-            isMutating = false;
-            return result;
-        };
-
-        // You can invoke this from any code responding to a value change for this array
-        // (e.g., a .subscribe() callback, or inside a property computed from the array value)
-        // to get a sparse diff (TODO: implement sparse)
-        this['getChanges'] = function() {
-            // Ensure we have a dependency on the observable array
-            var currentContents = this();
-
-            // We try to re-use cached diffs. Also it's not meaningful to ask about a diff
-            // if the array isn't currently mutating.
-            if (isMutating && !this[cachedDiffKey]) {
-                this[cachedDiffKey] = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
+            // Compute the diff and issue notifications, but only if someone is listening
+            if (this.hasSubscriptionsForEvent(arrayChangeEventName)) {
+                var changes = getChanges.call(this, previousContents);
+                this['notifySubscribers'](changes, arrayChangeEventName);
             }
 
-            return this[cachedDiffKey];
+            // Eliminate references to the old, removed items, so they can be GCed
+            previousContents = this.peek().slice(0);
+            this[cachedDiffKey] = null;
+            return result;
         };
+    }
 
-        // Allow chaining
-        return this;
-    };
+    function getChanges(previousContents) {
+        // We try to re-use cached diffs.
+        if (!this[cachedDiffKey]) {
+            var currentContents = this.peek();
+            this[cachedDiffKey] = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
+        }
+
+        return this[cachedDiffKey];
+    }
 
     ko.observableArray.cacheDiffForKnownOperation = function(observableArray, rawArray, operationName, args) {
         var diff,

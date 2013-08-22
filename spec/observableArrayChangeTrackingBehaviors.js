@@ -1,31 +1,12 @@
 describe('Observable Array change tracking', function() {
 
-    it('Throws an informative error if you ask for changes before enabling change tracking', function() {
-        var myArray = ko.observableArray([1, 2, 3]),
-            thrownError;
-
-        myArray.subscribe(function(values) {
-            try { myArray.getChanges(); }
-            catch(ex) { thrownError = ex; }
-        });
-
-        myArray.push(4);
-        expect(thrownError.message).toBe('Use myArray.trackChanges() to enable change tracking before calling myArray.getChanges()');
-    });
-
-    it('Returns null if you call getChanges outside the context of a mutation', function() {
-        var myArray = ko.observableArray([1, 2, 3]);
-        myArray.trackChanges();
-        expect(myArray.getChanges()).toBe(null);
-    });
-
-    it('Returns a changelist if you ask during subscribe callback', function() {
-        var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges(),
+    it('Supplies changelists to subscribers', function() {
+        var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
             changelist;
 
-        myArray.subscribe(function(newValues) {
-            changelist = myArray.getChanges();
-        });
+        myArray.subscribe(function(changes) {
+            changelist = changes;
+        }, null, 'arrayChange');
 
         // Not going to test all possible types of mutation, because we know the diffing
         // logic is all in ko.utils.compareArrays, which is tested separately. Just
@@ -36,25 +17,41 @@ describe('Observable Array change tracking', function() {
         ]);
     });
 
-    it('Returns a changelist if you ask during a computed evaluator function', function() {
-        var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges(),
-            changelist;
-        ko.computed(function() { changelist = myArray.getChanges(); });
+    it('Only computes diffs when there\'s at least one active arrayChange subscription', function() {
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']);
 
-        myArray.splice(1, 1);
-        expect(changelist).toEqual([
-            { status: 'deleted', value: 'Beta', index: 1 }
-        ]);
+            // Nobody has yet subscribed for arrayChange notifications, so
+            // array mutations don't involve computing diffs
+            myArray(['Another']);
+            expect(callLog.length).toBe(0);
+
+            // When there's a subscriber, it does compute diffs
+            var subscription = myArray.subscribe(function() {}, null, 'arrayChange');
+            myArray(['Changed']);
+            expect(callLog.length).toBe(1);
+
+            // If all the subscriptions are disposed, it stops computing diffs
+            subscription.dispose();
+            myArray(['Changed again']);
+            expect(callLog.length).toBe(1); // Did not increment
+
+            // ... but that doesn't stop someone else subscribing in the future,
+            // then diffs are computed again
+            myArray.subscribe(function() {}, null, 'arrayChange');
+            myArray(['Changed once more']);
+            expect(callLog.length).toBe(2);
+        });
     });
 
     it('Reuses cached diff results', function() {
         captureCompareArraysCalls(function(callLog) {
-            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges(),
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
                 changelist1,
                 changelist2;
 
-            myArray.subscribe(function() { changelist1 = myArray.getChanges(); });
-            myArray.subscribe(function() { changelist2 = myArray.getChanges(); });
+            myArray.subscribe(function(changes) { changelist1 = changes; }, null, 'arrayChange');
+            myArray.subscribe(function(changes) { changelist2 = changes; }, null, 'arrayChange');
             myArray(['Gamma']);
 
             // See that, not only did it invoke compareArrays only once, but the
@@ -79,7 +76,7 @@ describe('Observable Array change tracking', function() {
 
     it('Skips the diff algorithm when the array mutation is a known operation', function() {
         captureCompareArraysCalls(function(callLog) {
-            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']).trackChanges();
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']);
 
             // Push
             testKnownOperation(myArray, 'push', {
@@ -101,7 +98,7 @@ describe('Observable Array change tracking', function() {
             });
 
             // Pop empty array
-            testKnownOperation(ko.observableArray([]).trackChanges(), 'pop', {
+            testKnownOperation(ko.observableArray([]), 'pop', {
                 args: [], result: [], changes: []
             });
 
@@ -115,7 +112,7 @@ describe('Observable Array change tracking', function() {
             });
 
             // Shift empty array
-            testKnownOperation(ko.observableArray([]).trackChanges(), 'shift', {
+            testKnownOperation(ko.observableArray([]), 'shift', {
                 args: [], result: [], changes: []
             });
 
@@ -191,10 +188,10 @@ describe('Observable Array change tracking', function() {
 
     function testKnownOperation(array, operationName, options) {
         var changeList,
-            subscription = array.subscribe(function(newValues) {
-                expect(newValues).toEqual(options.result);
-                changeList = array.getChanges();
-            });
+            subscription = array.subscribe(function(changes) {
+                expect(array()).toEqual(options.result);
+                changeList = changes;
+            }, null, 'arrayChange');
         array[operationName].apply(array, options.args);
         subscription.dispose();
 

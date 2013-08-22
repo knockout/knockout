@@ -38,7 +38,7 @@ ko.subscribable['fn'] = {
 
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
-        if (this._subscriptions[event]) {
+        if (this.hasSubscriptionsForEvent(event)) {
             ko.dependencyDetection.ignore(function() {
                 ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
@@ -48,6 +48,10 @@ ko.subscribable['fn'] = {
                 });
             }, this);
         }
+    },
+
+    hasSubscriptionsForEvent: function(event) {
+        return this._subscriptions[event] && this._subscriptions[event].length;
     },
 
     getSubscriptionsCount: function () {
