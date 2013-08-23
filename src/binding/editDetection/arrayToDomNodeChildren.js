@@ -33,14 +33,18 @@
 
     var lastMappingResultDomDataKey = "setDomNodeChildrenFromArrayMapping_lastMappingResult";
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes, changeType) {
         // Compare the provided array against the previous one
         array = array || [];
         options = options || {};
         var isFirstExecution = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) === undefined;
         var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) || [];
         var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
-        var editScript = ko.utils.compareArrays(lastArray, array, options['dontLimitMoves']);
+
+        var editScript = [];
+        if (changeType !== "extended") {
+          editScript = ko.utils.compareArrays(lastArray, array, options['dontLimitMoves']);
+        }
 
         // Build the new mapping result
         var newMappingResult = [];
@@ -114,6 +118,50 @@
                     }
                     break;
             }
+        }
+
+        /**
+         * Special case of array modification where additional items have been added on to the end. Just add those items and skip
+         * everything else
+         */
+        if (changeType === "extended") {
+          // Start where we left off
+          newMappingResult = lastMappingResult;
+
+          // Double check this
+          newMappingResultIndex = newMappingResult.length
+
+          var lastNode;
+          var nextNode;
+
+          // Initialize lastNode
+          if (newMappingResult.length > 0) {
+            mapData = newMappingResult[newMappingResult.length - 1];
+            lastNode = mapData.mappedNodes[mapData.mappedNodes.length - 1];
+          }
+
+          for (var i = lastArray.length; i < array.length; ++i) {
+            mapData = { arrayEntry: array[i], indexObservable: ko.observable(newMappingResultIndex++) };
+            ko.utils.extend(mapData, mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable));
+
+            // Put nodes in the right place if they aren't there already
+            for (var j = 0; node = mapData.mappedNodes[j]; nextNode = node.nextSibling, lastNode = node, j++) {
+                if (node !== nextNode)
+                    ko.virtualElements.insertAfter(domNode, node, lastNode);
+            }
+
+            if (callbackAfterAddingNodes) {
+                callbackAfterAddingNodes(mapData.arrayEntry, mapData.mappedNodes, mapData.indexObservable);
+                mapData.initialized = true;
+            }
+
+            itemsForAfterAddCallbacks.push(mapData);
+            newMappingResult.push(mapData);
+          }
+          callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
+          ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
+
+          return;
         }
 
         // Call beforeMove first before any changes have been made to the DOM

@@ -37,14 +37,24 @@ ko.subscribable['fn'] = {
     },
 
     "notifySubscribers": function (valueToNotify, event) {
-        event = event || defaultEvent;
+        var actualEvent = event;
+        if (event === "extended")
+          event = defaultEvent;
+        else
+          event = event || defaultEvent;
+
         if (this._subscriptions[event]) {
             ko.dependencyDetection.ignore(function() {
                 ko.utils.arrayForEach(this._subscriptions[event].slice(0), function (subscription) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
-                    if (subscription && (subscription.isDisposed !== true))
-                        subscription.callback(valueToNotify);
+                    if (subscription && (subscription.isDisposed !== true)) {
+                        if (actualEvent && actualEvent !== defaultEvent) {
+                          subscription.callback(valueToNotify, actualEvent);
+                        } else {
+                          subscription.callback(valueToNotify);
+                        }
+                    }
                 });
             }, this);
         }
