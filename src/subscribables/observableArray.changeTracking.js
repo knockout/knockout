@@ -1,5 +1,9 @@
 var arrayChangeEventName = 'arrayChange';
 ko.extenders['trackArrayChanges'] = function(target) {
+    // Only modify the target observable once
+    if (target.cacheDiffForKnownOperation) {
+        return;
+    }
     var trackingChanges = false,
         cachedDiff = null,
         underlyingSubscribeFunction = target.subscribe;

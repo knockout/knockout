@@ -207,6 +207,22 @@ describe('Observable Array change tracking', function() {
             { status : 'deleted', value : 'Gamma', index : 2 },
             { status : 'deleted', value : 'Delta', index : 3 }
         ]);
+
+        // Check that extending the observable again doesn't break anything an only one diff is generated
+        var changelist2, callCount = 0;
+        myArray = myArray.extend({trackArrayChanges:true});
+
+        myArray.subscribe(function(changes) {
+            callCount++;
+            changelist2 = changes;
+        }, null, 'arrayChange');
+
+        myArray(['Gamma']);
+        expect(callCount).toEqual(1);
+        expect(changelist2).toEqual([
+            { status : 'added', value : 'Gamma', index : 0 }
+        ]);
+        expect(changelist2).toBe(changelist);
     });
 
     it('Should support tracking of a computed observable using extender', function() {
