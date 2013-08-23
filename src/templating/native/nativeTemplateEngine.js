@@ -14,7 +14,7 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
         return ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
     } else {
         var id = templateSource.domElement.id;
-        var cache = this.templateCache;
+        var cache = ko.nativeTemplateEngine.prototype.templateCache || {};
 
         // If the template is not cached, parse it
         if (!cache[id]) {
