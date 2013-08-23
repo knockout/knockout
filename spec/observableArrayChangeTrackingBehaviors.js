@@ -186,6 +186,50 @@ describe('Observable Array change tracking', function() {
         });
     });
 
+    it('Should support tracking of any observable using extender', function() {
+        var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']).extend({trackArrayChanges:true}),
+            changelist;
+
+        myArray.subscribe(function(changes) {
+            changelist = changes;
+        }, null, 'arrayChange');
+
+        myArray(['Alpha', 'Beta', 'Gamma', 'Delta']);
+        expect(changelist).toEqual([
+            { status: 'added', value: 'Delta', index: 3 }
+        ]);
+
+        // Should treat null value as an empty array
+        myArray(null);
+        expect(changelist).toEqual([
+            { status : 'deleted', value : 'Alpha', index : 0 },
+            { status : 'deleted', value : 'Beta', index : 1 },
+            { status : 'deleted', value : 'Gamma', index : 2 },
+            { status : 'deleted', value : 'Delta', index : 3 }
+        ]);
+    });
+
+    it('Should support tracking of a computed observable using extender', function() {
+        var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
+            myComputed = ko.computed(function() {
+                return myArray().slice(-2);
+            }).extend({trackArrayChanges:true}),
+            changelist;
+
+        expect(myComputed()).toEqual(['Beta', 'Gamma']);
+
+        myComputed.subscribe(function(changes) {
+            changelist = changes;
+        }, null, 'arrayChange');
+
+        myArray(['Alpha', 'Beta', 'Gamma', 'Delta']);
+        expect(myComputed()).toEqual(['Gamma', 'Delta']);
+        expect(changelist).toEqual([
+            { status : 'deleted', value : 'Beta', index : 0 },
+            { status : 'added', value : 'Delta', index : 1 }
+        ]);
+    });
+
     function testKnownOperation(array, operationName, options) {
         var changeList,
             subscription = array.subscribe(function(changes) {
@@ -195,17 +239,14 @@ describe('Observable Array change tracking', function() {
         array[operationName].apply(array, options.args);
         subscription.dispose();
 
-        // The actual ordering isn't fully defined if there's a mixture of
-        // additions and deletions at once, so we'll sort by index and then status
-        // just so the tests can get consistent results
+        // The ordering of added/deleted items for replaced entries isn't defined, so
+        // we'll sort by index and then status just so the tests can get consistent results
         changeList.sort(compareChangeListItems);
         expect(changeList).toEqual(options.changes);
     }
 
     function compareChangeListItems(a, b) {
-        if (a.index < b.index) { return -1; }
-        if (a.index > b.index) { return 1; }
-        return a.status.localeCompare(b.status);
+        return (a.index - b.index) || a.status.localeCompare(b.status);
     }
 
     // There's no public API for intercepting ko.utils.compareArrays, so we'll have to
