@@ -28,16 +28,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         _subscriptionsToDependencies = [];
     }
 
-    function evaluatePossiblyAsync() {
+    function evaluatePossiblyAsync(value, changeType) {
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
             clearTimeout(evaluationTimeoutInstance);
-            evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
+            evaluationTimeoutInstance = setTimeout(function() { evaluateImmediate(changeType) }, throttleEvaluationTimeout);
         } else
-            evaluateImmediate();
+            evaluateImmediate(changeType);
     }
 
-    function evaluateImmediate() {
+    function evaluateImmediate(changeType) {
         if (_isBeingEvaluated) {
             // If the evaluation of a ko.computed causes side effects, it's possible that it will trigger its own re-evaluation.
             // This is not desirable (it's hard for a developer to realise a chain of dependencies might cause this, and they almost
@@ -68,7 +68,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                     addSubscriptionToDependency(subscribable); // Brand new subscription - add it
             });
 
-            var newValue = readFunction.call(evaluatorFunctionTarget);
+            var args = [];
+            if (changeType)
+              args.push(changeType);
+
+            var newValue = readFunction.apply(evaluatorFunctionTarget, args);
 
             // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
             for (var i = disposalCandidates.length - 1; i >= 0; i--) {
@@ -81,7 +85,12 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
             _latestValue = newValue;
             if (DEBUG) dependentObservable._latestValue = _latestValue;
-            dependentObservable["notifySubscribers"](_latestValue);
+
+            if (changeType) {
+              dependentObservable["notifySubscribers"](_latestValue, changeType);
+            } else {
+              dependentObservable["notifySubscribers"](_latestValue);
+            }
 
         } finally {
             ko.dependencyDetection.end();

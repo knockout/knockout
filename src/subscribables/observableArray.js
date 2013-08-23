@@ -49,6 +49,17 @@ ko.observableArray['fn'] = {
         });
     },
 
+    'addAll': function (arrayOfValues) {
+        if (arrayOfValues.length > 0) {
+          var underlyingArray = this.peek();
+          this.valueWillMutate();
+          for (var i = 0; i < arrayOfValues.length; ++i) {
+            underlyingArray.push(arrayOfValues[i]);
+          }
+          this.valueHasMutated("extended");
+        }
+    },
+
     'destroy': function (valueOrPredicate) {
         var underlyingArray = this.peek();
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
