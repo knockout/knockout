@@ -65,12 +65,12 @@
             return self['$data'];
         }
         function disposeWhen() {
-            return !ko.utils.anyDomNodeIsAttachedToDocument(nodes);
+            return nodes && !ko.utils.anyDomNodeIsAttachedToDocument(nodes);
         }
 
         var self = this,
             isFunc = typeof(dataItemOrAccessor) == "function",
-            nodes = [],
+            nodes,
             subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen });
 
         // At this point, the binding context has been initialized, and the "subscribable" computed observable is
@@ -86,7 +86,7 @@
             // the context is attached to, and dispose the computed when all of those nodes have been cleaned.
 
             // Add properties to *subscribable* instead of *self* because any properties added to *self* may be overwritten on updates
-            subscribable._nodes = nodes;
+            nodes = [];
             subscribable._addNode = function(node) {
                 nodes.push(node);
                 ko.utils.domNodeDisposal.addDisposeCallback(node, function(node) {
