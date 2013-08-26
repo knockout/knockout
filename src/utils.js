@@ -266,6 +266,8 @@ ko.utils = (function () {
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
+            if (node === containedByNode)
+                return true;
             if (containedByNode.contains)
                 return containedByNode.contains(node.nodeType === 3 ? node.parentNode : node);
             if (containedByNode.compareDocumentPosition)
