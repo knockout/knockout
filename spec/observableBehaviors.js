@@ -213,7 +213,7 @@ describe('Observable', function() {
         expect(notifiedValues.length).toEqual(5);
     });
 
-    it('Should expose an "update" extender that can configure the observable to notify on all writes, even if the value is unchanged', function() {
+    it('Should expose a "notify" extender that can configure the observable to notify on all writes, even if the value is unchanged', function() {
         var instance = new ko.observable();
         var notifiedValues = [];
         instance.subscribe(notifiedValues.push, notifiedValues);
@@ -245,10 +245,12 @@ describe('Observable', function() {
         };
         instance(456);
 
-        expect(interceptedNotifications.length).toEqual(2);
+        expect(interceptedNotifications.length).toEqual(3);
         expect(interceptedNotifications[0].eventName).toEqual("beforeChange");
         expect(interceptedNotifications[1].eventName).toEqual("None");
+        expect(interceptedNotifications[2].eventName).toEqual("updated");
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
+        expect(interceptedNotifications[2].value).toEqual(456);
     });
 });
