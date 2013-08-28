@@ -341,32 +341,38 @@
                 if (node.nodeType === 8) {
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
                 }
-                // Run init, ignoring any dependencies
-                ko.dependencyDetection.ignore(function() {
-                    var handlerInitFn = bindingHandler["init"];
-                    if (typeof handlerInitFn == "function") {
-                        var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
-                        // If this binding handler claims to control descendant bindings, make a note of this
-                        if (initResult && initResult['controlsDescendantBindings']) {
-                            if (bindingHandlerThatControlsDescendantBindings !== undefined)
-                                throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
-                            bindingHandlerThatControlsDescendantBindings = bindingKey;
-                        }
-                    }
-                });
+                try {
+                    // Run init, ignoring any dependencies
+                    ko.dependencyDetection.ignore(function() {
+                        var handlerInitFn = bindingHandler["init"];
+                        if (typeof handlerInitFn == "function") {
+                            var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
-                // Run update in its own computed wrapper
-                ko.dependentObservable(
-                    function() {
-                        var handlerUpdateFn = bindingHandler["update"];
-                        if (typeof handlerUpdateFn == "function") {
-                            handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                            // If this binding handler claims to control descendant bindings, make a note of this
+                            if (initResult && initResult['controlsDescendantBindings']) {
+                                if (bindingHandlerThatControlsDescendantBindings !== undefined)
+                                    throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
+                                bindingHandlerThatControlsDescendantBindings = bindingKey;
+                            }
                         }
-                    },
-                    null,
-                    { disposeWhenNodeIsRemoved: node }
-                );
+                    });
+
+                    // Run update in its own computed wrapper
+                    ko.dependentObservable(
+                        function() {
+                            var handlerUpdateFn = bindingHandler["update"];
+                            if (typeof handlerUpdateFn == "function") {
+                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                            }
+                        },
+                        null,
+                        { disposeWhenNodeIsRemoved: node }
+                    );
+                } catch (ex) {
+                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
+                    throw ex;
+                }
             });
         }
 

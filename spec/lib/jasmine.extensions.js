@@ -58,6 +58,17 @@ jasmine.Matchers.prototype.toHaveSelectedValues = function (expectedValues) {
     return this.env.equals_(selectedValues, expectedValues);
 };
 
+jasmine.Matchers.prototype.toThrowContaining = function(expected) {
+    var exception;
+    try {
+        this.actual();
+    } catch (e) {
+        exception = e;
+    }
+    this.actual = exception && (exception.message || exception);   // Fix explanatory message
+    return exception ? this.env.contains_(exception.message || exception, expected) : false;
+};
+
 jasmine.addScriptReference = function(scriptUrl) {
     if (window.console)
         console.log("Loading " + scriptUrl + "...");

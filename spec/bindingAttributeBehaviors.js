@@ -79,6 +79,26 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(null, testNode); // No exception means success
     });
 
+    it('Should produce a meaningful error if a binding value contains invalid JavaScript', function() {
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) { valueAccessor(); }
+        };
+        testNode.innerHTML = "<div data-bind='test: (1;2)'></div>";
+        expect(function () {
+            ko.applyBindings(null, testNode);
+        }).toThrowContaining("Unable to parse bindings.\nBindings value: test: (1;2)\nMessage:");
+    });
+
+    it('Should produce a meaningful error if a binding value doesn\'t exist', function() {
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor) { valueAccessor(); }
+        };
+        testNode.innerHTML = "<div data-bind='test: nonexistentValue'></div>";
+        expect(function () {
+            ko.applyBindings(null, testNode);
+        }).toThrowContaining("Unable to process binding \"test: function");
+    });
+
     it('Should invoke registered handlers\'s init() then update() methods passing binding data', function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {
@@ -155,11 +175,9 @@ describe('Binding attribute syntax', function() {
         };
         ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
         testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>"
-        var didThrow = false;
-
-        try { ko.applyBindings(null, testNode) }
-        catch(ex) { didThrow = true; expect(ex.message).toContain('Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.') }
-        expect(didThrow).toEqual(true);
+        expect(function () {
+            ko.applyBindings(null, testNode);
+        }).toThrowContaining("Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.");
     });
 
     it('Should use properties on the view model in preference to properties on the binding context', function() {
@@ -220,14 +238,9 @@ describe('Binding attribute syntax', function() {
 
     it('Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones', function() {
         testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye"
-        var didThrow = false;
-        try {
+        expect(function () {
             ko.applyBindings(null, testNode);
-        } catch(ex) {
-            didThrow = true;
-            expect(ex.message).toEqual("The binding 'visible' cannot be used with virtual elements");
-        }
-        expect(didThrow).toEqual(true);
+        }).toThrow("The binding 'visible' cannot be used with virtual elements");
     });
 
     it('Should be able to set a custom binding to use containerless binding', function() {
@@ -363,14 +376,9 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({}, testNode);
 
         // Second call throws an error
-        var didThrow = false;
-        try { ko.applyBindings({}, testNode); }
-        catch (ex) {
-            didThrow = true;
-            expect(ex.message).toEqual("You cannot apply bindings multiple times to the same element.");
-        }
-        if (!didThrow)
-            throw new Error("Did not prevent multiple applyBindings calls");
+        expect(function () {
+            ko.applyBindings({}, testNode);
+        }).toThrow("You cannot apply bindings multiple times to the same element.");
     });
 
     it('Should allow multiple applyBindings calls for the same element if cleanNode is used', function() {
