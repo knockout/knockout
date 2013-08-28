@@ -2,6 +2,8 @@ describe('Binding attribute syntax', function() {
     beforeEach(jasmine.prepareTestNode);
 
     it('applyBindings should accept no parameters and then act on document.body with undefined model', function() {
+        this.after(function () { ko.utils.domData.clear(document.body); });     // Just to avoid interfering with other specs
+
         var didInit = false;
         ko.bindingHandlers.test = {
             init: function (element, valueAccessor, allBindings, viewModel) {
@@ -13,12 +15,11 @@ describe('Binding attribute syntax', function() {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings();
         expect(didInit).toEqual(true);
-
-        // Just to avoid interfering with other specs:
-        ko.utils.domData.clear(document.body);
     });
 
     it('applyBindings should accept one parameter and then act on document.body with parameter as model', function() {
+        this.after(function () { ko.utils.domData.clear(document.body); });     // Just to avoid interfering with other specs
+
         var didInit = false;
         var suppliedViewModel = {};
         ko.bindingHandlers.test = {
@@ -31,9 +32,6 @@ describe('Binding attribute syntax', function() {
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
         ko.applyBindings(suppliedViewModel);
         expect(didInit).toEqual(true);
-
-        // Just to avoid interfering with other specs:
-        ko.utils.domData.clear(document.body);
     });
 
     it('applyBindings should accept two parameters and then act on second param as DOM node with first param as model', function() {
@@ -47,15 +45,14 @@ describe('Binding attribute syntax', function() {
             }
         };
         testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+
         var shouldNotMatchNode = document.createElement("DIV");
         shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test:123'></div>";
         document.body.appendChild(shouldNotMatchNode);
-        try {
-            ko.applyBindings(suppliedViewModel, testNode);
-            expect(didInit).toEqual(true);
-        } finally {
-            shouldNotMatchNode.parentNode.removeChild(shouldNotMatchNode);
-        }
+        this.after(function () { document.body.removeChild(shouldNotMatchNode); });
+
+        ko.applyBindings(suppliedViewModel, testNode);
+        expect(didInit).toEqual(true);
     });
 
     it('Should tolerate empty or only white-space binding strings', function() {
@@ -408,6 +405,8 @@ describe('Binding attribute syntax', function() {
     });
 
     it('Should not bind against text content inside <script> tags', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
         // Developers won't expect or want binding to mutate the contents of <script> tags.
         // Historically this wasn't a problem because the default binding provider only acts
         // on elements, but now custom providers can act on text contents of elements, it's
@@ -415,6 +414,7 @@ describe('Binding attribute syntax', function() {
 
         // First replace the binding provider with one that's hardcoded to replace all text
         // content with a special message, via a binding handler that operates on text nodes
+
         var originalBindingProvider = ko.bindingProvider.instance;
         ko.bindingProvider.instance = {
             nodeHasBindings: function(node, bindingContext) {
@@ -439,7 +439,5 @@ describe('Binding attribute syntax', function() {
         testNode.innerHTML = "<p>Hello</p><script>alert(123);</script><p>Goodbye</p>";
         ko.applyBindings({ sometext: 'hello' }, testNode);
         expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
-
-        ko.bindingProvider.instance = originalBindingProvider;
     });
 });

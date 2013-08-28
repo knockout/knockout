@@ -373,6 +373,8 @@ describe('Templating', function() {
     });
 
     it('Data binding syntax should permit nested templates, and only bind inner templates once when using getBindingAccessors', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
         // Will verify that bindings are applied only once for both inline (rewritten) bindings,
         // and external (non-rewritten) ones
         var originalBindingProvider = ko.bindingProvider.instance;
@@ -403,11 +405,11 @@ describe('Templating', function() {
         expect(model.numRewrittenBindings).toEqual(1);
         expect(model.numExternalBindings).toEqual(1);
         expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>1</span>inner via external binding: <em>1</em></div>");
-
-        ko.bindingProvider.instance = originalBindingProvider;
     });
 
     it('Data binding syntax should permit nested templates, and only bind inner templates once when using getBindings', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
         // Will verify that bindings are applied only once for both inline (rewritten) bindings,
         // and external (non-rewritten) ones. Because getBindings actually gets called twice, we need
         // to expect two calls (but still it's a single binding).
@@ -434,8 +436,6 @@ describe('Templating', function() {
         expect(model.numRewrittenBindings).toEqual(1);
         expect(model.numExternalBindings).toEqual(2);
         expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>1</span>inner via external binding: <em>2</em></div>");
-
-        ko.bindingProvider.instance = originalBindingProvider;
     });
 
     describe('Data binding \'foreach\' option', function() {
@@ -937,6 +937,8 @@ describe('Templating', function() {
     });
 
     it('Should be possible to combine template rewriting, foreach, and a node preprocessor', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
         // This spec verifies that the use of fixUpContinuousNodeArray in templating.js correctly handles the scenario
         // where a memoized comment node is the first node outputted by 'foreach', and it gets removed by unmemoization.
         // In this case we rely on fixUpContinuousNodeArray to work out which remaining nodes correspond to the 'foreach'
@@ -952,20 +954,16 @@ describe('Templating', function() {
             return [node];
         };
 
-        try {
-            ko.setTemplateEngine(new dummyTemplateEngine({}));
-            testNode.innerHTML = "<div data-bind='template: { foreach: items }'><button data-bind='text: $data'></button> OK. </div>";
-            var items = ko.observableArray(['Alpha', 'Beta']);
-            ko.applyBindings({ items: items }, testNode);
-            expect(testNode).toContainText('Alpha OK. Beta OK. ');
+        ko.setTemplateEngine(new dummyTemplateEngine({}));
+        testNode.innerHTML = "<div data-bind='template: { foreach: items }'><button data-bind='text: $data'></button> OK. </div>";
+        var items = ko.observableArray(['Alpha', 'Beta']);
+        ko.applyBindings({ items: items }, testNode);
+        expect(testNode).toContainText('Alpha OK. Beta OK. ');
 
-            // Check that 'foreach' knows which set of elements to remove when an item vanishes from the model array,
-            // even though the original 'foreach' output's first node, the memo comment, was removed during unmemoization.
-            items.shift();
-            expect(testNode).toContainText('Beta OK. ');
-        } finally {
-            ko.bindingProvider.instance = originalBindingProvider;
-        }
+        // Check that 'foreach' knows which set of elements to remove when an item vanishes from the model array,
+        // even though the original 'foreach' output's first node, the memo comment, was removed during unmemoization.
+        items.shift();
+        expect(testNode).toContainText('Beta OK. ');
     });
 
     it('Should not throw errors if trying to apply text to a non-rendered node', function() {

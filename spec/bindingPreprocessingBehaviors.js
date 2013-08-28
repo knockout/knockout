@@ -57,7 +57,8 @@ describe('Binding preprocessing', function() {
     });
 
     it('Should be able to get a dynamically created binding handler during preprocessing', function() {
-        var oldGetHandler = ko.getBindingHandler;
+        this.restoreAfter(ko, 'getBindingHandler'); // restore original function when done
+
         ko.getBindingHandler = function(bindingKey) {
             return {
                 preprocess: function(value) {
@@ -66,7 +67,6 @@ describe('Binding preprocessing', function() {
             };
         };
         var rewritten = ko.expressionRewriting.preProcessBindings("a: 1");
-        ko.getBindingHandler = oldGetHandler;   // restore original function
 
         var parsedRewritten = eval("({" + rewritten + "})");
         expect(parsedRewritten.a).toEqual(12);

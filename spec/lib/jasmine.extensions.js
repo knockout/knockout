@@ -1,3 +1,10 @@
+jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
+    var originalValue = object[propertyName];
+    this.after(function() {
+        object[propertyName] = originalValue;
+    });
+};
+
 jasmine.Matchers.prototype.toEqualOneOf = function (expectedPossibilities) {
     for (var i = 0; i < expectedPossibilities.length; i++) {
         if (this.env.equals_(this.actual, expectedPossibilities[i])) {
