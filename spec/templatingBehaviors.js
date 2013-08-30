@@ -93,11 +93,10 @@ describe('Templating', function() {
     });
 
     it('Should not be able to render a template until a template engine is provided', function () {
-        var threw = false;
-        ko.setTemplateEngine(undefined);
-        try { ko.renderTemplate("someTemplate", {}) }
-        catch (ex) { threw = true }
-        expect(threw).toEqual(true);
+        expect(function () {
+            ko.setTemplateEngine(undefined);
+            ko.renderTemplate("someTemplate", {});
+        }).toThrow();
     });
 
     it('Should be able to render a template into a given DOM element', function () {
@@ -870,14 +869,9 @@ describe('Templating', function() {
         }));
         testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\" }'></div>";
 
-        var didThrow = false;
-        try {
+        expect(function () {
             ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
-        } catch(ex) {
-            didThrow = true;
-            expect(ex.message).toEqual("This template engine does not support anonymous templates nested within its templates");
-        }
-        expect(didThrow).toEqual(true);
+        }).toThrowContaining("This template engine does not support anonymous templates nested within its templates");
     });
 
     it('Should not be allowed to rewrite templates that embed control flow bindings', function() {
@@ -886,15 +880,10 @@ describe('Templating', function() {
             ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "<div data-bind='" + bindingName + ": \"SomeValue\"'>Hello</div>" }));
             testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\" }'></div>";
 
-            var didThrow = false;
             ko.utils.domData.clear(testNode);
-            try { ko.applyBindings({ someData: { childProp: 'abc' } }, testNode) }
-            catch (ex) {
-                didThrow = true;
-                expect(ex.message).toMatch("This template engine does not support");
-            }
-            if (!didThrow)
-                throw new Error("Did not prevent use of " + bindingName);
+            expect(function () {
+                ko.applyBindings({ someData: { childProp: 'abc' } }, testNode);
+            }).toThrowContaining("This template engine does not support");
         });
     });
 

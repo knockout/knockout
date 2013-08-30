@@ -1,10 +1,9 @@
 
 describe('Mapping helpers', function() {
     it('ko.toJS should require a parameter', function() {
-        var didThrow = false;
-        try { ko.toJS() }
-        catch(ex) { didThow = true }
-        expect(didThow).toEqual(true);
+        expect(function () {
+            ko.toJS();
+        }).toThrow();
     });
 
     it('ko.toJS should unwrap observable values', function() {

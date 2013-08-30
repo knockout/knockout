@@ -378,14 +378,11 @@ describe('Dependent Observable', function() {
         // Initially the computed value is true (executed sucessfully -> same value as observable)
         expect(computed()).toEqual(true);
 
-        var didThrow = false;
-        try {
+        expect(function () {
             // Update observable to cause computed to throw an exception
             observable(false);
-        } catch(e) {
-            didThrow = true;
-        }
-        expect(didThrow).toEqual(true);
+        }).toThrow();
+
         // The value of the computed is now undefined, although currently it keeps the previous value
         expect(computed()).toEqual(true);
 

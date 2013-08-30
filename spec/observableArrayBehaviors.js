@@ -23,11 +23,8 @@ describe('Observable Array', function() {
 
     it('Should require constructor arg, if given, to be array-like or null or undefined', function() {
         // Try non-array-like args
-        var threw;
-        try { threw = false; new ko.observableArray(1); } catch(ex) { threw = true }
-        expect(threw).toEqual(true);
-        try { threw = false; new ko.observableArray({}); } catch(ex) { threw = true }
-        expect(threw).toEqual(true);
+        expect(function () { ko.observableArray(1); }).toThrow();
+        expect(function () { ko.observableArray({}); }).toThrow();
 
         // Try allowed args
         expect((new ko.observableArray([1,2,3]))().length).toEqual(3);

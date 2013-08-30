@@ -402,10 +402,9 @@ describe('Binding dependencies', function() {
             ko.bindingHandlers.test4.after = [];
             testNode.innerHTML = "<div data-bind='test1, unknownBinding, test2, test4, test3'></div>";
 
-            var didThrow = false;
-            try { ko.applyBindings(null, testNode) }
-            catch(ex) { didThrow = true; expect(ex.message).toContain('Cannot combine the following bindings, because they have a cyclic dependency: test1, test3, test2') }
-            expect(didThrow).toEqual(true);
+            expect(function () {
+                ko.applyBindings(null, testNode);
+            }).toThrow("Cannot combine the following bindings, because they have a cyclic dependency: test1, test3, test2");
         })
     });
 });
