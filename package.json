@@ -1,7 +1,7 @@
 {
   "name": "knockout",
   "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
-  "url": "http://knockoutjs.com/",
+  "homepage": "http://knockoutjs.com/",
   "version": "3.0.0beta",
   "license": "MIT",
   "author": "The Knockout.js team",
