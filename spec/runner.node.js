@@ -36,6 +36,7 @@ require('./expressionRewritingBehaviors');
 require('./extenderBehaviors');
 require('./mappingHelperBehaviors');
 require('./observableArrayBehaviors');
+require('./observableArrayChangeTrackingBehaviors');
 require('./observableBehaviors');
 require('./subscribableBehaviors');
 

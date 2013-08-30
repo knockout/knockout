@@ -12,6 +12,7 @@ knockoutDebugCallback([
     'src/subscribables/dependencyDetection.js',
     'src/subscribables/observable.js',
     'src/subscribables/observableArray.js',
+    'src/subscribables/observableArray.changeTracking.js',
     'src/subscribables/dependentObservable.js',
     'src/subscribables/mappingHelpers.js',
     'src/binding/selectExtensions.js',

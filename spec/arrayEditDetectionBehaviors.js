@@ -43,7 +43,7 @@ describe('Compare Arrays', function() {
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
         expect(compareResult).toEqual([
             { status: "added", value: 123, index: 0 },
-             { status: "retained", value: "A" },
+            { status: "retained", value: "A" },
             { status: "deleted", value: "B", index: 1 },
             { status: "added", value: "E", index: 2, moved: 4 },
             { status: "retained", value: "C" },
@@ -56,20 +56,36 @@ describe('Compare Arrays', function() {
         var oldArray = ["A", "B", "C", "D", "E"];
         var newArray = ["F", "G", "H", "I", "J"];
         var compareResult = ko.utils.compareArrays(oldArray, newArray);
-        // The order of added and deleted doesn't really matter. We sort by a property that
-        // contains unique values to ensure the results are in a known order for verification.
-        compareResult.sort(function(a, b) { return a.value.localeCompare(b.value) });
+        // The ordering of added/deleted items for replaced entries isn't defined, so
+        // we'll sort the results first to ensure the results are in a known order for verification.
+        compareResult.sort(function(a, b) { return (a.index - b.index) || a.status.localeCompare(b.status); });
         expect(compareResult).toEqual([
-            { status: "deleted", value: "A", index: 0},
-            { status: "deleted", value: "B", index: 1},
-            { status: "deleted", value: "C", index: 2},
-            { status: "deleted", value: "D", index: 3},
-            { status: "deleted", value: "E", index: 4},
-            { status: "added", value: "F", index: 0},
-            { status: "added", value: "G", index: 1},
-            { status: "added", value: "H", index: 2},
-            { status: "added", value: "I", index: 3},
-            { status: "added", value: "J", index: 4}
+            { status : 'added', value : 'F', index : 0 },
+            { status : 'deleted', value : 'A', index : 0 },
+            { status : 'added', value : 'G', index : 1 },
+            { status : 'deleted', value : 'B', index : 1 },
+            { status : 'added', value : 'H', index : 2 },
+            { status : 'deleted', value : 'C', index : 2 },
+            { status : 'added', value : 'I', index : 3 },
+            { status : 'deleted', value : 'D', index : 3 },
+            { status : 'added', value : 'J', index : 4 },
+            { status : 'deleted', value : 'E', index : 4 }
+        ]);
+    });
+
+    it('Should support sparse diffs', function() {
+        // A sparse diff is exactly like a regular diff, except it doesn't contain any
+        // 'retained' items. This still preserves enough information for most things
+        // you'd want to do with the changeset.
+
+        var oldArray = ["A", "B", "C", "D", "E"];
+        var newArray = [123, "A", "E", "C", "D"];
+        var compareResult = ko.utils.compareArrays(oldArray, newArray, { sparse: true });
+        expect(compareResult).toEqual([
+            { status: "added", value: 123, index: 0 },
+            { status: "deleted", value: "B", index: 1 },
+            { status: "added", value: "E", index: 2, moved: 4 },
+            { status: "deleted", value: "E", index: 4, moved: 2 }
         ]);
     });
 });
