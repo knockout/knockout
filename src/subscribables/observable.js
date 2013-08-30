@@ -1,5 +1,3 @@
-var primitiveTypes = { 'undefined':true, 'boolean':true, 'number':true, 'string':true };
-
 ko.observable = function (initialValue) {
     var _latestValue = initialValue;
 
@@ -8,7 +6,7 @@ ko.observable = function (initialValue) {
             // Write
 
             // Ignore writes if the value hasn't changed
-            if ((!observable['equalityComparer']) || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if (!observable['equalityComparer'] || !observable['equalityComparer'](_latestValue, arguments[0])) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
@@ -37,10 +35,7 @@ ko.observable = function (initialValue) {
 }
 
 ko.observable['fn'] = {
-    "equalityComparer": function valuesArePrimitiveAndEqual(a, b) {
-        var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
-        return oldValueIsPrimitive ? (a === b) : false;
-    }
+    "equalityComparer": valuesArePrimitiveAndEqual
 };
 
 var protoProperty = ko.observable.protoProperty = "__ko_proto__";
