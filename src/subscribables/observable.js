@@ -12,7 +12,6 @@ ko.observable = function (initialValue) {
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }
-            observable["notifySubscribers"](_latestValue, "updated");
             return this; // Permits chained assignments
         }
         else {

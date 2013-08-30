@@ -245,12 +245,10 @@ describe('Observable', function() {
         };
         instance(456);
 
-        expect(interceptedNotifications.length).toEqual(3);
+        expect(interceptedNotifications.length).toEqual(2);
         expect(interceptedNotifications[0].eventName).toEqual("beforeChange");
         expect(interceptedNotifications[1].eventName).toEqual("None");
-        expect(interceptedNotifications[2].eventName).toEqual("updated");
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
-        expect(interceptedNotifications[2].value).toEqual(456);
     });
 });
