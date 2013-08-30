@@ -9,7 +9,7 @@
         'nodeHasBindings': function(node) {
             switch (node.nodeType) {
                 case 1: return node.getAttribute(defaultBindingAttributeName) != null;   // Element
-                case 8: return ko.virtualElements.virtualNodeBindingValue(node) != null; // Comment node
+                case 8: return ko.virtualElements.hasBindingValue(node); // Comment node
                 default: return false;
             }
         },
