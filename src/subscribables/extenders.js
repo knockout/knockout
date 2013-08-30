@@ -24,7 +24,6 @@ ko.extenders = {
         target["equalityComparer"] = notifyWhen == "always"
             ? function() { return false } // Treat all values as not equal
             : ko.observable["fn"]["equalityComparer"];
-        return target;
     }
 };
 
@@ -34,7 +33,7 @@ function applyExtenders(requestedExtenders) {
         ko.utils.objectForEach(requestedExtenders, function(key, value) {
             var extenderHandler = ko.extenders[key];
             if (typeof extenderHandler == 'function') {
-                target = extenderHandler(target, value);
+                target = extenderHandler(target, value) || target;
             }
         });
     }
