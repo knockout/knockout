@@ -390,4 +390,22 @@ describe('Dependent Observable', function() {
         observable(1);
         expect(computed()).toEqual(1);
     });
+
+    // Borrowed from haberman/knockout (see knockout/knockout#359)
+    it('Should allow long chains without overflowing the stack', function() {
+        // maximum with previous code (when running this test only): Chrome 28: 1310, IE 10: 2200; FF 23: 103
+        // maximum with changed code: Chrome 28: 2620, +100%, IE 10: 4900, +122%; FF 23: 267, +160%
+        var depth = 200;
+        var first = ko.observable(0);
+        var last = first;
+        for (var i = 0; i < depth; i++) {
+            (function() {
+                var l = last;
+                last = ko.computed(function() { return l() + 1; });
+            })();
+        }
+        var all = ko.computed(function() { return last() + first(); });
+        first(1);
+        expect(all()).toEqual(depth+2);
+    });
 })
