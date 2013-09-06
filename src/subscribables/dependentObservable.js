@@ -77,12 +77,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             }
             _hasBeenEvaluated = true;
 
-            dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+            if (!dependentObservable['equalityComparer'] || !dependentObservable['equalityComparer'](_latestValue, newValue)) {
+                dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
 
-            _latestValue = newValue;
-            if (DEBUG) dependentObservable._latestValue = _latestValue;
-            dependentObservable["notifySubscribers"](_latestValue);
-
+                _latestValue = newValue;
+                if (DEBUG) dependentObservable._latestValue = _latestValue;
+                dependentObservable["notifySubscribers"](_latestValue);
+            }
         } finally {
             ko.dependencyDetection.end();
             _isBeingEvaluated = false;
@@ -175,7 +176,9 @@ ko.isComputed = function(instance) {
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.dependentObservable[protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {};
+ko.dependentObservable['fn'] = {
+    "equalityComparer": valuesArePrimitiveAndEqual
+};
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);

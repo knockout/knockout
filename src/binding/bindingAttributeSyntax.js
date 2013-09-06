@@ -80,6 +80,9 @@
         if (subscribable.isActive()) {
             self['$dataFn'] = self._subscribable = subscribable;
 
+            // Always notify because even if the model ($data) hasn't changed, other context properties might have changed
+            subscribable['equalityComparer'] = null;
+
             // We need to be able to dispose of this computed observable when it's no longer needed. This would be
             // easy if we had a single node to watch, but binding contexts can be used by many different nodes, and
             // we cannot assume that those nodes have any relation to each other. So instead we track any node that
