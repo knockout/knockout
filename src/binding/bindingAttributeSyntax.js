@@ -230,7 +230,8 @@
         }
     }
 
-    var boundElementDomDataKey = '__ko_boundElement';
+    var boundElementDomDataKey = ko.utils.domData.nextKey();
+
 
     function topologicalSortBindings(bindings) {
         // Depth-first sort
@@ -384,7 +385,7 @@
         };
     };
 
-    var storedBindingContextDomDataKey = "__ko_bindingContext__";
+    var storedBindingContextDomDataKey = ko.utils.domData.nextKey();
     ko.storedBindingContextForNode = function (node, bindingContext) {
         if (arguments.length == 2) {
             ko.utils.domData.set(node, storedBindingContextDomDataKey, bindingContext);
