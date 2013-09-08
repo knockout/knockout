@@ -68,7 +68,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                     addSubscriptionToDependency(subscribable); // Brand new subscription - add it
             });
 
-            var newValue = readFunction.call(evaluatorFunctionTarget);
+            var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
 
             // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
             for (var i = disposalCandidates.length - 1; i >= 0; i--) {
