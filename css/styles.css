@@ -109,19 +109,21 @@ body { font-family: arial; font-size: 14px; }
 
 /* Homepage */
 #slogan { 
-	float:right; width: 17em;
+	float:right; width: 23.5em;
 	padding-left: 1.4em;
 	background: url(../img/vertical-bar.png) no-repeat;
 	font-size: 20px;
 	margin-bottom: 0.6em;
 }
 
+#slogan .download-button { margin-top: 0.6em; }
+
 .download-button {
-	background: url(../img/download-button-bg.png);
-	width: 173px; height: 51px;
-	display: block;
-	margin-top: 0.6em;
+	background: url(../img/download-button-bg-wide.png);
+	width: 220px; height: 51px;
+	display: inline-block;
 	text-decoration: none !important;
+	text-align: left;
 }
 .download-button p {
 	color: #005500;
@@ -136,8 +138,8 @@ body { font-family: arial; font-size: 14px; }
 .download-button:hover p { text-decoration: underline; }
 
 /* Downloads */
-.download-panel { background-color: #EBB60F; padding: 8px; border-radius: 8px; margin-top: -20px; }
-.download-panel .download-button { padding-top: 3px; background-repeat: no-repeat; margin: auto; }
+.download-panel { background-color: #EBB60F; padding: 8px; border-radius: 8px; margin-top: -20px; text-align: center; }
+.download-panel .download-button { padding-top: 3px; background-repeat: no-repeat; }
 .download-panel .download-button p { padding-top: 3px; }
 .download-debug-panel { font-size: 0.85em; margin: 1em; line-height: 1.3em; color: gray; }
 
