@@ -279,7 +279,7 @@ ko.utils = (function () {
         },
 
         domNodeIsAttachedToDocument: function (node) {
-            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument.body);
+            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument.documentElement);
         },
 
         anyDomNodeIsAttachedToDocument: function(nodes) {
