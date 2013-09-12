@@ -12,11 +12,12 @@ ko.observableArray = function (initialValues) {
 ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
         var underlyingArray = this.peek();
+        var underlyingArrayCopy = underlyingArray.concat();
         var removedValues = [];
         var predicate = typeof valueOrPredicate == "function" ? valueOrPredicate : function (value) { return value === valueOrPredicate; };
-        for (var i = 0; i < underlyingArray.length; i++) {
+        for (var i = 0, j = 0; j < underlyingArrayCopy.length; i++, j++) {
             var value = underlyingArray[i];
-            if (predicate(value)) {
+            if (predicate(value, j, underlyingArray)) {
                 if (removedValues.length === 0) {
                     this.valueWillMutate();
                 }
