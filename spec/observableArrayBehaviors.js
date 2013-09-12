@@ -257,4 +257,60 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
+
+    it('Should expose a filter method for extracting a subset of data', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var filtered = testObservableArray.filter(function (item) {
+            return item[0] === "A";
+        });
+
+        expect(filtered[0]).toEqual("Alpha");
+    });
+
+    it('Should expose a map method for extracting a transformed result', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var filtered = testObservableArray.map(function (item) {
+            return {
+                name: item
+            };
+        });
+
+        expect(filtered[0].name).toEqual("Alpha");
+    });
+
+    it('Should expose a reduce method for collapsing the array', function () {
+        testObservableArray([1, 2, 3]);
+        var result = testObservableArray.reduce(function (prev, curr) {
+            return prev + curr;
+        });
+
+        expect(result).toEqual(6);
+    });
+
+    it('Should expose a reduceRight method for collapsing the array', function () {
+        testObservableArray([[0, 1], [2, 3], [4, 5]]);
+        var result = testObservableArray.reduceRight(function (a, b) {
+            return a.concat(b);
+        });
+
+        expect(result[0]).toEqual(4);
+    });
+
+    it('Should expose an every method for matching all items', function () {
+        testObservableArray([12, 24, 42, 130, 44]);
+        var result = testObservableArray.every(function (element, index, array) {
+            return (element >= 10);
+        });
+
+        expect(result).toEqual(true);
+    });
+
+    it('Should expose a some method for matching some items', function () {
+        testObservableArray([12, 5, 8, 1, 4]);
+        var result = testObservableArray.some(function (element, index, array) {
+            return (element >= 10);
+        });
+
+        expect(result).toEqual(true);
+    });
 })
