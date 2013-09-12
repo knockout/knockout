@@ -52,6 +52,7 @@
                 // See https://github.com/SteveSanderson/knockout/issues/490
                 self['ko'] = ko;
             }
+            self['$rawData'] = dataItemOrAccessor;
             self['$data'] = dataItem;
             if (dataItemAlias)
                 self[dataItemAlias] = dataItem;
@@ -123,7 +124,7 @@
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties) {
-        return new ko.bindingContext(this['$dataFn'], this, null, function(self) {
+        return new ko.bindingContext(this['$rawData'], this, null, function(self) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
         });
     };

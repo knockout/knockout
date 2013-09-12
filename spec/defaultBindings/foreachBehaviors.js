@@ -560,8 +560,8 @@ describe('Binding: Foreach', function() {
         expect(testNode).toContainHtml('xxx<!-- ko foreach:someitems --><div><section data-bind="text: $data">alpha</section></div><div><section data-bind="text: $data">beta</section></div><!-- /ko -->');
     });
 
-    it('Should provide access to observable array items through $item', function() {
-        testNode.innerHTML = "<div data-bind='foreach: someItems'><input data-bind='value: $item'/></div>";
+    it('Should provide access to observable array items through $rawData', function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><input data-bind='value: $rawData'/></div>";
         var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
         ko.applyBindings({ someItems: someItems }, testNode);
         expect(testNode.childNodes[0]).toHaveValues(['first', 'second']);
