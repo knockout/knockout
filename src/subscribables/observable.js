@@ -4,11 +4,13 @@ ko.observable = function (initialValue) {
     function observable() {
         if (arguments.length > 0) {
             // Write
+            var newValue = arguments[0];
 
             // Ignore writes if the value hasn't changed
-            if (!observable['equalityComparer'] || !observable['equalityComparer'](_latestValue, arguments[0])) {
+            if (!observable['equalityComparer'] || !observable['equalityComparer'](_latestValue, newValue)) {
                 observable.valueWillMutate();
-                _latestValue = arguments[0];
+                // Filter/validate incoming value if function is set
+                _latestValue = observable['validateInput'] ? observable['validateInput'](newValue, _latestValue) : newValue;
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }

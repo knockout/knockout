@@ -142,12 +142,12 @@ describe('Observable', function() {
         expect(notifiedValues).toEqual([]);
     });
 
-    it('Should ignore writes when both the old and new values are strictly undefined', function() {
+    it('Should notify subscribers of a change when both the old and new values are strictly undefined', function() {
         var instance = new ko.observable(undefined);
         var notifiedValues = [];
         instance.subscribe(notifiedValues.push, notifiedValues);
         instance(undefined);
-        expect(notifiedValues).toEqual([]);
+        expect(notifiedValues).toEqual([undefined]);
     });
 
     it('Should notify subscribers of a change when an object value is written, even if it is identical to the old value', function() {
@@ -250,5 +250,30 @@ describe('Observable', function() {
         expect(interceptedNotifications[1].eventName).toEqual("None");
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
+    });
+
+    it('Should write values returned by "validateInput" filter function', function() {
+        var observable = ko.observable();
+        observable.validateInput = function(newValue, oldValue) {
+            return isNaN(newValue) ? 0 : parseFloat(+newValue);
+        };
+        var notifiedValues = [];
+        observable.subscribe(notifiedValues.push, notifiedValues);
+
+        // undefined becomes 0 (even though observable was initially undefined [being unset])
+        observable(undefined);
+        expect(notifiedValues).toEqual([0]);
+
+        // Numeric 1 is unchanged
+        observable(1);
+        expect(notifiedValues).toEqual([0,1]);
+
+        // String "1" is converted to numeric 1 and notifies of change (even though observable value hasn't changed)
+        observable("1");
+        expect(notifiedValues).toEqual([0,1,1]);
+
+        // String "xyz" becomes zero
+        observable("xyz");
+        expect(notifiedValues).toEqual([0,1,1,0]);
     });
 });
