@@ -41,7 +41,7 @@
                 // Because the above copy overwrites our own properties, we need to reset them.
                 // During the first execution, "subscribable" isn't set, so don't bother doing the update then.
                 if (subscribable) {
-                    self['$dataFn'] = self._subscribable = subscribable;
+                    self._subscribable = subscribable;
                 }
             } else {
                 self['$parents'] = [];
@@ -79,7 +79,7 @@
         // computed will be inactive, and we can safely throw it away. If it's active, the computed is stored in
         // the context object.
         if (subscribable.isActive()) {
-            self['$dataFn'] = self._subscribable = subscribable;
+            self._subscribable = subscribable;
 
             // We need to be able to dispose of this computed observable when it's no longer needed. This would be
             // easy if we had a single node to watch, but binding contexts can be used by many different nodes, and
@@ -98,8 +98,6 @@
                     }
                 });
             };
-        } else {
-            self['$dataFn'] = function() { return self['$data']; }
         }
     }
 
