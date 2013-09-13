@@ -203,9 +203,12 @@
         'init': function(element, valueAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            if ((typeof bindingValue != "string") && (!bindingValue['name']) && (element.nodeType == 1 || element.nodeType == 8)) {
+            if (typeof bindingValue == "string" || bindingValue['name']) {
+                // It's a named template - clear the element
+                ko.virtualElements.emptyNode(element);
+            } else {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateNodes = element.nodeType == 1 ? element.childNodes : ko.virtualElements.childNodes(element),
+                var templateNodes = ko.virtualElements.childNodes(element),
                     container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             }
