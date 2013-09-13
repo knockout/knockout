@@ -74,7 +74,7 @@ ko.bindingHandlers['options'] = {
             }
             var option = document.createElement("option");
             if (arrayEntry === captionPlaceholder) {
-                ko.utils.setHtml(option, allBindings.get('optionsCaption'));
+                ko.utils.setTextContent(option, allBindings.get('optionsCaption'));
                 ko.selectExtensions.writeValue(option, undefined);
             } else {
                 // Apply a value to the option element
