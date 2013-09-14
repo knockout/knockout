@@ -124,24 +124,18 @@ body { font-family: arial; font-size: 14px; }
 	display: inline-block;
 	text-decoration: none !important;
 	text-align: left;
-	padding-left: 9px;
-	box-sizing: border-box;
 }
-.download-button p, .download-button a {
-	color: #005500 !important; /* TODO: Remove the !important when v3 is released */
+.download-button p {
+	color: #005500;
 	font-size: 17px;
-	padding: 10px 0 0 0;
+	padding: 10px 0 0 9px;
 	margin: 0px;
-	text-decoration: none !important;
 }
-.download-button p.smallprint, .download-button p.smallprint a {
+.download-button p.smallprint {
 	font-size: 12px;
-	padding: 0.1em 0 0 0;
+	padding: 0.1em 0 0 11px;
 }
-
-/* TODO: Remove this temporary hackery when v3 is released */
-.download-button a.download-button-childlink { color: #24a !important;}
-.download-button a.download-button-childlink:hover { text-decoration: underline !important; }
+.download-button:hover p { text-decoration: underline; }
 
 /* Downloads */
 .download-panel { background-color: #EBB60F; padding: 8px; border-radius: 8px; margin-top: -20px; text-align: center; }
