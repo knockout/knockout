@@ -195,6 +195,13 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("template output");
     });
 
+    it('Should remove existing content when rendering a template using data-bind syntax', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "template output" }));
+        testNode.innerHTML = "<div data-bind='template:\"someTemplate\"'><span>existing content</span></div>";
+        ko.applyBindings(null, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("template output");
+    });
+
     it('Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
@@ -438,6 +445,14 @@ describe('Templating', function() {
     });
 
     describe('Data binding \'foreach\' option', function() {
+        it('Should remove existing content', function () {
+            ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<span>template content</span>" }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'><span>existing content</span></div>";
+
+            ko.applyBindings({ myCollection: [ {} ] }, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("<span>template content</span>");
+        });
+
         it('Should render for each item in an array but doesn\'t rerender everything if you push or splice', function () {
             var myArray = new ko.observableArray([{ personName: "Bob" }, { personName: "Frank"}]);
             ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>The item is [js: personName]</div>" }));
