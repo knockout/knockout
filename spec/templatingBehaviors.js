@@ -195,6 +195,13 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("template output");
     });
 
+    it('Should remove existing content when rendering a template using data-bind syntax', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "template output" }));
+        testNode.innerHTML = "<div data-bind='template:\"someTemplate\"'><span>existing content</span></div>";
+        ko.applyBindings(null, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("template output");
+    });
+
     it('Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
