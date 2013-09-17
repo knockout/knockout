@@ -11,7 +11,7 @@ If a plugin provides its own standard view model class (e.g., `ko.simpleGrid.vie
 
 Take a look at the HTML source code - it's pretty easy to use and interact with this simple grid.
 
-<script src="resources/knockout.simpleGrid.1.3.js" type="text/javascript"> </script>
+<script src="resources/knockout.simpleGrid.3.0.js" type="text/javascript"> </script>
 <style type="text/css">
     .ko-grid { margin-bottom: 1em; width: 25em; border: 1px solid silver; background-color:White; }
     .ko-grid th { text-align:left; background-color: Black; color:White; }

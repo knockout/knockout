@@ -12,11 +12,11 @@ For example, you can create interactive components like grids, tabsets, and so o
 To register a binding, add it as a subproperty of `ko.bindingHandlers`:
 
     ko.bindingHandlers.yourBindingName = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // This will be called when the binding is first applied to an element
             // Set up any initial state, event handlers, etc. here
         },
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // This will be called once when the binding is first applied to an element,
             // and again whenever the associated observable changes value.
             // Update the DOM element based on the supplied values here.
@@ -35,22 +35,22 @@ Whenever the associated observable changes, KO will call your `update` callback,
 
  * `element` --- The DOM element involved in this binding
  * `valueAccessor` --- A JavaScript function that you can call to get the current model property that is involved in this binding. Call this without passing any parameters (i.e., call `valueAccessor()`) to get the current model property value. To easily accept both observable and plain values, call `ko.unwrap` on the returned value.
- * `allBindingsAccessor` --- A JavaScript function that you can call to get *all* the model properties bound to this DOM element. Like `valueAccessor`, call it without any parameters to get the current bound model properties.
+ * `allBindings` --- A JavaScript object that you can use to access all the model values bound to this DOM element. Call `allBindings.get('name')` to retrieve the value of the `name` binding (returns `undefined` if the binding doesn't exist); or `allBindings.has('name')` to determine if the `name` binding is present for the current element.
  * `viewModel` --- The view model object that was passed to `ko.applyBindings`. Inside a nested binding context, this parameter will be set to the current data item (e.g., inside a `with: person` binding, `viewModel` will be set to `person`).
  * `bindingContext` --- An object that holds the [binding context](http://knockoutjs.com/documentation/binding-context.html) available to this element's bindings. This object includes special properties including `$parent`, `$parents`, and `$root` that can be used to access data that is bound against ancestors of this context.
 
 For example, you might have been controlling an element's visibility using the `visible` binding, but now you want to go a step further and animate the transition. You want elements to slide into and out of existence according to the value of an observable. You can do this by writing a custom binding that calls jQuery's `slideUp`/`slideDown` functions:
 
     ko.bindingHandlers.slideVisible = {
-        update: function(element, valueAccessor, allBindingsAccessor) {
+        update: function(element, valueAccessor, allBindings) {
             // First get the latest data that we're bound to
-            var value = valueAccessor(), allBindings = allBindingsAccessor();
+            var value = valueAccessor();
 
             // Next, whether or not the supplied model property is observable, get its current value
             var valueUnwrapped = ko.unwrap(value);
 
             // Grab some more data from another binding property
-            var duration = allBindings.slideDuration || 400; // 400ms is default duration unless otherwise specified
+            var duration = allBindings.get('slideDuration') || 400; // 400ms is default duration unless otherwise specified
 
             // Now manipulate the DOM element
             if (valueUnwrapped == true)
@@ -90,7 +90,7 @@ Continuing the previous example, you might want `slideVisible` to set the elemen
             var value = ko.unwrap(valueAccessor()); // Get the current value of the current property we're bound to
             $(element).toggle(value); // jQuery will hide/show the element depending on whether "value" or true or false
         },
-        update: function(element, valueAccessor, allBindingsAccessor) {
+        update: function(element, valueAccessor, allBindings) {
             // Leave as before
         }
     };

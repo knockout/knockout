@@ -38,7 +38,7 @@ To see this take effect, here's a sample usage:
 Normally, bindings that use `controlsDescendantBindings` will also call `ko.applyBindingsToDescendants(someBindingContext, element)` to apply the descendant bindings against some modified [binding context](binding-context.html). For example, you could have a binding called `withProperties` that attaches some extra properties to the binding context that will then be available to all descendant bindings:
 
     ko.bindingHandlers.withProperties = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var newProperties = valueAccessor(),
                 innerBindingContext = bindingContext.extend(newProperties);
@@ -67,7 +67,7 @@ Bindings such as [`with`](with-binding.html) and [`foreach`](foreach-binding.htm
 If you want to do this in custom bindings, then instead of using `bindingContext.extend()`, use `bindingContext.createChildContext(someData)`. This returns a new binding context whose viewmodel is `someData` and whose `$parentContext` is `bindingContext`. If you want, you can then extend the child context with extra properties using `ko.utils.extend`. For example,
 
     ko.bindingHandlers.withProperties = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var newProperties = valueAccessor(),
                 childBindingContext = bindingContext.createChildContext(viewModel);
