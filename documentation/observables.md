@@ -113,6 +113,6 @@ If you want to be notified of the previous value of an observable when it is cha
 
 ## Forcing observables to always notify subscribers
 
-When writing to an observable that contains a primitive value, the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that an observable's subscribers are always notified on a write, even if the value is the same. You would apply this extender to an observable like:
+When writing to an observable that contains a primitive value (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that an observable's subscribers are always notified on a write, even if the value is the same. You would apply the extender to an observable like this:
 
     myViewModel.personName.extend({ notify: 'always' });

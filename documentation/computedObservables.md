@@ -61,6 +61,14 @@ Of course, you can create whole chains of computed observables if you wish. For 
 
 Then, changes to `items` or `selectedIndexes` will ripple through the chain of computed observables, which in turn updates any UI bound to them. Very tidy and elegant.
 
+### Forcing computed observables to always notify subscribers
+
+When a computed observable returns a primitive value (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that a computed observable's subscribers are always notified on an update, even if the value is the same. You would apply the extender like this:
+
+    myViewModel.fullName = ko.computed(function() {
+        return myViewModel.firstName() + " " + myViewModel.lastName();
+    }).extend({ notify: 'always' });
+
 # Writeable computed observables
 
 *Beginners may wish to skip this section - writeable computed observables are fairly advanced and are not necessary in most situations*
@@ -245,7 +253,3 @@ A computed observable provides the following functions:
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
 * `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly_subscribing_to_observables) to be notified of changes to the computed observable.
-
-# What happened to dependent observables?
-
-Prior to Knockout 2.0, computed observables were known as *dependent observables*. With version 2.0, we decided to rename `ko.dependentObservable` to `ko.computed` because it is easier to explain, say, and type. But don't worry: this won't break any existing code. At runtime, `ko.dependentObservable` refers to the same function instance as `ko.computed` --- the two are equivalent.
