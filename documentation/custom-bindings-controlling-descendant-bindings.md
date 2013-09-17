@@ -70,7 +70,7 @@ If you want to do this in custom bindings, then instead of using `bindingContext
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var newProperties = valueAccessor(),
-                childBindingContext = bindingContext.createChildContext(viewModel);
+                childBindingContext = bindingContext.createChildContext(bindingContext.$data);
             ko.utils.extend(childBindingContext, newProperties);
             ko.applyBindingsToDescendants(childBindingContext, element);
 

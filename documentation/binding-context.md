@@ -33,12 +33,12 @@ Bindings contexts offer the following special properties that you can reference 
 
 * `$root`
 
-    This is the main view model object in the root context, i.e., the topmost parent context. It is equivalent to `$parents[$parents.length - 1]`.
+    This is the main view model object in the root context, i.e., the topmost parent context. It's usually the object that was passed to `ko.applyBindings`. It is equivalent to `$parents[$parents.length - 1]`. 
 
 * `$data`
 
-    This is the view model object in the current context. In the root context, `$data` and `$root` are equivalent. `$data` is useful  when you don't want to reference a property on the viewmodel, but instead want to reference the viewmodel itself. Example:
-
+    This is the view model object in the current context. In the root context, `$data` and `$root` are equivalent. Inside a nested binding context, this parameter will be set to the current data item (e.g., inside a `with: person` binding, `$data` will be set to `person`). `$data` is useful when you want to reference the viewmodel itself, rather than a property on the viewmodel. Example:
+    
         <ul data-bind="foreach: ['cats', 'dogs', 'fish']">
             <li>The value is <span data-bind="text: $data"></span></li>
         </ul>
