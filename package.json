@@ -17,7 +17,7 @@
   "bugs": "https://github.com/SteveSanderson/knockout/issues",
   "testling": {
     "preprocess": "build/build.sh",
-    "html": "spec/runner.html?src=build/output/knockout-latest.js",
+    "html": "spec/runner.html?src=build/output/knockout-latest.js&testling=true",
     "browsers": [
       "ie/6..latest",
       "chrome/20..latest",

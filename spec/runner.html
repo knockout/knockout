@@ -89,7 +89,9 @@
             jasmineEnv.addReporter(htmlReporter);
             jasmineEnv.specFilter = htmlReporter.specFilter;
 
-            jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
+            var testlingParam = /[?&]testling=true/.test(location.href);
+            if (testlingParam)
+                jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
             jasmineEnv.execute();
           })();
         </script>

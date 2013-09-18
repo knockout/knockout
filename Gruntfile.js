@@ -10,6 +10,17 @@ module.exports = function(grunt) {
         banner: '// Knockout JavaScript library v<%= pkg.version %>\n' +
                 '// (c) Steven Sanderson - <%= pkg.url %>\n' +
                 '// License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)\n\n',
+
+        checktrailingspaces: {
+            main: {
+                src: [
+                    "**/*.{js,html,css,bat,ps1,sh}",
+                    "!build/output/**",
+                    "!node_modules/**"
+                ],
+                filter: 'isFile'
+            }
+        },
         build: {
             debug: './build/output/knockout-latest.debug.js',
             min: './build/output/knockout-latest.js'
@@ -31,6 +42,24 @@ module.exports = function(grunt) {
         return !this.errorCount;
     });
 
+    var trailingSpaceRegex = /[ ]$/;
+    grunt.registerMultiTask('checktrailingspaces', 'checktrailingspaces', function() {
+        var matches = [];
+        this.files[0].src.forEach(function(filepath) {
+            var content = grunt.file.read(filepath),
+                lines = content.split(/\r*\n/);
+            lines.forEach(function(line, index) {
+                if (trailingSpaceRegex.test(line)) {
+                    matches.push([filepath, (index+1), line].join(':'));
+                }
+            });
+        });
+        if (matches.length) {
+            grunt.log.error("The following files have trailing spaces that need to be cleaned up:");
+            grunt.log.writeln(matches.join('\n'));
+            return false;
+        }
+    });
 
     var combinedSources;
     function combineSources() {
@@ -115,5 +144,5 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', ['clean', 'build', 'test']);
+    grunt.registerTask('default', ['clean', 'checktrailingspaces', 'build', 'test']);
 };
