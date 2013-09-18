@@ -343,6 +343,8 @@
 
             // Go through the sorted bindings, calling init and update for each
             ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
+                // Note that topologicalSortBindings has already filtered out any nonexistent binding handlers,
+                // so bindingKeyAndHandler.handler will always be nonnull.
                 var handlerInitFn = bindingKeyAndHandler.handler["init"],
                     handlerUpdateFn = bindingKeyAndHandler.handler["update"],
                     bindingKey = bindingKeyAndHandler.key;
@@ -371,7 +373,6 @@
                         ko.dependentObservable(
                             function() {
                                 handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
-
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
