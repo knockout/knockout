@@ -16,7 +16,7 @@ For a very simple example, here's a custom binding called `allowBindings` that a
     ko.bindingHandlers.allowBindings = {
         init: function(elem, valueAccessor) {
             // Let bindings proceed as normal *only if* my value is false
-            var shouldAllowBindings = ko.utils.unwrapObservable(valueAccessor());
+            var shouldAllowBindings = ko.unwrap(valueAccessor());
             return { controlsDescendantBindings: !shouldAllowBindings };
         }
     };

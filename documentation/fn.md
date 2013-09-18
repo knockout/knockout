@@ -29,7 +29,7 @@ Here's a way to define a `filterByProperty` function that will become available 
             var allItems = this(), matchingItems = [];
             for (var i = 0; i < allItems.length; i++) {
                 var current = allItems[i];
-                if (ko.utils.unwrapObservable(current[propName]) === matchValue)
+                if (ko.unwrap(current[propName]) === matchValue)
                     matchingItems.push(current);
             }
             return matchingItems;
@@ -47,7 +47,7 @@ The following live example shows how you could use this:
             var allItems = this(), matchingItems = [];
             for (var i = 0; i < allItems.length; i++) {
                 var current = allItems[i];
-                if (ko.utils.unwrapObservable(current[propName]) === matchValue)
+                if (ko.unwrap(current[propName]) === matchValue)
                     matchingItems.push(current);
             }
             return matchingItems;

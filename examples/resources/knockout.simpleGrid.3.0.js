@@ -19,7 +19,7 @@
             this.pageSize = configuration.pageSize || 5;
 
             // If you don't specify columns configuration, we'll use scaffolding
-            this.columns = configuration.columns || getColumnsForScaffolding(ko.utils.unwrapObservable(this.data));
+            this.columns = configuration.columns || getColumnsForScaffolding(ko.unwrap(this.data));
 
             this.itemsOnCurrentPage = ko.computed(function () {
                 var startIndex = this.pageSize * this.currentPageIndex();
@@ -27,7 +27,7 @@
             }, this);
 
             this.maxPageIndex = ko.computed(function () {
-                return Math.ceil(ko.utils.unwrapObservable(this.data).length / this.pageSize) - 1;
+                return Math.ceil(ko.unwrap(this.data).length / this.pageSize) - 1;
             }, this);
         }
     };
