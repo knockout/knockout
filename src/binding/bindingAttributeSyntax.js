@@ -290,22 +290,26 @@
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
-            // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
-            // Get the binding from the provider within a computed observable so that we can update the bindings whenever
-            // the binding context is updated.
-            var bindingsUpdater = ko.dependentObservable(
-                function() {
-                    bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
-                    // Register a dependency on the binding context
-                    if (bindings && bindingContext._subscribable)
-                        bindingContext._subscribable();
-                    return bindings;
-                },
-                null, { disposeWhenNodeIsRemoved: node }
-            );
+            if (sourceBindings || bindingContext._subscribable) {
+                // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
+                // Get the binding from the provider within a computed observable so that we can update the bindings whenever
+                // the binding context is updated.
+                var bindingsUpdater = ko.dependentObservable(
+                    function() {
+                        bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
+                        // Register a dependency on the binding context
+                        if (bindings && bindingContext._subscribable)
+                            bindingContext._subscribable();
+                        return bindings;
+                    },
+                    null, { disposeWhenNodeIsRemoved: node }
+                );
 
-            if (!bindings || !bindingsUpdater.isActive())
-                bindingsUpdater = null;
+                if (!bindings || !bindingsUpdater.isActive())
+                    bindingsUpdater = null;
+            } else {
+                bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
+            }
         }
 
         var bindingHandlerThatControlsDescendantBindings;
@@ -339,8 +343,11 @@
 
             // Go through the sorted bindings, calling init and update for each
             ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
-                var bindingKey = bindingKeyAndHandler.key,
-                    bindingHandler = bindingKeyAndHandler.handler;
+                // Note that topologicalSortBindings has already filtered out any nonexistent binding handlers,
+                // so bindingKeyAndHandler.handler will always be nonnull.
+                var handlerInitFn = bindingKeyAndHandler.handler["init"],
+                    handlerUpdateFn = bindingKeyAndHandler.handler["update"],
+                    bindingKey = bindingKeyAndHandler.key;
 
                 if (node.nodeType === 8) {
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
@@ -348,9 +355,8 @@
 
                 try {
                     // Run init, ignoring any dependencies
-                    ko.dependencyDetection.ignore(function() {
-                        var handlerInitFn = bindingHandler["init"];
-                        if (typeof handlerInitFn == "function") {
+                    if (typeof handlerInitFn == "function") {
+                        ko.dependencyDetection.ignore(function() {
                             var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
@@ -359,20 +365,19 @@
                                     throw new Error("Multiple bindings (" + bindingHandlerThatControlsDescendantBindings + " and " + bindingKey + ") are trying to control descendant bindings of the same element. You cannot use these bindings together on the same element.");
                                 bindingHandlerThatControlsDescendantBindings = bindingKey;
                             }
-                        }
-                    });
+                        });
+                    }
 
                     // Run update in its own computed wrapper
-                    ko.dependentObservable(
-                        function() {
-                            var handlerUpdateFn = bindingHandler["update"];
-                            if (typeof handlerUpdateFn == "function") {
+                    if (typeof handlerUpdateFn == "function") {
+                        ko.dependentObservable(
+                            function() {
                                 handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
-                            }
-                        },
-                        null,
-                        { disposeWhenNodeIsRemoved: node }
-                    );
+                            },
+                            null,
+                            { disposeWhenNodeIsRemoved: node }
+                        );
+                    }
                 } catch (ex) {
                     ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
                     throw ex;
