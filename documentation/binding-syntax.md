@@ -59,12 +59,10 @@ Bindings can include any amount of *whitespace* (spaces, tab, and newlines), so 
         value: selectedCountry,
         optionsCaption: 'Choose...'"></select>
 
-### Notes for multiple bindings on a single element
+#### Skipping the binding value
 
-When you use multiple bindings on a single element, those bindings can interact. If this behavior surprises you, it's worth bearing in mind the following current implementation details:
+Starting with Knockout 3.0, you can specify bindings without a value, which will give the binding an `undefined` value . For example:
 
-1. **Bindings are applied in order from left to right.** There are a few rare cases where bindings function correctly only when ordered in a certain way, because one reads a property that another writes. This is a limitation that we're likely to eliminate in a future version of Knockout. At present, the full list is:
-    * `attr: { value: ... }` or `value: ...` should be used before `checked: ...`
-    * `options: ...` or `foreach: ...` should be used before `value: ...` or `selectedOptions: ...`
-
-1. **When model values change, all bindings on the same element are updated together.** For example, if you use `enable: allowEdits, value: someValue`, then both the `enable` and `value` bindings will be refreshed when either `allowEdits` or `someValue` changes. In some extreme cases this can lead to worse performance ([more info](http://www.knockmeout.net/2012/06/knockoutjs-performance-gotcha-3-all-bindings.html)). Don't create custom bindings that rely on this implementation detail, because it's a limitation we are likely to eliminate in a future version of Knockout.
+    <span data-bind="text">Text that will be cleared when bindings are applied.</span>
+   
+This ability is especially useful when paired with [binding preprocessing](binding-preprocessing.html), which can assign a default value for a binding.
