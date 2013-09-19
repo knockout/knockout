@@ -10,7 +10,9 @@ blockquote > :first-child::before { content: ""; margin-left: 0; padding-right: 
 
 /* Basics */
 a { text-decoration: none; }
-code { font-family: Consolas, Monaco, "Courier New", mono-space, monospace !important; }
+.syntaxhighlighter .code, code {
+    font-family: Consolas, Monaco, "Courier New", mono-space, monospace !important;
+}
 .content .syntaxhighlighter table, .content .syntaxhighlighter td { border-width: 0; }
 .content .syntaxhighlighter table { margin-bottom: 0; }
 .syntaxhighlighter { 
