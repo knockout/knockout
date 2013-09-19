@@ -15,9 +15,9 @@ ko.extenders = {
 			throttleRate = options;
 		}
 		else {
-			throttleType = options.type;
-			throttleRate = options.delay;
-			throttleNoTrailingEval = options.noTrailing === true;
+			throttleType = options['type'];
+			throttleRate = options['delay'];
+			throttleNoTrailingEval = options['noTrailing'] === true;
 		}
 		
 		optionsValid = (
