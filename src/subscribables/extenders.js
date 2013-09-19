@@ -9,9 +9,10 @@ ko.extenders = {
 		var throttleType = 'debounce',
 			throttleRate = 0,
 			throttleNoTrailingEval = false,
+			writeTimeoutInstance = null,
 			optionsValid;
 		if (typeof options === 'number') {
-			// For backwards compatibility, allow numeric parameter and default to "debounce".
+			// For backwards compatibility with v2.3, allow numeric parameter and default to "debounce".
 			throttleRate = options;
 		}
 		else {
@@ -20,6 +21,7 @@ ko.extenders = {
 			throttleNoTrailingEval = options['noTrailing'] === true;
 		}
 		
+		// Validate parameters
 		optionsValid = (
 			throttleRate >= 0
 			&& (throttleType === 'debounce'
@@ -30,6 +32,7 @@ ko.extenders = {
 			return target; // do not modify
 		}
 		else {
+			// Add properties to be picked up by dependentObservable.js internals
 			target['throttleType'] = throttleType;
 			target['throttleEvaluation'] = throttleRate;
 			target['throttleNoTrailing'] = throttleNoTrailingEval;
@@ -37,17 +40,22 @@ ko.extenders = {
 
         // (2) For writable targets (observables, or writable dependent observables), we throttle *writes*
         //     so the target cannot change value synchronously or faster than a certain rate
-        var writeTimeoutInstance = null;
-        return ko.dependentObservable({
-            'read': target,
-            'write': function(value) {
-				// TODO: Apply "throttle" algorithm to writes, currently uses "debounce"
-				clearTimeout(writeTimeoutInstance);
-				writeTimeoutInstance = setTimeout(function() {
-					target(value);
-				}, throttleRate);
-            }
-        });
+		if (ko.isWriteableObservable(target)) {
+			return ko.dependentObservable({
+				'read': target,
+				'write': function(value) {
+					// TODO: Apply "throttle" algorithm to writes, if desired. Currently uses "debounce"
+					clearTimeout(writeTimeoutInstance);
+					writeTimeoutInstance = setTimeout(function() {
+						target(value);
+					}, throttleRate);
+				}
+			});
+		}
+		else {
+			// (3) For read-only targets, just return target to avoid overhead of wrapping in a new dependent observable.
+			return target;
+		}
     },
 
     'notify': function(target, notifyWhen) {
