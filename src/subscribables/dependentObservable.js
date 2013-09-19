@@ -47,7 +47,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 			
 			if (type === 'throttle') {
 				// Throttle
-				var curEval = (new Date()).valueOf(),
+				var curEval = getTime(),
 					elapsed = curEval - _lastEval;
 				
 				if (elapsed > delay) {
@@ -66,10 +66,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 				evaluationTimeoutInstance = setTimeout(evaluateImmediate, delay);
 			}
         } else {
-			_lastEval = (new Date()).valueOf();
+			_lastEval = getTime();
             evaluateImmediate();
 		}
     }
+	
+	function getTime() {
+		return (+new Date()); // = (new Date()).valueOf(), used for minification purposes
+	}
 
     function evaluateImmediate() {
         if (_isBeingEvaluated) {
@@ -131,7 +135,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof writeFunction === "function") {
                 // Writing a value
-				_lastEval = (new Date()).valueOf();
+				_lastEval = getTime();
                 writeFunction.apply(evaluatorFunctionTarget, arguments);
             } else {
                 throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
@@ -140,7 +144,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         } else {
             // Reading the value
             if (!_hasBeenEvaluated) {
-				_lastEval = (new Date()).valueOf();
+				_lastEval = getTime();
                 evaluateImmediate();
 			}
             ko.dependencyDetection.registerDependency(dependentObservable);
@@ -150,7 +154,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     function peek() {
         if (!_hasBeenEvaluated) {
-			_lastEval = (new Date()).valueOf();
+			_lastEval = getTime();
             evaluateImmediate();
 		}
         return _latestValue;
