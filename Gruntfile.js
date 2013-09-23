@@ -61,24 +61,29 @@ module.exports = function(grunt) {
         }
     });
 
-    var combinedSources;
-    function combineSources() {
-        var source = [];
-        var fragments = grunt.config('fragments');
-        function readFragment(fragment) {
-            source.push(grunt.file.read(fragments + fragment));
-        }
-        global.knockoutDebugCallback = function(sources) {
-            _.forEach(sources, function (file) {
-                source.push(grunt.file.read('./' + file));
-            });
-        };
-        readFragment('extern-pre.js');
-        readFragment('amd-pre.js');
-        require(fragments + 'source-references');
-        readFragment('amd-post.js');
-        readFragment('extern-post.js');
-        combinedSources = source.join('').replace('##VERSION##', grunt.config('pkg.version'));
+    function getReferencedSources(sourceReferencesFilename) {
+        // Returns the array of filenames references by a file like source-references.js
+        var result;
+        global.knockoutDebugCallback = function(sources) { result = sources; };
+        eval(grunt.file.read(sourceReferencesFilename));
+        return result;
+    }
+
+    function getCombinedSources() {
+        var fragments = grunt.config('fragments'),
+            sourceFilenames = [
+                fragments + 'extern-pre.js',
+                fragments + 'amd-pre.js',
+                getReferencedSources(fragments + 'source-references.js'),
+                fragments + 'amd-post.js',
+                fragments + 'extern-post.js'
+            ],
+            flattenedSourceFilenames = Array.prototype.concat.apply([], sourceFilenames),
+            combinedSources = flattenedSourceFilenames.map(function(filename) {
+                return grunt.file.read('./' + filename);
+            }).join('');
+
+        return combinedSources.replace('##VERSION##', grunt.config('pkg.version'));
     }
 
     function buildDebug(output) {
@@ -86,7 +91,7 @@ module.exports = function(grunt) {
         source.push(grunt.config('banner'));
         source.push('(function(){\n');
         source.push('var DEBUG=true;\n');
-        source.push(combinedSources);
+        source.push(getCombinedSources());
         source.push('})();\n');
         grunt.file.write(output, source.join('').replace(/\r\n/g, '\n'));
     }
@@ -98,7 +103,7 @@ module.exports = function(grunt) {
             output_wrapper: '(function() {%output%})();'
         };
         grunt.log.write('Compiling...');
-        cc.compile('/**@const*/var DEBUG=false;' + combinedSources, options, function (err, stdout, stderr) {
+        cc.compile('/**@const*/var DEBUG=false;' + getCombinedSources(), options, function (err, stdout, stderr) {
             if (err) {
                 grunt.error(err);
                 done(false);
@@ -111,9 +116,6 @@ module.exports = function(grunt) {
     }
 
     grunt.registerMultiTask('build', 'Build', function() {
-        if (!combinedSources)
-            combineSources();
-
         if (!this.errorCount) {
             var output = this.data;
             if (this.target === 'debug') {
