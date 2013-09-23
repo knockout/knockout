@@ -62,7 +62,7 @@ module.exports = function(grunt) {
     });
 
     function getReferencedSources(sourceReferencesFilename) {
-        // Returns the array of filenames references by a file like source-references.js
+        // Returns the array of filenames referenced by a file like source-references.js
         var result;
         global.knockoutDebugCallback = function(sources) { result = sources; };
         eval(grunt.file.read(sourceReferencesFilename));

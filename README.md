@@ -22,6 +22,7 @@ If you prefer to build the library yourself:
  1. **Clone the repo from GitHub**
 
         git clone https://github.com/knockout/knockout.git
+        cd knockout
 
  2. **Acquire build dependencies.** Make sure you have [Node.js](http://nodejs.org/) installed on your workstation. This is only needed to _build_ Knockout from sources. Knockout itself has no dependency on Node.js once it is built (it works with any server technology or none). Now run:
 
