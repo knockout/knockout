@@ -9,19 +9,36 @@ For more details, see
  * Documentation on [the project's website](http://knockoutjs.com/documentation/introduction.html)
  * Online examples at [http://knockoutjs.com/examples/](http://knockoutjs.com/examples/)
 
-##Downloading or building Knockout
+##Downloading Knockout
 
 You can [download released versions of Knockout](http://knockoutjs.com/downloads/) from the project's website.
 
-Or, if you prefer to build the source yourself, clone the repo from Github, and then run `./build/build.sh`.
+For Node.js developers, Knockout is also available from [npm](https://npmjs.org/) - just run `npm install knockout`.
 
-If you're running Windows, you must execute `./build/build.sh` from inside Git Bash, *not* the built-in Windows command prompt. If you have [Git for Windows](http://git-scm.com/downloads) installed, then you already have Git Bash installed.
+##Building Knockout from sources
 
-For Node.js developers, Knockout is also available from [npm](https://npmjs.org/): `npm install knockout`.
+If you prefer to build the library yourself:
+
+ 1. **Clone the repo from GitHub**
+
+        git clone https://github.com/knockout/knockout.git
+
+ 2. **Acquire build dependencies.** Make sure you have [Node.js](http://nodejs.org/) installed on your workstation. This is only needed to _build_ Knockout from sources. Knockout itself has no dependency on Node.js once it is built (it works with any server technology or none). Now run:
+
+        npm install -g grunt-cli
+        npm install
+
+    The first `npm` command sets up the popular [Grunt](http://gruntjs.com/) build tool. You might need to run this command with `sudo` if you're on Linux or Mac OS X, or in an Administrator command prompt on Windows. The second `npm` command fetches the remaining build dependencies.
+
+ 3. **Run the build tool**
+
+        grunt
+
+    Now you'll find the built files in `build/output/`.
 
 ## Running the tests
 
-If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `build.sh` script will automatically run the specification suite and report its results.
+If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `grunt` script will automatically run the specification suite and report its results.
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
