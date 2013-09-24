@@ -41,7 +41,7 @@
                 // Because the above copy overwrites our own properties, we need to reset them.
                 // During the first execution, "subscribable" isn't set, so don't bother doing the update then.
                 if (subscribable) {
-                    self['$dataFn'] = self._subscribable = subscribable;
+                    self._subscribable = subscribable;
                 }
             } else {
                 self['$parents'] = [];
@@ -52,6 +52,7 @@
                 // See https://github.com/SteveSanderson/knockout/issues/490
                 self['ko'] = ko;
             }
+            self['$rawData'] = dataItemOrAccessor;
             self['$data'] = dataItem;
             if (dataItemAlias)
                 self[dataItemAlias] = dataItem;
@@ -78,7 +79,7 @@
         // computed will be inactive, and we can safely throw it away. If it's active, the computed is stored in
         // the context object.
         if (subscribable.isActive()) {
-            self['$dataFn'] = self._subscribable = subscribable;
+            self._subscribable = subscribable;
 
             // Always notify because even if the model ($data) hasn't changed, other context properties might have changed
             subscribable['equalityComparer'] = null;
@@ -100,8 +101,6 @@
                     }
                 });
             };
-        } else {
-            self['$dataFn'] = function() { return self['$data']; }
         }
     }
 
@@ -126,7 +125,7 @@
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties) {
-        return new ko.bindingContext(this['$dataFn'], this, null, function(self) {
+        return new ko.bindingContext(this['$rawData'], this, null, function(self) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
         });
     };

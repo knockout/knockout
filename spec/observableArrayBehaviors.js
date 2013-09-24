@@ -58,6 +58,15 @@ describe('Observable Array', function() {
         expect(z._destroy).toEqual(true);
     });
 
+    it('Should be able to mark observable items as destroyed', function() {
+        var x = ko.observable(), y = ko.observable();
+        testObservableArray([x, y]);
+        testObservableArray.destroy(y);
+        expect(testObservableArray().length).toEqual(2);
+        expect(x._destroy).toEqual(undefined);
+        expect(y._destroy).toEqual(true);
+    });
+
     it('Should be able to mark all items as destroyed by passing no args to destroyAll()', function() {
         var x = {}, y = {}, z = {};
         testObservableArray([x, y, z]);
@@ -172,6 +181,16 @@ describe('Observable Array', function() {
         notifiedValues = [];
         var removed = testObservableArray.removeAll();
         expect(originalArray).toEqual([]);
+    });
+
+    it('Should remove matching observable items', function() {
+        var x = ko.observable(), y = ko.observable();
+        testObservableArray([x, y]);
+        notifiedValues = [];
+        var removed = testObservableArray.remove(y);
+        expect(testObservableArray()).toEqual([x]);
+        expect(removed).toEqual([y]);
+        expect(notifiedValues).toEqual([[x]]);
     });
 
     it('Should notify subscribers on replace', function () {
