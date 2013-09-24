@@ -2,6 +2,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     var _latestValue,
         _hasBeenEvaluated = false,
         _isBeingEvaluated = false,
+		_lastEval = 0,
         readFunction = evaluatorFunctionOrOptions;
 
     if (readFunction && typeof readFunction == "object") {
@@ -29,13 +30,50 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function evaluatePossiblyAsync() {
-        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
-        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
-            clearTimeout(evaluationTimeoutInstance);
-            evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
-        } else
+        var delay = dependentObservable['throttleEvaluation'],
+			type = dependentObservable['throttleType'],
+			noTrailing = dependentObservable['throttleNoTrailing'],
+			isAsync = (
+				(typeof delay === 'number')
+				&& (delay >= 0)
+				&& (typeof type === 'string')
+				&& (typeof noTrailing == 'boolean')
+			);
+	
+        if (isAsync) {
+			if (evaluationTimeoutInstance) {
+				clearTimeout(evaluationTimeoutInstance);
+			}
+			
+			if (type === 'throttle') {
+				// Throttle
+				var curEval = getTime(),
+					elapsed = curEval - _lastEval;
+				
+				if (elapsed > delay) {
+					_lastEval = curEval;
+					evaluateImmediate();
+				}
+				else if (!noTrailing) {
+					evaluationTimeoutInstance = setTimeout(function () {
+						_lastEval = curEval;
+						evaluateImmediate();
+					}, delay - elapsed);
+				}
+			}
+			else {
+				// Debounce
+				evaluationTimeoutInstance = setTimeout(evaluateImmediate, delay);
+			}
+        } else {
+			_lastEval = getTime();
             evaluateImmediate();
+		}
     }
+	
+	function getTime() {
+		return (+new Date()); // = (new Date()).valueOf(), used for minification purposes
+	}
 
     function evaluateImmediate() {
         if (_isBeingEvaluated) {
@@ -97,6 +135,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (arguments.length > 0) {
             if (typeof writeFunction === "function") {
                 // Writing a value
+				_lastEval = getTime();
                 writeFunction.apply(evaluatorFunctionTarget, arguments);
             } else {
                 throw new Error("Cannot write a value to a ko.computed unless you specify a 'write' option. If you wish to read the current value, don't pass any parameters.");
@@ -104,16 +143,20 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             return this; // Permits chained assignments
         } else {
             // Reading the value
-            if (!_hasBeenEvaluated)
+            if (!_hasBeenEvaluated) {
+				_lastEval = getTime();
                 evaluateImmediate();
+			}
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
         }
     }
 
     function peek() {
-        if (!_hasBeenEvaluated)
+        if (!_hasBeenEvaluated) {
+			_lastEval = getTime();
             evaluateImmediate();
+		}
         return _latestValue;
     }
 
