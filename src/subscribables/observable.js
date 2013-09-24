@@ -1,5 +1,7 @@
-ko.observable = function (initialValue) {
-    var _latestValue = initialValue;
+ko.observable = function (initialValue, options) {
+    options = options || {};
+    var validateInput = options['validateInput'];
+    var _latestValue = validateInput ? validateInput(initialValue) : initialValue;
 
     function observable() {
         if (arguments.length > 0) {
@@ -10,7 +12,7 @@ ko.observable = function (initialValue) {
             if (!observable['equalityComparer'] || !observable['equalityComparer'](_latestValue, newValue)) {
                 observable.valueWillMutate();
                 // Filter/validate incoming value if function is set
-                _latestValue = observable['validateInput'] ? observable['validateInput'](newValue, _latestValue) : newValue;
+                _latestValue = validateInput ? validateInput(newValue, _latestValue) : newValue;
                 if (DEBUG) observable._latestValue = _latestValue;
                 observable.valueHasMutated();
             }

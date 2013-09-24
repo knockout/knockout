@@ -1,7 +1,6 @@
 ko.observableArray = function (initialValues) {
-    var result = ko.utils.extend(ko.observable([]), ko.observableArray['fn']).extend({'trackArrayChanges':true});
-    result(initialValues);
-    return result;
+    var result = ko.observable(initialValues, {'validateInput': ko.observableArray['fn']['validateInput']});
+    return ko.utils.extend(result, ko.observableArray['fn']).extend({'trackArrayChanges':true});
 };
 
 ko.observableArray['fn'] = {

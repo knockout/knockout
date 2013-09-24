@@ -27,8 +27,7 @@ ko.extenders = {
     }
 };
 
-// 'undefined' specifically isn't included because two "un-set" values are not considered equal
-var primitiveTypes = { 'boolean':1, 'number':1, 'string':1 };
+var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
 function valuesArePrimitiveAndEqual(a, b) {
     var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
     return oldValueIsPrimitive ? (a === b) : false;
