@@ -1,15 +1,16 @@
 ko.observableArray = function (initialValues) {
-    var result = ko.observable(initialValues, {'validateInput': ko.observableArray['fn']['validateInput']});
-    return ko.utils.extend(result, ko.observableArray['fn']).extend({'trackArrayChanges':true});
-};
-
-ko.observableArray['fn'] = {
-    'validateInput': function(value) {
+    var options = {};
+    options['validateInput'] = function(value) {
         value = value || [];
         if (typeof value != 'object' || !('length' in value))
             throw new Error("The argument passed when setting an observable array must be an array, null, or undefined.");
         return value;
-    },
+    };
+    var result = ko.observable(initialValues, options);
+    return ko.utils.extend(result, ko.observableArray['fn']).extend({'trackArrayChanges':true});
+};
+
+ko.observableArray['fn'] = {
     'remove': function (valueOrPredicate) {
         var underlyingArray = this.peek();
         var removedValues = [];
