@@ -71,7 +71,7 @@
         var self = this,
             isFunc = typeof(dataItemOrAccessor) == "function",
             nodes,
-            subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen });
+            subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen, disposeWhenNodeIsRemoved: true });
 
         // At this point, the binding context has been initialized, and the "subscribable" computed observable is
         // subscribed to any observables that were accessed in the process. If there is nothing to track, the

@@ -2,7 +2,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     var _latestValue,
         _hasBeenEvaluated = false,
         _isBeingEvaluated = false,
-        _canDispose = false,
+        _suppressDisposalUntilDisposeWhenReturnsFalse = false,
         readFunction = evaluatorFunctionOrOptions;
 
     if (readFunction && typeof readFunction == "object") {
@@ -47,15 +47,16 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             return;
         }
 
-        // Don't dispose until we've first gotten a false "disposeWhen" result. This supports binding to detached
-        // nodes that will later be added to the document.
         if (disposeWhen && disposeWhen()) {
-            if (_canDispose) {
+            // See comment below about _suppressDisposalUntilDisposeWhenReturnsFalse
+            if (!_suppressDisposalUntilDisposeWhenReturnsFalse) {
                 dispose();
+                _hasBeenEvaluated = true;
                 return;
             }
         } else {
-            _canDispose = true;
+            // It just did return false, so we can stop suppressing now
+            _suppressDisposalUntilDisposeWhenReturnsFalse = false;
         }
 
         _isBeingEvaluated = true;
@@ -152,9 +153,21 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
     // Add a "disposeWhen" callback that, on each evaluation, disposes if the node was removed without using ko.removeNode.
     if (disposeWhenNodeIsRemoved) {
-        disposeWhen = function () {
-            return !ko.utils.domNodeIsAttachedToDocument(disposeWhenNodeIsRemoved) || (disposeWhenOption && disposeWhenOption());
-        };
+        // Since this computed is associated with a DOM node, and we don't want to dispose the computed
+        // until the DOM node is *removed* from the document (as opposed to never having been in the document),
+        // we'll prevent disposal until "disposeWhen" first returns false.
+        _suppressDisposalUntilDisposeWhenReturnsFalse = true;
+
+        // Only watch for the node's disposal if the value really is a node. It might not be,
+        // e.g., { disposeWhenNodeIsRemoved: true } can be used to opt into the "only dispose
+        // after first false result" behaviour even if there's no specific node to watch. This
+        // technique is intended for KO's internal use only and shouldn't be documented or used
+        // by application code, as it's likely to change in a future version of KO.
+        if (disposeWhenNodeIsRemoved.nodeType) {
+            disposeWhen = function () {
+                return !ko.utils.domNodeIsAttachedToDocument(disposeWhenNodeIsRemoved) || (disposeWhenOption && disposeWhenOption());
+            };
+        }
     }
 
     // Evaluate, unless deferEvaluation is true
