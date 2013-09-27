@@ -692,8 +692,8 @@ describe('Templating', function() {
         it('Should update all child contexts and bindings when used with a top-level observable view model', function() {
             var myVm = ko.observable({items: ['A', 'B', 'C'], itemValues: { 'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9] }});
             var engine = new dummyTemplateEngine({
-                itemTemplate: "The <span data-bind='text: $index'></span> item <span data-bind='text: $data'></span> has <div data-bind='template: { name: \"valueTemplate\", foreach: $root.itemValues[$data] }'></div> ",
-                valueTemplate: "<span data-bind='text: $index'></span>.<span data-bind='text: $data'></span>,"
+                itemTemplate: "<span>The <span data-bind='text: $index'>&nbsp;</span> item <span data-bind='text: $data'>&nbsp;</span> has <span data-bind='template: { name: \"valueTemplate\", foreach: $root.itemValues[$data] }'>&nbsp;</span> </span>",
+                valueTemplate: "<span data-bind='text: $index'>&nbsp;</span>.<span data-bind='text: $data'>&nbsp;</span>,"
             });
             engine.createJavaScriptEvaluatorBlock = function (script) { return "[[js:" + script + "]]"; };  // because we're using a binding with brackets
             ko.setTemplateEngine(engine);
