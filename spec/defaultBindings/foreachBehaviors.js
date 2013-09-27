@@ -204,7 +204,7 @@ describe('Binding: Foreach', function() {
             if (node.nodeType === 3 && node.data.charAt(0) === "$") {
                 var newNodes = [
                     document.createComment('ko text: ' + node.data),
-                    document.createComment('/ko'),
+                    document.createComment('/ko')
                 ];
                 for (var i = 0; i < newNodes.length; i++) {
                     node.parentNode.insertBefore(newNodes[i], node);
