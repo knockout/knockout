@@ -6,6 +6,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
     }
     var trackingChanges = false,
         cachedDiff = null,
+        pendingNotifications = 0,
         underlyingSubscribeFunction = target.subscribe;
 
     // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
@@ -24,6 +25,15 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
         trackingChanges = true;
 
+        // Intercept "notifySubscribers" to track how many times it was called.
+        var underlyingNotifySubscribersFunction = target['notifySubscribers'];
+        target['notifySubscribers'] = function(valueToNotify, event) {
+            if (!event || event === defaultEvent) {
+                ++pendingNotifications;
+            }
+            return underlyingNotifySubscribersFunction.apply(this, arguments);
+        };
+
         // Each time the array changes value, capture a clone so that on the next
         // change it's possible to produce a diff
         var previousContents = [].concat(target.peek() || []);
@@ -41,12 +51,16 @@ ko.extenders['trackArrayChanges'] = function(target) {
             // Eliminate references to the old, removed items, so they can be GCed
             previousContents = currentContents;
             cachedDiff = null;
+            pendingNotifications = 0;
         });
     }
 
     function getChanges(previousContents, currentContents) {
         // We try to re-use cached diffs.
-        if (!cachedDiff) {
+        // The only scenario where pendingNotifications > 1 is when using the KO 'deferred updates' plugin,
+        // which without this check would not be compatible with arrayChange notifications. Without that
+        // plugin, notifications are always issued immediately so we wouldn't be queueing up more than one.
+        if (!cachedDiff || pendingNotifications > 1) {
             cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
         }
 
@@ -55,7 +69,8 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
     target.cacheDiffForKnownOperation = function(rawArray, operationName, args) {
         // Only run if we're currently tracking changes for this observable array
-        if (!trackingChanges) {
+        // and there aren't any pending deferred notifications.
+        if (!trackingChanges || pendingNotifications) {
             return;
         }
         var diff = [],
