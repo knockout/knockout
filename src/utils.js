@@ -266,18 +266,20 @@ ko.utils = (function () {
         },
 
         domNodeIsContainedBy: function (node, containedByNode) {
+            if (node === containedByNode)
+                return true;
+            if (containedByNode.contains)
+                return containedByNode.contains(node.nodeType === 3 ? node.parentNode : node);
             if (containedByNode.compareDocumentPosition)
                 return (containedByNode.compareDocumentPosition(node) & 16) == 16;
-            while (node != null) {
-                if (node == containedByNode)
-                    return true;
+            while (node && node != containedByNode) {
                 node = node.parentNode;
             }
-            return false;
+            return !!node;
         },
 
         domNodeIsAttachedToDocument: function (node) {
-            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument);
+            return ko.utils.domNodeIsContainedBy(node, node.ownerDocument.documentElement);
         },
 
         anyDomNodeIsAttachedToDocument: function(nodes) {

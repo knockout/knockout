@@ -247,6 +247,46 @@ describe('Dependent Observable', function() {
         expect(dependent.isActive()).toEqual(false);
     });
 
+    it('Should dispose itself as soon as disposeWhen returns true, as long as it isn\'t waiting for a DOM node to be removed', function() {
+        var underlyingObservable = ko.observable(100),
+            dependent = ko.dependentObservable(
+                underlyingObservable,
+                null,
+                { disposeWhen: function() { return true; } }
+            );
+
+        expect(underlyingObservable.getSubscriptionsCount()).toEqual(0);
+        expect(dependent.isActive()).toEqual(false);
+    });
+
+    it('Should delay disposal until after disposeWhen returns false if it is waiting for a DOM node to be removed', function() {
+        var underlyingObservable = ko.observable(100),
+            shouldDispose = true,
+            dependent = ko.dependentObservable(
+                underlyingObservable,
+                null,
+                { disposeWhen: function() { return shouldDispose; }, disposeWhenNodeIsRemoved: true }
+            );
+
+        // Even though disposeWhen returns true, it doesn't dispose yet, because it's
+        // expecting an initial 'false' result to indicate the DOM node is still in the document
+        expect(underlyingObservable.getSubscriptionsCount()).toEqual(1);
+        expect(dependent.isActive()).toEqual(true);
+
+        // Trigger the false result. Of course it still doesn't dispose yet, because
+        // disposeWhen says false.
+        shouldDispose = false;
+        underlyingObservable(101);
+        expect(underlyingObservable.getSubscriptionsCount()).toEqual(1);
+        expect(dependent.isActive()).toEqual(true);
+
+        // Now trigger a true result. This time it will dispose.
+        shouldDispose = true;
+        underlyingObservable(102);
+        expect(underlyingObservable.getSubscriptionsCount()).toEqual(0);
+        expect(dependent.isActive()).toEqual(false);
+    });
+
     it('Should describe itself as active if the evaluator has dependencies on its first run', function() {
         var someObservable = ko.observable('initial'),
             dependentObservable = new ko.dependentObservable(function () { return someObservable(); });

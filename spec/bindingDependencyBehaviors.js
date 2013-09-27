@@ -260,6 +260,18 @@ describe('Binding dependencies', function() {
             expect(vm.getSubscriptionsCount()).toEqual(0);
         });
 
+        it('Should dispose view model subscription on next update when bound node is removed outside of KO', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(vm, testNode);
+            expect(vm.getSubscriptionsCount()).toEqual(1);
+
+            // remove the element and re-set the view-model; the subscription should be cleared
+            testNode.parentNode.removeChild(testNode);
+            vm(null);
+            expect(vm.getSubscriptionsCount()).toEqual(0);
+        });
+
         it('Should update all child contexts (including values copied from the parent)', function() {
             ko.bindingHandlers.setChildContext = {
                 init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
