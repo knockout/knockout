@@ -7,9 +7,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
     var trackingChanges = false,
         cachedDiff = null,
         pendingNotifications = 0,
-        underlyingSubscribeFunction = target.subscribe,
-        underlyingNotifySubscribersFunction = target["notifySubscribers"],
-        previousContents;
+        underlyingSubscribeFunction = target.subscribe;
 
     // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
     target.subscribe = target['subscribe'] = function(callback, callbackTarget, event) {
@@ -28,7 +26,8 @@ ko.extenders['trackArrayChanges'] = function(target) {
         trackingChanges = true;
 
         // Intercept "notifySubscribers" to track how many times it was called.
-        target["notifySubscribers"] = function(valueToNotify, event) {
+        var underlyingNotifySubscribersFunction = target['notifySubscribers'];
+        target['notifySubscribers'] = function(valueToNotify, event) {
             if (!event || event === defaultEvent) {
                 ++pendingNotifications;
             }
@@ -37,7 +36,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
         // Each time the array changes value, capture a clone so that on the next
         // change it's possible to produce a diff
-        previousContents = [].concat(target.peek() || []);
+        var previousContents = [].concat(target.peek() || []);
         cachedDiff = null;
         target.subscribe(function(currentContents) {
             // Make a copy of the current contents and ensure it's an array
@@ -58,6 +57,9 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
     function getChanges(previousContents, currentContents) {
         // We try to re-use cached diffs.
+        // The only scenario where pendingNotifications > 1 is when using the KO 'deferred updates' plugin,
+        // which without this check would not be compatible with arrayChange notifications. Without that
+        // plugin, notifications are always issued immediately so we wouldn't be queueing up more than one.
         if (!cachedDiff || pendingNotifications > 1) {
             cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
         }
