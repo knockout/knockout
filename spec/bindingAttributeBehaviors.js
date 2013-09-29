@@ -437,7 +437,14 @@ describe('Binding attribute syntax', function() {
 
         var originalBindingProvider = ko.bindingProvider.instance;
         ko.bindingProvider.instance = {
-            nodeHasBindings: function(node, bindingContext) {
+            nodeHasBindings: function(node) {
+                // IE < 9 can't bind text nodes, as expando properties are not allowed on them
+                // this will still prove that the binding provider was not executed on the children of a script tag
+                if (node.nodeType === 3 && ko.utils.ieVersion < 9) {
+                    node.data = "replaced";
+                    return false;
+                }
+
                 return true;
             },
             getBindingAccessors: function(node, bindingContext) {
