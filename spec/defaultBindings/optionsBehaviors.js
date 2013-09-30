@@ -1,8 +1,6 @@
 describe('Binding: Options', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    // Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
-
     it('Should only be applicable to SELECT nodes', function () {
         var threw = false;
         testNode.innerHTML = "<input data-bind='options:{}' />";
