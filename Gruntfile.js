@@ -8,7 +8,7 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
         fragments: './build/fragments/',
         banner: '// Knockout JavaScript library v<%= pkg.version %>\n' +
-                '// (c) Steven Sanderson - <%= pkg.url %>\n' +
+                '// (c) Steven Sanderson - <%= pkg.homepage %>\n' +
                 '// License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)\n\n',
 
         checktrailingspaces: {
