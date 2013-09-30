@@ -13,7 +13,7 @@ ko.bindingHandlers['options'] = {
     },
     'update': function (element, valueAccessor, allBindings) {
         function selectedOptions() {
-            return element['selectedOptions'] || ko.utils.arrayFilter(element.options, function (node) { return node.selected; });
+            return ko.utils.arrayFilter(element.options, function (node) { return node.selected; });
         }
 
         var selectWasPreviouslyEmpty = element.length == 0;
