@@ -28,7 +28,7 @@ describe('Node preprocessing', function() {
                 return [newNode];
             }
         };
-        testNode.innerHTML = "<p>a</p><mySpecialNode></mySpecialNode><p>b</p>";
+        testNode.innerHTML = "<span>a</span><mySpecialNode></mySpecialNode><span>b</span>";
         var someValue = ko.observable('hello');
         ko.applyBindings({ someValue: someValue }, testNode);
         expect(testNode).toContainText('ahellob');

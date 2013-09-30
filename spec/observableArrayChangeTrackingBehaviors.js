@@ -76,7 +76,8 @@ describe('Observable Array change tracking', function() {
 
     it('Skips the diff algorithm when the array mutation is a known operation', function() {
         captureCompareArraysCalls(function(callLog) {
-            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']);
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
+                browserSupportsSpliceWithoutDeletionCount = [1, 2].splice(1).length === 1;
 
             // Push
             testKnownOperation(myArray, 'push', {
@@ -140,14 +141,20 @@ describe('Observable Array change tracking', function() {
             });
 
             // Splice - no 'deletion count' supplied (deletes everything after start index)
-            testKnownOperation(myArray, 'splice', {
-                args: [2],
-                result: ['First', 'Second'],
-                changes: [
-                    { status: 'deleted', value: 'Another', index: 2 },
-                    { status: 'deleted', value: 'YetAnother', index: 3 }
-                ]
-            });
+            if (browserSupportsSpliceWithoutDeletionCount) {
+                testKnownOperation(myArray, 'splice', {
+                    args: [2],
+                    result: ['First', 'Second'],
+                    changes: [
+                        { status: 'deleted', value: 'Another', index: 2 },
+                        { status: 'deleted', value: 'YetAnother', index: 3 }
+                    ]
+                });
+            } else {
+                // Browser doesn't support that underlying operation, so just set the state
+                // to what it needs to be to run the remaining tests
+                myArray(['First', 'Second']);
+            }
 
             // Splice - deletion end index out of bounds
             testKnownOperation(myArray, 'splice', {
