@@ -45,7 +45,9 @@ ko.extenders['trackArrayChanges'] = function(target) {
             // Compute the diff and issue notifications, but only if someone is listening
             if (target.hasSubscriptionsForEvent(arrayChangeEventName)) {
                 var changes = getChanges(previousContents, currentContents);
-                target['notifySubscribers'](changes, arrayChangeEventName);
+                if (changes.length) {
+                    target['notifySubscribers'](changes, arrayChangeEventName);
+                }
             }
 
             // Eliminate references to the old, removed items, so they can be GCed
