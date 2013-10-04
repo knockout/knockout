@@ -51,6 +51,10 @@ Bindings contexts offer the following special properties that you can reference 
 
     This refers to the binding context object at the parent level. This is different from `$parent`, which refers to the *data* (not binding context) at the parent level. This is useful, for example, if you need to access the index value of an outer `foreach` item from an inner context (usage: `$parentContext.$index`). This is undefined in the root context.
 
+* `$rawData`
+
+    This is the raw view model value in the current context. Usually this will be the same as `$data`, but if the view model provided to Knockout is wrapped in an observable, `$data` will be the unwrapped view model, and `$rawData` will be the observable itself.
+
 The following special variables are also available in bindings, but are not part of the binding context object:
 
 * `$context`
