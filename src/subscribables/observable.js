@@ -1,4 +1,4 @@
-ko.observable = function (initialValue) {
+ko['observable'] = function (initialValue) {
     var _latestValue = initialValue;
 
     function observable() {
@@ -22,24 +22,20 @@ ko.observable = function (initialValue) {
     }
     if (DEBUG) observable._latestValue = _latestValue;
     ko.subscribable.call(observable);
-    observable.peek = function() { return _latestValue };
-    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
-    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable['peek'] = function() { return _latestValue };
+    observable['valueHasMutated'] = function () { observable["notifySubscribers"](_latestValue); }
+    observable['valueWillMutate'] = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
     ko.utils.extend(observable, ko.observable['fn']);
-
-    ko.exportProperty(observable, 'peek', observable.peek);
-    ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
-    ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
 
     return observable;
 }
 
-ko.observable['fn'] = {
+ko['observable']['fn'] = {
     "equalityComparer": valuesArePrimitiveAndEqual
 };
 
-var protoProperty = ko.observable.protoProperty = "__ko_proto__";
-ko.observable['fn'][protoProperty] = ko.observable;
+var protoProperty = ko['observable'].protoProperty = "__ko_proto__";
+ko['observable']['fn'][protoProperty] = ko['observable'];
 
 ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
@@ -47,12 +43,12 @@ ko.hasPrototype = function(instance, prototype) {
     return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain
 };
 
-ko.isObservable = function (instance) {
-    return ko.hasPrototype(instance, ko.observable);
+ko['isObservable'] = function (instance) {
+    return ko.hasPrototype(instance, ko['observable']);
 }
-ko.isWriteableObservable = function (instance) {
+ko['isWriteableObservable'] = function (instance) {
     // Observable
-    if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
+    if ((typeof instance == "function") && instance[protoProperty] === ko['observable'])
         return true;
     // Writeable dependent observable
     if ((typeof instance == "function") && (instance[protoProperty] === ko.dependentObservable) && (instance.hasWriteFunction))
@@ -60,8 +56,3 @@ ko.isWriteableObservable = function (instance) {
     // Anything else
     return false;
 }
-
-
-ko.exportSymbol('observable', ko.observable);
-ko.exportSymbol('isObservable', ko.isObservable);
-ko.exportSymbol('isWriteableObservable', ko.isWriteableObservable);
