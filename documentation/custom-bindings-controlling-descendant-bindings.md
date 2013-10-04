@@ -40,8 +40,7 @@ Normally, bindings that use `controlsDescendantBindings` will also call `ko.appl
     ko.bindingHandlers.withProperties = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
-            var newProperties = valueAccessor(),
-                innerBindingContext = bindingContext.extend(newProperties);
+            var innerBindingContext = bindingContext.extend(valueAccessor);
             ko.applyBindingsToDescendants(innerBindingContext, element);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
@@ -49,7 +48,7 @@ Normally, bindings that use `controlsDescendantBindings` will also call `ko.appl
         }
     };
 
-As you can see, binding contexts have an `extend` function that produces a clone with extra properties. This doesn't affect the original binding context, so there is no danger of affecting sibling-level elements - it will only affect descendants.
+As you can see, binding contexts have an `extend` function that produces a clone with extra properties. The `extend` function accepts either an object with the properties to copy or a function that returns such an object. The function syntax is preferred so that future changes in the binding value are always updated in the binding context. This process doesn't affect the original binding context, so there is no danger of affecting sibling-level elements - it will only affect descendants.
 
 Here's an example of using the above custom binding:
 
@@ -69,9 +68,12 @@ If you want to do this in custom bindings, then instead of using `bindingContext
     ko.bindingHandlers.withProperties = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
-            var newProperties = valueAccessor(),
-                childBindingContext = bindingContext.createChildContext(bindingContext.$data);
-            ko.utils.extend(childBindingContext, newProperties);
+            var childBindingContext = bindingContext.createChildContext(
+                bindingContext.$rawData, 
+                null, 
+                function(context) {
+                    ko.utils.extend(context, valueAccessor());
+                });
             ko.applyBindingsToDescendants(childBindingContext, element);
 
             // Also tell KO *not* to bind the descendants itself, otherwise they will be bound twice
