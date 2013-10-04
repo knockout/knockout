@@ -1,4 +1,3 @@
-
 ko.subscription = function (target, callback, disposeCallback) {
     this.target = target;
     this.callback = callback;
@@ -10,19 +9,15 @@ ko.subscription.prototype.dispose = function () {
     this.disposeCallback();
 };
 
-ko.subscribable = function () {
+ko['subscribable'] = function () {
     this._subscriptions = {};
-
-    ko.utils.extend(this, ko.subscribable['fn']);
-    ko.exportProperty(this, 'subscribe', this.subscribe);
-    ko.exportProperty(this, 'extend', this.extend);
-    ko.exportProperty(this, 'getSubscriptionsCount', this.getSubscriptionsCount);
+    ko.utils.extend(this, ko['subscribable']['fn']);
 }
 
 var defaultEvent = "change";
 
-ko.subscribable['fn'] = {
-    subscribe: function (callback, callbackTarget, event) {
+ko['subscribable']['fn'] = {
+    "subscribe": function (callback, callbackTarget, event) {
         event = event || defaultEvent;
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
@@ -57,7 +52,7 @@ ko.subscribable['fn'] = {
         return this._subscriptions[event] && this._subscriptions[event].length;
     },
 
-    getSubscriptionsCount: function () {
+    "getSubscriptionsCount": function () {
         var total = 0;
         ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
             total += subscriptions.length;
@@ -65,13 +60,10 @@ ko.subscribable['fn'] = {
         return total;
     },
 
-    extend: applyExtenders
+    "extend": applyExtenders
 };
 
 
-ko.isSubscribable = function (instance) {
+ko['isSubscribable'] = function (instance) {
     return instance != null && typeof instance.subscribe == "function" && typeof instance["notifySubscribers"] == "function";
 };
-
-ko.exportSymbol('subscribable', ko.subscribable);
-ko.exportSymbol('isSubscribable', ko.isSubscribable);
