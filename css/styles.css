@@ -16,7 +16,7 @@ a { text-decoration: none; }
 .content .syntaxhighlighter table, .content .syntaxhighlighter td { border-width: 0; }
 .content .syntaxhighlighter table { margin-bottom: 0; }
 .syntaxhighlighter { 
-	width: 680px; overflow-x: auto; margin-bottom: 1.8em; 
+	overflow-x: auto; margin-bottom: 1.8em; margin-right: 35px;
 	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em;
 }
 .syntaxhighlighter .line {
