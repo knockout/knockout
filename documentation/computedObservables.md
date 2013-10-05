@@ -147,7 +147,7 @@ Example 1 showed how a writeable computed observable can effectively *filter* it
 Taking this a step further, you could also toggle an `isValid` flag depending on whether the latest input was satisfactory, and display a message in the UI accordingly. There's an easier way of doing validation (explained below), but first consider the following view model, which demonstrates the mechanism:
 
     function MyViewModel() {
-        this.acceptedNumericValue = ko.observable(123);
+        this.acceptedNumericValue = ko.observable(123).extend({notify:'always'});
         this.lastInputWasValid = ko.observable(true);
 
         this.attemptedValue = ko.computed({
@@ -161,7 +161,7 @@ Taking this a step further, you could also toggle an `isValid` flag depending on
                 }
             },
             owner: this
-        });
+        }).extend({notify:'always'});
     }
 
     ko.applyBindings(new MyViewModel());
