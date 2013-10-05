@@ -43,18 +43,16 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
    	 * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
    	 * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously.
    	 
-   	 Of these options, `"afterkeydown"` is the best choice if you want to keep your view model updated in real-time. 
-   	 
-Example:
-   	
-    <p>Your value: <input data-bind="value: someValue, valueUpdate: 'afterkeydown'" /></p>
-    <p>You have typed: <span data-bind="text: someValue"></span></p> <!-- updates in real-time -->
-    
-    <script type="text/javascript">
-	    var viewModel = {
-			someValue: ko.observable("edit me")
-	    };
-    </script>   
+   	 Of these options, `"afterkeydown"` is the best choice if you want to keep your view model updated in real-time. For example:
+            
+            <p>Your value: <input data-bind="value: someValue, valueUpdate: 'afterkeydown'" /></p>
+            <p>You have typed: <span data-bind="text: someValue"></span></p> <!-- updates in real-time -->
+            
+            <script type="text/javascript">
+                var viewModel = {
+                    someValue: ko.observable("edit me")
+                };
+            </script>   
 
 ### Note 1: Working with drop-down lists (i.e., SELECT nodes)
 
@@ -68,9 +66,9 @@ If you use `value` to link a form element to an observable property, KO is able 
 
 However, if you use `value` to link a form element to a *non*-observable property (e.g., a plain old string, or an arbitrary JavaScript expression), KO will do the following:
 
-   * If you reference a *simple property*, i.e., it is just a regular property on your view model, KO will set the form element's initial state to the property value, and when the form element is edited, KO will write the changes back to your property. It cannot detect when the property changes (because it isn't observable), so this is only a 1-way binding.
+ * If you reference a *simple property*, i.e., it is just a regular property on your view model, KO will set the form element's initial state to the property value, and when the form element is edited, KO will write the changes back to your property. It cannot detect when the property changes (because it isn't observable), so this is only a 1-way binding.
    
-   * If you reference something that is *not* a simple property, e.g., a complex JavaScript expression or a sub-property, KO will set the form element's initial state to that value, but it will not be able to write any changes back when the user edits the form element. In this case it's a one-time-only value setter, not a real binding.
+ * If you reference something that is *not* a simple property, e.g., a complex JavaScript expression or a sub-property, KO will set the form element's initial state to that value, but it will not be able to write any changes back when the user edits the form element. In this case it's a one-time-only value setter, not a real binding.
 
 Example:
 
