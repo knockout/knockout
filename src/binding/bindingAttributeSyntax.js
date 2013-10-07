@@ -247,7 +247,7 @@
                         ko.utils.arrayForEach(binding['after'], function(bindingDependencyKey) {
                             if (bindings[bindingDependencyKey]) {
                                 if (ko.utils.arrayIndexOf(cyclicDependencyStack, bindingDependencyKey) !== -1) {
-                                    throw Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
+                                    throw new Error("Cannot combine the following bindings, because they have a cyclic dependency: " + cyclicDependencyStack.join(", "));
                                 } else {
                                     pushBinding(bindingDependencyKey);
                                 }
@@ -270,7 +270,7 @@
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
             if (alreadyBound) {
-                throw Error("You cannot apply bindings multiple times to the same element.");
+                throw new Error("You cannot apply bindings multiple times to the same element.");
             }
             ko.utils.domData.set(node, boundElementDomDataKey, true);
         }
