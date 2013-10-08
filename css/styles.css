@@ -126,6 +126,7 @@ body { font-family: arial; font-size: 14px; }
 	text-align: left;
 	padding-left: 9px;
 	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 .download-button p, .download-button a {
 	color: #005500 !important; /* TODO: Remove the !important when v3 is released */
