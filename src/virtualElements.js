@@ -142,7 +142,7 @@
         firstChild: function(node) {
             if (!isStartComment(node)) {
                 if (node.firstChild && isUnmatchedEndComment(node.firstChild)) {
-                    throw new Error("Found end comment without opening comment, as first child of " + node.outerHTML);
+                    throw new Error("Found end comment without opening comment, as first child of " + node);
                 }
                 return node.firstChild;
             } else {
@@ -157,7 +157,7 @@
 
             if (node.nextSibling && isEndComment(node.nextSibling)) {
                 if (isUnmatchedEndComment(node.nextSibling)) {
-                    throw Error("Found end comment without a matching opening comment, as next sibling of " + node.outerHTML);
+                    throw Error("Found end comment without a matching opening comment, as child of " + node);
                 } else {
                     return null;
                 }
