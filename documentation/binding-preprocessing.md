@@ -5,7 +5,7 @@ title: Extending Knockout's binding syntax using preprocessing
 
 *Note: This is an advanced technique, typically used only when creating libraries of reusable bindings or extended syntaxes. It's not something you'll normally need to do when building applications with Knockout.*
 
-Starting with Knockout 3.0, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings, or dynamically create binding handlers, during the binding process.
+Starting with Knockout 3.0, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings during the binding process.
 
 ## Example 1: Setting a default value for a binding
 
@@ -53,35 +53,8 @@ Now you can include a template in your view like this:
 
     <!-- template: 'some-template' -->
 
-## Example 4: Including binding data in the binding name
+# Preprocessing Reference
 
-If you'd like to be able to use a shorthand syntax for `foreach: {data: products, as: 'product'}` that includes the item name in the binding name, you can do so by overriding the `ko.getBindingHandler` function:
+* `ko.bindingHandlers.<name>.preprocess( value, name, addBinding(name, value) )` --- If defined, this function will be called for each `<name>` binding before the binding is evaluated. `value` is the text of the binding value, `name` is the binding name, and `addBinding` is a callback function that allows the `preprocess` function to add another binding. The `preprocess` function should return the new text value of the binding, or return `undefined` to remove the binding.
 
-    function makeNamedForeachBinding(itemName, bindingKey) {
-        return ko.bindingHandlers[bindingKey] = {
-            init: function(element, valueAccessor, allBindings, vm, bindingContext) {
-                ko.applyBindingAccessorsToNode(element, {foreach: function() {
-                    return {
-                        data: valueAccessor(),
-                        as: itemName
-                    };
-                }}, bindingContext);
-                return { controlsDescendantBindings: true };
-            }
-        };
-    }
-    var underlyingGetHandler = ko.getBindingHandler;
-    ko.getBindingHandler = function(bindingKey) {
-        return underlyingGetHandler(bindingKey) || (function() {
-            var match = bindingKey.match(/foreach-(.+)/);
-            if (match) 
-                return makeNamedForeachBinding(match[1], bindingKey);
-        })();
-    };
-
-Now you can bind to `products` like this:
-
-    <div data-bind="foreach-product: products">
-        <span data-bind="text: product.name"></span>
-    </div>
-
+* `ko.bindingProvider.instance.preprocessNode( node )` --- If defined, this function will be called for each DOM node before bindings are processed. The function can modify, remove, or replace the given node. Any modifications must be made to the DOM tree, and if any nodes were added or the given node was removed, the function must return an array of the new nodes.
