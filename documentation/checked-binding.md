@@ -88,20 +88,20 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
 
      If your binding also includes `checkedValue`, this defines the value used by the `checked` binding instead of the element's `value` attribute. This is useful if you want the value to be something other than a string (such as an integer or object), or you want the value set dynamically.
 
-     In the following example, the item object itself will be set in the `Values` array when an item is checked:
+     In the following example, the item objects themselves (not their `itemName` strings) will be included in the `chosenItems` array when their corresponding checkboxes are checked:
 
-            <!-- ko foreach: Choices -->
-              <input type="checkbox" data-bind="checkedValue: $data, checked: $root.Values" />
-              <span data-bind="text: Text"></span>
+            <!-- ko foreach: items -->
+                <input type="checkbox" data-bind="checkedValue: $data, checked: $root.chosenItems" />
+                <span data-bind="text: itemName"></span>
             <!-- /ko -->
 
             <script type="text/javascript">
                 var viewModel = {
-                    Choices: ko.observableArray([
-                        { Text: 'Choice 1' },
-                        { Text: 'Choice 2' }
+                    items: ko.observableArray([
+                        { itemName: 'Choice 1' },
+                        { itemName: 'Choice 2' }
                     ],
-                    Values: ko.observableArray()
+                    chosenItems: ko.observableArray()
                 };
             </script>
 
