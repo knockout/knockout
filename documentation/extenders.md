@@ -59,7 +59,7 @@ ko.extenders.numeric = function(target, precision) {
                 }
             }
         }
-    }).extend({notify:'always'});
+    }).extend({ notify: 'always' });
 
     //initialize with current value to make sure it is rounded appropriately
     result(target());
@@ -78,6 +78,7 @@ ko.applyBindings(new AppViewModel(221.2234, 123.4525));
 
 {% include live-example-minimal.html %}
 
+Note that for this to automatically erase rejected values from the UI, it's necessary to use `.extend({ notify: 'always' })` on the computed observable. Without this, it's possible for the user to enter an invalid `newValue` that when rounded gives an unchanged `valueToWrite`. Then, since the model value would not be changing, there would be no notification to update the textbox in the UI. Using `{ notify: 'always' }` causes the textbox to refresh (erasing rejected values) even if the computed property has not changed value.
 
 ### Live Example 2: Adding validation to an observable
 
