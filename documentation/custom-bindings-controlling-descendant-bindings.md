@@ -70,7 +70,7 @@ If you want to do this in custom bindings, then instead of using `bindingContext
             // Make a modified binding context, with a extra properties, and apply it to descendant elements
             var childBindingContext = bindingContext.createChildContext(
                 bindingContext.$rawData, 
-                null, 
+                null, // Optionally, pass a string here as an alias for the data item in descendant contexts
                 function(context) {
                     ko.utils.extend(context, valueAccessor());
                 });
