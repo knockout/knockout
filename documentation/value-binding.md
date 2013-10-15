@@ -68,13 +68,18 @@ However, if you use `value` to link a form element to a *non*-observable propert
 
  * If you reference a *simple property*, i.e., it is just a regular property on your view model, KO will set the form element's initial state to the property value, and when the form element is edited, KO will write the changes back to your property. It cannot detect when the property changes (because it isn't observable), so this is only a 1-way binding.
    
- * If you reference something that is *not* a simple property, e.g., a complex JavaScript expression or a sub-property, KO will set the form element's initial state to that value, but it will not be able to write any changes back when the user edits the form element. In this case it's a one-time-only value setter, not a real binding.
+ * If you reference something that is *not* a simple property, e.g., the result of a function call or comparison operation, KO will set the form element's initial state to that value, but it will not be able to write any changes back when the user edits the form element. In this case it's a one-time-only value setter, not an ongoing binding that reacts to changes.
 
 Example:
 
-    <p>First value: <input data-bind="value: firstValue" /></p>          <!-- two-way binding -->
-    <p>Second value: <input data-bind="value: secondValue" /></p>        <!-- one-way binding -->
-    <p>Third value: <input data-bind="value: secondValue.length" /></p>  <!-- no binding -->
+    <!-- Two-way binding. Populates textbox; syncs both ways. -->
+    <p>First value: <input data-bind="value: firstValue" /></p>
+
+    <!-- One-way binding. Populates textbox; syncs only from textbox to model. -->
+    <p>Second value: <input data-bind="value: secondValue" /></p>
+
+    <!-- No binding. Populates textbox, but doesn't react to any changes. -->
+    <p>Third value: <input data-bind="value: secondValue.length" /></p>
     
     <script type="text/javascript">
 	    var viewModel = {
