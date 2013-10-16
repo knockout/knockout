@@ -85,17 +85,15 @@ describe('Mapping helpers', function() {
         expect(result.booleanValue).toEqual(booleanValue);
     });
 
-    it('ko.toJS shouldn\'t serialize functions', function() {
+    it('ko.toJS should serialize functions', function() {
         var obj = {
-            include: ko.observable("I should be serialized"),
-            exclude: function(){
-                return "I shouldn't be serialized"
-            }
+            include: ko.observable("test"),
+            exclude: function(){}
         };
 
         var result = ko.toJS(obj);
-        expect(result.include).toEqual("I should be serialized");
-        expect(result.exclude).toEqual(undefined);
+        expect(result.include).toEqual("test");
+        expect(result.exclude).toEqual(obj.exclude);
     });
 
     it('ko.toJSON should unwrap everything and then stringify', function() {
