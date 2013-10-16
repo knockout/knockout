@@ -46,4 +46,38 @@ describe('Binding: Text', function() {
         expect(testNode).toContainText("xxx ");
         expect(testNode).toContainHtml("xxx <!--ko text: undefined--><!--/ko-->");
     });
+
+    it('Should not attempt data binding on the generated text node', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
+        // Since custom binding providers can regard text nodes as bindable, it would be a
+        // security risk to bind against user-supplied text (XSS).
+
+        // First replace the binding provider with one that's hardcoded to replace all text
+        // content with a special message, via a binding handler that operates on text nodes
+        var originalBindingProvider = ko.bindingProvider.instance;
+        ko.bindingProvider.instance = {
+            nodeHasBindings: function(node, bindingContext) {
+                return true;
+            },
+            getBindingAccessors: function(node, bindingContext) {
+                if (node.nodeType === 3) {
+                    return {
+                        replaceTextNodeContent: function() { return "should not see this value in the output"; }
+                    };
+                } else {
+                    return originalBindingProvider.getBindingAccessors(node, bindingContext);
+                }
+            }
+        };
+        ko.bindingHandlers.replaceTextNodeContent = {
+            update: function(textNode, valueAccessor) { textNode.data = valueAccessor(); }
+        };
+
+        // Now check that, after applying the "text" binding, the emitted text node does *not*
+        // get replaced by the special message.
+        testNode.innerHTML = "<span data-bind='text: sometext'></span>";
+        ko.applyBindings({ sometext: 'hello' }, testNode);
+        expect("textContent" in testNode ? testNode.textContent : testNode.innerText).toEqual('hello');
+    });
 });

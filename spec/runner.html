@@ -29,7 +29,7 @@
             // This is used by our automated test runners (PhantomJS and Testling CI).
             (function() {
                 var koFilenameParam = location.href.match(/[?&]src=([^&]+)/);
-                jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "spec/lib/knockout-latest.js"));
+                jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "downloads/knockout-3.0.0.js"));
             })();
         </script>
 
@@ -41,13 +41,17 @@
         <script type="text/javascript" src="subscribableBehaviors.js"></script>
         <script type="text/javascript" src="observableBehaviors.js"></script>
         <script type="text/javascript" src="observableArrayBehaviors.js"></script>
+        <script type="text/javascript" src="observableArrayChangeTrackingBehaviors.js"></script>
         <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
         <script type="text/javascript" src="dependentObservableDomBehaviors.js"></script>
         <script type="text/javascript" src="extenderBehaviors.js"></script>
         <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
         <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
         <script type="text/javascript" src="expressionRewritingBehaviors.js"></script>
+        <script type="text/javascript" src="bindingPreprocessingBehaviors.js"></script>
+        <script type="text/javascript" src="nodePreprocessingBehaviors.js"></script>
         <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
+        <script type="text/javascript" src="bindingDependencyBehaviors.js"></script>
         <script type="text/javascript" src="templatingBehaviors.js"></script>
         <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
         <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
@@ -85,7 +89,9 @@
             jasmineEnv.addReporter(htmlReporter);
             jasmineEnv.specFilter = htmlReporter.specFilter;
 
-            jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
+            var testlingParam = /[?&]testling=true/.test(location.href);
+            if (testlingParam)
+                jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
             jasmineEnv.execute();
           })();
         </script>

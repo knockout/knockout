@@ -1,3 +1,10 @@
+jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
+    var originalValue = object[propertyName];
+    this.after(function() {
+        object[propertyName] = originalValue;
+    });
+};
+
 jasmine.Matchers.prototype.toEqualOneOf = function (expectedPossibilities) {
     for (var i = 0; i < expectedPossibilities.length; i++) {
         if (this.env.equals_(this.actual, expectedPossibilities[i])) {
@@ -56,6 +63,17 @@ jasmine.Matchers.prototype.toHaveSelectedValues = function (expectedValues) {
         selectedValues = ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });
     this.actual = selectedValues;   // Fix explanatory message
     return this.env.equals_(selectedValues, expectedValues);
+};
+
+jasmine.Matchers.prototype.toThrowContaining = function(expected) {
+    var exception;
+    try {
+        this.actual();
+    } catch (e) {
+        exception = e;
+    }
+    this.actual = exception && (exception.message || exception);   // Fix explanatory message
+    return exception ? this.env.contains_(exception.message || exception, expected) : false;
 };
 
 jasmine.addScriptReference = function(scriptUrl) {

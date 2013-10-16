@@ -194,6 +194,49 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('first childhidden child');
     });
 
+    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function() {
+        // Set up a binding provider that converts text nodes to expressions
+        var originalBindingProvider = ko.bindingProvider.instance,
+            preprocessingBindingProvider = function() { };
+        preprocessingBindingProvider.prototype = originalBindingProvider;
+        ko.bindingProvider.instance = new preprocessingBindingProvider();
+        ko.bindingProvider.instance.preprocessNode = function(node) {
+            if (node.nodeType === 3 && node.data.charAt(0) === "$") {
+                var newNodes = [
+                    document.createComment('ko text: ' + node.data),
+                    document.createComment('/ko')
+                ];
+                for (var i = 0; i < newNodes.length; i++) {
+                    node.parentNode.insertBefore(newNodes[i], node);
+                }
+                node.parentNode.removeChild(node);
+                return newNodes;
+            }
+        };
+
+        // Now perform a foreach binding, and see that afterRender gets the output from the preprocessor and bindings
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRender: callback }'><span>[</span>$data<span>]</span></div>";
+        var someItems = ko.observableArray(['Alpha', 'Beta']),
+            callbackReceivedArrayValues = [];
+        ko.applyBindings({
+            someItems: someItems,
+            callback: function(nodes, arrayValue) {
+                expect(nodes.length).toBe(5);
+                expect(nodes[0]).toContainText('[');    // <span>[</span>
+                expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data -->
+                expect(nodes[2].nodeType).toBe(3);      // text node inserted by text binding
+                expect(nodes[3].nodeType).toBe(8);      // <!-- /ko -->
+                expect(nodes[4]).toContainText(']');    // <span>]</span>
+                callbackReceivedArrayValues.push(arrayValue);
+            }
+        }, testNode);
+
+        expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+        expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+
+        ko.bindingProvider.instance = originalBindingProvider;
+    });
+
     it('Should call an afterAdd callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
@@ -515,5 +558,37 @@ describe('Binding: Foreach', function() {
         };
         ko.applyBindings(viewModel, testNode);
         expect(testNode).toContainHtml('xxx<!-- ko foreach:someitems --><div><section data-bind="text: $data">alpha</section></div><div><section data-bind="text: $data">beta</section></div><!-- /ko -->');
+    });
+
+    it('Should provide access to observable array items through $rawData', function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><input data-bind='value: $rawData'/></div>";
+        var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
+        ko.applyBindings({ someItems: someItems }, testNode);
+        expect(testNode.childNodes[0]).toHaveValues(['first', 'second']);
+
+        // Should update observable when input is changed
+        testNode.childNodes[0].childNodes[0].value = 'third';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+        expect(x()).toEqual('third');
+
+        // Should update the input when the observable changes
+        y('fourth');
+        expect(testNode.childNodes[0]).toHaveValues(['third', 'fourth']);
+
+        // Should update the inputs when the array changes
+        someItems([x]);
+        expect(testNode.childNodes[0]).toHaveValues(['third']);
+    });
+
+    it('Should not re-render the nodes when a observable array item changes', function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
+        var x = ko.observable('first'), someItems = [ x ];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        expect(testNode.childNodes[0]).toContainText('first');
+
+        var saveNode = testNode.childNodes[0].childNodes[0];
+        x('second');
+        expect(testNode.childNodes[0]).toContainText('second');
+        expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
     });
 });

@@ -1,8 +1,6 @@
 describe('Binding: Options', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    // Todo: when the options list is populated, this should trigger a change event so that observers are notified of the new value (i.e., the default selection)
-
     it('Should only be applicable to SELECT nodes', function () {
         var threw = false;
         testNode.innerHTML = "<input data-bind='options:{}' />";
@@ -88,7 +86,7 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
-    it('Should retain selection when replacing the options data with new object that have the same "value"', function () {
+    it('Should retain selection when replacing the options data with new objects that have the same "value"', function () {
         var observable = new ko.observableArray([{x:"A"}, {x:"B"}, {x:"C"}]);
         testNode.innerHTML = "<select data-bind='options:myValues, optionsValue:\"x\"' multiple='multiple'></select>";
         ko.applyBindings({ myValues: observable }, testNode);
@@ -96,6 +94,81 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
         observable([{x:"A"}, {x:"C"}, {x:"B"}]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+    });
+
+    it('Should trigger a change event when the options selection is populated or changed by modifying the options data (single select)', function() {
+        var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
+        testNode.innerHTML = "<select data-bind='options:myValues'></select>";
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
+            changeHandlerFireCount++;
+        });
+        ko.applyBindings({ myValues: observable }, testNode);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change the order of options; since selection is not changed, should not trigger change event
+        observable(["B", "C", "A"]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(2);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change to a new set of options; since selection is changed, should trigger change event
+        observable(["D", "E"]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Delete all options; selection is changed (to nothing), so should trigger event
+        observable([]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+        expect(changeHandlerFireCount).toEqual(3);
+
+        // Re-add options; should trigger change event
+        observable([1, 2, 3]);
+        expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        expect(changeHandlerFireCount).toEqual(4);
+    });
+
+    it('Should trigger a change event when the options selection is changed by modifying the options data (multiple select)', function() {
+        var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
+        testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'></select>";
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
+            changeHandlerFireCount++;
+        });
+        ko.applyBindings({ myValues: observable }, testNode);
+        expect(changeHandlerFireCount).toEqual(0);  // Selection wasn't changed
+
+        // Select the first item and change the order of options; since selection is not changed, should not trigger change event
+        testNode.childNodes[0].options[0].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        observable(["B", "C", "A"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        expect(changeHandlerFireCount).toEqual(0);
+
+        // Select another item and then remove it from options; since selection is changed, should trigger change event
+        testNode.childNodes[0].options[0].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B","A"]);
+        observable(["C", "A"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
+        expect(changeHandlerFireCount).toEqual(1);
+
+        // Change to a new set of options; since selection is changed (to nothing), should trigger change event
+        observable(["D", "E"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Delete all options; selection is not changed, so shouldn't trigger event
+        observable([]);
+        expect(changeHandlerFireCount).toEqual(2);
+
+        // Set observable options and select them
+        observable([ko.observable("X"), ko.observable("Y")]);
+        expect(changeHandlerFireCount).toEqual(2);
+        testNode.childNodes[0].options[0].selected = testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["X","Y"]);
+
+        // Change the value of a selected item, which should deselect it and trigger a change event
+        observable()[1]("Z");
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["X"]);
+        expect(changeHandlerFireCount).toEqual(3);
     });
 
     it('Should place a caption at the top of the options list and display it when the model value is undefined', function() {
@@ -160,7 +233,7 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bert"]);
 
-        // Also show we can update the caption without affecting selection
+        // Also show we can update the text without affecting selection
         people[1].name("Bob");
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["-", "Annie", "Bob"]);

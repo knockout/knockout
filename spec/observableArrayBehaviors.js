@@ -23,11 +23,8 @@ describe('Observable Array', function() {
 
     it('Should require constructor arg, if given, to be array-like or null or undefined', function() {
         // Try non-array-like args
-        var threw;
-        try { threw = false; new ko.observableArray(1); } catch(ex) { threw = true }
-        expect(threw).toEqual(true);
-        try { threw = false; new ko.observableArray({}); } catch(ex) { threw = true }
-        expect(threw).toEqual(true);
+        expect(function () { ko.observableArray(1); }).toThrow();
+        expect(function () { ko.observableArray({}); }).toThrow();
 
         // Try allowed args
         expect((new ko.observableArray([1,2,3]))().length).toEqual(3);
@@ -59,6 +56,15 @@ describe('Observable Array', function() {
         expect(x._destroy).toEqual(true);
         expect(y._destroy).toEqual(undefined);
         expect(z._destroy).toEqual(true);
+    });
+
+    it('Should be able to mark observable items as destroyed', function() {
+        var x = ko.observable(), y = ko.observable();
+        testObservableArray([x, y]);
+        testObservableArray.destroy(y);
+        expect(testObservableArray().length).toEqual(2);
+        expect(x._destroy).toEqual(undefined);
+        expect(y._destroy).toEqual(true);
     });
 
     it('Should be able to mark all items as destroyed by passing no args to destroyAll()', function() {
@@ -175,6 +181,16 @@ describe('Observable Array', function() {
         notifiedValues = [];
         var removed = testObservableArray.removeAll();
         expect(originalArray).toEqual([]);
+    });
+
+    it('Should remove matching observable items', function() {
+        var x = ko.observable(), y = ko.observable();
+        testObservableArray([x, y]);
+        notifiedValues = [];
+        var removed = testObservableArray.remove(y);
+        expect(testObservableArray()).toEqual([x]);
+        expect(removed).toEqual([y]);
+        expect(notifiedValues).toEqual([[x]]);
     });
 
     it('Should notify subscribers on replace', function () {
