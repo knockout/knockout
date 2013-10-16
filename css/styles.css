@@ -111,7 +111,7 @@ body { font-family: arial; font-size: 14px; }
 
 /* Homepage */
 #slogan { 
-	float:right; width: 23.5em;
+	float:right; width: 20em;
 	padding-left: 1.4em;
 	background: url(../img/vertical-bar.png) no-repeat;
 	font-size: 20px;
@@ -121,8 +121,8 @@ body { font-family: arial; font-size: 14px; }
 #slogan .download-button { margin-top: 0.6em; }
 
 .download-button {
-	background: url(../img/download-button-bg-wide.png);
-	width: 220px; height: 51px;
+	background: url(../img/download-button-bg.png);
+	width: 173px; height: 51px;
 	display: inline-block;
 	text-decoration: none !important;
 	text-align: left;
