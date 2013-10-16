@@ -87,7 +87,8 @@ body { font-family: arial; font-size: 14px; }
 	text-shadow: rgba(253, 204, 197, 0.4) 1px 1px 0px;
 }
 
-.vspace { height: 2em;}
+.vspace { height: 2em; }
+.vspace-small { height: 1.25em; }
 
 .liveExample { padding: 1em; background-color: #EEEEDD; border: 1px solid #CCC; max-width: 655px; }
 .liveExample input { font-family: Arial; }
@@ -116,14 +117,15 @@ body { font-family: arial; font-size: 14px; }
 	background: url(../img/vertical-bar.png) no-repeat;
 	font-size: 20px;
 	margin-bottom: 0.6em;
+	text-align: center;
 }
 
-#slogan .download-button { margin-top: 0.6em; }
+#slogan .download-button { margin: 0.6em 0 0.2em 0; }
 
 .download-button {
 	background: url(../img/download-button-bg.png);
-	width: 173px; height: 51px;
-	display: inline-block;
+	width: 100%; height: 51px;
+	display: block;
 	text-decoration: none !important;
 	text-align: left;
 }
@@ -139,10 +141,15 @@ body { font-family: arial; font-size: 14px; }
 }
 .download-button:hover p { text-decoration: underline; }
 
+.download-widget { width: 173px; display: inline-block; margin: auto; padding: 0 8px; }
+.download-widget a.download-info { display: block; text-align: center; font-size: 0.7em; color: #fe9; }
+.download-widget a.download-info:hover { text-decoration: underline; }
+
 /* Downloads */
-.download-panel { background-color: #EBB60F; padding: 8px; border-radius: 8px; margin-top: -20px; text-align: center; }
-.download-panel .download-button { padding-top: 3px; background-repeat: no-repeat; }
+.download-panel { background-color: #e82; padding: 8px 0 6px 0; border-radius: 8px; margin-top: -20px; text-align: center; }
+.download-panel .download-button { padding-top: 3px; background-repeat: no-repeat; margin: 0.1em 0 0.1em 0; }
 .download-panel .download-button p { padding-top: 3px; }
+.download-panel a.download-info { color: #ffd; line-height: 1em; margin-top: 0.2em; text-decoration: none; font-size: 0.9em; }
 .download-debug-panel { font-size: 0.85em; margin: 1em; line-height: 1.3em; color: gray; }
 
 /* Columns */
