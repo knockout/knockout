@@ -17,6 +17,11 @@ ko.bindingHandlers['value'] = {
             var modelValue = valueAccessor();
             var elementValue = ko.selectExtensions.readValue(element);
             ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'value', elementValue);
+            
+            // Sometimes, the model property will reject the update. In that case, the model and element
+            // will be out-of-sync. The update function checks if this is the case (values are different) 
+            // and updates the element to match.
+            ko.bindingHandlers['value']['update'](element, valueAccessor);
         }
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122
