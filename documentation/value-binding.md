@@ -79,7 +79,7 @@ Example:
     <p>Second value: <input data-bind="value: secondValue" /></p>
 
     <!-- No binding. Populates textbox, but doesn't react to any changes. -->
-    <p>Third value: <input data-bind="value: secondValue.length" /></p>
+    <p>Third value: <input data-bind="value: secondValue.length > 8" /></p>
     
     <script type="text/javascript">
 	    var viewModel = {
