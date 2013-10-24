@@ -986,4 +986,20 @@ describe('Templating', function() {
         // Since the actual template markup was invalid, we don't really care what the
         // resulting DOM looks like. We are only verifying there were no exceptions.
     });
+
+    it('Should be possible to render a template to a document fragment', function() {
+        // Represents https://github.com/knockout/knockout/issues/1162
+        // This was failing on IE8
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            myTemplate: "<p>myval: [js: myVal]</p>" // The whitespace after the closing span is what triggers the strange HTML parsing
+        }));
+
+        var testDocFrag = document.createDocumentFragment();
+        ko.renderTemplate("myTemplate", { myVal: 123 }, null, testDocFrag);
+
+        // Can't use .toContainHtml directly on doc frags, so check DOM structure manually
+        expect(testDocFrag.childNodes.length).toEqual(1);
+        expect(testDocFrag.childNodes[0].tagName).toEqual("P");
+        expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
+    });
 })

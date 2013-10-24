@@ -268,6 +268,8 @@ ko.utils = (function () {
         domNodeIsContainedBy: function (node, containedByNode) {
             if (node === containedByNode)
                 return true;
+            if (node.nodeType === 11)
+                return false; // Fixes issue #1162 - can't use node.contains for document fragments on IE8
             if (containedByNode.contains)
                 return containedByNode.contains(node.nodeType === 3 ? node.parentNode : node);
             if (containedByNode.compareDocumentPosition)
