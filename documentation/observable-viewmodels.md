@@ -40,6 +40,13 @@ window.setInterval(function() {
 
 {% include live-example-minimal.html %}
 
-#### Don't forget the "with" binding
+### Other considerations
 
-Of course, there are much easier and more flexible ways of swapping sections of your viewmodel and view, for example using a [`with` binding](with-binding.html), so you should only use the observable viewmodel technique if you have a strong and specific reason.
+The observable viewmodel technique is now fully supported in Knockout 3.0 and will work with all of the built-in bindings. But if you are using any external or custom bindings in your UI, you will need to check that they are compatible. If not, you may be better off using the [`template`](template-binding.html) or [`with`](with-binding.html) bindings instead to handle swapping your viewmodel.
+
+If you want your custom bindings to be compatible with observable view models, you'll need to make sure that they update correctly when the viewmodel changes. Here are some specific items to check for and change:
+
+1. Don't use the `viewModel` parameter to access the viewmodel in the `init` method, because it will only ever point to the initial viewmodel. Instead, get the viewmodel object from the binding context parameter, using `$data` or the new `$rawData`.
+2. Don't subscribe directly to observable values in the `init` method. Instead, use a computed observable that will also have a dependency on the observable view model, for example, by calling the `valueAccessor` function. Or just use your handler's `update` method to perform updates.
+3. Don't create or apply bindings using values extracted from the viewmodel. Instead, supply a function when creating or applying bindings that returns the values using `valueAccessor` or `bindingContext.$rawData`.
+4. Don't have code that uses the viewmodel or the binding value directly in the `init` method, unless you are sure that the code only needs to ever run once. Instead, use the `update` method or wrap the code in a computed observable.
