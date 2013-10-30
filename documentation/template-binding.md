@@ -236,7 +236,7 @@ The [Underscore.js template engine](http://documentcloud.github.com/underscore/#
         <% }) %>
     </script>
 
-Here's [a simple implementation of integrating Underscore templates with Knockout](http://jsfiddle.net/6pStz/). The integration code is just 16 lines long, but it's enough to support Knockout `data-bind` attributes (and hence nested templates) and Knockout [binding context](binding-context.html) variables (`$parent`, `$root`, etc.).
+Here's [a simple implementation of integrating Underscore templates with Knockout](http://jsfiddle.net/rniemeyer/NW5Vn/). The integration code is just 16 lines long, but it's enough to support Knockout `data-bind` attributes (and hence nested templates) and Knockout [binding context](binding-context.html) variables (`$parent`, `$root`, etc.).
 
 If you're not a fan of the `<%= ... %>` delimiters, you can configure the Underscore template engine to use any other delimiter characters of your choice.
 
