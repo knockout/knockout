@@ -22,8 +22,8 @@ module.exports = function(grunt) {
             }
         },
         build: {
-            debug: './build/output/knockout-latest.debug.js',
-            min: './build/output/knockout-latest.js'
+            debug: './build/output/knockout.js',
+            min: './build/output/knockout.min.js'
         },
         test: {
             phantomjs: 'spec/runner.phantom.js',
