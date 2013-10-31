@@ -1,4 +1,5 @@
-ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+// Make "ko.computed" an alias for "ko.dependentObservable" 
+ko['computed'] = ko['dependentObservable'] = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
         _hasBeenEvaluated = false,
         _isBeingEvaluated = false,
@@ -138,19 +139,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     if (!evaluatorFunctionTarget)
         evaluatorFunctionTarget = options["owner"];
 
-    dependentObservable.peek = peek;
-    dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; };
+    dependentObservable['peek'] = peek;
+    dependentObservable['getDependenciesCount'] = function () { return _subscriptionsToDependencies.length; };
+    dependentObservable['dispose'] = function () { dispose(); };
+    dependentObservable['isActive'] = isActive;
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
-    dependentObservable.dispose = function () { dispose(); };
-    dependentObservable.isActive = isActive;
 
     ko.subscribable.call(dependentObservable);
     ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
-
-    ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
-    ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
-    ko.exportProperty(dependentObservable, 'isActive', dependentObservable.isActive);
-    ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
 
     // Add a "disposeWhen" callback that, on each evaluation, disposes if the node was removed without using ko.removeNode.
     if (disposeWhenNodeIsRemoved) {
@@ -188,18 +184,15 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     return dependentObservable;
 };
 
-ko.isComputed = function(instance) {
-    return ko.hasPrototype(instance, ko.dependentObservable);
+ko['isComputed'] = function(instance) {
+    return ko.hasPrototype(instance, ko['dependentObservable']);
 };
 
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
-ko.dependentObservable[protoProp] = ko.observable;
+ko['dependentObservable'][protoProp] = ko.observable;
 
-ko.dependentObservable['fn'] = {
+ko['dependentObservable']['fn'] = {
     "equalityComparer": valuesArePrimitiveAndEqual
 };
-ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
+ko['dependentObservable']['fn'][protoProp] = ko.dependentObservable;
 
-ko.exportSymbol('dependentObservable', ko.dependentObservable);
-ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
-ko.exportSymbol('isComputed', ko.isComputed);
