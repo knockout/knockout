@@ -86,6 +86,13 @@ ko.observableArray['fn'] = {
             this.peek()[index] = newItem;
             this.valueHasMutated();
         }
+    },
+    'pushAll': function(items) {
+        if(!(items instanceof Array)) return this.peek().length;
+        this.valueWillMutate();
+        ko.utils.arrayPushAll(this.peek(), items);
+        this.valueHasMutated();
+        return this.peek().length;
     }
 };
 

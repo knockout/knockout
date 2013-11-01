@@ -276,4 +276,42 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
+
+    it('Should push items from the input array into the current', function() {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"]);
+        expect(testObservableArray().length).toEqual(6);
+        expect(testObservableArray()).toEqual(["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]);
+    });
+
+    it('Should return the Array length', function() {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        expect(testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"])).toEqual(6);
+    });
+
+    it('Should not modify the current if input argument is not an instance of Array', function() {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        testObservableArray.pushAll("Delta");
+        expect(testObservableArray()).toEqual(["Alpha", "Beta", "Gamma"]);
+    });
+
+    it('Should notify "beforeChange" subscribers before pushAll', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var notified = false;
+        testObservableArray.subscribe(function(value) {
+            notified = true;
+        }, null, "beforeChange");
+        testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"]);
+        expect(notified).toEqual(true);
+    });
+
+    it('Should notify subscribers after pushAll', function() {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        var notified = false;
+        testObservableArray.subscribe(function(value) {
+            notified = true;
+        });
+        testObservableArray.pushAll(["Delta", "Epsilon", "Zeta"]);
+        expect(notified).toEqual(true); 
+    });
 })
