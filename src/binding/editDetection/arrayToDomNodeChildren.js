@@ -77,6 +77,12 @@
             }
         }
 
+        // Clean node, but only Knockout data as the beforeRemove callback is
+        // responsible for tearing the node down
+        function cleanNode(node) {
+            ko.cleanNode(node, false);
+        }
+
         for (var i = 0, editScriptItem, movedIndex; editScriptItem = editScript[i]; i++) {
             movedIndex = editScriptItem['moved'];
             switch (editScriptItem['status']) {
@@ -120,7 +126,7 @@
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
-        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
+        ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? cleanNode : ko.removeNode);
 
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
         for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {

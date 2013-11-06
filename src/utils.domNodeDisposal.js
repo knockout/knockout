@@ -1,4 +1,3 @@
-
 ko.utils.domNodeDisposal = new (function () {
     var domDataKey = ko.utils.domData.nextKey();
     var cleanableNodeTypes = { 1: true, 8: true, 9: true };       // Element, Comment, Document
@@ -16,7 +15,10 @@ ko.utils.domNodeDisposal = new (function () {
         ko.utils.domData.set(node, domDataKey, undefined);
     }
 
-    function cleanSingleNode(node) {
+    function cleanSingleNode(node, cleanAllData) {
+        if (cleanAllData === undefined || cleanAllData === null) {
+            cleanAllData = true;
+        }
         // Run all the dispose callbacks
         var callbacks = getDisposeCallbacksCollection(node, false);
         if (callbacks) {
@@ -28,11 +30,17 @@ ko.utils.domNodeDisposal = new (function () {
         // Also erase the DOM data
         ko.utils.domData.clear(node);
 
-        // Special support for jQuery here because it's so commonly used.
-        // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
-        // so notify it to tear down any resources associated with the node & descendants here.
-        if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
-            jQuery['cleanData']([node]);
+        if (cleanAllData) {
+            // Access jQuery via explicit string as window.jQuery is subject to minification and thus
+            // won't be stubbable by tests
+            var jQuery = window["jQuery"];
+
+            // Special support for jQuery here because it's so commonly used.
+            // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
+            // so notify it to tear down any resources associated with the node & descendants here.
+            if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
+                jQuery['cleanData']([node]);
+        }
 
         // Also clear any immediate-child comment nodes, as these wouldn't have been found by
         // node.getElementsByTagName("*") in cleanNode() (comment nodes aren't elements)
@@ -65,10 +73,10 @@ ko.utils.domNodeDisposal = new (function () {
             }
         },
 
-        cleanNode : function(node) {
+        cleanNode : function(node, cleanAllData) {
             // First clean this node, where applicable
             if (cleanableNodeTypes[node.nodeType]) {
-                cleanSingleNode(node);
+                cleanSingleNode(node, cleanAllData);
 
                 // ... then its descendants, where applicable
                 if (cleanableNodeTypesWithDescendants[node.nodeType]) {
@@ -76,7 +84,7 @@ ko.utils.domNodeDisposal = new (function () {
                     var descendants = [];
                     ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
                     for (var i = 0, j = descendants.length; i < j; i++)
-                        cleanSingleNode(descendants[i]);
+                        cleanSingleNode(descendants[i], cleanAllData);
                 }
             }
             return node;
@@ -87,7 +95,7 @@ ko.utils.domNodeDisposal = new (function () {
             if (node.parentNode)
                 node.parentNode.removeChild(node);
         }
-    }
+    };
 })();
 ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
 ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience
