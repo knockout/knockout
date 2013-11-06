@@ -100,7 +100,7 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
                     items: ko.observableArray([
                         { itemName: 'Choice 1' },
                         { itemName: 'Choice 2' }
-                    ],
+                    ]),
                     chosenItems: ko.observableArray()
                 };
             </script>
