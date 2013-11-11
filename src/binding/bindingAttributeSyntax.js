@@ -253,7 +253,7 @@
                                 }
                             }
                         });
-                        cyclicDependencyStack.pop();
+                        cyclicDependencyStack.length--;
                     }
                     // Next add the current binding
                     result.push({ key: bindingKey, handler: binding });
