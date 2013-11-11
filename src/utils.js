@@ -70,8 +70,12 @@ ko.utils = (function () {
 
         arrayRemoveItem: function (array, itemToRemove) {
             var index = ko.utils.arrayIndexOf(array, itemToRemove);
-            if (index >= 0)
+            if (index === 0) {
+                array.shift();
+            }
+            else if (index > 0) {
                 array.splice(index, 1);
+            }
         },
 
         arrayGetDistinctValues: function (array) {
@@ -213,7 +217,7 @@ ko.utils = (function () {
 
                 // Rule [A]
                 while (continuousNodeArray.length && continuousNodeArray[0].parentNode !== parentNode)
-                    continuousNodeArray.splice(0, 1);
+                    continuousNodeArray.shift();
 
                 // Rule [B]
                 if (continuousNodeArray.length > 1) {
