@@ -29,6 +29,11 @@
 
     ko.templateSources.domElement = function(element) {
         this.domElement = element;
+
+        // Parse the template to speed up rendering of multiple instances of this template
+        if (this.domElement) {
+            this.nodeList = ko.utils.parseHtmlFragment(this.text());
+        }
     }
 
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
@@ -81,8 +86,12 @@
     };
     ko.templateSources.domElement.prototype['nodes'] = function(/* valueToWrite */) {
         if (arguments.length == 0) {
-            var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
-            return templateData.containerData;
+            if (this.nodeList) {
+                return this.nodeList;
+            } else {
+                var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
+                return templateData.containerData;
+            }
         } else {
             var valueToWrite = arguments[0];
             ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, {containerData: valueToWrite});

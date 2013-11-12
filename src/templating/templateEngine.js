@@ -37,11 +37,27 @@ ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script
 ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateDocument) {
     // Named template
     if (typeof template == "string") {
+        var namedTemplateCache = this.namedTemplateCache || {};
+
+        // See if we've already build this template
+        if (namedTemplateCache[template]) {
+            return namedTemplateCache[template];
+        }
+
         templateDocument = templateDocument || document;
         var elem = templateDocument.getElementById(template);
         if (!elem)
             throw new Error("Cannot find template with ID " + template);
-        return new ko.templateSources.domElement(elem);
+        var domElementSource = new ko.templateSources.domElement(elem);
+
+        namedTemplateCache[template] = domElementSource;
+
+        // Garbage collect this template if not used within 10s (helpful for batch templating, like in a foreach
+        setTimeout(function() {
+            delete namedTemplateCache[template];
+        }, 10000);
+
+        return domElementSource;
     } else if ((template.nodeType == 1) || (template.nodeType == 8)) {
         // Anonymous template
         return new ko.templateSources.anonymousTemplate(template);
