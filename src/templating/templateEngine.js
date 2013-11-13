@@ -50,7 +50,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
                     this.templateCacheCleanupTimeoutID = null;
 
                     var cacheEmpty = true;
-                    var currentTime = Date.now()
+                    var currentTime = Date.now();
 
                     // Walk through the templates, and delete all that have expired
                     for (var templateName in namedTemplateCache) {
