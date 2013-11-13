@@ -248,14 +248,14 @@ ko.utils = (function () {
         },
 
         stringTokenize: function (string, delimiter) {
-            var result = [];
             var tokens = (string || "").split(delimiter);
-            for (var i = 0, j = tokens.length; i < j; i++) {
+            for (var i = tokens.length - 1; i >= 0; i--) {
                 var trimmed = ko.utils.stringTrim(tokens[i]);
-                if (trimmed !== "")
-                    result.push(trimmed);
+                if (!trimmed.length) {
+                    tokens.splice(i, 1);
+                }
             }
-            return result;
+            return tokens;
         },
 
         stringStartsWith: function (string, startsWith) {
