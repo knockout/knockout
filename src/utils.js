@@ -52,7 +52,9 @@ ko.utils = (function () {
                 action(array[i]);
         },
 
-        arrayIndexOf: (typeof Array.prototype.indexOf == "function") ? Array.prototype.indexOf : function(array, item) {
+        arrayIndexOf: (typeof Array.prototype.indexOf == "function") ? function (array, item) {
+            return Array.prototype.indexOf.call(array, item);
+        } : function (array, item) {
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
