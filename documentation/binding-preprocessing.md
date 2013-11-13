@@ -57,7 +57,7 @@ Now you can bind `click` like this:
 
   * `name`: the name of the binding (e.g., for `yourBinding: 1 + 1`, the name is `"yourBinding"` as a string).
 
-  * `addBinding`: a callback function you an optionally use to insert another binding on the current element. This requires two parameters, `name` and `value`. For example, inside your `preprocess` function, call `addBinding('visible', 'acceptsTerms()');` to make Knockout behave as if the element had a `visible: acceptsTerms()` binding on it.
+  * `addBinding`: a callback function you can optionally use to insert another binding on the current element. This requires two parameters, `name` and `value`. For example, inside your `preprocess` function, call `addBinding('visible', 'acceptsTerms()');` to make Knockout behave as if the element had a `visible: acceptsTerms()` binding on it.
 
   **Return value**:
 
@@ -71,7 +71,7 @@ Now you can bind `click` like this:
 
 You can hook into Knockout's logic for traversing the DOM by providing a *node preprocessor*. This is a function that Knockout will call once for each DOM node that it walks over, both when the UI is first bound, and later when any new DOM subtrees are injected (e.g., via a [`foreach` binding](foreach-binding.html)).
 
-To do this, define `preprocessNode` function on your binding provider:
+To do this, define a `preprocessNode` function on your binding provider:
 
     ko.bindingProvider.instance.preprocessNode = function(node) {
         // Use DOM APIs such as setAttribute to modify 'node' if you wish.
