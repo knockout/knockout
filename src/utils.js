@@ -251,7 +251,10 @@ ko.utils = (function () {
             var tokens = (string || "").split(delimiter);
             for (var i = tokens.length - 1; i >= 0; i--) {
                 var trimmed = ko.utils.stringTrim(tokens[i]);
-                if (!trimmed.length) {
+                if (trimmed.length) {
+                    tokens[i] = trimmed;
+                }
+                else {
                     tokens.splice(i, 1);
                 }
             }
