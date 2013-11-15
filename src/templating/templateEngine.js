@@ -50,7 +50,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
                     this.templateCacheCleanupTimeoutID = null;
 
                     var cacheEmpty = true;
-                    var currentTime = Date.now();
+                    var currentTime = new Date().getTime();
 
                     // Walk through the templates, and delete all that have expired
                     for (var templateName in namedTemplateCache) {
@@ -76,7 +76,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
         // See if we've already build this template
         if (namedTemplateCache[template]) {
             var cacheEntry = namedTemplateCache[template];
-            cacheEntry.lastAccessed = Date.now()
+            cacheEntry.lastAccessed = new Date().getTime();
             return cacheEntry.domElementSource;
         }
 
@@ -88,7 +88,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
 
         namedTemplateCache[template] = {
           domElementSource: domElementSource,
-          lastAccessed: Date.now()
+          lastAccessed: new Date().getTime()
         };
 
         return domElementSource;
