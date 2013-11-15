@@ -54,11 +54,13 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
 
                     // Walk through the templates, and delete all that have expired
                     for (var templateName in namedTemplateCache) {
-                        var template = namedTemplateCache[templateName];
-                        if (currentTime - template.lastAccessed > cacheLifetime) {
-                            delete namedTemplateCache[templateName];
-                        } else {
-                            cacheEmpty = false;
+                        if (namedTemplateCache.hasOwnProperty(templateName)) {
+                            var template = namedTemplateCache[templateName];
+                            if (currentTime - template.lastAccessed > cacheLifetime) {
+                                delete namedTemplateCache[templateName];
+                            } else {
+                                cacheEmpty = false;
+                            }
                         }
                     }
 
