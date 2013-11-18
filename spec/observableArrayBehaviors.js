@@ -1,5 +1,7 @@
 
 describe('Observable Array', function() {
+    var testObservableArray, notifiedValues, beforeNotifiedValues;
+
     beforeEach(function () {
         testObservableArray = new ko.observableArray([1, 2, 3]);
         notifiedValues = [];
@@ -37,6 +39,21 @@ describe('Observable Array', function() {
         expect(notifiedValues.length).toEqual(1);
         expect(notifiedValues[0][0]).toEqual('X');
         expect(notifiedValues[0][1]).toEqual('Y');
+    });
+
+    it('Should require written value to be array-like or null or undefined', function() {
+        var observableArray = ko.observableArray();
+        // Try non-array-like args
+        expect(function () { observableArray(1); }).toThrow();
+        expect(function () { observableArray({}); }).toThrow();
+
+        // Try allowed args
+        observableArray([1,2,3]);
+        expect(observableArray().length).toEqual(3);
+        observableArray(null);
+        expect(observableArray().length).toEqual(0);
+        observableArray(undefined);
+        expect(observableArray().length).toEqual(0);
     });
 
     it('Should be able to mark single items as destroyed', function() {

@@ -251,4 +251,36 @@ describe('Observable', function() {
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
     });
+
+    it('Should write values returned by "validateInput" filter function', function() {
+        var observable = ko.observable(undefined, {
+            validateInput: function(newValue, oldValue) {
+                return isNaN(newValue) ? 0 : parseFloat(+newValue);
+            }});
+        var notifiedValues = [];
+        observable.subscribe(notifiedValues.push, notifiedValues);
+
+        // initial value is 0 (converted from undefined)
+        expect(observable()).toEqual(0);
+
+        // Setting to undefined becomes 0 (even though observable was initially undefined)
+        observable(undefined);
+        expect(notifiedValues).toEqual([0]);
+
+        // Numeric 1 is unchanged
+        observable(1);
+        expect(notifiedValues).toEqual([0,1]);
+
+        // Setting to 1 again doesn't notify
+        observable(1);
+        expect(notifiedValues).toEqual([0,1]);
+
+        // String "1" is converted to numeric 1 and notifies of change (even though observable value hasn't changed)
+        observable("1");
+        expect(notifiedValues).toEqual([0,1,1]);
+
+        // String "xyz" becomes zero
+        observable("xyz");
+        expect(notifiedValues).toEqual([0,1,1,0]);
+    });
 });
