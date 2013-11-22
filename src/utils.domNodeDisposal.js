@@ -31,7 +31,7 @@ ko.utils.domNodeDisposal = new (function () {
         // Special support for jQuery here because it's so commonly used.
         // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
         // so notify it to tear down any resources associated with the node & descendants here.
-        if ((typeof jQuery == "function") && (typeof jQuery['cleanData'] == "function"))
+        if (jQuery && (typeof jQuery['cleanData'] == "function"))
             jQuery['cleanData']([node]);
 
         // Also clear any immediate-child comment nodes, as these wouldn't have been found by
