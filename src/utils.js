@@ -297,7 +297,7 @@ ko.utils = (function () {
 
         registerEventHandler: function (element, eventType, handler) {
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
-            if (!mustUseAttachEvent && typeof jQuery != "undefined") {
+            if (!mustUseAttachEvent && jQuery) {
                 if (isClickOnCheckableElement(element, eventType)) {
                     // For click events on checkboxes, jQuery interferes with the event handling in an awkward way:
                     // it toggles the element checked state *after* the click event handlers run, whereas native
@@ -333,7 +333,7 @@ ko.utils = (function () {
             if (!(element && element.nodeType))
                 throw new Error("element must be a DOM node when calling triggerEvent");
 
-            if (typeof jQuery != "undefined") {
+            if (jQuery) {
                 var eventData = [];
                 if (isClickOnCheckableElement(element, eventType)) {
                     // Work around the jQuery "click events on checkboxes" issue described above by storing the original checked state before triggering the handler
