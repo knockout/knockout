@@ -105,7 +105,7 @@ module.exports = function(grunt) {
         grunt.log.write('Compiling...');
         cc.compile('/**@const*/var DEBUG=false;' + getCombinedSources(), options, function (err, stdout, stderr) {
             if (err) {
-                grunt.error(err);
+                grunt.log.error(err);
                 done(false);
             } else {
                 grunt.log.ok();
