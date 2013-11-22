@@ -65,4 +65,43 @@ describe('DOM node disposal', function() {
         ko.cleanNode(originalNode);
         ko.utils.domNodeDisposal.addDisposeCallback(cloneNode, function() { });
     });
+
+    it('Should be able to clean any user data by overwriting "cleanExternalData"', function() {
+        this.restoreAfter(ko.utils.domNodeDisposal, 'cleanExternalData'); // restore original function when done
+
+        ko.utils.domNodeDisposal.cleanExternalData = function (node) {
+            if (node['ko_test'])
+                node['ko_test'] = undefined;
+        };
+
+        testNode['ko_test'] = "mydata";
+        expect(testNode['ko_test']).toEqual("mydata");
+
+        ko.cleanNode(testNode);
+        expect(testNode['ko_test']).toBeUndefined();
+    });
+
+    if (typeof jQuery !== 'undefined') {
+        it('Should clear jQuery data when a node is cleaned', function() {
+            var obj = {};
+            jQuery.data(testNode, 'ko_test', obj);
+            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+
+            ko.cleanNode(testNode);
+            expect(jQuery.data(testNode, 'ko_test')).toBeUndefined();
+        });
+
+        it('Should be able to prevent jQuery data from being cleared by overwriting "cleanExternalData"', function() {
+            this.restoreAfter(ko.utils.domNodeDisposal, 'cleanExternalData'); // restore original function when done
+
+            ko.utils.domNodeDisposal.cleanExternalData = function () {};
+
+            var obj = {};
+            jQuery.data(testNode, 'ko_test', obj);
+            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+
+            ko.cleanNode(testNode);
+            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+        });
+    }
 });
