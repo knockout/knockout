@@ -466,4 +466,24 @@ describe('Dependent Observable', function() {
         first(1);
         expect(all()).toEqual(depth+2);
     });
+
+    if ({ __proto__: [] } instanceof Array) {
+        it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+            this.after(function() {
+                delete ko.subscribable.fn.customFunction1;
+                delete ko.computed.fn.customFunction2;
+            });
+
+            var computed = ko.computed(function () {});
+
+            var customFunction1 = function () {};
+            var customFunction2 = function () {};
+
+            ko.subscribable.fn.customFunction1 = customFunction1;
+            ko.computed.fn.customFunction2 = customFunction2;
+
+            expect(computed.customFunction1).toBe(customFunction1);
+            expect(computed.customFunction2).toBe(customFunction2);
+        });
+    }
 });

@@ -276,4 +276,24 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
+
+    if ({ __proto__: [] } instanceof Array) {
+        it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+            this.after(function() {
+                delete ko.observable.fn.customFunction1;
+                delete ko.observableArray.fn.customFunction2;
+            });
+
+            var observableArray = ko.observableArray();
+
+            var customFunction1 = function () {};
+            var customFunction2 = function () {};
+
+            ko.observable.fn.customFunction1 = customFunction1;
+            ko.observableArray.fn.customFunction2 = customFunction2;
+
+            expect(observableArray.customFunction1).toBe(customFunction1);
+            expect(observableArray.customFunction2).toBe(customFunction2);
+        });
+    }
 })

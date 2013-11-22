@@ -251,4 +251,24 @@ describe('Observable', function() {
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
     });
+
+    if ({ __proto__: [] } instanceof Array) {
+        it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+            this.after(function() {
+                delete ko.subscribable.fn.customFunction1;
+                delete ko.observable.fn.customFunction2;
+            });
+
+            var observable = ko.observable();
+
+            var customFunction1 = function () {};
+            var customFunction2 = function () {};
+
+            ko.subscribable.fn.customFunction1 = customFunction1;
+            ko.observable.fn.customFunction2 = customFunction2;
+
+            expect(observable.customFunction1).toBe(customFunction1);
+            expect(observable.customFunction2).toBe(customFunction2);
+        });
+    }
 });

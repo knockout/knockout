@@ -138,14 +138,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     if (!evaluatorFunctionTarget)
         evaluatorFunctionTarget = options["owner"];
 
+    ko.subscribable.call(dependentObservable);
+    ko.utils.setPrototypeOfOrExtend(dependentObservable, ko.dependentObservable['fn']);
+
     dependentObservable.peek = peek;
     dependentObservable.getDependenciesCount = function () { return _subscriptionsToDependencies.length; };
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () { dispose(); };
     dependentObservable.isActive = isActive;
-
-    ko.subscribable.call(dependentObservable);
-    ko.utils.extend(dependentObservable, ko.dependentObservable['fn']);
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);

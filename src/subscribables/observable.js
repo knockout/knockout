@@ -20,12 +20,13 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
-    if (DEBUG) observable._latestValue = _latestValue;
     ko.subscribable.call(observable);
+    ko.utils.setPrototypeOfOrExtend(observable, ko.observable['fn']);
+
+    if (DEBUG) observable._latestValue = _latestValue;
     observable.peek = function() { return _latestValue };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
-    ko.utils.extend(observable, ko.observable['fn']);
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
