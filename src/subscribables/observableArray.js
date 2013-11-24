@@ -5,7 +5,10 @@ ko.observableArray = function (initialValues) {
         throw new Error("The argument passed when initializing an observable array must be an array, or null, or undefined.");
 
     var result = ko.observable(initialValues);
-    ko.utils.extend(result, ko.observableArray['fn']);
+
+    if (!ko.utils.tryToSetPrototypeOf(result, ko.observableArray['fn'])) {
+        ko.utils.extend(result, ko.observableArray['fn']);
+    }
     return result.extend({'trackArrayChanges':true});
 };
 
@@ -112,5 +115,7 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
         return underlyingArray[methodName].apply(underlyingArray, arguments);
     };
 });
+
+ko.utils.tryToSetPrototypeOf(ko.observableArray['fn'], ko.observable['fn']);
 
 ko.exportSymbol('observableArray', ko.observableArray);
