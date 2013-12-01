@@ -208,9 +208,13 @@
                 ko.virtualElements.emptyNode(element);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateNodes = ko.virtualElements.childNodes(element),
-                    container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
-                new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                var templateNodes = ko.virtualElements.childNodes(element);
+                if (templateNodes.length > 0) {
+                    var container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
+                    new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                } else {
+                    throw new Error("Anonymous template defined, but no template content was provided");
+                }
             }
             return { 'controlsDescendantBindings': true };
         },

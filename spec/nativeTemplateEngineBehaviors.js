@@ -70,6 +70,17 @@ describe('Native template engine', function() {
         expect(window.testDivTemplate.childNodes[0]).toContainText("Value: abc");
     });
 
+    it('Anonymous templates with no content should be rejected', function () {
+        window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'></div>"
+
+        var viewModel = {
+            someItem: { val: 'abc' }
+        };
+        expect(function () {
+            ko.applyBindings(viewModel, window.testDivTemplate);
+        }).toThrowContaining("no template content");
+    });
+
     it('Anonymous templates work in conjunction with foreach', function() {
         window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
         var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
