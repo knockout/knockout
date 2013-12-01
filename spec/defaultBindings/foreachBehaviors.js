@@ -25,6 +25,13 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     });
 
+    it('Should reject bindings where no template content is specified', function () {
+        testNode.innerHTML = "<div data-bind='foreach: [1, 2, 3]'></div>";
+        expect(function () {
+            ko.applyBindings({}, testNode);
+        }).toThrowContaining("no template content");
+    });
+
     it('Should clean away any data values attached to the original template nodes before use', function() {
         // Represents issue https://github.com/SteveSanderson/knockout/pull/420
         testNode.innerHTML = "<div data-bind='foreach: [1, 2]'><span></span></div>";
