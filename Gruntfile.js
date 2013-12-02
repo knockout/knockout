@@ -109,7 +109,7 @@ module.exports = function(grunt) {
                 done(false);
             } else {
                 grunt.log.ok();
-                grunt.file.write(output, (grunt.config('banner') + stdout).replace(/\r\n/g, '\n'));
+                grunt.file.write(output, (grunt.config('banner') + stdout).toString().replace(/\r\n/g, '\n'));
                 done(true);
             }
         });
