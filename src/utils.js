@@ -446,7 +446,11 @@ ko.utils = (function () {
         },
 
         makeArray: function(arrayLikeObject) {
-            return ko.utils.arrayPushAll([], arrayLikeObject);
+            var result = [];
+            for (var i = 0, j = arrayLikeObject.length; i < j; i++) {
+                result.push(arrayLikeObject[i]);
+            };
+            return result;
         },
 
         isIe6 : isIe6,
