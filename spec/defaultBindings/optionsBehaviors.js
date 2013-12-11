@@ -96,6 +96,34 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
+    it('Should select first option when removing the selected option and the original first option', function () {
+        // This test failed in IE<=8 without changes made in #1208
+        testNode.innerHTML = '<select data-bind="options: filterValues, optionsText: \'x\', optionsValue: \'x\'">';
+        var viewModel = {
+            filterValues: ko.observableArray([{x:1},{x:2},{x:3}])
+        };
+        ko.applyBindings(viewModel, testNode);
+        testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues([2]);
+
+        viewModel.filterValues.splice(0, 2, {x:4});
+        expect(testNode.childNodes[0]).toHaveSelectedValues([4]);
+    });
+
+    it('Should select caption by default and retain selection when adding multiple items', function () {
+        // This test failed in IE<=8 without changes made in #1208
+        testNode.innerHTML = '<select data-bind="options: filterValues, optionsCaption: \'foo\'">';
+        var viewModel = {
+            filterValues: ko.observableArray()
+        };
+        ko.applyBindings(viewModel, testNode);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([undefined]);
+
+        viewModel.filterValues.push("1");
+        viewModel.filterValues.push("2");
+        expect(testNode.childNodes[0]).toHaveSelectedValues([undefined]);
+    });
+
     it('Should trigger a change event when the options selection is populated or changed by modifying the options data (single select)', function() {
         var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
         testNode.innerHTML = "<select data-bind='options:myValues'></select>";
