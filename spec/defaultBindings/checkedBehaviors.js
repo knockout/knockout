@@ -318,4 +318,25 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].childNodes[1].checked).toEqual(true);
     });
 
+    it('When the bound observable is updated in a subscription in response to a radio click, view and model should stay in sync', function() {
+        // This test failed when jQuery was included before the changes made in #1191
+        testNode.innerHTML = '<input type="radio" value="1" name="x" data-bind="checked: choice" />' +
+            '<input type="radio" value="2" name="x" data-bind="checked: choice" />' +
+            '<input type="radio" value="3" name="x" data-bind="checked: choice" />';
+        var choice = ko.observable('1');
+        choice.subscribe(function(newValue) {
+            if (newValue == '3')        // don't allow item 3 to be selected; revert to item 1
+                choice('1');
+        });
+        ko.applyBindings({choice: choice}, testNode);
+        expect(testNode.childNodes[0].checked).toEqual(true);
+
+        // Click on item 2; verify it's selected
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        expect(testNode.childNodes[1].checked).toEqual(true);
+
+        // Click on item 3; verify item 1 is selected
+        ko.utils.triggerEvent(testNode.childNodes[2], "click");
+        expect(testNode.childNodes[0].checked).toEqual(true);
+    });
 });
