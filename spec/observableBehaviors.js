@@ -268,23 +268,26 @@ describe('Observable', function() {
         expect(instance.customFunc()).toEqual(123);
     });
 
-    if ({ __proto__: [] } instanceof Array) {
-        it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
-            this.after(function() {
-                delete ko.subscribable.fn.customFunction1;
-                delete ko.observable.fn.customFunction2;
-            });
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
 
-            var observable = ko.observable();
-
-            var customFunction1 = function () {};
-            var customFunction2 = function () {};
-
-            ko.subscribable.fn.customFunction1 = customFunction1;
-            ko.observable.fn.customFunction2 = customFunction2;
-
-            expect(observable.customFunction1).toBe(customFunction1);
-            expect(observable.customFunction2).toBe(customFunction2);
+        this.after(function() {
+            delete ko.subscribable.fn.customFunction1;
+            delete ko.observable.fn.customFunction2;
         });
-    }
+
+        var observable = ko.observable();
+
+        var customFunction1 = function () {};
+        var customFunction2 = function () {};
+
+        ko.subscribable.fn.customFunction1 = customFunction1;
+        ko.observable.fn.customFunction2 = customFunction2;
+
+        expect(observable.customFunction1).toBe(customFunction1);
+        expect(observable.customFunction2).toBe(customFunction2);
+    });
 });
