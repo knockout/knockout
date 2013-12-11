@@ -467,6 +467,22 @@ describe('Dependent Observable', function() {
         expect(all()).toEqual(depth+2);
     });
 
+    it('Should inherit any properties defined on ko.subscribable.fn or ko.computed.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;       // Will be able to reach this
+            delete ko.subscribable.fn.customFunc;       // Overridden on ko.computed.fn
+            delete ko.computed.fn.customFunc;         // Will be able to reach this
+        });
+
+        ko.subscribable.fn.customProp = 'subscribable value';
+        ko.subscribable.fn.customFunc = function() { throw new Error('Shouldn\'t be reachable') };
+        ko.computed.fn.customFunc = function() { return this(); };
+
+        var instance = ko.computed(function() { return 123; });
+        expect(instance.customProp).toEqual('subscribable value');
+        expect(instance.customFunc()).toEqual(123);
+    });
+
     if ({ __proto__: [] } instanceof Array) {
         it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
             this.after(function() {

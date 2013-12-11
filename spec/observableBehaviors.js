@@ -252,6 +252,22 @@ describe('Observable', function() {
         expect(interceptedNotifications[1].value).toEqual(456);
     });
 
+    it('Should inherit any properties defined on ko.subscribable.fn or ko.observable.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;       // Will be able to reach this
+            delete ko.subscribable.fn.customFunc;       // Overridden on ko.observable.fn
+            delete ko.observable.fn.customFunc;         // Will be able to reach this
+        });
+
+        ko.subscribable.fn.customProp = 'subscribable value';
+        ko.subscribable.fn.customFunc = function() { throw new Error('Shouldn\'t be reachable') };
+        ko.observable.fn.customFunc = function() { return this(); };
+
+        var instance = ko.observable(123);
+        expect(instance.customProp).toEqual('subscribable value');
+        expect(instance.customFunc()).toEqual(123);
+    });
+
     if ({ __proto__: [] } instanceof Array) {
         it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
             this.after(function() {

@@ -106,4 +106,18 @@ describe('Subscribable', function() {
         expect(interceptedNotifications[0].eventName).toEqual("myEvent");
         expect(interceptedNotifications[0].value).toEqual(123);
     });
+
+    it('Should inherit any properties defined on ko.subscribable.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;
+            delete ko.subscribable.fn.customFunc;
+        });
+
+        ko.subscribable.fn.customProp = 'some value';
+        ko.subscribable.fn.customFunc = function() { return this; };
+
+        var instance = new ko.subscribable();
+        expect(instance.customProp).toEqual('some value');
+        expect(instance.customFunc()).toEqual(instance);
+    });
 });
