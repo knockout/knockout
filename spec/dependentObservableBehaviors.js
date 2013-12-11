@@ -72,6 +72,15 @@ describe('Dependent Observable', function() {
         model.prop1('prop1').prop2('prop2');
     });
 
+    it('Should be able to use Function.prototype methods to access/update', function() {
+        var instance = ko.computed({read: function() {return 'A'}, write: function(value) {}});
+        var obj = {};
+
+        expect(instance.call(null)).toEqual('A');
+        expect(instance.apply(null, [])).toBe('A');
+        expect(instance.call(obj, 'B')).toBe(obj);
+    });
+
     it('Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters', function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};

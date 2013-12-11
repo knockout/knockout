@@ -26,6 +26,15 @@ describe('Observable', function() {
         expect(model.prop2()).toEqual('B');
     });
 
+    it('Should be able to use Function.prototype methods to access/update', function() {
+        var instance = ko.observable('A');
+        var obj = {};
+
+        expect(instance.call(null)).toEqual('A');
+        expect(instance.call(obj, 'B')).toBe(obj);
+        expect(instance.apply(null, [])).toBe('B');
+    });
+
     it('Should advertise that instances can have values written to them', function () {
         var instance = new ko.observable(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(true);
