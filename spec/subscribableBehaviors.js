@@ -120,4 +120,23 @@ describe('Subscribable', function() {
         expect(instance.customProp).toEqual('some value');
         expect(instance.customFunc()).toEqual(instance);
     });
+
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
+
+        this.after(function() {
+            delete ko.subscribable.fn.customFunction;
+        });
+
+        var subscribable = new ko.subscribable();
+
+        var customFunction = function () {};
+
+        ko.subscribable.fn.customFunction = customFunction;
+
+        expect(subscribable.customFunction).toBe(customFunction);
+    });
 });
