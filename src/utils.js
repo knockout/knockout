@@ -19,7 +19,6 @@ ko.utils = (function () {
     }
 
     function setPrototypeOf(obj, proto) {
-        proto.__proto__ = obj.__proto__;
         obj.__proto__ = proto;
         return obj;
     }
@@ -140,7 +139,11 @@ ko.utils = (function () {
             }
         },
 
+        canSetPrototype: canSetPrototype,
+
         extend: extend,
+
+        setPrototypeOf: setPrototypeOf,
 
         setPrototypeOfOrExtend: canSetPrototype ? setPrototypeOf : extend,
 

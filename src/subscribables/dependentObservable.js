@@ -200,6 +200,12 @@ ko.dependentObservable['fn'] = {
 };
 ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
+// Note that for browsers that don't support proto assignment, the
+// inheritance chain is created manually in the ko.dependentObservable constructor
+if (ko.utils.canSetPrototype) {
+    ko.utils.setPrototypeOf(ko.dependentObservable['fn'], ko.subscribable['fn']);
+}
+
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
 ko.exportSymbol('isComputed', ko.isComputed);

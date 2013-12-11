@@ -113,4 +113,10 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
     };
 });
 
+// Note that for browsers that don't support proto assignment, the
+// inheritance chain is created manually in the ko.observableArray constructor
+if (ko.utils.canSetPrototype) {
+    ko.utils.setPrototypeOf(ko.observableArray['fn'], ko.observable['fn']);
+}
+
 ko.exportSymbol('observableArray', ko.observableArray);
