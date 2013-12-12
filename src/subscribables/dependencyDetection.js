@@ -24,9 +24,9 @@ ko.dependencyDetection = (function () {
     }
 
     return {
-        _begin: begin,
+        begin: begin,
 
-        _end: end,
+        end: end,
 
         registerDependency: function (subscribable) {
             if (currentFrame) {
