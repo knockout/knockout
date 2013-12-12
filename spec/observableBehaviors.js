@@ -26,6 +26,15 @@ describe('Observable', function() {
         expect(model.prop2()).toEqual('B');
     });
 
+    it('Should be able to use Function.prototype methods to access/update', function() {
+        var instance = ko.observable('A');
+        var obj = {};
+
+        expect(instance.call(null)).toEqual('A');
+        expect(instance.call(obj, 'B')).toBe(obj);
+        expect(instance.apply(null, [])).toBe('B');
+    });
+
     it('Should advertise that instances can have values written to them', function () {
         var instance = new ko.observable(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(true);
@@ -250,5 +259,44 @@ describe('Observable', function() {
         expect(interceptedNotifications[1].eventName).toEqual("None");
         expect(interceptedNotifications[0].value).toEqual(123);
         expect(interceptedNotifications[1].value).toEqual(456);
+    });
+
+    it('Should inherit any properties defined on ko.subscribable.fn or ko.observable.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;       // Will be able to reach this
+            delete ko.subscribable.fn.customFunc;       // Overridden on ko.observable.fn
+            delete ko.observable.fn.customFunc;         // Will be able to reach this
+        });
+
+        ko.subscribable.fn.customProp = 'subscribable value';
+        ko.subscribable.fn.customFunc = function() { throw new Error('Shouldn\'t be reachable') };
+        ko.observable.fn.customFunc = function() { return this(); };
+
+        var instance = ko.observable(123);
+        expect(instance.customProp).toEqual('subscribable value');
+        expect(instance.customFunc()).toEqual(123);
+    });
+
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
+
+        this.after(function() {
+            delete ko.subscribable.fn.customFunction1;
+            delete ko.observable.fn.customFunction2;
+        });
+
+        var observable = ko.observable();
+
+        var customFunction1 = function () {};
+        var customFunction2 = function () {};
+
+        ko.subscribable.fn.customFunction1 = customFunction1;
+        ko.observable.fn.customFunction2 = customFunction2;
+
+        expect(observable.customFunction1).toBe(customFunction1);
+        expect(observable.customFunction2).toBe(customFunction2);
     });
 });

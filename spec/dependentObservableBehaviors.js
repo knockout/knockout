@@ -72,6 +72,15 @@ describe('Dependent Observable', function() {
         model.prop1('prop1').prop2('prop2');
     });
 
+    it('Should be able to use Function.prototype methods to access/update', function() {
+        var instance = ko.computed({read: function() {return 'A'}, write: function(value) {}});
+        var obj = {};
+
+        expect(instance.call(null)).toEqual('A');
+        expect(instance.apply(null, [])).toBe('A');
+        expect(instance.call(obj, 'B')).toBe(obj);
+    });
+
     it('Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters', function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
@@ -465,5 +474,44 @@ describe('Dependent Observable', function() {
         var all = ko.computed(function() { return last() + first(); });
         first(1);
         expect(all()).toEqual(depth+2);
+    });
+
+    it('Should inherit any properties defined on ko.subscribable.fn or ko.computed.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;       // Will be able to reach this
+            delete ko.subscribable.fn.customFunc;       // Overridden on ko.computed.fn
+            delete ko.computed.fn.customFunc;         // Will be able to reach this
+        });
+
+        ko.subscribable.fn.customProp = 'subscribable value';
+        ko.subscribable.fn.customFunc = function() { throw new Error('Shouldn\'t be reachable') };
+        ko.computed.fn.customFunc = function() { return this(); };
+
+        var instance = ko.computed(function() { return 123; });
+        expect(instance.customProp).toEqual('subscribable value');
+        expect(instance.customFunc()).toEqual(123);
+    });
+
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
+
+        this.after(function() {
+            delete ko.subscribable.fn.customFunction1;
+            delete ko.computed.fn.customFunction2;
+        });
+
+        var computed = ko.computed(function () {});
+
+        var customFunction1 = function () {};
+        var customFunction2 = function () {};
+
+        ko.subscribable.fn.customFunction1 = customFunction1;
+        ko.computed.fn.customFunction2 = customFunction2;
+
+        expect(computed.customFunction1).toBe(customFunction1);
+        expect(computed.customFunction2).toBe(customFunction2);
     });
 });

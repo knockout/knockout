@@ -276,4 +276,50 @@ describe('Observable Array', function() {
         newArray.push("Another");
         expect(timesEvaluated).toEqual(1);
     });
+
+    it('Should inherit any properties defined on ko.subscribable.fn, ko.observable.fn, or ko.observableArray.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.subscribableProp; // Will be able to reach this
+            delete ko.subscribable.fn.customProp;       // Overridden on ko.observable.fn
+            delete ko.subscribable.fn.customFunc;       // Overridden on ko.observableArray.fn
+            delete ko.observable.fn.customProp;         // Overridden on ko.observableArray.fn
+            delete ko.observable.fn.customFunc;         // Will be able to reach this
+            delete ko.observableArray.fn.customProp;    // Will be able to reach this
+        });
+
+        ko.subscribable.fn.subscribableProp = 'subscribable value';
+        ko.subscribable.fn.customProp = 'subscribable value - will be overridden';
+        ko.subscribable.fn.customFunc = function() { throw new Error('Shouldn\'t be reachable') };
+        ko.observable.fn.customProp = 'observable prop value - will be overridden';
+        ko.observable.fn.customFunc = function() { return this(); };
+        ko.observableArray.fn.customProp = 'observableArray value';
+
+        var instance = ko.observableArray([123]);
+        expect(instance.subscribableProp).toEqual('subscribable value');
+        expect(instance.customProp).toEqual('observableArray value');
+        expect(instance.customFunc()).toEqual([123]);
+    });
+
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
+
+        this.after(function() {
+            delete ko.observable.fn.customFunction1;
+            delete ko.observableArray.fn.customFunction2;
+        });
+
+        var observableArray = ko.observableArray();
+
+        var customFunction1 = function () {};
+        var customFunction2 = function () {};
+
+        ko.observable.fn.customFunction1 = customFunction1;
+        ko.observableArray.fn.customFunction2 = customFunction2;
+
+        expect(observableArray.customFunction1).toBe(customFunction1);
+        expect(observableArray.customFunction2).toBe(customFunction2);
+    });
 })
