@@ -106,3 +106,5 @@ jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
         );
     return version > 4 ? version : undefined;
 }());
+
+jasmine.browserSupportsProtoAssignment = { __proto__: [] } instanceof Array;
