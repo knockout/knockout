@@ -1,4 +1,3 @@
-
 ko.dependencyDetection = (function () {
     var _frames = [];
 
@@ -8,7 +7,7 @@ ko.dependencyDetection = (function () {
         },
 
         end: function () {
-            _frames.pop();
+            _frames.length--;
         },
 
         registerDependency: function (subscribable) {
@@ -28,7 +27,7 @@ ko.dependencyDetection = (function () {
                 _frames.push(null);
                 return callback.apply(callbackTarget, callbackArgs || []);
             } finally {
-                _frames.pop();
+                _frames.length--;
             }
         }
     };
