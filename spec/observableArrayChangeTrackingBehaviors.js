@@ -189,6 +189,22 @@ describe('Observable Array change tracking', function() {
                 ]
             });
 
+            // Slice - swapping items should find moves
+            // NOTE: ko.utils.compareArrays will report the change list as
+            //     { status: 'deleted', value: 'First', index: 0, moved: 1 },
+            //     { status: 'added', value: 'First', index: 1, moved: 0 }
+            // which is also valid.
+            testKnownOperation(myArray, 'splice', {
+                args: [0, 2, 'X', 'First'],
+                result: ['X', 'First', 'Blah', 'Another', 'New2'],
+                changes: [
+                    { status: 'added', value: 'X', index: 0, moved: 1 },
+                    { status: 'deleted', value: 'First', index: 0, moved: 1 },
+                    { status: 'added', value: 'First', index: 1, moved: 0 },
+                    { status: 'deleted', value: 'X', index: 1, moved: 0 }
+                ]
+            });
+
             expect(callLog.length).toBe(0); // Never needed to run the diff algorithm
         });
     });
