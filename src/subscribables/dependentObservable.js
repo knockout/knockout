@@ -74,7 +74,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                         // Don't want to dispose this subscription, as it's still being used
                         _subscriptionsToDependencies[id] = disposalCandidates[id];
                         ++_dependenciesCount;
-                        disposalCandidates[id] = false;
+                        delete disposalCandidates[id];
                         --disposalCount;
                     } else {
                         // Brand new subscription - add it
@@ -91,9 +91,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
             if (disposalCount) {
                 ko.utils.objectForEach(disposalCandidates, function(id, toDispose) {
-                    if (toDispose) {
-                        toDispose.dispose();
-                    }
+                    toDispose.dispose();
                 });
             }
 
