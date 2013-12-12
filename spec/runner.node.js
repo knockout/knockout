@@ -39,6 +39,7 @@ require('./observableArrayBehaviors');
 require('./observableArrayChangeTrackingBehaviors');
 require('./observableBehaviors');
 require('./subscribableBehaviors');
+require('./utilsBehaviors');
 
 // get reference to jasmine runtime
 var env = jasmine.jasmine.getEnv();
