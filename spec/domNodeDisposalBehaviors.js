@@ -81,27 +81,33 @@ describe('DOM node disposal', function() {
         expect(testNode['ko_test']).toBeUndefined();
     });
 
-    if (typeof jQuery !== 'undefined') {
-        it('Should clear jQuery data when a node is cleaned', function() {
-            var obj = {};
-            jQuery.data(testNode, 'ko_test', obj);
-            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+    it('If jQuery is referenced, should clear jQuery data when a node is cleaned', function() {
+        if (typeof jQuery === 'undefined') {
+            return; // Nothing to test. Run the specs with jQuery referenced for this to do anything.
+        }
 
-            ko.cleanNode(testNode);
-            expect(jQuery.data(testNode, 'ko_test')).toBeUndefined();
-        });
+        var obj = {};
+        jQuery.data(testNode, 'ko_test', obj);
+        expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
 
-        it('Should be able to prevent jQuery data from being cleared by overwriting "cleanExternalData"', function() {
-            this.restoreAfter(ko.utils.domNodeDisposal, 'cleanExternalData'); // restore original function when done
+        ko.cleanNode(testNode);
+        expect(jQuery.data(testNode, 'ko_test')).toBeUndefined();
+    });
 
-            ko.utils.domNodeDisposal.cleanExternalData = function () {};
+    it('If jQuery is referenced, should be able to prevent jQuery data from being cleared by overwriting "cleanExternalData"', function() {
+        if (typeof jQuery === 'undefined') {
+            return; // Nothing to test. Run the specs with jQuery referenced for this to do anything.
+        }
 
-            var obj = {};
-            jQuery.data(testNode, 'ko_test', obj);
-            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+        this.restoreAfter(ko.utils.domNodeDisposal, 'cleanExternalData'); // restore original function when done
 
-            ko.cleanNode(testNode);
-            expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
-        });
-    }
+        ko.utils.domNodeDisposal.cleanExternalData = function () {};
+
+        var obj = {};
+        jQuery.data(testNode, 'ko_test', obj);
+        expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+
+        ko.cleanNode(testNode);
+        expect(jQuery.data(testNode, 'ko_test')).toBe(obj);
+    });
 });
