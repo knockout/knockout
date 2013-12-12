@@ -25,16 +25,13 @@ ko.utils.domNodeDisposal = new (function () {
                 callbacks[i](node);
         }
 
-        // Also erase the DOM data
+        // Erase the DOM data
         ko.utils.domData.clear(node);
 
-        // Special support for jQuery here because it's so commonly used.
-        // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
-        // so notify it to tear down any resources associated with the node & descendants here.
-        if (jQuery && (typeof jQuery['cleanData'] == "function"))
-            jQuery['cleanData']([node]);
+        // Perform cleanup needed by external libraries (currently only jQuery, but can be extended)
+        ko.utils.domNodeDisposal["cleanExternalData"](node);
 
-        // Also clear any immediate-child comment nodes, as these wouldn't have been found by
+        // Clear any immediate-child comment nodes, as these wouldn't have been found by
         // node.getElementsByTagName("*") in cleanNode() (comment nodes aren't elements)
         if (cleanableNodeTypesWithDescendants[node.nodeType])
             cleanImmediateCommentTypeChildren(node);
@@ -86,6 +83,14 @@ ko.utils.domNodeDisposal = new (function () {
             ko.cleanNode(node);
             if (node.parentNode)
                 node.parentNode.removeChild(node);
+        },
+
+        "cleanExternalData" : function (node) {
+            // Special support for jQuery here because it's so commonly used.
+            // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
+            // so notify it to tear down any resources associated with the node & descendants here.
+            if (jQuery && (typeof jQuery['cleanData'] == "function"))
+                jQuery['cleanData']([node]);
         }
     }
 })();
