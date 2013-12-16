@@ -86,16 +86,21 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             _subscriptionsToDependencies = {};
             _dependenciesCount = 0;
 
-            var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
+            try {
+                var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
 
-            // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
-            if (disposalCount) {
-                ko.utils.objectForEach(disposalCandidates, function(id, toDispose) {
-                    toDispose.dispose();
-                });
+            } finally {
+                ko.dependencyDetection.end();
+
+                // For each subscription no longer being used, remove it from the active subscriptions list and dispose it
+                if (disposalCount) {
+                    ko.utils.objectForEach(disposalCandidates, function(id, toDispose) {
+                        toDispose.dispose();
+                    });
+                }
+
+                _hasBeenEvaluated = true;
             }
-
-            _hasBeenEvaluated = true;
 
             if (!dependentObservable['equalityComparer'] || !dependentObservable['equalityComparer'](_latestValue, newValue)) {
                 dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
@@ -105,7 +110,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 dependentObservable["notifySubscribers"](_latestValue);
             }
         } finally {
-            ko.dependencyDetection.end();
             _isBeingEvaluated = false;
         }
 
