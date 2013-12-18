@@ -59,9 +59,9 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
     function getChanges(previousContents, currentContents) {
         // We try to re-use cached diffs.
-        // The only scenario where pendingNotifications > 1 is when using the KO 'deferred updates' plugin,
-        // which without this check would not be compatible with arrayChange notifications. Without that
-        // plugin, notifications are always issued immediately so we wouldn't be queueing up more than one.
+        // The scenarios where pendingNotifications > 1 are when using rate-limiting or the Deferred Updates
+        // plugin, which without this check would not be compatible with arrayChange notifications. Normally,
+        // notifications are issued immediately so we wouldn't be queueing up more than one.
         if (!cachedDiff || pendingNotifications > 1) {
             cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
         }

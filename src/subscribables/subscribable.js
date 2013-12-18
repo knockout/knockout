@@ -3,11 +3,30 @@ ko.subscription = function (target, callback, disposeCallback) {
     this.target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
+    this.isDisposed = false;
     ko.exportProperty(this, 'dispose', this.dispose);
 };
 ko.subscription.prototype.dispose = function () {
     this.isDisposed = true;
     this.disposeCallback();
+};
+ko.subscription.prototype['limit'] = function (limitFunction, funcOptions) {
+    var self = this,
+        target = self.target,
+        originalCallback = self.callback,
+        notifiedValue = target.peek ? target.peek() : undefined,
+        pendingValue;
+
+    var finish = limitFunction(function () {
+        if (!self.isDisposed && target.isDifferent(notifiedValue, pendingValue)) {
+            originalCallback(notifiedValue = pendingValue);
+        }
+    }, funcOptions);
+
+    self.callback = function(value) {
+        pendingValue = value;
+        finish(target, value);
+    };
 };
 
 ko.subscribable = function () {
@@ -26,6 +45,10 @@ var ko_subscribable_fn = {
             ko.utils.arrayRemoveItem(this._subscriptions[event], subscription);
         }.bind(this));
 
+        if (event === defaultEvent && this._limitFunction) {
+            subscription['limit'](this._limitFunction, this._limitFuncOptions);
+        }
+
         if (!this._subscriptions[event])
             this._subscriptions[event] = [];
         this._subscriptions[event].push(subscription);
@@ -40,13 +63,18 @@ var ko_subscribable_fn = {
                 for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
-                    if (subscription && (subscription.isDisposed !== true))
+                    if (!subscription.isDisposed)
                         subscription.callback(valueToNotify);
                 }
             } finally {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
             }
         }
+    },
+
+    'limit': function(limitFunction, funcOptions) {
+        this._limitFunction = limitFunction;
+        this._limitFuncOptions = funcOptions;
     },
 
     hasSubscriptionsForEvent: function(event) {
@@ -59,6 +87,10 @@ var ko_subscribable_fn = {
             total += subscriptions.length;
         });
         return total;
+    },
+
+    isDifferent: function(oldValue, newValue) {
+        return !this['equalityComparer'] || !this['equalityComparer'](oldValue, newValue);
     },
 
     extend: applyExtenders

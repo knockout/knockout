@@ -31,6 +31,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
         _subscriptionsToDependencies = {};
         _dependenciesCount = 0;
+        _hasBeenEvaluated = true;
     }
 
     function evaluatePossiblyAsync() {
@@ -38,8 +39,11 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
             clearTimeout(evaluationTimeoutInstance);
             evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
-        } else
+        } else if (dependentObservable._evalRateLimited) {
+            dependentObservable._evalRateLimited();
+        } else {
             evaluateImmediate();
+        }
     }
 
     function evaluateImmediate() {
@@ -102,12 +106,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 _hasBeenEvaluated = true;
             }
 
-            if (!dependentObservable['equalityComparer'] || !dependentObservable['equalityComparer'](_latestValue, newValue)) {
+            if (dependentObservable.isDifferent(_latestValue, newValue)) {
                 dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
 
                 _latestValue = newValue;
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
-                dependentObservable["notifySubscribers"](_latestValue);
+                if (!dependentObservable._evalRateLimited || dependentObservable['throttleEvaluation']) {
+                    dependentObservable["notifySubscribers"](_latestValue);
+                }
             }
         } finally {
             _isBeingEvaluated = false;
@@ -136,7 +142,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function peek() {
-        if (!_hasBeenEvaluated)
+        if (!_hasBeenEvaluated && !_subscriptionsToDependencies.length)
             evaluateImmediate();
         return _latestValue;
     }
@@ -166,6 +172,25 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
     dependentObservable.dispose = function () { dispose(); };
     dependentObservable.isActive = isActive;
+
+    // Replace the limit function with one that delays evaluation as well.
+    dependentObservable['limit'] = function(limitFunction, funcOptions) {
+        var isPending, previousValue;
+        var finish = limitFunction(function() {
+            isPending = false;
+            if (dependentObservable.isDifferent(previousValue, dependentObservable())) {
+                dependentObservable["notifySubscribers"](_latestValue);
+            }
+        }, funcOptions);
+        dependentObservable._evalRateLimited = function() {
+            if (!isPending) {
+                isPending = true;
+                previousValue = peek();
+            }
+            _hasBeenEvaluated = false;   // mark as dirty
+            finish(dependentObservable);
+        };
+    };
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
