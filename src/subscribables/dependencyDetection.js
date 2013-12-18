@@ -1,34 +1,47 @@
 
 ko.dependencyDetection = (function () {
-    var _frames = [];
+    var outerFrames = [],
+        currentFrame,
+        lastId = 0;
+
+    // Return a unique ID that can be assigned to an observable for dependency tracking.
+    // Theoretically, you could eventually overflow the number storage size, resulting
+    // in duplicate IDs. But in JavaScript, the largest exact integral value is 2^53
+    // or 9,007,199,254,740,992. If you created 1,000,000 IDs per second, it would
+    // take over 285 years to reach that number.
+    // Reference http://blog.vjeux.com/2010/javascript/javascript-max_int-number-limits.html
+    function getId() {
+        return ++lastId;
+    }
+
+    function begin(options) {
+        outerFrames.push(currentFrame);
+        currentFrame = options;
+    }
+
+    function end() {
+        currentFrame = outerFrames.pop();
+    }
 
     return {
-        begin: function (callback) {
-            _frames.push(callback && { callback: callback, distinctDependencies:[] });
-        },
+        begin: begin,
 
-        end: function () {
-            _frames.pop();
-        },
+        end: end,
 
         registerDependency: function (subscribable) {
-            if (!ko.isSubscribable(subscribable))
-                throw new Error("Only subscribable things can act as dependencies");
-            if (_frames.length > 0) {
-                var topFrame = _frames[_frames.length - 1];
-                if (!topFrame || ko.utils.arrayIndexOf(topFrame.distinctDependencies, subscribable) >= 0)
-                    return;
-                topFrame.distinctDependencies.push(subscribable);
-                topFrame.callback(subscribable);
+            if (currentFrame) {
+                if (!ko.isSubscribable(subscribable))
+                    throw new Error("Only subscribable things can act as dependencies");
+                currentFrame.callback(subscribable, subscribable._id || (subscribable._id = getId()));
             }
         },
 
-        ignore: function(callback, callbackTarget, callbackArgs) {
+        ignore: function (callback, callbackTarget, callbackArgs) {
             try {
-                _frames.push(null);
+                begin();
                 return callback.apply(callbackTarget, callbackArgs || []);
             } finally {
-                _frames.pop();
+                end();
             }
         }
     };

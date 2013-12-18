@@ -36,7 +36,7 @@ var ko_subscribable_fn = {
         event = event || defaultEvent;
         if (this.hasSubscriptionsForEvent(event)) {
             try {
-                ko.dependencyDetection.begin();
+                ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
                 for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
@@ -44,7 +44,7 @@ var ko_subscribable_fn = {
                         subscription.callback(valueToNotify);
                 }
             } finally {
-                ko.dependencyDetection.end();
+                ko.dependencyDetection.end(); // End suppressing dependency detection
             }
         }
     },

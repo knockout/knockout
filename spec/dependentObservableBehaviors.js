@@ -415,29 +415,35 @@ describe('Dependent Observable', function() {
     });
 
     it('Should be able to re-evaluate a computed that previously threw an exception', function() {
-        var observable = ko.observable(true),
+        var observableSwitch = ko.observable(true), observableValue = ko.observable(1),
             computed = ko.computed(function() {
-                if (!observable()) {
-                    throw Error("Some dummy error");
+                if (!observableSwitch()) {
+                    throw Error("Error during computed evaluation");
                 } else {
-                    return observable();
+                    return observableValue();
                 }
             });
 
-        // Initially the computed value is true (executed sucessfully -> same value as observable)
-        expect(computed()).toEqual(true);
+        // Initially the computed evaluated sucessfully
+        expect(computed()).toEqual(1);
 
         expect(function () {
             // Update observable to cause computed to throw an exception
-            observable(false);
-        }).toThrow();
+            observableSwitch(false);
+        }).toThrow("Error during computed evaluation");
 
         // The value of the computed is now undefined, although currently it keeps the previous value
-        expect(computed()).toEqual(true);
-
-        // Update observable to cause computed to re-evaluate
-        observable(1);
         expect(computed()).toEqual(1);
+        // The computed should not be dependent on the second observable
+        expect(computed.getDependenciesCount()).toEqual(1);
+
+        // Updating the second observable shouldn't re-evaluate computed
+        observableValue(2);
+        expect(computed()).toEqual(1);
+
+        // Update the first observable to cause computed to re-evaluate
+        observableSwitch(1);
+        expect(computed()).toEqual(2);
     });
 
     it('Should expose a "notify" extender that can configure a computed to notify on all changes', function() {
