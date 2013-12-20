@@ -333,6 +333,23 @@ describe('Rate-limited', function() {
     });
 
     describe('Dependent Observable', function() {
+        it('Should delay running evaluator where there are no subscribers', function() {
+            var observable = ko.observable();
+            var evalSpy = jasmine.createSpy('evalSpy');
+            var computed = ko.computed(function () { evalSpy(observable()); return observable(); }).extend({rateLimit:500});
+
+            // Observable is changed, but evaluation is delayed
+            evalSpy.reset();
+            observable('a');
+            observable('b');
+            expect(evalSpy).not.toHaveBeenCalled();
+
+            // Advance clock; Change notification happens now using the latest value notified
+            evalSpy.reset();
+            jasmine.Clock.tick(501);
+            expect(evalSpy).toHaveBeenCalledWith('b');
+        });
+
         it('Should delay change notifications and evaluation', function() {
             var observable = ko.observable();
             var evalSpy = jasmine.createSpy('evalSpy');
@@ -351,6 +368,7 @@ describe('Rate-limited', function() {
             // Second change notification is also delayed
             evalSpy.reset();
             observable('b');
+            expect(computed.peek()).toEqual('a');           // peek returns previously evaluated value
             expect(evalSpy).not.toHaveBeenCalled();
             expect(notifySpy).not.toHaveBeenCalled();
 
@@ -398,31 +416,37 @@ describe('Rate-limited', function() {
         });
 
         it('Should be able to re-evaluate a computed that previously threw an exception', function() {
-            var observable = ko.observable(true),
+            var observableSwitch = ko.observable(true), observableValue = ko.observable(1),
                 computed = ko.computed(function() {
-                    if (!observable()) {
+                    if (!observableSwitch()) {
                         throw Error("Error during computed evaluation");
                     } else {
-                        return observable();
+                        return observableValue();
                     }
                 }).extend({rateLimit:500});
 
-            // Initially the computed value is true (executed sucessfully -> same value as observable)
-            expect(computed()).toEqual(true);
+            // Initially the computed evaluated sucessfully
+            expect(computed()).toEqual(1);
 
             expect(function () {
                 // Update observable to cause computed to throw an exception
-                observable(false);
+                observableSwitch(false);
                 computed();
-            }).toThrow();
+            }).toThrow("Error during computed evaluation");
 
             // The value of the computed is now undefined, although currently it keeps the previous value
             // This should not try to re-evaluate and thus shouldn't throw an exception
-            expect(computed()).toEqual(true);
-
-            // Update observable to cause computed to re-evaluate
-            observable(1);
             expect(computed()).toEqual(1);
+            // The computed should not be dependent on the second observable
+            expect(computed.getDependenciesCount()).toEqual(1);
+
+            // Updating the second observable shouldn't re-evaluate computed
+            observableValue(2);
+            expect(computed()).toEqual(1);
+
+            // Update the first observable to cause computed to re-evaluate
+            observableSwitch(1);
+            expect(computed()).toEqual(2);
         });
     });
 });

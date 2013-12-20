@@ -1,6 +1,6 @@
 ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
-        _hasBeenEvaluated = false,
+        _needsEvaluation = true,
         _isBeingEvaluated = false,
         _suppressDisposalUntilDisposeWhenReturnsFalse = false,
         readFunction = evaluatorFunctionOrOptions;
@@ -31,7 +31,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         });
         _subscriptionsToDependencies = {};
         _dependenciesCount = 0;
-        _hasBeenEvaluated = true;
+        _needsEvaluation = false;
     }
 
     function evaluatePossiblyAsync() {
@@ -59,7 +59,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             // See comment below about _suppressDisposalUntilDisposeWhenReturnsFalse
             if (!_suppressDisposalUntilDisposeWhenReturnsFalse) {
                 dispose();
-                _hasBeenEvaluated = true;
                 return;
             }
         } else {
@@ -103,7 +102,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                     });
                 }
 
-                _hasBeenEvaluated = true;
+                _needsEvaluation = false;
             }
 
             if (dependentObservable.isDifferent(_latestValue, newValue)) {
@@ -111,6 +110,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
 
                 _latestValue = newValue;
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
+
+                // If rate-limited, the notification will happen within the limit function. Otherwise,
+                // notify as soon as the value changes. Check specifically for the throttle setting since
+                // it overrides rateLimit.
                 if (!dependentObservable._evalRateLimited || dependentObservable['throttleEvaluation']) {
                     dependentObservable["notifySubscribers"](_latestValue);
                 }
@@ -134,7 +137,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             return this; // Permits chained assignments
         } else {
             // Reading the value
-            if (!_hasBeenEvaluated)
+            if (_needsEvaluation)
                 evaluateImmediate();
             ko.dependencyDetection.registerDependency(dependentObservable);
             return _latestValue;
@@ -142,13 +145,14 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function peek() {
-        if (!_hasBeenEvaluated && !_subscriptionsToDependencies.length)
+        // Peek won't re-evaluate, except to get the initial value when "deferEvaluation" is set
+        if (_needsEvaluation && !_dependenciesCount)
             evaluateImmediate();
         return _latestValue;
     }
 
     function isActive() {
-        return !_hasBeenEvaluated || _dependenciesCount > 0;
+        return _needsEvaluation || _dependenciesCount > 0;
     }
 
     // By here, "options" is always non-null
@@ -187,7 +191,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                 isPending = true;
                 previousValue = peek();
             }
-            _hasBeenEvaluated = false;   // mark as dirty
+            _needsEvaluation = true;   // mark as dirty
             finish(dependentObservable);
         };
     };

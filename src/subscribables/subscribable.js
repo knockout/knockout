@@ -14,12 +14,12 @@ ko.subscription.prototype['limit'] = function (limitFunction, funcOptions) {
     var self = this,
         target = self.target,
         originalCallback = self.callback,
-        notifiedValue = target.peek ? target.peek() : undefined,
+        previousValue = target.peek ? target.peek() : undefined,
         pendingValue;
 
     var finish = limitFunction(function () {
-        if (!self.isDisposed && target.isDifferent(notifiedValue, pendingValue)) {
-            originalCallback(notifiedValue = pendingValue);
+        if (!self.isDisposed && target.isDifferent(previousValue, pendingValue)) {
+            originalCallback(previousValue = pendingValue);
         }
     }, funcOptions);
 
@@ -38,20 +38,22 @@ var defaultEvent = "change";
 
 var ko_subscribable_fn = {
     subscribe: function (callback, callbackTarget, event) {
+        var self = this;
+
         event = event || defaultEvent;
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
-        var subscription = new ko.subscription(this, boundCallback, function () {
-            ko.utils.arrayRemoveItem(this._subscriptions[event], subscription);
-        }.bind(this));
+        var subscription = new ko.subscription(self, boundCallback, function () {
+            ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
+        });
 
-        if (event === defaultEvent && this._limitFunction) {
-            subscription['limit'](this._limitFunction, this._limitFuncOptions);
+        if (event === defaultEvent && self._limitFunction) {
+            subscription['limit'](self._limitFunction, self._limitFuncOptions);
         }
 
-        if (!this._subscriptions[event])
-            this._subscriptions[event] = [];
-        this._subscriptions[event].push(subscription);
+        if (!self._subscriptions[event])
+            self._subscriptions[event] = [];
+        self._subscriptions[event].push(subscription);
         return subscription;
     },
 
