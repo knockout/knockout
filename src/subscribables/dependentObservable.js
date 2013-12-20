@@ -35,6 +35,7 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function evaluatePossiblyAsync() {
+        _needsEvaluation = true;
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
             clearTimeout(evaluationTimeoutInstance);
@@ -52,6 +53,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             // This is not desirable (it's hard for a developer to realise a chain of dependencies might cause this, and they almost
             // certainly didn't intend infinite re-evaluations). So, for predictability, we simply prevent ko.computeds from causing
             // their own re-evaluation. Further discussion at https://github.com/SteveSanderson/knockout/pull/387
+            return;
+        }
+
+        if (!_needsEvaluation) {
             return;
         }
 
@@ -178,22 +183,17 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     dependentObservable.isActive = isActive;
 
     // Replace the limit function with one that delays evaluation as well.
+    var originalLimit = dependentObservable['limit'];
     dependentObservable['limit'] = function(limitFunction, funcOptions) {
-        var isPending, previousValue;
-        var finish = limitFunction(function() {
-            isPending = false;
-            if (dependentObservable.isDifferent(previousValue, dependentObservable())) {
-                dependentObservable["notifySubscribers"](_latestValue);
-            }
-        }, funcOptions);
+        originalLimit.apply(this, arguments);
+        var finish = limitFunction(evaluateImmediate, funcOptions);
         dependentObservable._evalRateLimited = function() {
-            if (!isPending) {
-                isPending = true;
-                previousValue = peek();
+            if (dependentObservable.hasSubscriptionsForEvent('change')) {
+                dependentObservable["notifySubscribers"](dependentObservable);
+            } else {
+                finish(dependentObservable);
             }
-            _needsEvaluation = true;   // mark as dirty
-            finish(dependentObservable);
-        };
+        }
     };
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);

@@ -18,6 +18,9 @@ ko.subscription.prototype['limit'] = function (limitFunction, funcOptions) {
         pendingValue;
 
     var finish = limitFunction(function () {
+        if (pendingValue === target) {
+            pendingValue = target();
+        }
         if (!self.isDisposed && target.isDifferent(previousValue, pendingValue)) {
             originalCallback(previousValue = pendingValue);
         }
