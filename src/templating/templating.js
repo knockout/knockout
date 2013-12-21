@@ -133,7 +133,8 @@
                         : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
                     // Support selecting template as a function of the data being rendered
-                    var templateName = typeof(template) == 'function' ? template(bindingContext['$data'], bindingContext) : template;
+                    var templateName = ko.isObservable(template) ? template()
+                        : typeof(template) == 'function' ? template(bindingContext['$data'], bindingContext) : template;
 
                     var renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
                     if (renderMode == "replaceNode") {
@@ -215,15 +216,18 @@
             return { 'controlsDescendantBindings': true };
         },
         'update': function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var templateName = ko.utils.unwrapObservable(valueAccessor()),
-                options = {},
-                shouldDisplay = true,
+            var value = valueAccessor(),
                 dataValue,
-                templateComputed = null;
+                options = ko.utils.unwrapObservable(value),
+                shouldDisplay = true,
+                templateComputed = null,
+                templateName;
 
-            if (typeof templateName != "string") {
-                options = templateName;
-                templateName = ko.utils.unwrapObservable(options['name']);
+            if (typeof options == "string") {
+                templateName = value;
+                options = {};
+            } else {
+                templateName = options['name'];
 
                 // Support "if"/"ifnot" conditions
                 if ('if' in options)
