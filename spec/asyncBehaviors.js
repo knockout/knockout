@@ -141,7 +141,7 @@ describe('Rate-limited', function() {
             expect(notifySpy).toHaveBeenCalledWith('b');
         });
 
-        it('Should delay notifications if subscription is rate-limited', function() {
+        xit('Should delay notifications if subscription is rate-limited', function() {
             var subscribable = new ko.subscribable();
             // First subscription is rate-limited
             var notifySpy1 = jasmine.createSpy('notifySpy1');

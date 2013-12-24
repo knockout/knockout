@@ -185,14 +185,10 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     // Replace the limit function with one that delays evaluation as well.
     var originalLimit = dependentObservable['limit'];
     dependentObservable['limit'] = function(limitFunction, funcOptions) {
-        originalLimit.apply(this, arguments);
-        var finish = limitFunction(evaluateImmediate, funcOptions);
+        originalLimit.call(this, limitFunction, funcOptions);
         dependentObservable._evalRateLimited = function() {
-            if (dependentObservable.hasSubscriptionsForEvent('change')) {
-                dependentObservable["notifySubscribers"](dependentObservable);
-            } else {
-                finish(dependentObservable);
-            }
+            dependentObservable._storePreviousValue(_latestValue);
+            dependentObservable._notifyRateLimited(dependentObservable);
         }
     };
 

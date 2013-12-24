@@ -10,27 +10,6 @@ ko.subscription.prototype.dispose = function () {
     this.isDisposed = true;
     this.disposeCallback();
 };
-ko.subscription.prototype['limit'] = function (limitFunction, funcOptions) {
-    var self = this,
-        target = self.target,
-        originalCallback = self.callback,
-        previousValue = target.peek ? target.peek() : undefined,
-        pendingValue;
-
-    var finish = limitFunction(function () {
-        if (pendingValue === target) {
-            pendingValue = target();
-        }
-        if (!self.isDisposed && target.isDifferent(previousValue, pendingValue)) {
-            originalCallback(previousValue = pendingValue);
-        }
-    }, funcOptions);
-
-    self.callback = function(value) {
-        pendingValue = value;
-        finish(target, value);
-    };
-};
 
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
@@ -50,8 +29,8 @@ var ko_subscribable_fn = {
             ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
         });
 
-        if (event === defaultEvent && self._limitFunction) {
-            subscription['limit'](self._limitFunction, self._limitFuncOptions);
+        if (event === defaultEvent && self._notifyRateLimited && self.peek) {
+            self.peek();
         }
 
         if (!self._subscriptions[event])
@@ -78,8 +57,42 @@ var ko_subscribable_fn = {
     },
 
     'limit': function(limitFunction, funcOptions) {
-        this._limitFunction = limitFunction;
-        this._limitFuncOptions = funcOptions;
+        var self = this, isPending, previousValue, pendingValue;
+
+        if (!self._origNotifySubscribers) {
+            self._origNotifySubscribers = self["notifySubscribers"];
+            self["notifySubscribers"] = function(value, event) {
+                if (!event || event === defaultEvent) {
+                    this._notifyRateLimited(value);
+                } else {
+                    if (event === 'beforeChange') {
+                        this._storePreviousValue(value);
+                    }
+                    this._origNotifySubscribers(value, event);
+                }
+            };
+        }
+
+        var finish = limitFunction(function() {
+            if (pendingValue === self) {
+                pendingValue = self();
+            }
+            isPending = false;
+            if (self.isDifferent(previousValue, pendingValue)) {
+                self._origNotifySubscribers(previousValue = pendingValue);
+            }
+        }, funcOptions);
+
+        self._notifyRateLimited = function(value) {
+            isPending = true;
+            pendingValue = value;
+            finish(self);
+        };
+        self._storePreviousValue = function(value) {
+            if (!isPending) {
+                previousValue = value;
+            }
+        };
     },
 
     hasSubscriptionsForEvent: function(event) {
