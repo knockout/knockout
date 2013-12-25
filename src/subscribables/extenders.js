@@ -31,7 +31,9 @@ ko.extenders = {
         }
 
         limitFunction = method == 'debounce' ?  debounce : throttle;
-        target['limit'](limitFunction, timeout);
+        target.limit(function(callback) {
+            return limitFunction(callback, timeout);
+        });
     },
 
     'notify': function(target, notifyWhen) {

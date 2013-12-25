@@ -117,7 +117,7 @@ describe('Rate-limited', function() {
     });
 
     describe('Subscribable', function() {
-        it('Should delay change notifications if rate-limited', function() {
+        it('Should delay change notifications', function() {
             var subscribable = new ko.subscribable().extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
@@ -141,40 +141,14 @@ describe('Rate-limited', function() {
             expect(notifySpy).toHaveBeenCalledWith('b');
         });
 
-        xit('Should delay notifications if subscription is rate-limited', function() {
-            var subscribable = new ko.subscribable();
-            // First subscription is rate-limited
-            var notifySpy1 = jasmine.createSpy('notifySpy1');
-            var subscription1 = subscribable.subscribe(notifySpy1, null, 'custom');
-            ko.extenders.rateLimit(subscription1, 500);
-            // Second isn't
-            var notifySpy2 = jasmine.createSpy('notifySpy2');
-            var subscription2 = subscribable.subscribe(notifySpy2, null, 'custom');
-
-            subscribable.notifySubscribers('a', 'custom');
-            expect(notifySpy1).not.toHaveBeenCalled();
-            expect(notifySpy2).toHaveBeenCalledWith('a');
-
-            notifySpy2.reset();
-            subscribable.notifySubscribers('b', 'custom');
-            expect(notifySpy1).not.toHaveBeenCalled();
-            expect(notifySpy2).toHaveBeenCalledWith('b');
-
-            // Advance clock; Notification happens now using the latest value notified
-            notifySpy2.reset();
-            jasmine.Clock.tick(501);
-            expect(notifySpy1).toHaveBeenCalledWith('b');
-            expect(notifySpy2).not.toHaveBeenCalled();
-        });
-
-        it('Throttle method should notify every timeout interval', function() {
+        it('Should notify every timeout interval using throttle method ', function() {
             var subscribable = new ko.subscribable().extend({rateLimit:{method:'throttle', timeout:50}});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
 
             // Push 10 changes every 25 ms
             for (var i = 0; i < 10; ++i) {
-                subscribable.notifySubscribers(i+1, "change");
+                subscribable.notifySubscribers(i+1);
                 jasmine.Clock.tick(25);
             }
 
@@ -188,14 +162,14 @@ describe('Rate-limited', function() {
             expect(notifySpy).not.toHaveBeenCalled();
         });
 
-        it('Debounce method should notify after nothing happens for the timeout period', function() {
+        it('Should notify after nothing happens for the timeout period using debounce method', function() {
             var subscribable = new ko.subscribable().extend({rateLimit:{method:'debounce', timeout:50}});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
 
             // Push 10 changes every 25 ms
             for (var i = 0; i < 10; ++i) {
-                subscribable.notifySubscribers(i+1, "change");
+                subscribable.notifySubscribers(i+1);
                 jasmine.Clock.tick(25);
             }
 
@@ -206,6 +180,41 @@ describe('Rate-limited', function() {
             jasmine.Clock.tick(50);
             expect(notifySpy.calls.length).toBe(1);
             expect(notifySpy).toHaveBeenCalledWith(10);
+        });
+
+        it('Should use latest settings when applied multiple times', function() {
+            var subscribable = new ko.subscribable().extend({rateLimit:250}).extend({rateLimit:500});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            subscribable.subscribe(notifySpy);
+
+            subscribable.notifySubscribers('a');
+
+            jasmine.Clock.tick(250);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(250);
+            expect(notifySpy).toHaveBeenCalledWith('a');
+        });
+
+        it('Should use latest settings for future notification and previous settings for pending notificaiton', function() {
+            var subscribable = new ko.subscribable().extend({rateLimit:250});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            subscribable.subscribe(notifySpy);
+
+            subscribable.notifySubscribers('a');  // Pending notificaiton
+
+            // Apply new setting and schedule new notification
+            subscribable = subscribable.extend({rateLimit:500});
+            subscribable.notifySubscribers('b');
+
+            // First notification happens using original settings
+            jasmine.Clock.tick(250);
+            expect(notifySpy).toHaveBeenCalledWith('a');
+
+            // Second notification happends using later settings
+            notifySpy.reset();
+            jasmine.Clock.tick(250);
+            expect(notifySpy).toHaveBeenCalledWith('b');
         });
     });
 

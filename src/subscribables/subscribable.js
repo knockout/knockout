@@ -56,7 +56,7 @@ var ko_subscribable_fn = {
         }
     },
 
-    'limit': function(limitFunction, funcOptions) {
+    limit: function(limitFunction) {
         var self = this, isPending, previousValue, pendingValue;
 
         if (!self._origNotifySubscribers) {
@@ -81,12 +81,12 @@ var ko_subscribable_fn = {
             if (self.isDifferent(previousValue, pendingValue)) {
                 self._origNotifySubscribers(previousValue = pendingValue);
             }
-        }, funcOptions);
+        });
 
         self._notifyRateLimited = function(value) {
             isPending = true;
             pendingValue = value;
-            finish(self);
+            finish();
         };
         self._storePreviousValue = function(value) {
             if (!isPending) {
