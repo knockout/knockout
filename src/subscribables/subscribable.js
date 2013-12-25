@@ -29,7 +29,7 @@ var ko_subscribable_fn = {
             ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
         });
 
-        if (event === defaultEvent && self._notifyRateLimited && self.peek) {
+        if (self._notifyRateLimited && self.peek) {
             self.peek();
         }
 
@@ -57,18 +57,17 @@ var ko_subscribable_fn = {
     },
 
     limit: function(limitFunction) {
-        var self = this, isPending, previousValue, pendingValue;
+        var self = this, isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
             self["notifySubscribers"] = function(value, event) {
                 if (!event || event === defaultEvent) {
-                    this._notifyRateLimited(value);
+                    self._notifyRateLimited(value);
+                } else if (event === beforeChange) {
+                    self._storePreviousValue(value);
                 } else {
-                    if (event === 'beforeChange') {
-                        this._storePreviousValue(value);
-                    }
-                    this._origNotifySubscribers(value, event);
+                    self._origNotifySubscribers(value, event);
                 }
             };
         }
@@ -91,6 +90,7 @@ var ko_subscribable_fn = {
         self._storePreviousValue = function(value) {
             if (!isPending) {
                 previousValue = value;
+                self._origNotifySubscribers(value, beforeChange);
             }
         };
     },

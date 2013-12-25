@@ -223,11 +223,14 @@ describe('Rate-limited', function() {
             var observable = ko.observable().extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             observable.subscribe(notifySpy);
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            observable.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             // Observable is changed, but notification is delayed
             observable('a');
             expect(observable()).toEqual('a');
             expect(notifySpy).not.toHaveBeenCalled();
+            expect(beforeChangeSpy).toHaveBeenCalledWith(undefined);    // beforeChange notification happens right away
 
             // Second change notification is also delayed
             observable('b');
@@ -236,12 +239,15 @@ describe('Rate-limited', function() {
             // Advance clock; Change notification happens now using the latest value notified
             jasmine.Clock.tick(501);
             expect(notifySpy).toHaveBeenCalledWith('b');
+            expect(beforeChangeSpy.calls.length).toBe(1);   // Only one beforeChange notification
         });
 
         it('Should suppress change notification when value is changed/reverted', function() {
             var observable = ko.observable('original').extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             observable.subscribe(notifySpy);
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            observable.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             observable('new');                      // change value
             expect(observable()).toEqual('new');    // access observable to make sure it really has the changed value
@@ -253,6 +259,13 @@ describe('Rate-limited', function() {
             // Check that value is correct and notification hasn't happened
             expect(observable()).toEqual('original');
             expect(notifySpy).not.toHaveBeenCalled();
+
+            // Changing observable to a new value still works as expected
+            observable('new');
+            jasmine.Clock.tick(501);
+            expect(notifySpy).toHaveBeenCalledWith('new');
+            expect(beforeChangeSpy).toHaveBeenCalledWith('original');
+            expect(beforeChangeSpy).not.toHaveBeenCalledWith('new');
         });
 
         it('Should support notifications from nested update', function() {
@@ -365,6 +378,8 @@ describe('Rate-limited', function() {
             var computed = ko.computed(function () { evalSpy(observable()); return observable(); }).extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             computed.subscribe(notifySpy);
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            computed.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             // Observable is changed, but notification is delayed
             evalSpy.reset();
@@ -373,6 +388,7 @@ describe('Rate-limited', function() {
             expect(computed()).toEqual('a');
             expect(evalSpy).toHaveBeenCalledWith('a');      // evaluation happens when computed is accessed
             expect(notifySpy).not.toHaveBeenCalled();       // but notification is still delayed
+            expect(beforeChangeSpy).toHaveBeenCalledWith(undefined);    // beforeChange notification happens right away
 
             // Second change notification is also delayed
             evalSpy.reset();
@@ -386,6 +402,7 @@ describe('Rate-limited', function() {
             jasmine.Clock.tick(501);
             expect(evalSpy).toHaveBeenCalledWith('b');
             expect(notifySpy).toHaveBeenCalledWith('b');
+            expect(beforeChangeSpy.calls.length).toBe(1);   // Only one beforeChange notification
         });
 
         it('Should run initial evaluation at first subscribe when using deferEvaluation', function() {
@@ -427,6 +444,8 @@ describe('Rate-limited', function() {
             var computed = ko.computed(function () { return observable(); }).extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             computed.subscribe(notifySpy);
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            computed.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             observable('new');                      // change value
             expect(computed()).toEqual('new');      // access computed to make sure it really has the changed value
@@ -438,6 +457,13 @@ describe('Rate-limited', function() {
             // Check that value is correct and notification hasn't happened
             expect(computed()).toEqual('original');
             expect(notifySpy).not.toHaveBeenCalled();
+
+            // Changing observable to a new value still works as expected
+            observable('new');
+            jasmine.Clock.tick(501);
+            expect(notifySpy).toHaveBeenCalledWith('new');
+            expect(beforeChangeSpy).toHaveBeenCalledWith('original');
+            expect(beforeChangeSpy).not.toHaveBeenCalledWith('new');
         });
 
         it('Should not re-evaluate if computed is disposed before timeout', function() {
