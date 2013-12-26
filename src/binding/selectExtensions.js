@@ -47,7 +47,8 @@
                     if (value === null || value === undefined)
                         element.selectedIndex = -1;
                     for (var i = element.options.length - 1; i >= 0; i--) {
-                        if (ko.selectExtensions.readValue(element.options[i]) == value) {
+                        var optionValue = ko.selectExtensions.readValue(element.options[i]);
+                        if (optionValue == value || (optionValue instanceof Date && value instanceof Date && optionValue - value == 0)) {
                             element.selectedIndex = i;
                             break;
                         }
