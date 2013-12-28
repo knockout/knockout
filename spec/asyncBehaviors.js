@@ -137,7 +137,7 @@ describe('Rate-limited', function() {
 
             // Advance clock; Change notification happens now using the latest value notified
             notifySpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('b');
         });
 
@@ -196,7 +196,9 @@ describe('Rate-limited', function() {
             expect(notifySpy).toHaveBeenCalledWith('a');
         });
 
-        it('Should use latest settings for future notification and previous settings for pending notificaiton', function() {
+        it('Uses latest settings for future notification and previous settings for pending notificaiton', function() {
+            // This test describes the current behavior for the given scenario but is not a contract for that
+            // behavior, which could change in the future if convenient.
             var subscribable = new ko.subscribable().extend({rateLimit:250});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
@@ -237,7 +239,7 @@ describe('Rate-limited', function() {
             expect(notifySpy).not.toHaveBeenCalled();
 
             // Advance clock; Change notification happens now using the latest value notified
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('b');
             expect(beforeChangeSpy.calls.length).toBe(1);   // Only one beforeChange notification
         });
@@ -253,7 +255,7 @@ describe('Rate-limited', function() {
             expect(observable()).toEqual('new');    // access observable to make sure it really has the changed value
             observable('original');                 // but then change it back
             expect(notifySpy).not.toHaveBeenCalled();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).not.toHaveBeenCalled();
 
             // Check that value is correct and notification hasn't happened
@@ -262,7 +264,7 @@ describe('Rate-limited', function() {
 
             // Changing observable to a new value still works as expected
             observable('new');
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('new');
             expect(beforeChangeSpy).toHaveBeenCalledWith('original');
             expect(beforeChangeSpy).not.toHaveBeenCalledWith('new');
@@ -284,12 +286,12 @@ describe('Rate-limited', function() {
             expect(observable()).toEqual('b');
 
             notifySpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('b');
             expect(observable()).toEqual('z');
 
             notifySpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('z');
         });
 
@@ -310,12 +312,12 @@ describe('Rate-limited', function() {
             expect(observable()).toEqual('b');
 
             notifySpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('b');
             expect(observable()).toEqual('b');
 
             notifySpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).not.toHaveBeenCalled();
         });
     });
@@ -368,7 +370,7 @@ describe('Rate-limited', function() {
 
             // Advance clock; Change notification happens now using the latest value notified
             evalSpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(evalSpy).toHaveBeenCalledWith('b');
         });
 
@@ -399,13 +401,16 @@ describe('Rate-limited', function() {
 
             // Advance clock; Change notification happens now using the latest value notified
             evalSpy.reset();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(evalSpy).toHaveBeenCalledWith('b');
             expect(notifySpy).toHaveBeenCalledWith('b');
             expect(beforeChangeSpy.calls.length).toBe(1);   // Only one beforeChange notification
         });
 
         it('Should run initial evaluation at first subscribe when using deferEvaluation', function() {
+            // This behavior means that code using rate-limited computeds doesn't need to care if the
+            // computed also has deferEvaluation. For example, the preceding test ('Should delay change
+            // notifications and evaluation') will pass just as well if using deferEvaluation.
             var observable = ko.observable('a');
             var evalSpy = jasmine.createSpy('evalSpy');
             var computed = ko.computed({
@@ -451,7 +456,7 @@ describe('Rate-limited', function() {
             expect(computed()).toEqual('new');      // access computed to make sure it really has the changed value
             observable('original');                 // and then change the value back
             expect(notifySpy).not.toHaveBeenCalled();
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).not.toHaveBeenCalled();
 
             // Check that value is correct and notification hasn't happened
@@ -460,7 +465,7 @@ describe('Rate-limited', function() {
 
             // Changing observable to a new value still works as expected
             observable('new');
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(notifySpy).toHaveBeenCalledWith('new');
             expect(beforeChangeSpy).toHaveBeenCalledWith('original');
             expect(beforeChangeSpy).not.toHaveBeenCalledWith('new');
@@ -479,7 +484,7 @@ describe('Rate-limited', function() {
             observable('b');
             computed.dispose();
 
-            jasmine.Clock.tick(501);
+            jasmine.Clock.tick(500);
             expect(computed()).toEqual('a');
             expect(evalSpy).not.toHaveBeenCalled();
         });

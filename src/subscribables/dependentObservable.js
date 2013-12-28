@@ -150,7 +150,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function peek() {
-        // Peek won't re-evaluate, except to get the initial value when "deferEvaluation" is set
+        // Peek won't re-evaluate, except to get the initial value when "deferEvaluation" is set.
+        // That's the only time that both of these conditions will be satisfied.
         if (_needsEvaluation && !_dependenciesCount)
             evaluateImmediate();
         return _latestValue;
@@ -185,10 +186,13 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     // Replace the limit function with one that delays evaluation as well.
     var originalLimit = dependentObservable.limit;
     dependentObservable.limit = function(limitFunction) {
-        originalLimit.call(this, limitFunction);
+        originalLimit.call(dependentObservable, limitFunction);
         dependentObservable._evalRateLimited = function() {
-            dependentObservable._storePreviousValue(_latestValue);
-            dependentObservable._notifyRateLimited(dependentObservable);
+            dependentObservable._rateLimitedBeforeChange(_latestValue);
+
+            // Pass the observable to the rate-limit code, which will access it when
+            // it's time to do the notification.
+            dependentObservable._rateLimitedChange(dependentObservable);
         }
     };
 

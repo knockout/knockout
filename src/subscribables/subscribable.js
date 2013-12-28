@@ -29,7 +29,9 @@ var ko_subscribable_fn = {
             ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
         });
 
-        if (self._notifyRateLimited && self.peek) {
+        // This will force a computed with deferEvaluation to evaluate before any subscriptions
+        // are registered (only if rate-limiting is set).
+        if (self._rateLimitedChange && self.peek) {
             self.peek();
         }
 
@@ -57,15 +59,16 @@ var ko_subscribable_fn = {
     },
 
     limit: function(limitFunction) {
-        var self = this, isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
+        var self = this, selfIsObservable = ko.isObservable(self),
+            isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
             self["notifySubscribers"] = function(value, event) {
                 if (!event || event === defaultEvent) {
-                    self._notifyRateLimited(value);
+                    self._rateLimitedChange(value);
                 } else if (event === beforeChange) {
-                    self._storePreviousValue(value);
+                    self._rateLimitedBeforeChange(value);
                 } else {
                     self._origNotifySubscribers(value, event);
                 }
@@ -73,7 +76,9 @@ var ko_subscribable_fn = {
         }
 
         var finish = limitFunction(function() {
-            if (pendingValue === self) {
+            // If an observable provided a reference to itself, access it to get the latest value.
+            // This allows computed observables to delay calculating their value until needed.
+            if (selfIsObservable && pendingValue === self) {
                 pendingValue = self();
             }
             isPending = false;
@@ -82,12 +87,12 @@ var ko_subscribable_fn = {
             }
         });
 
-        self._notifyRateLimited = function(value) {
+        self._rateLimitedChange = function(value) {
             isPending = true;
             pendingValue = value;
             finish();
         };
-        self._storePreviousValue = function(value) {
+        self._rateLimitedBeforeChange = function(value) {
             if (!isPending) {
                 previousValue = value;
                 self._origNotifySubscribers(value, beforeChange);
