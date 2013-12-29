@@ -225,7 +225,8 @@ describe('Rate-limited', function() {
             var observable = ko.observable().extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             observable.subscribe(notifySpy);
-            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy')
+                .andCallFake(function(value) {expect(observable()).toBe(value); });
             observable.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             // Observable is changed, but notification is delayed
@@ -380,7 +381,8 @@ describe('Rate-limited', function() {
             var computed = ko.computed(function () { evalSpy(observable()); return observable(); }).extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             computed.subscribe(notifySpy);
-            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy')
+                .andCallFake(function(value) {expect(computed()).toBe(value); });
             computed.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             // Observable is changed, but notification is delayed

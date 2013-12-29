@@ -35,7 +35,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
     }
 
     function evaluatePossiblyAsync() {
-        _needsEvaluation = true;
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
             clearTimeout(evaluationTimeoutInstance);
@@ -53,10 +52,6 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
             // This is not desirable (it's hard for a developer to realise a chain of dependencies might cause this, and they almost
             // certainly didn't intend infinite re-evaluations). So, for predictability, we simply prevent ko.computeds from causing
             // their own re-evaluation. Further discussion at https://github.com/SteveSanderson/knockout/pull/387
-            return;
-        }
-
-        if (!_needsEvaluation) {
             return;
         }
 
@@ -189,6 +184,8 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
         originalLimit.call(dependentObservable, limitFunction);
         dependentObservable._evalRateLimited = function() {
             dependentObservable._rateLimitedBeforeChange(_latestValue);
+
+            _needsEvaluation = true;    // Mark as dirty
 
             // Pass the observable to the rate-limit code, which will access it when
             // it's time to do the notification.
