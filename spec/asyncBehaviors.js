@@ -141,8 +141,8 @@ describe('Rate-limited', function() {
             expect(notifySpy).toHaveBeenCalledWith('b');
         });
 
-        it('Should notify every timeout interval using throttle method ', function() {
-            var subscribable = new ko.subscribable().extend({rateLimit:{method:'throttle', timeout:50}});
+        it('Should notify every timeout interval using notifyAtFixedRate method ', function() {
+            var subscribable = new ko.subscribable().extend({rateLimit:{method:'notifyAtFixedRate', timeout:50}});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
 
@@ -162,8 +162,8 @@ describe('Rate-limited', function() {
             expect(notifySpy).not.toHaveBeenCalled();
         });
 
-        it('Should notify after nothing happens for the timeout period using debounce method', function() {
-            var subscribable = new ko.subscribable().extend({rateLimit:{method:'debounce', timeout:50}});
+        it('Should notify after nothing happens for the timeout period using notifyWhenChangesStop method', function() {
+            var subscribable = new ko.subscribable().extend({rateLimit:{method:'notifyWhenChangesStop', timeout:50}});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
 
