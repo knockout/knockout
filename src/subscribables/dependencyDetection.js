@@ -1,5 +1,5 @@
 
-ko.dependencyDetection = (function () {
+ko.computedContext = ko.dependencyDetection = (function () {
     var outerFrames = [],
         currentFrame,
         lastId = 0;
@@ -43,6 +43,21 @@ ko.dependencyDetection = (function () {
             } finally {
                 end();
             }
+        },
+
+        getDependenciesCount: function () {
+            if (currentFrame)
+                return currentFrame.computed.getDependenciesCount();
+        },
+
+        isInitial: function() {
+            if (currentFrame)
+                return currentFrame.isInitial;
+        },
+
+        computed: function() {
+            if (currentFrame)
+                return currentFrame.computed;
         }
     };
 })();

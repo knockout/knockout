@@ -1,4 +1,4 @@
-ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
         _needsEvaluation = true,
         _isBeingEvaluated = false,
@@ -83,7 +83,9 @@ ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunction
                         // Brand new subscription - add it
                         addSubscriptionToDependency(subscribable, id);
                     }
-                }
+                },
+                computed: dependentObservable,
+                isInitial: !_dependenciesCount        // If we're evaluating when there are no previous dependencies, it must be the first time
             });
 
             _subscriptionsToDependencies = {};
