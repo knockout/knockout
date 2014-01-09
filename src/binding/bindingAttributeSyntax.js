@@ -287,12 +287,13 @@
             bindings = sourceBindings;
         } else {
             var provider = ko.bindingProvider['instance'],
+                providerOptions = provider['options'] || {},
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
-            if (sourceBindings || bindingContext._subscribable) {
+            if (sourceBindings || bindingContext._subscribable || providerOptions['trackObservables']) {
                 // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
                 // Get the binding from the provider within a computed observable so that we can update the bindings whenever
-                // the binding context is updated.
+                // the binding context is updated. Also do so if the binding provider sets a "trackObservables" option.
                 var bindingsUpdater = ko.dependentObservable(
                     function() {
                         bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);

@@ -221,6 +221,68 @@ describe('Binding dependencies', function() {
         expect(latestValue).toEqual(2);
     });
 
+    it('Ignores observables accessed within the binding provider\'s "getBindingAccessor" function', function() {
+        // This behavior is not guaranteed and could change in the future if convenient.
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
+        var observable = ko.observable('substitute'),
+            originalBindingProvider = ko.bindingProvider.instance;
+
+        ko.bindingProvider.instance = {
+            nodeHasBindings: originalBindingProvider.nodeHasBindings,
+            getBindingAccessors: function(node, bindingContext) {
+                var bindings = originalBindingProvider.getBindingAccessors(node, bindingContext);
+                if (bindings && bindings['text']) {
+                    var newValue = observable();
+                    bindings['text'] = function () { return newValue; };
+                }
+                return bindings;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='text: \"original\"'></div>";
+        ko.applyBindings({}, testNode);
+
+        expect(testNode).toContainText('substitute');
+        expect(observable.getSubscriptionsCount()).toEqual(0);
+
+        // uptdating observable doesn't update binding
+        observable('new value');
+        expect(testNode).toContainText('substitute');
+    });
+
+    it('Should track observables accessed within the binding provider\'s "getBindingAccessor" function when "trackObservables" is true', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
+        var observable = ko.observable('substitute'),
+            originalBindingProvider = ko.bindingProvider.instance;
+
+        ko.bindingProvider.instance = {
+            nodeHasBindings: originalBindingProvider.nodeHasBindings,
+            getBindingAccessors: function(node, bindingContext) {
+                var bindings = originalBindingProvider.getBindingAccessors(node, bindingContext);
+                if (bindings && bindings['text']) {
+                    var newValue = observable();
+                    bindings['text'] = function () { return newValue; };
+                }
+                return bindings;
+            },
+            options: {
+                trackObservables: true
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='text: \"hello\"'></div>";
+        ko.applyBindings({}, testNode);
+
+        expect(testNode).toContainText('substitute');
+        expect(observable.getSubscriptionsCount()).toEqual(1);
+
+        // uptdate observable to update binding
+        observable('new value');
+        expect(testNode).toContainText('new value');
+    });
+
     describe('Observable view models', function() {
         it('Should update bindings (including callbacks)', function() {
             var vm = ko.observable(), clickedVM;

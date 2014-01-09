@@ -24,6 +24,12 @@
             return bindingsString ? this['parseBindingsString'](bindingsString, bindingContext, node, {'valueAccessors':true}) : null;
         },
 
+        'options': {
+            // Don't try to track observables accessed in getBindingAccessors. Note that this is just a hint
+            // to the binding processor, which may still track obsevables if it's convenient.
+            'trackObservables': false
+        },
+
         // The following function is only used internally by this default provider.
         // It's not part of the interface definition for a general binding provider.
         'getBindingsString': function(node, bindingContext) {
