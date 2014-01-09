@@ -188,6 +188,20 @@ describe('Templating', function() {
         expect(testNode.innerHTML).toEqual("Value = A");
     });
 
+    it('Should be able to pick template via an observable', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First template output",
+            secondTemplate: "Second template output"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        ko.renderTemplate(chosenTemplate, null, null, testNode);
+        expect(testNode.innerHTML).toEqual("First template output");
+
+        chosenTemplate("secondTemplate");
+        expect(testNode.innerHTML).toEqual("Second template output");
+    });
+
     it('Should be able to render a template using data-bind syntax', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "template output" }));
         testNode.innerHTML = "<div data-bind='template:\"someTemplate\"'></div>";
