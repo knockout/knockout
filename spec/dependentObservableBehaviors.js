@@ -416,26 +416,6 @@ describe('Dependent Observable', function() {
         expect(computed.getDependenciesCount()).toEqual(1);
     });
 
-    it('Should not subscribe to observables accessed through change notifications of an accessed computed', function() {
-        // See https://github.com/SteveSanderson/knockout/issues/341
-        var observableDependent = ko.observable(),
-            observableIndependent = ko.observable(),
-            computedInner = ko.computed({read: function() { return observableDependent() }, deferEvaluation: true}),
-            computedOuter = ko.computed({read: function() { return computedInner() }, deferEvaluation: true});
-
-        // initially there are no dependencies (because they haven't been evaluated)
-        expect(computedInner.getDependenciesCount()).toEqual(0);
-        expect(computedOuter.getDependenciesCount()).toEqual(0);
-
-        // create a change subscription on the inner computed that also accesses an observable
-        computedInner.subscribe(function() { observableIndependent() });
-        // now trigger evaluation of both computeds by accessing the outer one
-        computedOuter();
-        // there should be only one dependency for each
-        expect(computedInner.getDependenciesCount()).toEqual(1);
-        expect(computedOuter.getDependenciesCount()).toEqual(1);
-    });
-
     it('Should be able to re-evaluate a computed that previously threw an exception', function() {
         var observableSwitch = ko.observable(true), observableValue = ko.observable(1),
             computed = ko.computed(function() {
