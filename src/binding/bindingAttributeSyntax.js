@@ -287,29 +287,23 @@
             bindings = sourceBindings;
         } else {
             var provider = ko.bindingProvider['instance'],
-                providerOptions = provider['options'] || {},
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
-            if (sourceBindings || bindingContext._subscribable || providerOptions['trackObservables']) {
-                // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
-                // Get the binding from the provider within a computed observable so that we can update the bindings whenever
-                // the binding context is updated. Also do so if the binding provider sets a "trackObservables" option.
-                var bindingsUpdater = ko.dependentObservable(
-                    function() {
-                        bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
-                        // Register a dependency on the binding context
-                        if (bindings && bindingContext._subscribable)
-                            bindingContext._subscribable();
-                        return bindings;
-                    },
-                    null, { disposeWhenNodeIsRemoved: node }
-                );
+            // Get the binding from the provider within a computed observable so that we can update the bindings whenever
+            // the binding context is updated or if the binding provider accesses observables.
+            var bindingsUpdater = ko.dependentObservable(
+                function() {
+                    bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
+                    // Register a dependency on the binding context to support obsevable view models.
+                    if (bindings && bindingContext._subscribable)
+                        bindingContext._subscribable();
+                    return bindings;
+                },
+                null, { disposeWhenNodeIsRemoved: node }
+            );
 
-                if (!bindings || !bindingsUpdater.isActive())
-                    bindingsUpdater = null;
-            } else {
-                bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
-            }
+            if (!bindings || !bindingsUpdater.isActive())
+                bindingsUpdater = null;
         }
 
         var bindingHandlerThatControlsDescendantBindings;
