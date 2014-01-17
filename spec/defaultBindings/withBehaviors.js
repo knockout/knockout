@@ -176,4 +176,48 @@ describe('Binding: With', function() {
         viewModel.topitem(null);
         expect(testNode).toContainHtml("hello <!-- ko with: topitem --><!-- /ko -->");
     });
+
+    it('Should be able to give an alias to $data using \"as\"', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'><span data-bind='text: item.existentChildProp'></span></div>";
+        expect(testNode.childNodes.length).toEqual(1);
+        ko.applyBindings({ someItem: { existentChildProp: 'Child prop value' } }, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
+    });
+
+    it('Should be able to give an alias to $data using \"as\", and use it within a nested \"with\"', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'>"
+                           +    "<span data-bind='with: sub'>"
+                           +        "<span data-bind='text: item.name+\":\"+$data'></span>"
+                           +    "</span>"
+                           + "</div>";
+        var someItem = { name: 'alpha', sub: 'a' };
+        ko.applyBindings({ someItem: someItem }, testNode);
+        expect(testNode.childNodes[0]).toContainText('alpha:a');
+    });
+
+    it('Should be able to set up multiple nested levels of aliases using \"as\"', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'>"
+                           +    "<span data-bind='with: { data: sub, as: \"subvalue\" }'>"
+                           +        "<span data-bind='text: item.name+\":\"+subvalue'></span>"
+                           +    "</span>"
+                           + "</div>";
+        var someItem = { name: 'alpha', sub: 'a' };
+        ko.applyBindings({ someItem: someItem }, testNode);
+        expect(testNode.childNodes[0]).toContainText('alpha:a');
+    });
+
+    it('Should be able to give an alias to $data using \"as\", and use it within arbitrary descendant binding contexts', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'><span data-bind='if: item.length'><span data-bind='text: item'></span></span></div>";
+        var someItem = 'alpha';
+        ko.applyBindings({ someItem: someItem }, testNode);
+        expect(testNode.childNodes[0]).toContainText('alpha');
+    });
+
+    it('Should be able to give an alias to $data using \"as\", and use it within descendant binding contexts defined using containerless syntax', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'>x<!-- ko if: item.length --><span data-bind='text: item'></span>x<!-- /ko --></div>";
+        var someItem = 'alpha';
+        ko.applyBindings({ someItem: someItem }, testNode);
+        expect(testNode.childNodes[0]).toContainText('xalphax');
+    });
 });
