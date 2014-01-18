@@ -36,23 +36,24 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
  * Additional parameters 
 
    * `valueUpdate`
-   
+
    	 If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. The following string values are the most commonly useful choices:
 
+   	 * `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes
    	 * `"keyup"` - updates your view model when the user releases a key
    	 * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
    	 * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously.
-   	 
-   	 Of these options, `"afterkeydown"` is the best choice if you want to keep your view model updated in real-time. For example:
+
+   	 Of these options, `"input"` is the best choice if you want to keep your view model updated in real-time. (`"afterkeydown"` is a good choice for older browsers.) For example:
             
-            <p>Your value: <input data-bind="value: someValue, valueUpdate: 'afterkeydown'" /></p>
+            <p>Your value: <input data-bind="value: someValue, valueUpdate: 'input'" /></p>
             <p>You have typed: <span data-bind="text: someValue"></span></p> <!-- updates in real-time -->
             
             <script type="text/javascript">
                 var viewModel = {
                     someValue: ko.observable("edit me")
                 };
-            </script>   
+            </script>
 
 ### Note 1: Working with drop-down lists (i.e., SELECT nodes)
 
