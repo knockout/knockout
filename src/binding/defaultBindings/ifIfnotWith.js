@@ -44,7 +44,7 @@ makeWithIfBinding('with', true /* isWith */, false /* isNot */,
 
         //if there is an 'as' alias, apply it using dataValue.data as the dataValue
         //e.g. data-bind: { with: { data: value, as: 'alias' }}
-        if(alias)
+        if(alias && 'data' in dataValue && typeof alias === 'string')
           return bindingContext['createChildContext'](dataValue['data'], alias);
 
         //otherwise continue without an 'as' alias

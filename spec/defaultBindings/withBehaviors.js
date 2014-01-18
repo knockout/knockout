@@ -236,4 +236,20 @@ describe('Binding: With', function() {
         ko.applyBindings({ someItem: someItem }, testNode);
         expect(testNode.childNodes[0]).toContainText('xalphax');
     });
+
+    it('Should not give an alias when binding to an object that contains an \"as\" property with no \"data\" pair', function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: as'></span></div>";
+        expect(testNode.childNodes.length).toEqual(1);
+        ko.applyBindings({ someItem: { as: 'alpha' } }, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0]).toContainText('alpha');
+    });
+
+    it('Should not give an alias when binding to an object that contains an \"as\" property whose unwrapped value is not a string', function() {
+        testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: as.existentChildProp'></span></div>";
+        expect(testNode.childNodes.length).toEqual(1);
+        ko.applyBindings({ someItem: { as: { existentChildProp: 'Child prop value' }, data: [1, 2, 3] } }, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0]).toContainText('Child prop value');
+    });
 });
