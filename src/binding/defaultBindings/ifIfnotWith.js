@@ -40,10 +40,12 @@ makeWithIfBinding('if');
 makeWithIfBinding('ifnot', false /* isWith */, true /* isNot */);
 makeWithIfBinding('with', true /* isWith */, false /* isNot */,
     function(bindingContext, dataValue) {
+        var alias = ko.utils.unwrapObservable(dataValue['as']);
+
         //if there is an 'as' alias, apply it using dataValue.data as the dataValue
         //e.g. data-bind: { with: { data: value, as: 'alias' }}
-        if(dataValue['as'])
-          return bindingContext['createChildContext'](dataValue['data'], dataValue['as']);
+        if(alias)
+          return bindingContext['createChildContext'](dataValue['data'], alias);
 
         //otherwise continue without an 'as' alias
         //e.g. data-bind: { with: value }

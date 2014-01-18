@@ -185,6 +185,22 @@ describe('Binding: With', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
     });
 
+    it('Should be able to give an alias to observable $data using \"as\"', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'><span data-bind='text: item.existentChildProp'></span></div>";
+        expect(testNode.childNodes.length).toEqual(1);
+        ko.applyBindings({ someItem: ko.observable({ existentChildProp: 'Child prop value' }) }, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
+    });
+
+    it('Should be able to give an observable alias to $data using \"as\"', function() {
+        testNode.innerHTML = "<div data-bind='with: { data: someItem, as: alias }'><span data-bind='text: item.existentChildProp'></span></div>";
+        expect(testNode.childNodes.length).toEqual(1);
+        ko.applyBindings({ alias: ko.observable('item'), someItem: { existentChildProp: 'Child prop value' } }, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
+    });
+
     it('Should be able to give an alias to $data using \"as\", and use it within a nested \"with\"', function() {
         testNode.innerHTML = "<div data-bind='with: { data: someItem, as: \"item\" }'>"
                            +    "<span data-bind='with: sub'>"
