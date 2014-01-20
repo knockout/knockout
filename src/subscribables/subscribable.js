@@ -30,8 +30,8 @@ var ko_subscribable_fn = {
         });
 
         // This will force a computed with deferEvaluation to evaluate before any subscriptions
-        // are registered (only if rate-limiting is set).
-        if (self._rateLimitedChange && self.peek) {
+        // are registered.
+        if (self.peek) {
             self.peek();
         }
 

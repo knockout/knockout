@@ -338,6 +338,28 @@ describe('Dependent Observable', function() {
         expect(timesEvaluated).toEqual(1);
     });
 
+    it('Should perform dependency detection when subscribed to when constructed with "deferEvaluation"', function() {
+        var data = ko.observable(1),
+            computed = ko.computed({ read: data, deferEvaluation: true }),
+            result = ko.observable();
+
+        // initially computed has no dependencies since it has not been evaluated
+        expect(computed.getDependenciesCount()).toEqual(0);
+
+        // Now subscribe to computed
+        computed.subscribe(result);
+
+        // The dependency should now be tracked
+        expect(computed.getDependenciesCount()).toEqual(1);
+
+        // But the subscription should not have sent down the initial value
+        expect(result()).toEqual(undefined);
+
+        // Updating data should trigger the subscription
+        data(42);
+        expect(result()).toEqual(42);
+    });
+
     it('Should prevent recursive calling of read function', function() {
         var observable = ko.observable(0),
             computed = ko.dependentObservable(function() {
@@ -392,26 +414,6 @@ describe('Dependent Observable', function() {
         observableModified.subscribe(function() { observableIndependent() }, null, 'beforeChange');
         observableDependent(2);
         expect(computed.getDependenciesCount()).toEqual(1);
-    });
-
-    it('Should not subscribe to observables accessed through change notifications of an accessed computed', function() {
-        // See https://github.com/SteveSanderson/knockout/issues/341
-        var observableDependent = ko.observable(),
-            observableIndependent = ko.observable(),
-            computedInner = ko.computed({read: function() { return observableDependent() }, deferEvaluation: true}),
-            computedOuter = ko.computed({read: function() { return computedInner() }, deferEvaluation: true});
-
-        // initially there are no dependencies (because they haven't been evaluated)
-        expect(computedInner.getDependenciesCount()).toEqual(0);
-        expect(computedOuter.getDependenciesCount()).toEqual(0);
-
-        // create a change subscription on the inner computed that also accesses an observable
-        computedInner.subscribe(function() { observableIndependent() });
-        // now trigger evaluation of both computeds by accessing the outer one
-        computedOuter();
-        // there should be only one dependency for each
-        expect(computedInner.getDependenciesCount()).toEqual(1);
-        expect(computedOuter.getDependenciesCount()).toEqual(1);
     });
 
     it('Should be able to re-evaluate a computed that previously threw an exception', function() {
