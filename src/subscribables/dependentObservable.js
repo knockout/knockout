@@ -40,6 +40,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
             clearTimeout(evaluationTimeoutInstance);
+            evaluationTimeoutInstance = null;
             evaluationTimeoutInstance = setTimeout(evaluateImmediate, throttleEvaluationTimeout);
         } else if (dependentObservable._evalRateLimited) {
             dependentObservable._evalRateLimited();
@@ -137,6 +138,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             dispose();
     }
 
+    function flush() {
+        if (evaluationTimeoutInstance !== null) {
+            clearTimeout(evaluationTimeoutInstance);
+            evaluationTimeoutInstance = null;
+            evaluateImmediate();
+        }
+    }
+
     function dependentObservable() {
         if (arguments.length > 0) {
             if (typeof writeFunction === "function") {
@@ -183,6 +192,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     ko.subscribable.call(dependentObservable);
     ko.utils.setPrototypeOfOrExtend(dependentObservable, ko.dependentObservable['fn']);
 
+    dependentObservable.flush = flush;
     dependentObservable.peek = peek;
     dependentObservable.getDependenciesCount = function () { return _dependenciesCount; };
     dependentObservable.hasWriteFunction = typeof options["write"] === "function";
@@ -204,6 +214,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
     };
 
+    ko.exportProperty(dependentObservable, 'flush', dependentObservable.flush);
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'isActive', dependentObservable.isActive);
