@@ -44,7 +44,7 @@
                 case 'select':
                     if (value === "")       // A blank string value will select the caption
                         value = undefined;
-                    var selection = allowUnset ? -1 : 0;
+                    var selection = -1;
                     for (var i = 0, n = element.options.length, optionValue; i < n; ++i) {
                         optionValue = ko.selectExtensions.readValue(element.options[i]);
                         // Include special check to handle selecting a caption with a blank string value
@@ -53,7 +53,9 @@
                             break;
                         }
                     }
-                    element.selectedIndex = selection;
+                    if (allowUnset || selection >= 0) {
+                        element.selectedIndex = selection;
+                    }
                     break;
                 default:
                     if ((value === null) || (value === undefined))

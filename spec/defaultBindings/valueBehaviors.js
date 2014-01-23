@@ -384,7 +384,10 @@ describe('Binding: Value', function() {
             expect(testNode.childNodes[0].selectedIndex).toEqual(1);
 
             observable('D'); // This change should be rejected, as there's no corresponding option in the UI
-            expect(observable()).not.toEqual('D');
+            expect(observable()).toEqual('B');
+
+            observable(null); // This change should also be rejected
+            expect(observable()).toEqual('B');
         });
 
         it('Should support numerical option values, which are not implicitly converted to strings', function() {
