@@ -53,7 +53,7 @@
                             break;
                         }
                     }
-                    if (allowUnset || selection >= 0) {
+                    if (allowUnset || selection >= 0 || (value == null && element.size > 1)) {
                         element.selectedIndex = selection;
                     }
                     break;
