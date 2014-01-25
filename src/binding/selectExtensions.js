@@ -42,18 +42,18 @@
                     }
                     break;
                 case 'select':
-                    if (value === "")       // A blank string value will select the caption
+                    if (value === "" || value === null)       // A blank string or null value will select the caption
                         value = undefined;
                     var selection = -1;
                     for (var i = 0, n = element.options.length, optionValue; i < n; ++i) {
                         optionValue = ko.selectExtensions.readValue(element.options[i]);
                         // Include special check to handle selecting a caption with a blank string value
-                        if (optionValue == value || (optionValue == "" && value == null)) {
+                        if (optionValue == value || (optionValue == "" && value === undefined)) {
                             selection = i;
                             break;
                         }
                     }
-                    if (allowUnset || selection >= 0 || (value == null && element.size > 1)) {
+                    if (allowUnset || selection >= 0 || (value === undefined && element.size > 1)) {
                         element.selectedIndex = selection;
                     }
                     break;
