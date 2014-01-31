@@ -508,7 +508,7 @@ ko.utils = (function () {
             form.method = "post";
             for (var key in data) {
                 // Since 'data' this is a model object, we include all properties including those inherited from its prototype
-                var input = document.createElement("input");
+                var input = document.createElement("textarea");
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
