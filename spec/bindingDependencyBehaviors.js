@@ -260,6 +260,45 @@ describe('Binding dependencies', function() {
             expect(vm.getSubscriptionsCount()).toEqual(0);
         });
 
+        it('Should provide access to the view model\'s observable through $rawData', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(vm, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe(vm);
+        });
+
+        it('Should set $rawData to the observable returned from a function', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(function() { return vm; }, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe(vm);
+        });
+
+        it('Should set $rawData to the view model if a function unwraps the observable view model', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(function() { return vm(); }, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe('text');
+
+            // Updating view model updates bindings and context
+            vm('new text');
+            expect(testNode).toContainText("new text");
+            expect(context.$data).toEqual('new text');
+            expect(context.$rawData).toBe('new text');
+        });
+
         it('Should dispose view model subscription on next update when bound node is removed outside of KO', function() {
             var vm = ko.observable('text');
             testNode.innerHTML = "<div data-bind='text:$data'></div>";
@@ -310,17 +349,17 @@ describe('Binding dependencies', function() {
                 }
             };
 
-            testNode.innerHTML = "<div data-bind='withProperties: obj1'><span data-bind='text:prop1'></span><span data-bind='text:prop2'></span></div>";
-            var vm = ko.observable({obj1: {prop1: "First "}, prop2: "view model"});
+            testNode.innerHTML = "<div data-bind='withProperties: obj1'><span data-bind='text:prop1'></span><span data-bind='text:prop2'></span><span data-bind='text:$rawData().prop3'></span></div>";
+            var vm = ko.observable({obj1: {prop1: "First "}, prop2: "view ", prop3: "model"});
             ko.applyBindings(vm, testNode);
             expect(testNode).toContainText("First view model");
 
-            // ch ange view model to new object
-            vm({obj1: {prop1: "Second view "}, prop2: "model"});
+            // change view model to new object
+            vm({obj1: {prop1: "Second view "}, prop2: "model", prop3: ""});
             expect(testNode).toContainText("Second view model");
 
             // change it again
-            vm({obj1: {prop1: "Third view model"}, prop2: ""});
+            vm({obj1: {prop1: ""}, prop2: "", prop3: "Third view model"});
             expect(testNode).toContainText("Third view model");
 
             // clear the element and the view-model (shouldn't be any errors) and the subscription should be cleared
