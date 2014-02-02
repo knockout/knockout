@@ -589,18 +589,5 @@ describe('Dependent Observable', function() {
             // value outside of computed is undefined
             expect(ko.computedContext.getDependenciesCount()).toBeUndefined();
         });
-
-        it('Should provide access to the computed object', function() {
-            var computedFromContext,
-                computed = ko.computed(function() {
-                    computedFromContext = ko.computedContext.computed();
-                    expect(ko.isComputed(computedFromContext)).toBe(true);
-                });
-
-            expect(computedFromContext).toBe(computed);
-
-            // value outside of computed is undefined
-            expect(ko.computedContext.computed()).toBeUndefined();
-        });
     });
 });
