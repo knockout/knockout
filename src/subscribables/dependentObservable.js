@@ -80,15 +80,17 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             var disposalCandidates = _subscriptionsToDependencies, disposalCount = _dependenciesCount;
             ko.dependencyDetection.begin({
                 callback: function(subscribable, id) {
-                    if (disposalCount && disposalCandidates[id]) {
-                        // Don't want to dispose this subscription, as it's still being used
-                        _subscriptionsToDependencies[id] = disposalCandidates[id];
-                        ++_dependenciesCount;
-                        delete disposalCandidates[id];
-                        --disposalCount;
-                    } else {
-                        // Brand new subscription - add it
-                        addSubscriptionToDependency(subscribable, id);
+                    if (!_isDisposed) {
+                        if (disposalCount && disposalCandidates[id]) {
+                            // Don't want to dispose this subscription, as it's still being used
+                            _subscriptionsToDependencies[id] = disposalCandidates[id];
+                            ++_dependenciesCount;
+                            delete disposalCandidates[id];
+                            --disposalCount;
+                        } else {
+                            // Brand new subscription - add it
+                            addSubscriptionToDependency(subscribable, id);
+                        }
                     }
                 },
                 computed: dependentObservable,

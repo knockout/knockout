@@ -535,6 +535,7 @@ describe('Dependent Observable', function() {
         o(1);
         expect(evaluateCount).toEqual(1);
         expect(c()).toEqual(1);
+        expect(c.getDependenciesCount()).toEqual(0);
     });
 
     it('Should not evaluate (and hence dependency detection) after it has been disposed if created with "deferEvaluation"', function () {
@@ -549,6 +550,30 @@ describe('Dependent Observable', function() {
         o(1);
         expect(evaluateCount).toEqual(0);
         expect(c()).toEqual(undefined);
+        expect(c.getDependenciesCount()).toEqual(0);
+    });
+
+    it('Should not add dependencies if disposed during evaluation', function () {
+        // This is a bit of a contrived example and likely won't occur in any actual applications.
+        // A more likely scenario might involve a binding that removes a node connected to the binding,
+        // causing the binding's computed observable to dispose.
+        // See https://github.com/knockout/knockout/issues/1041
+        var evaluateCount = 0, A = ko.observable(true), B = ko.observable(0);
+        var C = ko.computed(function() {
+            if (!A())
+                C.dispose();
+            return ++evaluateCount + B();
+        });
+        expect(evaluateCount).toEqual(1);
+        expect(C()).toEqual(1);
+        expect(C.getDependenciesCount()).toEqual(2);
+        expect(B.getSubscriptionsCount()).toEqual(1);
+
+        A(false);
+        expect(evaluateCount).toEqual(2);
+        expect(C()).toEqual(2);
+        expect(C.getDependenciesCount()).toEqual(0);
+        expect(B.getSubscriptionsCount()).toEqual(0);
     });
 
     describe('Context', function() {
