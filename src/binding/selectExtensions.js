@@ -20,7 +20,7 @@
             }
         },
 
-        writeValue: function(element, value) {
+        writeValue: function(element, value, allowUnset) {
             switch (ko.utils.tagNameLower(element)) {
                 case 'option':
                     switch(typeof value) {
@@ -42,19 +42,19 @@
                     }
                     break;
                 case 'select':
-                    if (value === "")
+                    if (value === "" || value === null)       // A blank string or null value will select the caption
                         value = undefined;
-                    if (value === null || value === undefined)
-                        element.selectedIndex = -1;
-                    for (var i = element.options.length - 1; i >= 0; i--) {
-                        if (ko.selectExtensions.readValue(element.options[i]) == value) {
-                            element.selectedIndex = i;
+                    var selection = -1;
+                    for (var i = 0, n = element.options.length, optionValue; i < n; ++i) {
+                        optionValue = ko.selectExtensions.readValue(element.options[i]);
+                        // Include special check to handle selecting a caption with a blank string value
+                        if (optionValue == value || (optionValue == "" && value === undefined)) {
+                            selection = i;
                             break;
                         }
                     }
-                    // for drop-down select, ensure first is selected
-                    if (!(element.size > 1) && element.selectedIndex === -1) {
-                        element.selectedIndex = 0;
+                    if (allowUnset || selection >= 0 || (value === undefined && element.size > 1)) {
+                        element.selectedIndex = selection;
                     }
                     break;
                 default:
