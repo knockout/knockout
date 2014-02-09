@@ -342,7 +342,7 @@ describe('Binding dependencies', function() {
 
         it('Should update all extended contexts (including values copied from the parent)', function() {
             ko.bindingHandlers.withProperties = {
-                init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var innerBindingContext = bindingContext.extend(valueAccessor);
                     ko.applyBindingsToDescendants(innerBindingContext, element);
                     return { controlsDescendantBindings : true };
@@ -368,9 +368,41 @@ describe('Binding dependencies', function() {
             expect(vm.getSubscriptionsCount()).toEqual(0);
         });
 
+        it('Should maintain correct $rawData in extended context when parent is bound to a function that returns an observable view model', function() {
+            ko.bindingHandlers.extended = {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+                    ko.applyBindingsToDescendants(bindingContext.extend(valueAccessor), element);
+                    return { controlsDescendantBindings : true };
+                }
+            };
+
+            var vm1 = ko.observable('vm1'),
+                vm2 = ko.observable('vm2'),
+                whichVm = ko.observable(vm1);
+            testNode.innerHTML = "<div data-bind='extended: {}'><div data-bind='text: $data'></div></div>";
+            ko.applyBindings(function() { return whichVm(); }, testNode);
+            expect(testNode).toContainText('vm1');
+
+            var parentContext = ko.contextFor(testNode),
+                childContext = ko.contextFor(testNode.childNodes[0].childNodes[0]);
+
+            expect(parentContext.$data).toEqual('vm1');
+            expect(parentContext.$rawData).toBe(vm1);
+
+            expect(childContext).not.toBe(parentContext);
+            expect(childContext.$data).toEqual('vm1');
+            expect(childContext.$rawData).toBe(vm1);
+
+            // Updating view model updates bindings and context
+            whichVm(vm2);
+            expect(testNode).toContainText('vm2');
+            expect(childContext.$data).toEqual('vm2');
+            expect(childContext.$rawData).toBe(vm2);
+        });
+
         it('Should update an extended child context', function() {
             ko.bindingHandlers.withProperties = {
-                init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var childBindingContext = bindingContext.createChildContext(null, null, function(context) {
                         ko.utils.extend(context, valueAccessor());
                     });
