@@ -523,34 +523,41 @@ describe('Dependent Observable', function() {
         expect(computed.customFunction2).toBe(customFunction2);
     });
 
-    it('Should not evaluate (and hence dependency detection) after it has been disposed', function () {
+    it('Should not evaluate (or add dependencies) after it has been disposed', function () {
         var evaluateCount = 0,
-            o = ko.observable(0),
-            c = ko.computed(function () { return ++evaluateCount + o(); });
+            observable = ko.observable(0),
+            computed = ko.computed(function () {
+                return ++evaluateCount + observable();
+            });
 
         expect(evaluateCount).toEqual(1);
-        c.dispose();
+        computed.dispose();
 
-        // this should not cause a new evaluation
-        o(1);
+        // This should not cause a new evaluation
+        observable(1);
         expect(evaluateCount).toEqual(1);
-        expect(c()).toEqual(1);
-        expect(c.getDependenciesCount()).toEqual(0);
+        expect(computed()).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(0);
     });
 
-    it('Should not evaluate (and hence dependency detection) after it has been disposed if created with "deferEvaluation"', function () {
+    it('Should not evaluate (or add dependencies) after it has been disposed if created with "deferEvaluation"', function () {
         var evaluateCount = 0,
-            o = ko.observable(0),
-            c = ko.computed({ read: function () { return ++evaluateCount + o(); }, deferEvaluation: true });
+            observable = ko.observable(0),
+            computed = ko.computed({
+                read: function () {
+                    return ++evaluateCount + observable();
+                },
+                deferEvaluation: true
+            });
 
         expect(evaluateCount).toEqual(0);
-        c.dispose();
+        computed.dispose();
 
-        // this should not cause a new evaluation
-        o(1);
+        // This should not cause a new evaluation
+        observable(1);
         expect(evaluateCount).toEqual(0);
-        expect(c()).toEqual(undefined);
-        expect(c.getDependenciesCount()).toEqual(0);
+        expect(computed()).toEqual(undefined);
+        expect(computed.getDependenciesCount()).toEqual(0);
     });
 
     it('Should not add dependencies if disposed during evaluation', function () {
@@ -558,22 +565,27 @@ describe('Dependent Observable', function() {
         // A more likely scenario might involve a binding that removes a node connected to the binding,
         // causing the binding's computed observable to dispose.
         // See https://github.com/knockout/knockout/issues/1041
-        var evaluateCount = 0, A = ko.observable(true), B = ko.observable(0);
-        var C = ko.computed(function() {
-            if (!A())
-                C.dispose();
-            return ++evaluateCount + B();
-        });
-        expect(evaluateCount).toEqual(1);
-        expect(C()).toEqual(1);
-        expect(C.getDependenciesCount()).toEqual(2);
-        expect(B.getSubscriptionsCount()).toEqual(1);
+        var evaluateCount = 0,
+            observableToTriggerDisposal = ko.observable(false),
+            observableGivingValue = ko.observable(0),
+            computed = ko.computed(function() {
+                if (observableToTriggerDisposal())
+                    computed.dispose();
+                return ++evaluateCount + observableGivingValue();
+            });
 
-        A(false);
+        // Check initial state
+        expect(evaluateCount).toEqual(1);
+        expect(computed()).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(2);
+        expect(observableGivingValue.getSubscriptionsCount()).toEqual(1);
+
+        // Now cause a disposal during evaluation
+        observableToTriggerDisposal(true);
         expect(evaluateCount).toEqual(2);
-        expect(C()).toEqual(2);
-        expect(C.getDependenciesCount()).toEqual(0);
-        expect(B.getSubscriptionsCount()).toEqual(0);
+        expect(computed()).toEqual(2);
+        expect(computed.getDependenciesCount()).toEqual(0);
+        expect(observableGivingValue.getSubscriptionsCount()).toEqual(0);
     });
 
     describe('Context', function() {
