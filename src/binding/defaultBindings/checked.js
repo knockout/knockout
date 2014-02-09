@@ -16,7 +16,7 @@ ko.bindingHandlers['checked'] = {
                 elemValue = useCheckedValue ? checkedValue() : isChecked;
 
             // When we're first setting up this computed, don't change any model state.
-            if (!shouldSet) {
+            if (ko.computedContext.isInitial()) {
                 return;
             }
 
@@ -75,8 +75,7 @@ ko.bindingHandlers['checked'] = {
 
         var isValueArray = isCheckbox && (ko.utils.unwrapObservable(valueAccessor()) instanceof Array),
             oldElemValue = isValueArray ? checkedValue() : undefined,
-            useCheckedValue = isRadio || isValueArray,
-            shouldSet = false;
+            useCheckedValue = isRadio || isValueArray;
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
         if (isRadio && !element.name)
@@ -85,13 +84,11 @@ ko.bindingHandlers['checked'] = {
         // Set up two computeds to update the binding:
 
         // The first responds to changes in the checkedValue value and to element clicks
-        ko.dependentObservable(updateModel, null, { disposeWhenNodeIsRemoved: element });
+        ko.computed(updateModel, null, { disposeWhenNodeIsRemoved: element });
         ko.utils.registerEventHandler(element, "click", updateModel);
 
         // The second responds to changes in the model value (the one associated with the checked binding)
-        ko.dependentObservable(updateView, null, { disposeWhenNodeIsRemoved: element });
-
-        shouldSet = true;
+        ko.computed(updateView, null, { disposeWhenNodeIsRemoved: element });
     }
 };
 ko.expressionRewriting.twoWayBindings['checked'] = true;

@@ -522,4 +522,74 @@ describe('Dependent Observable', function() {
         expect(computed.customFunction1).toBe(customFunction1);
         expect(computed.customFunction2).toBe(customFunction2);
     });
+
+    describe('Context', function() {
+        it('Should accurately report initial evaluation', function() {
+            var observable = ko.observable(1),
+                evaluationCount = 0,
+                computed = ko.computed(function() {
+                    ++evaluationCount;
+                    observable();   // for dependency
+                    return ko.computedContext.isInitial();
+                });
+
+            expect(evaluationCount).toEqual(1);     // single evaluation
+            expect(computed()).toEqual(true);       // value of isInitial was true
+
+            observable(2);
+            expect(evaluationCount).toEqual(2);     // second evaluation
+            expect(computed()).toEqual(false);      // value of isInitial was false
+
+            // value outside of computed is undefined
+            expect(ko.computedContext.isInitial()).toBeUndefined();
+        });
+
+        it('Should accurately report initial evaluation when deferEvaluation is true', function() {
+            var observable = ko.observable(1),
+                evaluationCount = 0,
+                computed = ko.computed(function() {
+                    ++evaluationCount;
+                    observable();   // for dependency
+                    return ko.computedContext.isInitial();
+                }, null, {deferEvaluation:true});
+
+            expect(evaluationCount).toEqual(0);     // no evaluation yet
+            expect(computed()).toEqual(true);       // first access causes evaluation; value of isInitial was true
+            expect(evaluationCount).toEqual(1);     // single evaluation
+
+            observable(2);
+            expect(evaluationCount).toEqual(2);     // second evaluation
+            expect(computed()).toEqual(false);      // value of isInitial was false
+        });
+
+        it('Should accurately report the number of dependencies', function() {
+            var observable1 = ko.observable(1),
+                observable2 = ko.observable(1),
+                evaluationCount = 0,
+                computed = ko.computed(function() {
+                    ++evaluationCount;
+                    // no dependencies at first
+                    expect(ko.computedContext.getDependenciesCount()).toEqual(0);
+                    // add a single dependency
+                    observable1();
+                    expect(ko.computedContext.getDependenciesCount()).toEqual(1);
+                    // add a second one
+                    observable2();
+                    expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                    // accessing observable again doesn't affect count
+                    observable1();
+                    expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                });
+
+            expect(evaluationCount).toEqual(1);     // single evaluation
+            expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+
+            observable1(2);
+            expect(evaluationCount).toEqual(2);     // second evaluation
+            expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+
+            // value outside of computed is undefined
+            expect(ko.computedContext.getDependenciesCount()).toBeUndefined();
+        });
+    });
 });
