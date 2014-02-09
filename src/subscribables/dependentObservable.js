@@ -3,6 +3,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _needsEvaluation = true,
         _isBeingEvaluated = false,
         _suppressDisposalUntilDisposeWhenReturnsFalse = false,
+        _isDisposed = false,
         readFunction = evaluatorFunctionOrOptions;
 
     if (readFunction && typeof readFunction == "object") {
@@ -26,6 +27,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     }
 
     function disposeAllSubscriptionsToDependencies() {
+        _isDisposed = true;
         ko.utils.objectForEach(_subscriptionsToDependencies, function (id, subscription) {
             subscription.dispose();
         });
@@ -55,6 +57,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             return;
         }
 
+        // Do not evaluate (and possibly capture new dependencies) if disposed
+        if (_isDisposed) {
+            return;
+        }
+
         if (disposeWhen && disposeWhen()) {
             // See comment below about _suppressDisposalUntilDisposeWhenReturnsFalse
             if (!_suppressDisposalUntilDisposeWhenReturnsFalse) {
@@ -73,15 +80,17 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             var disposalCandidates = _subscriptionsToDependencies, disposalCount = _dependenciesCount;
             ko.dependencyDetection.begin({
                 callback: function(subscribable, id) {
-                    if (disposalCount && disposalCandidates[id]) {
-                        // Don't want to dispose this subscription, as it's still being used
-                        _subscriptionsToDependencies[id] = disposalCandidates[id];
-                        ++_dependenciesCount;
-                        delete disposalCandidates[id];
-                        --disposalCount;
-                    } else {
-                        // Brand new subscription - add it
-                        addSubscriptionToDependency(subscribable, id);
+                    if (!_isDisposed) {
+                        if (disposalCount && disposalCandidates[id]) {
+                            // Don't want to dispose this subscription, as it's still being used
+                            _subscriptionsToDependencies[id] = disposalCandidates[id];
+                            ++_dependenciesCount;
+                            delete disposalCandidates[id];
+                            --disposalCount;
+                        } else {
+                            // Brand new subscription - add it
+                            addSubscriptionToDependency(subscribable, id);
+                        }
                     }
                 },
                 computed: dependentObservable,

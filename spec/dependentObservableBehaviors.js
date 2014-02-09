@@ -523,6 +523,71 @@ describe('Dependent Observable', function() {
         expect(computed.customFunction2).toBe(customFunction2);
     });
 
+    it('Should not evaluate (or add dependencies) after it has been disposed', function () {
+        var evaluateCount = 0,
+            observable = ko.observable(0),
+            computed = ko.computed(function () {
+                return ++evaluateCount + observable();
+            });
+
+        expect(evaluateCount).toEqual(1);
+        computed.dispose();
+
+        // This should not cause a new evaluation
+        observable(1);
+        expect(evaluateCount).toEqual(1);
+        expect(computed()).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(0);
+    });
+
+    it('Should not evaluate (or add dependencies) after it has been disposed if created with "deferEvaluation"', function () {
+        var evaluateCount = 0,
+            observable = ko.observable(0),
+            computed = ko.computed({
+                read: function () {
+                    return ++evaluateCount + observable();
+                },
+                deferEvaluation: true
+            });
+
+        expect(evaluateCount).toEqual(0);
+        computed.dispose();
+
+        // This should not cause a new evaluation
+        observable(1);
+        expect(evaluateCount).toEqual(0);
+        expect(computed()).toEqual(undefined);
+        expect(computed.getDependenciesCount()).toEqual(0);
+    });
+
+    it('Should not add dependencies if disposed during evaluation', function () {
+        // This is a bit of a contrived example and likely won't occur in any actual applications.
+        // A more likely scenario might involve a binding that removes a node connected to the binding,
+        // causing the binding's computed observable to dispose.
+        // See https://github.com/knockout/knockout/issues/1041
+        var evaluateCount = 0,
+            observableToTriggerDisposal = ko.observable(false),
+            observableGivingValue = ko.observable(0),
+            computed = ko.computed(function() {
+                if (observableToTriggerDisposal())
+                    computed.dispose();
+                return ++evaluateCount + observableGivingValue();
+            });
+
+        // Check initial state
+        expect(evaluateCount).toEqual(1);
+        expect(computed()).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(2);
+        expect(observableGivingValue.getSubscriptionsCount()).toEqual(1);
+
+        // Now cause a disposal during evaluation
+        observableToTriggerDisposal(true);
+        expect(evaluateCount).toEqual(2);
+        expect(computed()).toEqual(2);
+        expect(computed.getDependenciesCount()).toEqual(0);
+        expect(observableGivingValue.getSubscriptionsCount()).toEqual(0);
+    });
+
     describe('Context', function() {
         it('Should accurately report initial evaluation', function() {
             var observable = ko.observable(1),
