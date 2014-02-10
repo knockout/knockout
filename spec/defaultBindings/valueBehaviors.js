@@ -220,6 +220,12 @@ describe('Binding: Value', function() {
             testNode.innerHTML = "<input data-bind='value:someProp' />";
             ko.applyBindings({ someProp: myobservable }, testNode);
 
+            // Simulate a blur occurring before the first real property change.
+            // See that no 'update' event fires.
+            ko.utils.triggerEvent(testNode.childNodes[0], "focus");
+            ko.utils.triggerEvent(testNode.childNodes[0], "blur");
+            expect(numUpdates).toEqual(0);
+
             // Simulate:
             // 1. Select from autofill
             // 2. Modify the textbox further
