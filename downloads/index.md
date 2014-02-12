@@ -31,14 +31,15 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 * **Microsoft Ajax CDN** ([about](http://www.asp.net/ajaxlibrary/CDN.ashx))
 
-  * [Knockout version 2.2.1](http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js)
+  * [Knockout version 3.0.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js)
 
 * **CDNJS** ([about](http://cdnjs.com/))
 
-  * [Knockout version 2.3.0](http://cdnjs.cloudflare.com/ajax/libs/knockout/2.3.0/knockout-min.js)
+  * [Knockout version 3.0.0](http://cdnjs.cloudflare.com/ajax/libs/knockout/3.0.0/knockout-min.js)
 
 ### Archive of all versions
 
+* [v3.1.0 Beta](knockout-3.1.0beta.js) ([debug](knockout-3.1.0beta.debug.js)) --- February 12th, 2014
 * [v3.0.0](knockout-3.0.0.js) ([debug](knockout-3.0.0.debug.js)) --- October 25th, 2013
 * [v3.0.0 Release Candidate](knockout-3.0.0rc.js) ([debug](knockout-3.0.0rc.debug.js)) --- September 30th, 2013
 * [v3.0.0 Beta](knockout-3.0.0beta.js) ([debug](knockout-3.0.0beta.debug.js)) --- July 9th, 2013
