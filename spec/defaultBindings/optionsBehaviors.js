@@ -97,7 +97,7 @@ describe('Binding: Options', function() {
     });
 
     it('Should select first option when removing the selected option and the original first option', function () {
-        // This test failed in IE<=8 without changes made in #1208
+        // This test failed in IE<=8 and Firefox without changes made in #1208
         testNode.innerHTML = '<select data-bind="options: filterValues, optionsText: \'x\', optionsValue: \'x\'">';
         var viewModel = {
             filterValues: ko.observableArray([{x:1},{x:2},{x:3}])

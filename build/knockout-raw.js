@@ -1,6 +1,5 @@
 var DEBUG = true,
-    jQuery = window.jQuery,
-    JSON = window.JSON;
+    jQuery = window.jQuery;
 
 // This script adds <script> tags referencing each of the knockout.js source files in the correct order
 // It uses JSONP to fetch the list of source files from source-references.js
