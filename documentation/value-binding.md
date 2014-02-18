@@ -55,11 +55,40 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
                 };
             </script>
 
-### Note 1: Working with drop-down lists (i.e., SELECT nodes)
+    * `valueAllowUnset`
 
-Knockout has special support for drop-down lists (i.e., `<select>` nodes). The `value` binding works in conjunction with the `options` binding to let you read and write values that are arbitrary JavaScript objects, not just string values. This is very useful if you want to let the user select from a set of model objects. For examples of this, see [the `options` binding](options-binding.html) or for handling multi-select lists, see the documentation for [the `selectedOptions` binding](selectedOptions-binding.html).
+      See [Note 1](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
+
+### Note 1: Working with drop-down lists (i.e., `<select>` elements)
+
+Knockout has special support for drop-down lists (i.e., `<select>` elements). The `value` binding works in conjunction with the `options` binding to let you read and write values that are arbitrary JavaScript objects, not just string values. This is very useful if you want to let the user select from a set of model objects. For examples of this, see [the `options` binding](options-binding.html) or for handling multi-select lists, see the documentation for [the `selectedOptions` binding](selectedOptions-binding.html).
 
 You can also use the `value` binding with a `<select>` element that does not use the `options` binding. In this case, you can choose to specify your `<option>` elements in markup or build them using the `foreach` or `template` bindings. You can even nest options within `<optgroup>` elements and Knockout will set the selected value appropriately.
+
+#### Using `valueAllowUnset` with `<select>` elements
+
+Normally, when you use the `value` binding on a `<select>` element, it means that you want the associated model value to describe which item in the `<select>` is selected. But what happens if you set the model value to something that has no corresponding entry in the list? The default behavior is for Knockout to overwrite your model value to reset it to whatever is already selected in the dropdown, thereby preventing the model and UI from getting out of sync.
+
+However, sometimes you might not want that behavior. If instead you want Knockout to allow your model observable to take values that have no corresponding entry in the `<select>`, then specify `valueAllowUnset: true`. In this case, whenever your model value cannot be represented in the `<select>`, then the `<select>` simply has no selected value at that time, which is visually represented by it being blank. When the user later selects an entry from the dropdown, this will be written to your model as usual. For example:
+
+    <p>
+        Select a country:
+        <select data-bind="options: countries,
+                           optionsCaption: 'Choose one...',
+                           value: selectedCountry,
+                           valueAllowUnset: true"></select>
+    </p>
+
+    <script type="text/javascript">
+        var viewModel = {
+            countries: ['Japan', 'Bolivia', 'New Zealand'],
+            selectedCountry: ko.observable('Latvia')
+        };
+    </script>
+
+In the above example, `selectedCountry` will retain the value `'Latvia'`, and the dropdown will be blank, because there is no corresponding option.
+
+If `valueAllowUnset` had not been enabled, then Knockout would have overwritten `selectedCountry` with `undefined`, so that it would match the value of the `'Choose one...'` caption entry.
 
 ### Note 2: Updating observable and non-observable property values
 

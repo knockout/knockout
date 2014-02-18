@@ -131,6 +131,10 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
      For a multi-select list, you can read and write the selection state using `selectedOptions`. Technically this is a separate binding, so it has [its own documentation](selectedOptions-binding.html).
 
+   * `valueAllowUnset`
+
+     If you want Knockout to allow your model property to take values that have no corresponding entry in your `<select>` element (and display this by making the `<select>` element blank), then see [documentation for `valueAllowUnset`](value-binding.html#using-valueallowunset-with-select-elements).
+
 ### Note 1: Selection is preserved when setting/changing options
 
 When the `options` binding changes the set of options in your `<select>` element, KO will leave the user's selection unchanged where possible. So, for a single-select drop-down list, the previously selected option value will still be selected, and for a multi-select list, all the previously selected option values will still be selected (unless, of course, you've removed one or more of those options).
