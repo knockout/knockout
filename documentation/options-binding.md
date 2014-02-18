@@ -95,7 +95,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
    * `optionsCaption`
 
-     Sometimes, you might not want to select any particular option by default. But a single-select drop-down list *always* has one item selected, so how can you avoid preselecting something? The usual solution is to prefix the list of options with a special dummy option that just reads "Select an item" or "Please choose an option" or similar, and have that one selected by default.
+     Sometimes, you might not want to select any particular option by default. But a single-select drop-down list usually starts with some item selected, so how can you avoid preselecting something? The usual solution is to prefix the list of options with a special dummy option that just reads "Select an item" or "Please choose an option" or similar, and have that one selected by default.
 
      This easy to do: just add an additional parameter with name `optionsCaption`, with its value being a string to display. For example:
 
