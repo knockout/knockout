@@ -11,30 +11,40 @@ The value you assign should be an array (or observable array). The `<select>` el
 Note: For a multi-select list, to set which of the options are selected, or to read which of the options are selected, use [the `selectedOptions` binding](selectedOptions-binding.html). For a single-select list, you can also read and write the selected option using [the `value` binding](value-binding.html).
 
 ### Example 1: Drop-down list
-    <p>Destination country: <select data-bind="options: availableCountries"></select></p>
+    <p>
+        Destination country:
+        <select data-bind="options: availableCountries"></select>
+    </p>
 
     <script type="text/javascript">
-	    var viewModel = {
-			availableCountries : ko.observableArray(['France', 'Germany', 'Spain']) // These are the initial options
-	    };
+        var viewModel = {
+            // These are the initial options
+            availableCountries: ko.observableArray(['France', 'Germany', 'Spain'])
+        };
 
-	    // ... then later ...
-	    viewModel.availableCountries.push('China'); // Adds another option
+        // ... then later ...
+        viewModel.availableCountries.push('China'); // Adds another option
     </script>
 
 ### Example 2: Multi-select list
-    <p>Choose some countries you'd like to visit: <select data-bind="options: availableCountries" size="5" multiple="true"></select></p>
+    <p>
+        Choose some countries you would like to visit:
+        <select data-bind="options: availableCountries" size="5" multiple="true"></select>
+    </p>
 
     <script type="text/javascript">
-	    var viewModel = {
-			availableCountries : ko.observableArray(['France', 'Germany', 'Spain'])
-	    };
+        var viewModel = {
+            availableCountries: ko.observableArray(['France', 'Germany', 'Spain'])
+        };
     </script>
 
 ### Example 3: Drop-down list representing arbitrary JavaScript objects, not just strings
     <p>
-    	Your country:
-    	<select data-bind="options: availableCountries, optionsText: 'countryName', value: selectedCountry, optionsCaption: 'Choose...'"></select>
+        Your country:
+        <select data-bind="options: availableCountries,
+                           optionsText: 'countryName',
+                           value: selectedCountry,
+                           optionsCaption: 'Choose...'"></select>
     </p>
 
     <div data-bind="visible: selectedCountry"> <!-- Appears when you select something -->
@@ -43,23 +53,24 @@ Note: For a multi-select list, to set which of the options are selected, or to r
     </div>
 
     <script type="text/javascript">
-    	// Constructor for an object with two properties
+        // Constructor for an object with two properties
         var Country = function(name, population) {
             this.countryName = name;
             this.countryPopulation = population;
         };
 
-	    var viewModel = {
-			availableCountries : ko.observableArray([
-				new Country("UK", 65000000),
-				new Country("USA", 320000000),
-				new Country("Sweden", 29000000)
-			]),
-			selectedCountry : ko.observable() // Nothing selected by default
-	    };
+        var viewModel = {
+            availableCountries : ko.observableArray([
+                new Country("UK", 65000000),
+                new Country("USA", 320000000),
+                new Country("Sweden", 29000000)
+            ]),
+            selectedCountry : ko.observable() // Nothing selected by default
+        };
     </script>
 
 ### Example 4: Drop-down list representing arbitrary JavaScript objects, with displayed text computed as a function of the represented item
+
     <!-- Same as example 3, except the <select> box expressed as follows: -->
     <select data-bind="options: availableCountries,
                        optionsText: function(item) {
@@ -84,7 +95,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
    * `optionsCaption`
 
-   	 Sometimes, you might not want to select any particular option by default. But a single-select drop-down list *always* has one item selected, so how can you avoid preselecting something? The usual solution is to prefix the list of options with a special dummy option that just reads "Select an item" or "Please choose an option" or similar, and have that one selected by default.
+     Sometimes, you might not want to select any particular option by default. But a single-select drop-down list *always* has one item selected, so how can you avoid preselecting something? The usual solution is to prefix the list of options with a special dummy option that just reads "Select an item" or "Please choose an option" or similar, and have that one selected by default.
 
      This easy to do: just add an additional parameter with name `optionsCaption`, with its value being a string to display. For example:
 
