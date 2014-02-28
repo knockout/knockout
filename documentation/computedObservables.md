@@ -69,6 +69,12 @@ When a computed observable returns a primitive value (a number, string, boolean,
         return myViewModel.firstName() + " " + myViewModel.lastName();
     }).extend({ notify: 'always' });
 
+### Delaying and/or suppressing change notifications
+
+Normally, a computed observable updates and notifies its subscribers immediately, as soon as its dependencies change. But if a computed observable has many dependencies or involves expensive updates, you may get better performance by limiting or delaying the computed observable's updates and notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
+
+    myViewModel.fullName.extend({ rateLimit: 50 });
+    
 # Writeable computed observables
 
 *Beginners may wish to skip this section - writeable computed observables are fairly advanced and are not necessary in most situations*
@@ -204,7 +210,7 @@ In the example below, a computed observable is used to reload an observable name
         $.getJSON('/Some/Json/Service', params, this.currentPageData);
     }, this);
 
-Note: If you just want to prevent a computed observable from updating too often, see the [throttle extender](throttle-extender.html).
+Note: If you just want to prevent a computed observable from updating too often, see the [`rateLimit` extender](rateLimit-observable.html).
 
 ### Note: Why circular dependencies aren't meaningful
 
@@ -224,8 +230,8 @@ In some scenarios, it is useful to programmatically determine if you are dealing
 
 Additionally, Knockout provides similar functions that can operate on observables and computed observables:
 
-* `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
-* `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
+* `ko.isObservable` - returns true for observables, observable arrays, and all computed observables.
+* `ko.isWriteableObservable` - returns true for observable, observable arrays, and writeable computed observables.
 
 # Computed Observable Reference
 
