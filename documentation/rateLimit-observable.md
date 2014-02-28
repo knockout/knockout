@@ -102,7 +102,7 @@ This is very simple and elegant (and it's trivial to add yet more observable que
 
 The problem is that this will cause *two* Ajax requests: the first one will start when you update `pageSize`, and the second one will start immediately afterwards when you update `pageIndex`. This is a waste of bandwidth and server resources, and a source of unpredictable race conditions.
 
-When applied to a computed observable, the `rateLimit` extender will also avoid excess evaluation of the computed function. Using a short rate-limit timeout (e.g., 0 millisecond) ensures that any sequence of synchronous changes to dependencies will trigger just *one* re-evaluation of your computed observable. For example:
+When applied to a computed observable, the `rateLimit` extender will also avoid excess evaluation of the computed function. Using a short rate-limit timeout (e.g., 0 milliseconds) ensures that any sequence of synchronous changes to dependencies will trigger just *one* re-evaluation of your computed observable. For example:
 
     ko.computed(function() {
         // This evaluation logic is exactly the same as before
@@ -114,7 +114,7 @@ Now you can change `pageIndex` and `pageSize` as many times as you like, and the
 
 ## Rate-limit methods
 
-The `rateLimit` extender accepts two parameters, `timeout` and `method`. In general, the extender ensures that change notifications won't happen more freqently than the specified timeout value, although the exact timing is dependendent on the method. Here are the supported methods:
+The `rateLimit` extender accepts two parameters, `timeout` and `method`. In general, the extender ensures that change notifications won't happen more frequently than the specified timeout value, although the exact timing is dependent on the method. Here are the supported methods:
 
 1. `notifyAtFixedRate` --- The notification happens after the specified period of time from the first change to the observable (either initially or since the previous notification). This is the default method, so you'll generally use it by just providing a timeout value: `rateLimit: <timeout>`.
 
@@ -122,11 +122,11 @@ The `rateLimit` extender accepts two parameters, `timeout` and `method`. In gene
 
 ## Special consideration for computed observables
 
-For a computed observable, the rate-limit timer is triggered when one of the computed observable's dependencies change instead of when the its value changes. The computed observable is not re-evaluated until its value is actually needed---after the timeout period when the change notification should happen, or when the computed observable value is accessed directly. If you need to access the value of the computed's most recent evaluation, you can do so with the `peek` method.
+For a computed observable, the rate-limit timer is triggered when one of the computed observable's dependencies change instead of when its value changes. The computed observable is not re-evaluated until its value is actually needed---after the timeout period when the change notification should happen, or when the computed observable value is accessed directly. If you need to access the value of the computed's most recent evaluation, you can do so with the `peek` method.
 
 ## Forcing rate-limited observables to always notify subscribers
 
-When the value of a rate-limited obsevable is primitive (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value is actually different at the end of the timeout period. Thus if a rate-limited observable is changed to a new value and then changed back to the original value before the timeout period, no notification will happen. To ensure that the subscribers are always notified of an update, even if the value is the same, you would use the `notify` extender in addition to `rateLimit`:
+When the value of a rate-limited observable is primitive (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value is actually different at the end of the timeout period. Thus if a rate-limited observable is changed to a new value and then changed back to the original value before the timeout period, no notification will happen. To ensure that the subscribers are always notified of an update, even if the value is the same, you would use the `notify` extender in addition to `rateLimit`:
 
     myViewModel.fullName = ko.computed(function() {
         return myViewModel.firstName() + " " + myViewModel.lastName();
