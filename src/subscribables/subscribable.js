@@ -41,8 +41,9 @@ var ko_subscribable_fn = {
         return subscription;
     },
 
-    "notifySubscribers": function (valueToNotify, event) {
+    notifySubscribers: function (valueToNotify, event, priorValue) {
         event = event || defaultEvent;
+        var args = arguments.length === 3 ? [valueToNotify, priorValue] : [valueToNotify]; // Only pass prior value if provided
         if (this.hasSubscriptionsForEvent(event)) {
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
@@ -50,7 +51,7 @@ var ko_subscribable_fn = {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
                     if (!subscription.isDisposed)
-                        subscription.callback(valueToNotify);
+                        subscription.callback.apply(null, args);
                 }
             } finally {
                 ko.dependencyDetection.end(); // End suppressing dependency detection

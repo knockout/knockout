@@ -72,6 +72,21 @@ describe('Observable', function() {
         expect(notifiedValues[1]).toEqual('B');
     });
 
+    it('Should notify subscribers with the prior value', function () {
+        var instance = new ko.observable();
+        var priorValues = [];
+        instance.subscribe(function (value, priorValue) {
+            priorValues.push(priorValue);
+        });
+
+        instance('A');
+        instance('B');
+
+        expect(priorValues.length).toEqual(2);
+        expect(priorValues[0]).toEqual(undefined);
+        expect(priorValues[1]).toEqual('A');
+    });
+
     it('Should be able to tell it that its value has mutated, at which point it notifies subscribers', function () {
         var instance = new ko.observable();
         var notifiedValues = [];
@@ -130,7 +145,7 @@ describe('Observable', function() {
     it('Should ignore writes when the new value is primitive and strictly equals the old value', function() {
         var instance = new ko.observable();
         var notifiedValues = [];
-        instance.subscribe(notifiedValues.push, notifiedValues);
+        instance.subscribe(function (value) { notifiedValues.push(value); });
 
         for (var i = 0; i < 3; i++) {
             instance("A");
@@ -165,7 +180,7 @@ describe('Observable', function() {
         var constantObject = {};
         var instance = new ko.observable(constantObject);
         var notifiedValues = [];
-        instance.subscribe(notifiedValues.push, notifiedValues);
+        instance.subscribe(function (value) { notifiedValues.push(value); });
         instance(constantObject);
         expect(notifiedValues).toEqual([constantObject]);
     });
@@ -173,7 +188,7 @@ describe('Observable', function() {
     it('Should notify subscribers of a change even when an identical primitive is written if you\'ve set the equality comparer to null', function() {
         var instance = new ko.observable("A");
         var notifiedValues = [];
-        instance.subscribe(notifiedValues.push, notifiedValues);
+        instance.subscribe(function (value) { notifiedValues.push(value); });
 
         // No notification by default
         instance("A");
@@ -192,7 +207,7 @@ describe('Observable', function() {
         };
 
         var notifiedValues = [];
-        instance.subscribe(notifiedValues.push, notifiedValues);
+        instance.subscribe(function (value) { notifiedValues.push(value); });
 
         instance({ id: 1 });
         expect(notifiedValues.length).toEqual(1);
@@ -225,7 +240,7 @@ describe('Observable', function() {
     it('Should expose a "notify" extender that can configure the observable to notify on all writes, even if the value is unchanged', function() {
         var instance = new ko.observable();
         var notifiedValues = [];
-        instance.subscribe(notifiedValues.push, notifiedValues);
+        instance.subscribe(function (value) { notifiedValues.push(value); });
 
         instance(123);
         expect(notifiedValues.length).toEqual(1);
