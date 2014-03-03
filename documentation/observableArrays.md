@@ -96,4 +96,5 @@ Note that when KO renders a `foreach` binding, it automatically hides any object
 
 Normally, an `observableArray` notifies its subscribers immediately, as soon as it's changed. But if an `observableArray` is changed repeatedly or triggers expensive updates, you may get better performance by limiting or delaying change notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
 
+    // Ensure it notifies about changes no more than once per 50-millisecond period
     myViewModel.myObservableArray.extend({ rateLimit: 50 });

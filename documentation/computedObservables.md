@@ -73,6 +73,7 @@ When a computed observable returns a primitive value (a number, string, boolean,
 
 Normally, a computed observable updates and notifies its subscribers immediately, as soon as its dependencies change. But if a computed observable has many dependencies or involves expensive updates, you may get better performance by limiting or delaying the computed observable's updates and notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
 
+    // Ensure updates no more than once per 50-millisecond period
     myViewModel.fullName.extend({ rateLimit: 50 });
     
 # Writeable computed observables

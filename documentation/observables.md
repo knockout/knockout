@@ -111,7 +111,7 @@ If you want to be notified of the value of an observable before it is about to b
         alert("The person's previous name is " + oldValue);
     }, null, "beforeChange");
     
-Note: Knockout does not guarantee that the `beforeChange` and `change` events will be paired, since any event can be notified manually. The robust way to track the previous value of an observable is to save the value notified by the previous `change` event (or the initial value before the first `change` event).
+Note: Knockout does not guarantee that the `beforeChange` and `change` events will occur in pairs, since other parts of your code might raise either event individually. If you need to track the previous value of an observable, it's up to you to use a subscription to capture and track it.
 
 ## Forcing observables to always notify subscribers
 
@@ -123,4 +123,5 @@ When writing to an observable that contains a primitive value (a number, string,
 
 Normally, an observable notifies its subscribers immediately, as soon as it's changed. But if an observable is changed repeatedly or triggers expensive updates, you may get better performance by limiting or delaying the observable's change notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
 
+    // Ensure it notifies about changes no more than once per 50-millisecond period
     myViewModel.personName.extend({ rateLimit: 50 });
