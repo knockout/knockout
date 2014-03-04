@@ -106,4 +106,37 @@ describe('Subscribable', function() {
         expect(interceptedNotifications[0].eventName).toEqual("myEvent");
         expect(interceptedNotifications[0].value).toEqual(123);
     });
+
+    it('Should inherit any properties defined on ko.subscribable.fn', function() {
+        this.after(function() {
+            delete ko.subscribable.fn.customProp;
+            delete ko.subscribable.fn.customFunc;
+        });
+
+        ko.subscribable.fn.customProp = 'some value';
+        ko.subscribable.fn.customFunc = function() { return this; };
+
+        var instance = new ko.subscribable();
+        expect(instance.customProp).toEqual('some value');
+        expect(instance.customFunc()).toEqual(instance);
+    });
+
+    it('Should have access to functions added to "fn" on existing instances on supported browsers', function () {
+        // On unsupported browsers, there's nothing to test
+        if (!jasmine.browserSupportsProtoAssignment) {
+            return;
+        }
+
+        this.after(function() {
+            delete ko.subscribable.fn.customFunction;
+        });
+
+        var subscribable = new ko.subscribable();
+
+        var customFunction = function () {};
+
+        ko.subscribable.fn.customFunction = customFunction;
+
+        expect(subscribable.customFunction).toBe(customFunction);
+    });
 });
