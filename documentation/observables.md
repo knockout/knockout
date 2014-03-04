@@ -89,7 +89,7 @@ When you change the name value to `'Mary'` by calling `myViewModel.personName('M
 
 *You won't normally need to set up subscriptions manually, so beginners should skip this section.*
 
-For advanced users, if you want to register your own subscriptions to be notified of changes to observables, you can call their `subscribe` function. For example,
+For advanced users, if you want to register your own subscriptions to be notified of changes to observables, you can call their `subscribe` function. For example:
 
     myViewModel.personName.subscribe(function(newValue) {
         alert("The person's new name is " + newValue);
@@ -105,14 +105,23 @@ You can also terminate a subscription if you wish: first capture the return valu
     // ...then later...
     subscription.dispose(); // I no longer want notifications
 
-If you want to be notified of the previous value of an observable when it is changed, you can subscribe to the `beforeChange` event:
+If you want to be notified of the value of an observable before it is about to be changed, you can subscribe to the `beforeChange` event. For example:
 
     myViewModel.personName.subscribe(function(oldValue) {
         alert("The person's previous name is " + oldValue);
     }, null, "beforeChange");
+    
+Note: Knockout does not guarantee that the `beforeChange` and `change` events will occur in pairs, since other parts of your code might raise either event individually. If you need to track the previous value of an observable, it's up to you to use a subscription to capture and track it.
 
 ## Forcing observables to always notify subscribers
 
 When writing to an observable that contains a primitive value (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that an observable's subscribers are always notified on a write, even if the value is the same. You would apply the extender to an observable like this:
 
     myViewModel.personName.extend({ notify: 'always' });
+
+## Delaying and/or suppressing change notifications
+
+Normally, an observable notifies its subscribers immediately, as soon as it's changed. But if an observable is changed repeatedly or triggers expensive updates, you may get better performance by limiting or delaying the observable's change notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
+
+    // Ensure it notifies about changes no more than once per 50-millisecond period
+    myViewModel.personName.extend({ rateLimit: 50 });

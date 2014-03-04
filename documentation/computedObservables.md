@@ -69,6 +69,13 @@ When a computed observable returns a primitive value (a number, string, boolean,
         return myViewModel.firstName() + " " + myViewModel.lastName();
     }).extend({ notify: 'always' });
 
+### Delaying and/or suppressing change notifications
+
+Normally, a computed observable updates and notifies its subscribers immediately, as soon as its dependencies change. But if a computed observable has many dependencies or involves expensive updates, you may get better performance by limiting or delaying the computed observable's updates and notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
+
+    // Ensure updates no more than once per 50-millisecond period
+    myViewModel.fullName.extend({ rateLimit: 50 });
+    
 # Writeable computed observables
 
 *Beginners may wish to skip this section - writeable computed observables are fairly advanced and are not necessary in most situations*
@@ -204,7 +211,7 @@ In the example below, a computed observable is used to reload an observable name
         $.getJSON('/Some/Json/Service', params, this.currentPageData);
     }, this);
 
-Note: If you just want to prevent a computed observable from updating too often, see the [throttle extender](throttle-extender.html).
+Note: If you just want to prevent a computed observable from updating too often, see the [`rateLimit` extender](rateLimit-observable.html).
 
 ### Note: Why circular dependencies aren't meaningful
 
@@ -224,10 +231,14 @@ In some scenarios, it is useful to programmatically determine if you are dealing
 
 Additionally, Knockout provides similar functions that can operate on observables and computed observables:
 
-* `ko.isObservable` - returns true for observables, observableArrays, and all computed observables.
-* `ko.isWriteableObservable` - returns true for observable, observableArrays, and writeable computed observables.
+* `ko.isObservable` - returns true for observables, observable arrays, and all computed observables.
+* `ko.isWriteableObservable` - returns true for observable, observable arrays, and writeable computed observables.
 
 # Computed Observable Reference
+
+The following documentation describes how to construct and work with computed observables.
+
+## Constructing a computed observable
 
 A computed observable can be constructed using one of the following forms:
 
@@ -240,9 +251,11 @@ A computed observable can be constructed using one of the following forms:
   * `read` --- Required. A function that is used to evaluate the computed observable's current value.
   * `write` --- Optional. If given, makes the computed observable writeable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
   * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
-  * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access it. By default, a computed observable has its value determined immediately during creation.
+  * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
   * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
   * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
+
+## Using a computed observable
 
 A computed observable provides the following functions:
 
@@ -253,3 +266,28 @@ A computed observable provides the following functions:
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
 * `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly_subscribing_to_observables) to be notified of changes to the computed observable.
+
+## Using the computed context
+
+During the execution of a computed observable's evaluator function, you can access `ko.computedContext` to get information about the current computed property. It provides the following functions:
+
+* `isInitial()` --- A function that returns `true` if called during the first ever evaluation of the current computed observable, or `false` otherwise.
+
+* `getDependenciesCount()` --- Returns the number of dependencies of the computed observable detected so far during the current evaluation.
+  * Note: `ko.computedContext.getDependenciesCount()` is equivalent to calling `getDependenciesCount()` on the computed observable itself. The reason that it also exists on `ko.computedContext` is to provide a way of counting the dependencies during the first ever evaluation, before the computed observable has even finished being constructed.
+
+Example:
+
+    var myComputed = ko.computed(function() {
+        // ... Omitted: read some data that might be observable ...
+
+        // Now let's inspect ko.computedContext
+        var isFirstEvaluation = ko.computedContext.isInitial(),
+            dependencyCount = ko.computedContext.getDependenciesCount(),
+        console.log("Evaluating " + (isFirstEvaluation ? "for the first time" : "again"));
+        console.log("By now, this computed has " + dependencyCount + " dependencies");
+
+        // ... Omitted: return the result ...
+    });
+
+These facilities are typically useful only in advanced scenarios, for example when your computed observable's primary purpose is to trigger some side-effect during its evaluator, and you want to perform some setup logic only during the first run, or only if it has at least one dependency (and hence might re-evaluate in the future). Most computed properties do not need to care whether they have been evaluated before, or how many dependencies they have.

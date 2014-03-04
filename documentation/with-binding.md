@@ -2,7 +2,6 @@
 layout: documentation
 title: The "with" binding
 ---
-<script type="text/javascript" src="../examples/resources/twitterApi.js"> </script>
 
 ### Purpose
 The `with` binding creates a new [binding context](binding-context.html), so that descendant elements are bound in the context of a specified object.
@@ -58,16 +57,18 @@ Try it out:
 {% capture live_example_viewmodel %}
 function AppViewModel() {
     var self = this;
-    self.twitterName = ko.observable('@StephenFry');
+    self.twitterName = ko.observable('@example');
     self.resultData = ko.observable(); // No initial value
 
     self.getTweets = function() {
-        twitterApi.getTweetsForUser(self.twitterName(), function(data) {
-            self.resultData({
-                retrievalDate: new Date(),
-                topTweets: data.slice(0, 5)
-            });
-        });
+        var name = self.twitterName(),
+            simulatedResults = [
+                { text: name + ' What a nice day.' },
+                { text: name + ' Building some cool apps.' },
+                { text: name + ' Just saw a famous celebrity eating lard. Yum.' }
+            ];
+
+        self.resultData({ retrievalDate: new Date(), topTweets: simulatedResults });
     }
 
     self.clearResults = function() {

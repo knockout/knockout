@@ -3,6 +3,8 @@ layout: documentation
 title: The "throttle" extender
 ---
 
+*Note: This throttle API is deprecated as of Knockout 3.1.0. Please use the [`rateLimit` extender](rateLimit-observable.html) for similar functionality.*
+
 Normally, [computed observables](computedObservables.html) are re-evaluated *synchronously*, as soon as each of their dependencies change. The `throttle` extender, however, causes a computed observable to delay re-evaluation until its dependencies have stopped changing for a specified period of time. Throttled computed observables therefore update *asychronously*.
 
 The main uses cases for throttling are:

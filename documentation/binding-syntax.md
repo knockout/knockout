@@ -61,7 +61,7 @@ Bindings can include any amount of *whitespace* (spaces, tab, and newlines), so 
 
 #### Skipping the binding value
 
-Starting with Knockout 3.0, you can specify bindings without a value, which will give the binding an `undefined` value . For example:
+Starting with Knockout 3.0, you can specify bindings without a value, which will give the binding an `undefined` value. For example:
 
     <span data-bind="text">Text that will be cleared when bindings are applied.</span>
    

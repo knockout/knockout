@@ -96,6 +96,38 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
     });
 
+    it('Should select first option when removing the selected option and the original first option', function () {
+        // This test failed in IE<=8 and Firefox without changes made in #1208
+        testNode.innerHTML = '<select data-bind="options: filterValues, optionsText: \'x\', optionsValue: \'x\'">';
+        var viewModel = {
+            filterValues: ko.observableArray([{x:1},{x:2},{x:3}])
+        };
+        ko.applyBindings(viewModel, testNode);
+        testNode.childNodes[0].options[1].selected = true;
+        expect(testNode.childNodes[0]).toHaveSelectedValues([2]);
+
+        viewModel.filterValues.splice(0, 2, {x:4});
+        expect(testNode.childNodes[0]).toHaveSelectedValues([4]);
+    });
+
+    it('Should select caption by default and retain selection when adding multiple items', function () {
+        // This test failed in IE<=8 without changes made in #1208
+        testNode.innerHTML = '<select data-bind="options: filterValues, optionsCaption: \'foo\'">';
+        var viewModel = {
+            filterValues: ko.observableArray()
+        };
+        ko.applyBindings(viewModel, testNode);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([undefined]);
+        var captionElement = testNode.childNodes[0].options[0];
+
+        viewModel.filterValues.push("1");
+        viewModel.filterValues.push("2");
+        expect(testNode.childNodes[0]).toHaveSelectedValues([undefined]);
+
+        // The option element for the caption is retained
+        expect(testNode.childNodes[0].options[0]).toBe(captionElement);
+    });
+
     it('Should trigger a change event when the options selection is populated or changed by modifying the options data (single select)', function() {
         var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
         testNode.innerHTML = "<select data-bind='options:myValues'></select>";
@@ -205,8 +237,8 @@ describe('Binding: Options', function() {
         var myCaption = ko.observable("Initial caption");
         testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption: myCaption'></select>";
         ko.applyBindings({ myCaption: myCaption }, testNode);
-        testNode.childNodes[0].options[2].selected = true;
 
+        testNode.childNodes[0].options[2].selected = true;
         expect(testNode.childNodes[0].selectedIndex).toEqual(2);
         expect(testNode.childNodes[0]).toHaveTexts(["Initial caption", "A", "B"]);
 

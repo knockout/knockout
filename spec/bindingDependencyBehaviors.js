@@ -221,6 +221,35 @@ describe('Binding dependencies', function() {
         expect(latestValue).toEqual(2);
     });
 
+    it('Should track observables accessed within the binding provider\'s "getBindingAccessor" function', function() {
+        this.restoreAfter(ko.bindingProvider, 'instance');
+
+        var observable = ko.observable('substitute'),
+            originalBindingProvider = ko.bindingProvider.instance;
+
+        ko.bindingProvider.instance = {
+            nodeHasBindings: originalBindingProvider.nodeHasBindings,
+            getBindingAccessors: function(node, bindingContext) {
+                var bindings = originalBindingProvider.getBindingAccessors(node, bindingContext);
+                if (bindings && bindings['text']) {
+                    var newValue = observable();
+                    bindings['text'] = function () { return newValue; };
+                }
+                return bindings;
+            }
+        };
+
+        testNode.innerHTML = "<div data-bind='text: \"hello\"'></div>";
+        ko.applyBindings({}, testNode);
+
+        expect(testNode).toContainText('substitute');
+        expect(observable.getSubscriptionsCount()).toEqual(1);
+
+        // uptdate observable to update binding
+        observable('new value');
+        expect(testNode).toContainText('new value');
+    });
+
     describe('Observable view models', function() {
         it('Should update bindings (including callbacks)', function() {
             var vm = ko.observable(), clickedVM;
@@ -258,6 +287,45 @@ describe('Binding dependencies', function() {
             ko.removeNode(testNode);
             vm(null);
             expect(vm.getSubscriptionsCount()).toEqual(0);
+        });
+
+        it('Should provide access to the view model\'s observable through $rawData', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(vm, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe(vm);
+        });
+
+        it('Should set $rawData to the observable returned from a function', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(function() { return vm; }, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe(vm);
+        });
+
+        it('Should set $rawData to the view model if a function unwraps the observable view model', function() {
+            var vm = ko.observable('text');
+            testNode.innerHTML = "<div data-bind='text:$data'></div>";
+            ko.applyBindings(function() { return vm(); }, testNode);
+            expect(testNode).toContainText("text");
+
+            var context = ko.contextFor(testNode);
+            expect(context.$data).toEqual('text');
+            expect(context.$rawData).toBe('text');
+
+            // Updating view model updates bindings and context
+            vm('new text');
+            expect(testNode).toContainText("new text");
+            expect(context.$data).toEqual('new text');
+            expect(context.$rawData).toBe('new text');
         });
 
         it('Should dispose view model subscription on next update when bound node is removed outside of KO', function() {
@@ -303,24 +371,24 @@ describe('Binding dependencies', function() {
 
         it('Should update all extended contexts (including values copied from the parent)', function() {
             ko.bindingHandlers.withProperties = {
-                init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var innerBindingContext = bindingContext.extend(valueAccessor);
                     ko.applyBindingsToDescendants(innerBindingContext, element);
                     return { controlsDescendantBindings : true };
                 }
             };
 
-            testNode.innerHTML = "<div data-bind='withProperties: obj1'><span data-bind='text:prop1'></span><span data-bind='text:prop2'></span></div>";
-            var vm = ko.observable({obj1: {prop1: "First "}, prop2: "view model"});
+            testNode.innerHTML = "<div data-bind='withProperties: obj1'><span data-bind='text:prop1'></span><span data-bind='text:prop2'></span><span data-bind='text:$rawData().prop3'></span></div>";
+            var vm = ko.observable({obj1: {prop1: "First "}, prop2: "view ", prop3: "model"});
             ko.applyBindings(vm, testNode);
             expect(testNode).toContainText("First view model");
 
-            // ch ange view model to new object
-            vm({obj1: {prop1: "Second view "}, prop2: "model"});
+            // change view model to new object
+            vm({obj1: {prop1: "Second view "}, prop2: "model", prop3: ""});
             expect(testNode).toContainText("Second view model");
 
             // change it again
-            vm({obj1: {prop1: "Third view model"}, prop2: ""});
+            vm({obj1: {prop1: ""}, prop2: "", prop3: "Third view model"});
             expect(testNode).toContainText("Third view model");
 
             // clear the element and the view-model (shouldn't be any errors) and the subscription should be cleared
@@ -329,9 +397,41 @@ describe('Binding dependencies', function() {
             expect(vm.getSubscriptionsCount()).toEqual(0);
         });
 
+        it('Should maintain correct $rawData in extended context when parent is bound to a function that returns an observable view model', function() {
+            ko.bindingHandlers.extended = {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+                    ko.applyBindingsToDescendants(bindingContext.extend(valueAccessor), element);
+                    return { controlsDescendantBindings : true };
+                }
+            };
+
+            var vm1 = ko.observable('vm1'),
+                vm2 = ko.observable('vm2'),
+                whichVm = ko.observable(vm1);
+            testNode.innerHTML = "<div data-bind='extended: {}'><div data-bind='text: $data'></div></div>";
+            ko.applyBindings(function() { return whichVm(); }, testNode);
+            expect(testNode).toContainText('vm1');
+
+            var parentContext = ko.contextFor(testNode),
+                childContext = ko.contextFor(testNode.childNodes[0].childNodes[0]);
+
+            expect(parentContext.$data).toEqual('vm1');
+            expect(parentContext.$rawData).toBe(vm1);
+
+            expect(childContext).not.toBe(parentContext);
+            expect(childContext.$data).toEqual('vm1');
+            expect(childContext.$rawData).toBe(vm1);
+
+            // Updating view model updates bindings and context
+            whichVm(vm2);
+            expect(testNode).toContainText('vm2');
+            expect(childContext.$data).toEqual('vm2');
+            expect(childContext.$rawData).toBe(vm2);
+        });
+
         it('Should update an extended child context', function() {
             ko.bindingHandlers.withProperties = {
-                init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var childBindingContext = bindingContext.createChildContext(null, null, function(context) {
                         ko.utils.extend(context, valueAccessor());
                     });
