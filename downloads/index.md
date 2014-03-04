@@ -12,7 +12,7 @@ Get the latest stable production build of Knockout.js:
 </div>
 
 <div class="download-debug-panel">
-    Also available: <a href='knockout-3.0.0.debug.js'>debug build</a>.
+    Also available: <a href='knockout-3.1.0.debug.js'>debug build</a>.
     <strong>Note:</strong> This is only intended to help you understand how Knockout works. Don't use it for normal application
     development, because it exposes additional unsupported private APIs.
 </div>
@@ -21,7 +21,7 @@ Get the latest stable production build of Knockout.js:
 
 Simply reference the JavaScript file using a `<script>` tag somewhere on your HTML pages. For example,
 
-    <script type='text/javascript' src='knockout-3.0.0.js'></script>
+    <script type='text/javascript' src='knockout-3.1.0.js'></script>
 
 Of course, update the `src` attribute to match the location where you put the downloaded file. Next, if you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](../documentation/observables.html).
 
@@ -39,6 +39,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v3.1.0](knockout-3.1.0.js) ([debug](knockout-3.1.0.debug.js)) --- March 4th, 2014
 * [v3.1.0 Beta](knockout-3.1.0beta.js) ([debug](knockout-3.1.0beta.debug.js)) --- February 12th, 2014
 * [v3.0.0](knockout-3.0.0.js) ([debug](knockout-3.0.0.debug.js)) --- October 25th, 2013
 * [v3.0.0 Release Candidate](knockout-3.0.0rc.js) ([debug](knockout-3.0.0rc.debug.js)) --- September 30th, 2013
