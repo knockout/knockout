@@ -52,7 +52,7 @@ ko.bindingHandlers['value'] = {
 
         if (valueHasChanged) {
             if (ko.utils.tagNameLower(element) === "select") {
-                var allowUnset = allBindings.get('valueAllowUnset');
+                var allowUnset = ko.utils.unwrapObservable(allBindings.get('valueAllowUnset'));
                 var applyValueAction = function () {
                     ko.selectExtensions.writeValue(element, newValue, allowUnset);
                 };
