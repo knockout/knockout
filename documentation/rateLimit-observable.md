@@ -140,7 +140,7 @@ If you want to ensure that the subscribers are always notified of an update, eve
 
 ## Comparison with the throttle extender
 
-If you'd like to migrate code from using the deprecated `throttle` extender, you should note following ways that the `rateLimit` extender is different from the `throttle` extender.
+If you'd like to migrate code from using the deprecated `throttle` extender, you should note the following ways that the `rateLimit` extender is different from the `throttle` extender.
 
 When using `rateLimit`:
 
