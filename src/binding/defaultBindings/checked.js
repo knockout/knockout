@@ -43,7 +43,10 @@ ko.bindingHandlers['checked'] = {
                     // add/remove the element value to the model array.
                     ko.utils.addOrRemoveItem(modelValue, elemValue, isChecked);
                 }
-            } else {
+            } else 
+			if (isFlags) {
+				ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'checked', modelValue ^ elemValue, true);
+			} else {
                 ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'checked', elemValue, true);
             }
         };
@@ -53,6 +56,10 @@ ko.bindingHandlers['checked'] = {
             // It runs in response to changes in the bound (checked) value.
             var modelValue = ko.utils.unwrapObservable(valueAccessor());
 
+            if (isFlags) {
+                // When a checkbox is bound to an array, being checked represents its value being present in that array
+                element.checked = modelValue & checkedValue();
+            } else
             if (isValueArray) {
                 // When a checkbox is bound to an array, being checked represents its value being present in that array
                 element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
@@ -76,6 +83,7 @@ ko.bindingHandlers['checked'] = {
         var isValueArray = isCheckbox && (ko.utils.unwrapObservable(valueAccessor()) instanceof Array),
             oldElemValue = isValueArray ? checkedValue() : undefined,
             useCheckedValue = isRadio || isValueArray,
+			isFlags = allBindings.get('flags') === true,
             shouldSet = false;
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
