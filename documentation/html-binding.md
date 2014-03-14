@@ -22,7 +22,7 @@ Typically this is useful when values in your view model are actually strings of 
 
  * Main parameter
    
-   KO sets the element's `innerHTML` property to your parameter value. Any previous content will be overwritten.
+   KO clears the previous content and then sets the element's content to your parameter value using jQuery's `html` function or by parsing the string into HTML nodes and appending each node as a child of the element, if jQuery is not available.
    
    If this parameter is an observable value, the binding will update the element's content whenever the value changes. If the parameter isn't observable, it will only set the element's content once and will not update it again later.   
    
