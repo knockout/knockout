@@ -23,7 +23,7 @@
 
             this.itemsOnCurrentPage = ko.computed(function () {
                 var startIndex = this.pageSize * this.currentPageIndex();
-                return this.data.slice(startIndex, startIndex + this.pageSize);
+                return ko.unwrap(this.data).slice(startIndex, startIndex + this.pageSize);
             }, this);
 
             this.maxPageIndex = ko.computed(function () {
