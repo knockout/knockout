@@ -3,10 +3,10 @@
         get: function(componentName, callback) {
             var completedAsync = false;
 
-            getFirstResultFromLoaders('getConfig', [componentName], function(loaderSupplyingConfig, config) {
+            getFirstResultFromLoaders('getConfig', [componentName], function(config) {
                 if (config) {
                     // We have a config, so now load its definition
-                    getFirstResultFromLoaders('loadComponent', [componentName, config], function(loaderSupplyingDefinition, definition) {
+                    getFirstResultFromLoaders('loadComponent', [componentName, config], function(definition) {
                         invokeAsyncIfNeeded(callback, [definition], !completedAsync);
                     });
                 } else {
@@ -42,10 +42,10 @@
                 var wasAborted = false,
                     synchronousReturnValue = methodInstance.apply(currentCandidateLoader, argsExceptCallback.concat(function(result) {
                         if (wasAborted) {
-                            callback(currentCandidateLoader, null);
+                            callback(null);
                         } else if (result !== null) {
                             // This candidate returned a value. Use it.
-                            callback(currentCandidateLoader, result);
+                            callback(result);
                         } else {
                             // Try the next candidate
                             getFirstResultFromLoaders(methodName, argsExceptCallback, callback, candidateLoaders);
@@ -71,7 +71,7 @@
             }
         } else {
             // No candidates returned a value
-            callback(null, null);
+            callback(null);
         }
     }
 
