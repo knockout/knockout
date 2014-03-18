@@ -14,8 +14,6 @@ var
     colors = require('colors'),
 
     /* Variables */
-    now = new Date(),
-
     pkg = require('./package.json'),
 
     banner = [
@@ -27,7 +25,7 @@ var
 
     // Source files
     scriptsDir = 'build/fragments/',
-    sources = require("./" + scriptsDir + "source-references.js"),
+    sources = require("./" + scriptsDir + "source-references.json"),
 
     // [].concat.apply flattens the list
     scripts = [].concat.apply([], [
@@ -36,6 +34,18 @@ var
         sources,
         scriptsDir + 'amd-post.js',
         scriptsDir + 'extern-post.js'
+    ]),
+
+    // scripts that are loaded by the browser during testing
+    runner_scripts = [].concat.apply([], [
+        "spec/lib/jasmine.extensions.js",
+        // knockout polyfills
+        "spec/lib/innershiv.js",
+        "spec/lib/json2.js",
+        // knockout
+        sources,
+        // specs
+        require("./spec/helpers/specs.json")
     ]),
 
     // Destination files
@@ -56,16 +66,10 @@ var
     },
 
     // Test options
-    spec = "spec/spec.node.js";
+    spec = "spec/spec.node.js",
 
-
-function getReferencedSources(sourceReferenceFilename) {
-     // Returns the array of filenames referenced by a file like source-references.js
-    var result;
-    global.knockoutDebugCallback = function(sources) { result = sources; };
-    eval(fs.readFileSync(sourceReferenceFilename, { encoding: 'utf8' }));
-    return result;
-}
+    // make sure this matches the <script> in spec/runner.html
+    livereload_port = 35728;
 
 
 gulp.task("clean", function() {
@@ -89,6 +93,9 @@ gulp.task("test", ['build'], function () {
 
 gulp.task("checkTrailingSpaces", function () {
     // TODO
+    //  "**/*.{js,html,css,bat,ps1,sh}",
+    // "!build/output/**",
+    // "!node_modules/**"
     console.error("checkTrailingSpaces: Not yet implemented".red)
 })
 
@@ -110,6 +117,26 @@ gulp.task("build", function () {
         .pipe(plugins.uglify(uglifyOptions))
         .pipe(plugins.header(banner, { pkg: pkg }))
         .pipe(gulp.dest(buildDir))
+})
+
+
+gulp.task("watch", function () {
+    var server = plugins.livereload(livereload_port);
+    gulp.watch(runner_scripts).on('change', function (file) {
+        server.changed(file.path)
+    })
+})
+
+
+gulp.task("runner", function () {
+    // build runner.html in the root directory.
+    inject_options = {
+        addRootSlash: false
+    }
+    gulp.src("spec/runner.html")
+        .pipe(plugins.inject(gulp.src(runner_scripts, {read: false}),
+            inject_options))
+        .pipe(gulp.dest("./"))
 })
 
 

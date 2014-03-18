@@ -96,17 +96,9 @@ beforeEach(function() {
         });
     };
 
-
     jasmine.nodeText = function(node) {
         return 'textContent' in node ? node.textContent : node.innerText;
     }
-
-
-    jasmine.addScriptReference = function(scriptUrl) {
-        if (window.console)
-            console.log("Loading " + scriptUrl + "...");
-        document.write("<scr" + "ipt type='text/javascript' src='" + scriptUrl + "'></sc" + "ript>");
-    };
 
     jasmine.prepareTestNode = function() {
         // The bindings specs make frequent use of this utility function to set up

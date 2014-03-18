@@ -47,6 +47,8 @@
     "jshint-stylish": "*",
     "gulp-load-plugins": "*",
     "colors": "*",
-    "closure-compiler": "~0.2.1"
+    "gulp-livereload": "*",
+    "gulp-watch": "^0.5.2",
+    "gulp-inject": "^0.4.1"
   }
 }
