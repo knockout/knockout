@@ -44,10 +44,6 @@ var
         debug: 'knockout-latest.debug.js',
         main: 'knockout.js',
     },
-    test = {
-        phantomjs: 'spec/runner.phantom.js',
-        node: 'spec/runner.node.js'
-    },
 
     // Compiler options
     uglifyOptions = {
@@ -57,7 +53,11 @@ var
                 DEBUG: false,
             }
         },
-    };
+    },
+
+    // Test options
+    spec = "spec/spec.node.js";
+
 
 function getReferencedSources(sourceReferenceFilename) {
      // Returns the array of filenames referenced by a file like source-references.js
@@ -81,6 +81,12 @@ gulp.task("lint", function () {
 })
 
 
+gulp.task("test", ['build'], function () {
+    gulp.src(spec)
+        .pipe(plugins.jasmine())
+})
+
+
 gulp.task("checkTrailingSpaces", function () {
     // TODO
     console.error("checkTrailingSpaces: Not yet implemented".red)
@@ -100,6 +106,7 @@ gulp.task('build-debug', function () {
 gulp.task("build", function () {
     gulp.src(scripts)
         .pipe(plugins.concat(build.main))
+        .pipe(plugins.rename({ extname: ".min.js" }))
         .pipe(plugins.uglify(uglifyOptions))
         .pipe(plugins.header(banner, { pkg: pkg }))
         .pipe(gulp.dest(buildDir))

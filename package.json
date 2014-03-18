@@ -28,7 +28,10 @@
     ]
   },
   "licenses": [
-    { "type": "MIT", "url": "http://www.opensource.org/licenses/mit-license.php" }
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
   ],
   "devDependencies": {
     "gulp": "*",
@@ -40,6 +43,7 @@
     "gulp-jshint": "*",
     "gulp-rename": "*",
     "gulp-notify": "*",
+    "gulp-jasmine": "*",
     "jshint-stylish": "*",
     "gulp-load-plugins": "*",
     "colors": "*",
