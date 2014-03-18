@@ -1,4 +1,4 @@
-knockoutDebugCallback([
+module.exports = [
     'src/namespace.js',
     'src/google-closure-compiler-utils.js',
     'src/version.js',
@@ -37,7 +37,8 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/uniqueName.js',
     'src/binding/defaultBindings/value.js',
     'src/binding/defaultBindings/visible.js',
-    // click depends on event - The order matters for specs, which includes each file individually
+    // click depends on event - The order matters for specs, which
+    // includes each file individually
     'src/binding/defaultBindings/click.js',
     'src/templating/templateEngine.js',
     'src/templating/templateRewriting.js',
@@ -47,4 +48,4 @@ knockoutDebugCallback([
     'src/binding/editDetection/arrayToDomNodeChildren.js',
     'src/templating/native/nativeTemplateEngine.js',
     'src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js'
-]);
+]
