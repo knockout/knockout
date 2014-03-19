@@ -1,1 +1,10 @@
 language: node_js
+
+# See
+# https://saucelabs.com/opensource/travis
+# http://about.travis-ci.org/docs/user/gui-and-headless-browsers/
+# https://saucelabs.com/docs/connect
+addons:
+  sauce_connect:
+    username: "brianmhunt"
+    access_key: "cd6ce1e2-070f-4cf2-81b9-b814fe2f4ea5"

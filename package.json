@@ -7,7 +7,7 @@
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",
   "scripts": {
-    "test": "node spec/runner.node.js"
+    "test": "gulp test"
   },
   "repository": {
     "type": "git",

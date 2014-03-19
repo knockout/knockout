@@ -86,7 +86,7 @@ gulp.task("lint", function () {
 })
 
 
-gulp.task("test", ['build'], function () {
+gulp.task("test", ['build', 'runner'], function () {
     gulp.src(spec)
         .pipe(plugins.jasmine())
 })
