@@ -23,6 +23,19 @@ TODO: gulp-git might be handy when it works, but at the moment it lacks
 the capacity to stream the items below in order and git.reset is not
 exposed.
 
+  Handy reference
+  ~~~~~~~~~~~~~~~~~
+  Here is a reminder for some related tasks.
+
+  To delete tag:
+    $ git tag -d vX.X.X
+
+  To unpublish a tag:
+    $ git push origin :refs/tags/vX.X.X
+
+  To publish to npm:
+    $ npm publish
+
  */
 var fs = require('fs'),
     gulp = require('gulp'),
@@ -63,7 +76,7 @@ gulp.task("add-dist", function (done) {
 })
 
 
-gulp.task("commit", ['add-dist'], function () {
+gulp.task("commit", ['add-dist'], function (done) {
   var message = "(task) Release " + target_version;
   git_exec("commit -a -m \"" + message + "\"", done)
 })
@@ -78,7 +91,7 @@ gulp.task("tag", ['commit'], function (done) {
 
 
 gulp.task("reset", ['tag'], function (done) {
-  var cmd = "git reset HEAD^1";
+  var cmd = "reset HEAD^1";
   git_exec(cmd, done)
 })
 
