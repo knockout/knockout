@@ -119,6 +119,11 @@ gulp.task("clean", function() {
 })
 
 
+//      lint
+//      ~~~~
+//
+//   Config with .jshintrc; see http://www.jshint.com/docs/options/
+//
 gulp.task("lint", function () {
     gulp.src(sources)
         .pipe(plugins.jshint())
