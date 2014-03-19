@@ -18,10 +18,14 @@ B.
  5. git push --tags
 
 C. removes dest/
+
+TODO: gulp-git might be handy when it works, but at the moment it lacks
+the capacity to stream the items below in order and git.reset is not
+exposed.
+
  */
 var fs = require('fs'),
     gulp = require('gulp'),
-    git = require('gulp-git'),
     gutil = require('gulp-util'),
     exec = require('child_process').exec,
 
@@ -40,57 +44,57 @@ var fs = require('fs'),
     target_version;
 
 
-gulp.task("add-dist", function () {
-  gulp.src(DEST)
-      .pipe(git.add({args: "-f"}))
+function git_exec(args, cb) {
+  var exec_opts = {cwd:process.cwd()},
+      cmd = "git " + args;
+  exec(cmd, exec_opts, function (err, stdout, stderr) {
+    if (err) {
+      gutil.log(err);
+      throw new Error("Tagging error: " + err);
+    }
+    gutil.log(stdout, stderr)
+    cb()
+  })
+}
+
+
+gulp.task("add-dist", function (done) {
+  git_exec("add -f " + DEST, done)
 })
 
 
 gulp.task("commit", ['add-dist'], function () {
-  gulp.src("./")
-      .pipe(git.commit("(task) Release " + target_version))
+  var message = "(task) Release " + target_version;
+  git_exec("commit -a -m \"" + message + "\"", done)
 })
 
 
 gulp.task("tag", ['commit'], function (done) {
   var message = "(task) Tagging " + target_version,
-      cmd = 'git tag ' + escape([target_version])+ ' -m "' + message + '" ',
-      templ = gutil.template(cmd, {file:message});
+      args = 'tag ' + escape([target_version])+ ' -m "' + message + '" ';
 
-  exec(templ, {cwd: process.cwd()}, function(err, stdout, stderr){
-    if (err) {
-      gutil.log(err);
-      done(new Error("Tagging error: " + err))
-      return
-    }
-    gutil.log(stdout, stderr);
-    done();
-  });
+  git_exec(args, done)
 })
 
 
 gulp.task("reset", ['tag'], function (done) {
   var cmd = "git reset HEAD^1";
-  exec(cmd, {cwd: process.cwd()}, function(err, stdout, stderr) {
-    if(err) {
-      gutil.log(err);
-      done(new Error("git reset HEAD ^1 emitted an error: " + err))
-      return;
-    }
-    gutil.log(stdout, stderr);
-    if(cb) cb();
-  }
+  git_exec(cmd, done)
 })
 
 
 gulp.task('push-tags', ['reset'], function (done) {
-  git.push('origin', 'master', {args: '--tags'}, done)
+  var cmd = "push origin master --tags";
+  git_exec(cmd, done)
 })
 
 
 module.exports = function release(version) {
   // A.
-  fs.mkdirSync(DEST)
+  try {
+    // may error if the directory exists
+    fs.mkdirSync(DEST)
+  } catch (e) {}
   fs.writeFileSync(min_copy.dest, fs.readFileSync(min_copy.src))
   fs.writeFileSync(debug_copy.dest, fs.readFileSync(debug_copy.src))
 

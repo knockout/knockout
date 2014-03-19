@@ -88,6 +88,7 @@ var
 
     // Destination files
     buildDir = 'build/output/',
+    destDir = "dest/",
     build = {
         debug: 'knockout-latest.debug.js',
         main: 'knockout-latest.js',
@@ -113,7 +114,7 @@ var
 
 
 gulp.task("clean", function() {
-    gulp.src(buildDir + "*", {read: false})
+    gulp.src([buildDir + "*.js", destDir], {read: false})
         .pipe(plugins.clean())
 })
 
