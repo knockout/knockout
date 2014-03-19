@@ -1,6 +1,6 @@
 /*
-        Spec helper for
-        Jasmine
+        Run before each
+        Jasmine test
         ---------------
  */
 
@@ -88,46 +88,5 @@ matchers.toContainHtml = function (expectedHtml) {
 
 
 beforeEach(function() {
-
-    jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
-        var originalValue = object[propertyName];
-        this.after(function() {
-            object[propertyName] = originalValue;
-        });
-    };
-
-    jasmine.nodeText = function(node) {
-        return 'textContent' in node ? node.textContent : node.innerText;
-    }
-
-    jasmine.prepareTestNode = function() {
-        // The bindings specs make frequent use of this utility function to set up
-        // a clean new DOM node they can execute code against
-        var existingNode = document.getElementById("testNode");
-        if (existingNode != null)
-            existingNode.parentNode.removeChild(existingNode);
-        testNode = document.createElement("div");
-        testNode.id = "testNode";
-        document.body.appendChild(testNode);
-    };
-
-    // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
-    // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
-    // If there is a future need to detect specific versions of IE10+, we will amend this.
-    // If browser detection is important:
-    //      https://github.com/NielsLeenheer/WhichBrowser
-    jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
-        var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
-
-        // Keep constructing conditional HTML blocks until we hit one that resolves to an empty fragment
-        while (
-            div.innerHTML = '<!--[if gt IE ' + (++version) + ']><i></i><![endif]-->',
-                iElems[0]
-            );
-        return version > 4 ? version : undefined;
-    }());
-
-    jasmine.browserSupportsProtoAssignment = { __proto__: [] } instanceof Array;
-
-    this.addMatchers(matchers)
+    this.addMatchers(matchers);
 });

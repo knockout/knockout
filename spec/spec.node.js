@@ -1,10 +1,12 @@
 
 // Setup
+require('./helpers/beforeEach');
 require('./lib/jasmine.extensions');
 global.ko = require("../" + buildDir + "knockout.min.js")
 
 
-// Tests
+// Tests run by Node. These are also in specs.json i.e. tests run in
+// the browser.
 require('./arrayEditDetectionBehaviors');
 require('./asyncBehaviors');
 require('./dependentObservableBehaviors');

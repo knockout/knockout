@@ -38,10 +38,11 @@ var
 
     // scripts that are loaded by the browser during testing
     runner_scripts = [].concat.apply([], [
-        "spec/lib/jasmine.extensions.js",
+        "spec/helpers/beforeEach.js",
+        "spec/helpers/jasmine.browser.js",
         // knockout polyfills
-        "spec/lib/innershiv.js",
-        "spec/lib/json2.js",
+        "spec/helpers/innershiv.js",
+        "spec/helpers/json2.js",
         // knockout
         sources,
         // specs
@@ -120,7 +121,7 @@ gulp.task("build", function () {
 })
 
 
-gulp.task("watch", function () {
+gulp.task("watch", ['runner'], function () {
     var server = plugins.livereload(livereload_port);
     gulp.watch(runner_scripts).on('change', function (file) {
         server.changed(file.path)
@@ -129,11 +130,14 @@ gulp.task("watch", function () {
 
 
 gulp.task("runner", function () {
-    // build runner.html in the root directory.
+    // Build runner.html in the root directory. This makes it more
+    // straightforward to access relative-path src/ and spec/ files i.e.
+    // there will be no "../" in our <script> tags.
     inject_options = {
         addRootSlash: false
     }
-    gulp.src("spec/runner.html")
+    gulp.src("spec/helpers/runner.template.html")
+        .pipe(plugins.rename("runner.html"))
         .pipe(plugins.inject(gulp.src(runner_scripts, {read: false}),
             inject_options))
         .pipe(gulp.dest("./"))
