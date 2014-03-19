@@ -1,7 +1,6 @@
 
 // Setup
 require('./helpers/beforeEach');
-require('./lib/jasmine.extensions');
 global.ko = require("../" + buildDir + "knockout.min.js")
 
 
