@@ -1,7 +1,8 @@
-
+/*
+    Run some of our tests in Node.
+ */
 // Setup
 require('./helpers/beforeEach');
-global.ko = require("../" + buildDir + "knockout.min.js")
 
 
 // Tests run by Node. These are also in specs.json i.e. tests run in

@@ -87,6 +87,7 @@ gulp.task("lint", function () {
 
 
 gulp.task("test", ['build', 'runner'], function () {
+    global.ko = require("./" + buildDir + "knockout.min.js")
     gulp.src(spec)
         .pipe(plugins.jasmine())
 })
