@@ -60,7 +60,7 @@ gulp.task("tag", ['commit'], function (done) {
   exec(templ, {cwd: process.cwd()}, function(err, stdout, stderr){
     if (err) {
       gutil.log(err);
-      done(new Error("Tagging error", err))
+      done(new Error("Tagging error: " + err))
       return
     }
     gutil.log(stdout, stderr);
@@ -70,7 +70,16 @@ gulp.task("tag", ['commit'], function (done) {
 
 
 gulp.task("reset", ['tag'], function (done) {
-  git.reset('HEAD^1', {}, done)
+  var cmd = "git reset HEAD^1";
+  exec(cmd, {cwd: process.cwd()}, function(err, stdout, stderr) {
+    if(err) {
+      gutil.log(err);
+      done(new Error("git reset HEAD ^1 emitted an error: " + err))
+      return;
+    }
+    gutil.log(stdout, stderr);
+    if(cb) cb();
+  }
 })
 
 
