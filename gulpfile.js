@@ -42,6 +42,7 @@ var
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     colors = require('colors'),
+    closureCompiler = require('gulp-closure-compiler'),
 
     /* Variables */
     pkg = require('./package.json'),
@@ -101,13 +102,8 @@ var
     PACKAGE_FILES = ["./package.json", "./bower.json"],
 
     // Compiler options
-    uglifyOptions = {
-        compress: {
-            global_defs: {
-                // remove `if (DEBUG) { ... }` statements
-                DEBUG: false,
-            }
-        },
+    closure_options = {
+        compilation_level: "ADVANCED_OPTIMIZATIONS"
     },
 
     // Test options
@@ -157,6 +153,7 @@ gulp.task('build-debug', function () {
         .pipe(plugins.header("function(){\nvar DEBUG=true;\n"))
         .pipe(plugins.header(banner, { pkg: pkg }))
         .pipe(plugins.footer("})();\n"))
+        .pipe(plugins.replace("##VERSION##", pkg.version + "-debug"))
         .pipe(gulp.dest(buildDir))
 })
 
@@ -164,7 +161,8 @@ gulp.task('build-debug', function () {
 gulp.task("build", function () {
     gulp.src(build_scripts)
         .pipe(plugins.concat(build.main))
-        .pipe(plugins.uglify(uglifyOptions))
+        .pipe(plugins.replace("##VERSION##", pkg.version))
+        .pipe(closureCompiler(closure_options))
         .pipe(plugins.header(banner, { pkg: pkg }))
         .pipe(gulp.dest(buildDir))
 })
