@@ -78,6 +78,7 @@ var
         "http://localhost:35728/livereload.js",
         JASMINE_CDN,
         JASMINE_HTML_CDN,
+        "node_modules/jasmine-tapreporter/src/tapreporter.js",
         "spec/helpers/beforeEach.js",
         "spec/helpers/jasmine.browser.js",
         // Knockout polyfills
