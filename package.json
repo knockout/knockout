@@ -49,6 +49,9 @@
     "colors": "*",
     "gulp-livereload": "*",
     "gulp-watch": "^0.5.2",
-    "gulp-inject": "^0.4.1"
+    "gulp-inject": "^0.4.1",
+    "gulp-bump": "^0.1.6",
+    "gulp-git": "^0.3.5",
+    "gulp-util": "^2.2.14"
   }
 }
