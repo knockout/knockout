@@ -53,6 +53,7 @@
     "gulp-inject": "^0.4.1",
     "gulp-bump": "^0.1.6",
     "gulp-util": "^2.2.14",
-    "jasmine-tapreporter": "^0.2.2"
+    "jasmine-tapreporter": "^0.2.2",
+    "gulp-replace": "^0.2.0"
   }
 }

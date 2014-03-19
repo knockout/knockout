@@ -58,7 +58,7 @@ var
     sources = require("./" + scriptsDir + "source-references.json"),
 
     // [].concat.apply flattens the list
-    scripts = [].concat.apply([], [
+    build_scripts = [].concat.apply([], [
         scriptsDir + 'extern-pre.js',
         scriptsDir + 'amd-pre.js',
         sources,
@@ -73,22 +73,22 @@ var
     JQUERY_CDN = CDN_ROOT + "jquery/1.11.0/jquery.min.js",
     MODERNIZR_CDN = CDN_ROOT + "modernizr/2.7.1/modernizr.min.js",
 
-    // scripts that are loaded by the browser during testing
-    runner_scripts = [].concat.apply([], [
-        "http://localhost:35728/livereload.js",
-        JASMINE_CDN,
-        JASMINE_HTML_CDN,
-        "node_modules/jasmine-tapreporter/src/tapreporter.js",
-        "spec/helpers/beforeEach.js",
-        "spec/helpers/jasmine.browser.js",
-        // Knockout polyfills
-        "spec/helpers/innershiv.js",
-        "spec/helpers/json2.js",
-        // Knockout source
-        sources,
-        // Specs - tests
-        require("./spec/helpers/specs.json")
-    ]),
+    // scripts that are loaded by the browser during testing;
+    // in runner.template.html the respective comments are replace by
+    // the respective <script> tags
+    setup_scripts = [
+            "http://localhost:35728/livereload.js",
+            JASMINE_CDN,
+            JASMINE_HTML_CDN,
+            "node_modules/jasmine-tapreporter/src/tapreporter.js",
+            "spec/helpers/beforeEach.js",
+            "spec/helpers/jasmine.browser.js",
+            // Knockout polyfills
+            "spec/helpers/innershiv.js",
+            "spec/helpers/json2.js",
+    ],
+
+    spec_scripts = require("./spec/helpers/specs.json"),
 
     // Destination files
     buildDir = 'build/output/',
@@ -152,7 +152,7 @@ gulp.task("checkTrailingSpaces", function () {
 
 
 gulp.task('build-debug', function () {
-    gulp.src(scripts)
+    gulp.src(build_scripts)
         .pipe(plugins.concat(build.debug))
         .pipe(plugins.header("function(){\nvar DEBUG=true;\n"))
         .pipe(plugins.header(banner, { pkg: pkg }))
@@ -162,7 +162,7 @@ gulp.task('build-debug', function () {
 
 
 gulp.task("build", function () {
-    gulp.src(scripts)
+    gulp.src(build_scripts)
         .pipe(plugins.concat(build.main))
         .pipe(plugins.uglify(uglifyOptions))
         .pipe(plugins.header(banner, { pkg: pkg }))
@@ -171,9 +171,16 @@ gulp.task("build", function () {
 
 
 gulp.task("watch", ['runner'], function () {
-    var server = plugins.livereload(livereload_port);
-    gulp.watch(runner_scripts).on('change', function (file) {
+    var server = plugins.livereload(livereload_port),
+        watched = [].concat(sources, spec_scripts, setup_scripts,
+            build_scripts, ['runner.html'])
+    // reload the browser when any of the watched files change
+    gulp.watch(watched).on('change', function (file) {
         server.changed(file.path)
+    })
+    // recompile runner.*.html as needed
+    gulp.watch(['spec/helpers/runner.template.html']).on('change', function () {
+        gulp.start('runner')
     })
 })
 
@@ -201,19 +208,29 @@ gulp.task("runner", function () {
     // Build runner.html in the root directory. This makes it more
     // straightforward to access relative-path src/ and spec/ files i.e.
     // there will be no "../" in our <script> tags.
-    var inject_options = { addRootSlash: false },
-        SKIP = { read: false };
+    function script_tag(s) {
+        return "<script type='text/javascript' src='" + s + "'></script>\n\t"
+    }
+
+    function replace(key, scripts) {
+        var target = "<!-- " + key + " -->",
+            replacement = scripts.map(script_tag).join("");
+        return plugins.replace(target, replacement)
+    }
+
     gulp.src("spec/helpers/runner.template.html")
         // create vanilla runner
         .pipe(plugins.rename("runner.html"))
-        .pipe(plugins.inject(runner_scripts), inject_options)
+        .pipe(replace("SETUP", setup_scripts))
+        .pipe(replace("SOURCE", sources))
+        .pipe(replace("SPECS", spec_scripts))
         .pipe(gulp.dest("./"))
         // create runner with jquery
-        .pipe(plugins.inject([JQUERY_CDN]))
+        .pipe(replace("JQUERY_CDN", [JQUERY_CDN]))
         .pipe(plugins.rename("runner.jquery.html"))
         .pipe(gulp.dest("./"))
         // create runner with modernizr
-        .pipe(plugins.inject([MODERNIZR_CDN]))
+        .pipe(replace("MODERNIZR_CDN", [MODERNIZR_CDN]))
         .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })

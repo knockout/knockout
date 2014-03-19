@@ -51,10 +51,15 @@ jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
  */
 function start_jasmine_tests() {
     var jasmineEnv = jasmine.getEnv(),
-        htmlReporter = jasmine.HtmlReporter();
+        htmlReporter = new jasmine.HtmlReporter(),
+        tapReporter = new TAPReporter(function (m) {console.log(m)});
     jasmine.updateInterval = 500;
     jasmineEnv.addReporter(htmlReporter);
-    jasmineEnv.specFilter = htmlReporter.specFilter;
-    jasmineEnv.addReporter(new jasmine.TapReporter());
-    jasmineEnv.execute();
+    jasmineEnv.specFilter = function (spec) {
+        return htmlReporter.specFilter(spec);
+    }
+    jasmineEnv.addReporter(tapReporter);
+    window.onload = function () {
+        jasmineEnv.execute();
+    }
 }
