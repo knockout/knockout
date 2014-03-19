@@ -1,4 +1,10 @@
 /*
+    This script is included in runner[.jquery|.modernize].js
+ */
+var DEBUG = true,
+    jQuery = window.jQuery;
+
+/*
     Some helper functions for jasmine on the browser
  */
 jasmine.prepareTestNode = function() {
@@ -39,3 +45,16 @@ jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
         );
     return version > 4 ? version : undefined;
 }());
+
+/*
+    Misc. settings
+ */
+function start_jasmine_tests() {
+    var jasmineEnv = jasmine.getEnv(),
+        htmlReporter = jasmine.HtmlReporter();
+    jasmine.updateInterval = 500;
+    jasmineEnv.addReporter(htmlReporter);
+    jasmineEnv.specFilter = htmlReporter.specFilter;
+    jasmineEnv.addReporter(new jasmine.TapReporter());
+    jasmineEnv.execute();
+}

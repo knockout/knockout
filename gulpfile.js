@@ -10,7 +10,10 @@ Tasks
 -----
 
 $ gulp        (default task)
-: clean, build, build-debug
+: lint, build, build-debug, runner
+
+$ gulp clean
+: remove dist/ and build/output/*.js
 
 $ gulp watch
 : runner
@@ -77,12 +80,12 @@ var
         JASMINE_HTML_CDN,
         "spec/helpers/beforeEach.js",
         "spec/helpers/jasmine.browser.js",
-        // knockout polyfills
+        // Knockout polyfills
         "spec/helpers/innershiv.js",
         "spec/helpers/json2.js",
-        // knockout
+        // Knockout source
         sources,
-        // specs
+        // Specs - tests
         require("./spec/helpers/specs.json")
     ]),
 
@@ -205,11 +208,11 @@ gulp.task("runner", function () {
         .pipe(plugins.inject(runner_scripts), inject_options)
         .pipe(gulp.dest("./"))
         // create runner with jquery
-        .pipe(plugins.inject(JQUERY_CDN))
+        .pipe(plugins.inject([JQUERY_CDN]))
         .pipe(plugins.rename("runner.jquery.html"))
         .pipe(gulp.dest("./"))
         // create runner with modernizr
-        .pipe(plugins.inject(MODERNIZR_CDN))
+        .pipe(plugins.inject([MODERNIZR_CDN]))
         .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })
@@ -217,5 +220,5 @@ gulp.task("runner", function () {
 
 gulp.task('default', ['clean'], function () {
     // TODO add 'lint' here
-    gulp.start('build', 'build-debug')
+    gulp.start('lint', 'build', 'build-debug', 'runner')
 })
