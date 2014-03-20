@@ -161,9 +161,16 @@ gulp.task('build-debug', function () {
 
 
 gulp.task("build", function (done) {
-    var cc = require("closure-compiler"),
-        prefix = '/**@const*/var DEBUG=false;',
-        banner_text = gutil.template(banner, {pkg: pkg});
+    var template = require('lodash.template');
+    var reInterpolate = require('lodash._reinterpolate');
+    var forcedSettings = {
+      escape: /<%-([\s\S]+?)%>/g,
+      evaluate: /<%([\s\S]+?)%>/g,
+      interpolate: reInterpolate
+    };
+    var cc = require("closure-compiler");
+    var prefix = '/**@const*/var DEBUG=false;';
+    var banner_text = template(banner, null, forcedSettings)({pkg: pkg});
 
     function read_src(src) {
         return fs.readFileSync(src, {encoding: 'utf8'})
