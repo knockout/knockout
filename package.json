@@ -54,8 +54,6 @@
     "gulp-util": "^2.2.14",
     "jasmine-tapreporter": "^0.2.2",
     "gulp-replace": "^0.2.0",
-    "lodash._reinterpolate": "^2.4.1",
-    "closure-compiler": "^0.2.3",
-    "lodash.template": "^2.4.1"
+    "gulp-closure-compiler": "*"
   }
 }

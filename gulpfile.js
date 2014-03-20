@@ -42,8 +42,7 @@ var
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     colors = require('colors'),
-    gutil = require('gulp-util'),
-
+    closureCompiler = require('gulp-closure-compiler'),
 
     /* Variables */
     pkg = require('./package.json'),
@@ -104,8 +103,7 @@ var
 
     // Compiler options
     closure_options = {
-        compilation_level: "ADVANCED_OPTIMIZATIONS",
-        output_wrapper: '(function() {%output%})();'
+        compilation_level: "ADVANCED_OPTIMIZATIONS"
     },
 
     // Test options
@@ -160,33 +158,13 @@ gulp.task('build-debug', function () {
 })
 
 
-gulp.task("build", function (done) {
-    var template = require('lodash.template');
-    var reInterpolate = require('lodash._reinterpolate');
-    var forcedSettings = {
-      escape: /<%-([\s\S]+?)%>/g,
-      evaluate: /<%([\s\S]+?)%>/g,
-      interpolate: reInterpolate
-    };
-    var cc = require("closure-compiler");
-    var prefix = '/**@const*/var DEBUG=false;';
-    var banner_text = template(banner, null, forcedSettings)({pkg: pkg});
-
-    function read_src(src) {
-        return fs.readFileSync(src, {encoding: 'utf8'})
-    }
-
-    function on_compile(err, stdout, stderr) {
-        if (err) {
-            throw new Error("Unable to compile: " + err)
-        }
-        fs.writeFileSync(buildDir + build.main,
-            banner_text + stdout.replace(/\r\n/g, '\n'))
-        done()
-    }
-
-    cc.compile(prefix + sources.map(read_src).join("\n"),
-        closure_options, on_compile)
+gulp.task("build", ['build-debug'], function () {
+    return gulp.src(buildDir + build.debug)
+        .pipe(plugins.replace("var DEBUG=true", "/** @const */var DEBUG=false"))
+        .pipe(closureCompiler(closure_options))
+        .pipe(plugins.rename(build.main))
+        .pipe(plugins.header(banner, {pkg: pkg}))
+        .pipe(gulp.dest(buildDir))
 })
 
 
