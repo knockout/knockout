@@ -58,7 +58,6 @@
             if (config) {
                 // We have a config, so now load its definition
                 getFirstResultFromLoaders('loadComponent', [componentName, config], function(definition) {
-                    loadedDefinitionsCache[componentName] = definition;
                     notifySubscribersAsync(definition);
                 });
             } else {
@@ -66,7 +65,6 @@
                 // Note that this is not an error (e.g., a module loading error) - that would abort the
                 // process and this callback would not run. For this callback to run, all loaders must
                 // have confirmed they don't know about this component.
-                loadedDefinitionsCache[componentName] = null;
                 notifySubscribersAsync(null);
             }
         });
