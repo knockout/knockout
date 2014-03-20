@@ -44,7 +44,6 @@
     "gulp-rename": "*",
     "gulp-notify": "*",
     "gulp-jasmine": "*",
-    "gulp-closure-compiler": "*",
     "jshint-stylish": "*",
     "gulp-load-plugins": "*",
     "colors": "*",

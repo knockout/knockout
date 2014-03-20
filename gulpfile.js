@@ -42,7 +42,8 @@ var
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     colors = require('colors'),
-    closureCompiler = require('gulp-closure-compiler'),
+    gutil = require('gulp-util'),
+
 
     /* Variables */
     pkg = require('./package.json'),
@@ -103,7 +104,8 @@ var
 
     // Compiler options
     closure_options = {
-        compilation_level: "ADVANCED_OPTIMIZATIONS"
+        compilation_level: "ADVANCED_OPTIMIZATIONS",
+        output_wrapper: '(function() {%output%})();'
     },
 
     // Test options
@@ -114,7 +116,7 @@ var
 
 
 gulp.task("clean", function() {
-    gulp.src([buildDir + "*.js", destDir], {read: false})
+    return gulp.src([buildDir + "*.js", destDir], {read: false})
         .pipe(plugins.clean())
 })
 
@@ -125,7 +127,7 @@ gulp.task("clean", function() {
 //   Config with .jshintrc; see http://www.jshint.com/docs/options/
 //
 gulp.task("lint", function () {
-    gulp.src(sources)
+    return gulp.src(sources)
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
@@ -133,7 +135,7 @@ gulp.task("lint", function () {
 
 gulp.task("test", ['build', 'runner'], function () {
     global.ko = require("./" + buildDir + "knockout.min.js")
-    gulp.src(spec)
+    return gulp.src(spec)
         .pipe(plugins.jasmine())
 })
 
@@ -148,9 +150,9 @@ gulp.task("checkTrailingSpaces", function () {
 
 
 gulp.task('build-debug', function () {
-    gulp.src(build_scripts)
+    return gulp.src(build_scripts)
         .pipe(plugins.concat(build.debug))
-        .pipe(plugins.header("function(){\nvar DEBUG=true;\n"))
+        .pipe(plugins.header("(function(){\nvar DEBUG=true;\n"))
         .pipe(plugins.header(banner, { pkg: pkg }))
         .pipe(plugins.footer("})();\n"))
         .pipe(plugins.replace("##VERSION##", pkg.version + "-debug"))
@@ -158,13 +160,26 @@ gulp.task('build-debug', function () {
 })
 
 
-gulp.task("build", function () {
-    gulp.src(build_scripts)
-        .pipe(plugins.concat(build.main))
-        .pipe(plugins.replace("##VERSION##", pkg.version))
-        .pipe(closureCompiler(closure_options))
-        .pipe(plugins.header(banner, { pkg: pkg }))
-        .pipe(gulp.dest(buildDir))
+gulp.task("build", function (done) {
+    var cc = require("closure-compiler"),
+        prefix = '/**@const*/var DEBUG=false;',
+        banner_text = gutil.template(banner, {pkg: pkg});
+
+    function read_src(src) {
+        return fs.readFileSync(src, {encoding: 'utf8'})
+    }
+
+    function on_compile(err, stdout, stderr) {
+        if (err) {
+            throw new Error("Unable to compile: " + err)
+        }
+        fs.writeFileSync(buildDir + build.main,
+            banner_text + stdout.replace(/\r\n/g, '\n'))
+        done()
+    }
+
+    cc.compile(prefix + sources.map(read_src).join("\n"),
+        closure_options, on_compile)
 })
 
 
@@ -172,13 +187,13 @@ gulp.task("watch", ['runner'], function () {
     var server = plugins.livereload(livereload_port),
         watched = [].concat(sources, spec_scripts, setup_scripts,
             build_scripts, ['runner.html'])
-    // reload the browser when any of the watched files change
-    gulp.watch(watched).on('change', function (file) {
-        server.changed(file.path)
-    })
     // recompile runner.*.html as needed
     gulp.watch(['spec/helpers/runner.template.html']).on('change', function () {
         gulp.start('runner')
+    })
+    // reload the browser when any of the watched files change
+    return gulp.watch(watched).on('change', function (file) {
+        server.changed(file.path)
     })
 })
 
@@ -216,7 +231,7 @@ gulp.task("runner", function () {
         return plugins.replace(target, replacement)
     }
 
-    gulp.src("spec/helpers/runner.template.html")
+    return gulp.src("spec/helpers/runner.template.html")
         // create vanilla runner
         .pipe(plugins.rename("runner.html"))
         .pipe(replace("SETUP", setup_scripts))
@@ -236,5 +251,5 @@ gulp.task("runner", function () {
 
 gulp.task('default', ['clean'], function () {
     // TODO add 'lint' here
-    gulp.start('lint', 'build', 'build-debug', 'runner')
+    return gulp.start('lint', 'build', 'build-debug', 'runner')
 })
