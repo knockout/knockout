@@ -266,14 +266,17 @@ gulp.task("runner", function () {
 
 
 gulp.task('default', function () {
-    gutil.log("Specify a gulp task. Available gulp tasks:".red)
+    gutil.log('')
+    gutil.log("Specify a gulp task for Knockout, one of:".red)
+    gutil.log('')
 
     Object.keys(gulp.tasks).sort().forEach(function (task_name) {
         var tstr = "\t " + task_name.cyan,
             task = gulp.tasks[task_name]
         if (task.dep.length > 0) {
-            tstr += " (runs " + task.dep.join(", ") + ")"
+            tstr += " (runs: " + task.dep.join(", ") + ")"
         }
         gutil.log(tstr)
     })
+    gutil.log('')
 })
