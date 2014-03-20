@@ -10,7 +10,7 @@ Tasks
 -----
 
 $ gulp        (default task)
-: lint, build, build-debug, runner
+Print some help.
 
 $ gulp clean
 : remove dist/ and build/output/*.js
@@ -35,6 +35,9 @@ $ gulp release
 Tag and publish a version of the repository that includes dist/knockout.js
 and dist/knockout.debug.js
 
+$ gulp runner
+: Create the runner[.jquery|.modernizr].html files from runner.template.html
+
  */
 var
     /* Imports */
@@ -42,6 +45,7 @@ var
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     colors = require('colors'),
+    gutil = require('gulp-util'),
     closureCompiler = require('gulp-closure-compiler'),
 
     /* Variables */
@@ -234,7 +238,15 @@ gulp.task("runner", function () {
 })
 
 
-gulp.task('default', ['clean'], function () {
-    // TODO add 'lint' here
-    return gulp.start('lint', 'build', 'build-debug', 'runner')
+gulp.task('default', function () {
+    gutil.log("Specify a gulp task. Available gulp tasks:".red)
+
+    Object.keys(gulp.tasks).sort().forEach(function (task_name) {
+        var tstr = "\t " + task_name.cyan,
+            task = gulp.tasks[task_name]
+        if (task.dep.length > 0) {
+            tstr += " (runs " + task.dep.join(", ") + ")"
+        }
+        gutil.log(tstr)
+    })
 })
