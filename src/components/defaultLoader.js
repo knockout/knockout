@@ -30,6 +30,7 @@
 
     ko.components.unregister = function(componentName) {
         delete defaultConfigRegistry[componentName];
+        ko.components.clearCachedDefinition(componentName);
     }
 
     ko.components.defaultLoader = {

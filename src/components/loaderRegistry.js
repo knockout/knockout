@@ -1,31 +1,78 @@
 (function(undefined) {
+    var loadingSubscribablesCache = {}, // Tracks component loads that are currently in flight
+        loadedDefinitionsCache = {};    // Tracks component loads that have already completed
+
     ko.components = {
         get: function(componentName, callback) {
-            var completedAsync = false;
+            var cachedDefinition = getObjectOwnProperty(loadedDefinitionsCache, componentName);
+            if (cachedDefinition) {
+                // It's already loaded and cached. Reuse the same definition object.
+                // Note that for API consistency, even cache hits complete asynchronously.
+                setTimeout(function() { callback(cachedDefinition) }, 0);
+            } else {
+                // Join the loading process that is already underway, or start a new one.
+                ensureComponentIsLoading(componentName).subscribe(callback);
+            }
+        },
 
-            getFirstResultFromLoaders('getConfig', [componentName], function(config) {
-                if (config) {
-                    // We have a config, so now load its definition
-                    getFirstResultFromLoaders('loadComponent', [componentName, config], function(definition) {
-                        invokeAsyncIfNeeded(callback, [definition], !completedAsync);
-                    });
-                } else {
-                    // The component has no config - it's unknown to all the loaders
-                    invokeAsyncIfNeeded(callback, [null], !completedAsync);
-                }
-            });
-
-            completedAsync = true;
+        clearCachedDefinition: function(componentName) {
+            delete loadedDefinitionsCache[componentName];
         }
     };
 
-    function invokeAsyncIfNeeded(callback, args, needsAsync) {
-        var action = function() { callback.apply(null, args); };
-        if (needsAsync) {
-            setTimeout(action, 0);
-        } else {
-            action();
+    function getObjectOwnProperty(obj, propName) {
+        return obj.hasOwnProperty(propName) ? obj[propName] : undefined;
+    }
+
+    function ensureComponentIsLoading(componentName) {
+        var subscribable = getObjectOwnProperty(loadingSubscribablesCache, componentName);
+        if (!subscribable) {
+            // It's not started loading yet. Start loading, and when it's done, move it to loadedDefinitionsCache.
+            subscribable = loadingSubscribablesCache[componentName] = beginLoadingComponent(componentName);
+            subscribable.subscribe(function(definition) {
+                loadedDefinitionsCache[componentName] = definition;
+                delete loadingSubscribablesCache[componentName];
+            });
         }
+
+        return subscribable;
+    }
+
+    function beginLoadingComponent(componentName) {
+        var loadResultSubscribable = new ko.subscribable(),
+            completedAsync = false,
+            notifySubscribersAsync = function(definition) {
+                // For API consistency, all loads complete asynchronously. However we want to avoid
+                // adding an extra setTimeout if it's unnecessary (i.e., the completion is already
+                // async) since setTimeout(..., 0) still takes about 16ms or more on most browsers.
+                if (completedAsync) {
+                    loadResultSubscribable['notifySubscribers'](definition);
+                } else {
+                    setTimeout(function() {
+                        loadResultSubscribable['notifySubscribers'](definition);
+                    }, 0);
+                }
+            };
+
+        getFirstResultFromLoaders('getConfig', [componentName], function(config) {
+            if (config) {
+                // We have a config, so now load its definition
+                getFirstResultFromLoaders('loadComponent', [componentName, config], function(definition) {
+                    loadedDefinitionsCache[componentName] = definition;
+                    notifySubscribersAsync(definition);
+                });
+            } else {
+                // The component has no config - it's unknown to all the loaders.
+                // Note that this is not an error (e.g., a module loading error) - that would abort the
+                // process and this callback would not run. For this callback to run, all loaders must
+                // have confirmed they don't know about this component.
+                loadedDefinitionsCache[componentName] = null;
+                notifySubscribersAsync(null);
+            }
+        });
+        completedAsync = true;
+
+        return loadResultSubscribable;
     }
 
     function getFirstResultFromLoaders(methodName, argsExceptCallback, callback, candidateLoaders) {
@@ -81,4 +128,5 @@
 
     ko.exportSymbol('components', ko.components);
     ko.exportSymbol('components.get', ko.components.get);
+    ko.exportSymbol('components.clearCachedDefinition', ko.components.clearCachedDefinition);
 })();

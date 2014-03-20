@@ -70,6 +70,10 @@ describe('Components: Loader registry', function() {
             }
         };
 
+    afterEach(function() {
+        ko.components.unregister(testComponentName);
+    });
+
     it('Exposes the list of loaders as an array', function() {
         expect(ko.components.loaders instanceof Array).toBe(true);
     });
@@ -177,4 +181,114 @@ describe('Components: Loader registry', function() {
         expect(ko.components.loaders.length).toBe(1);
         expect(ko.components.loaders[0]).toBe(ko.components.defaultLoader);
     });
+
+    it('Caches and reuses loaded component definitions', function() {
+        // Ensure we leave clean state after the test
+        this.after(function() {
+            ko.components.unregister('some-component');
+            ko.components.unregister('other-component');
+        });
+
+        ko.components.register('some-component', {
+            viewModel: function() { this.isTheTestComponent = true; }
+        });
+        ko.components.register('other-component', {
+            viewModel: function() { this.isTheOtherComponent = true; }
+        });
+
+        // Fetch the component definition, and see it's the right thing
+        var definition1;
+        getComponentDefinition('some-component', function(definition) {
+            definition1 = definition;
+            expect(definition1.createViewModel().isTheTestComponent).toBe(true);
+        });
+
+        // Fetch it again, and see the definition was reused
+        getComponentDefinition('some-component', function(definition2) {
+            expect(definition2).toBe(definition1);
+        });
+
+        // See that requests for other component names don't reuse the same cache entry
+        getComponentDefinition('other-component', function(otherDefinition) {
+            expect(otherDefinition).not.toBe(definition1);
+            expect(otherDefinition.createViewModel().isTheOtherComponent).toBe(true);
+        });
+
+        // See we can choose to force a refresh by clearing a cache entry before fetching a definition.
+        // This facility probably won't be used by most applications, but it is helpful for tests.
+        runs(function() { ko.components.clearCachedDefinition('some-component'); });
+        getComponentDefinition('some-component', function(definition3) {
+            expect(definition3).not.toBe(definition1);
+            expect(definition3.createViewModel().isTheTestComponent).toBe(true);
+        });
+
+        // See that unregistering a component implicitly clears the cache entry too
+        runs(function() { ko.components.unregister('some-component'); });
+        getComponentDefinition('some-component', function(definition4) {
+            expect(definition4).toBe(null);
+        });
+    });
+
+    it('Only commences a single loading process, even if multiple requests arrive before loading has completed', function() {
+        // Set up a mock AMD environment that logs calls
+        var someModuleTemplate = [],
+            someComponentModule = { template: someModuleTemplate },
+            requireCallLog = [];
+        this.restoreAfter(window, 'require');
+        window.require = function(modules, callback) {
+            requireCallLog.push(modules.slice(0));
+            setTimeout(function() { callback(someComponentModule); }, 80);
+        };
+
+        ko.components.register(testComponentName, { require: 'path/testcomponent' });
+
+        // Begin loading the module; see it synchronously made a request to the module loader
+        var definition1 = undefined;
+        ko.components.get(testComponentName, function(loadedDefinition) {
+            definition1 = loadedDefinition;
+        });
+        expect(requireCallLog).toEqual([['path/testcomponent']]);
+
+        // Even a little while later, the module hasn't yet loaded
+        var definition2 = undefined;
+        waits(20);
+        runs(function() {
+            expect(definition1).toBe(undefined);
+
+            // ... but let's make a second request for the same module
+            ko.components.get(testComponentName, function(loadedDefinition) {
+                definition2 = loadedDefinition;
+            });
+
+            // This time there was no further request to the module loader
+            expect(requireCallLog.length).toBe(1);
+        });
+
+        // And when the loading eventually completes, both requests are satisifed with the same definition
+        waitsFor(function() { return definition1 }, 300);
+        runs(function() {
+            expect(definition1.template).toBe(someModuleTemplate);
+            expect(definition2).toBe(definition1);
+        });
+
+        // Subsequent requests also don't involve calls to the module loader
+        getComponentDefinition(testComponentName, function(definition3) {
+            expect(definition3).toBe(definition1);
+            expect(requireCallLog.length).toBe(1);
+        });
+    });
+
+    function getComponentDefinition(componentName, assertionCallback, usingMockClock) {
+        var loadedDefinition,
+            hasCompleted = false;
+        runs(function() {
+            ko.components.get(componentName, function(definition) {
+                loadedDefinition = definition;
+                hasCompleted = true;
+            });
+            expect(hasCompleted).toBe(false); // Should always complete asynchronously
+        });
+        waitsFor(function() { return hasCompleted; });
+        runs(function() { assertionCallback(loadedDefinition); });
+    }
 });
