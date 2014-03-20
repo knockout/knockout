@@ -145,7 +145,7 @@ gulp.task("lint", ['checkTrailingSpaces'], function () {
 
 
 gulp.task("test", ['build', 'runner'], function () {
-    global.ko = require("./" + buildDir + "knockout.min.js")
+    global.ko = require("./" + buildDir + build.main)
     return gulp.src(spec)
         .pipe(plugins.jasmine())
 })
