@@ -45,6 +45,7 @@ var
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     colors = require('colors'),
+    vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
     closureCompiler = require('gulp-closure-compiler'),
 
@@ -113,6 +114,14 @@ var
     // Test options
     spec = "spec/spec.node.js",
 
+    // Linting and trailing whitespace detection
+    trailingSpaceRegex = /[ ]$/,
+    trailingSpaceSources = [
+        'spec/*.{js,html,css,bat,ps1,sh}',
+        'src/*.{js,html,css,bat,ps1,sh}',
+        'build/fragments/*',
+    ],
+
     // make sure this matches the <script> in spec/runner.html
     livereload_port = 35728;
 
@@ -128,7 +137,7 @@ gulp.task("clean", function() {
 //
 //   Config with .jshintrc; see http://www.jshint.com/docs/options/
 //
-gulp.task("lint", function () {
+gulp.task("lint", ['checkTrailingSpaces'], function () {
     return gulp.src(sources)
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter('jshint-stylish'))
@@ -143,11 +152,29 @@ gulp.task("test", ['build', 'runner'], function () {
 
 
 gulp.task("checkTrailingSpaces", function () {
-    // TODO
-    //  "**/*.{js,html,css,bat,ps1,sh}",
-    // "!build/output/**",
-    // "!node_modules/**"
-    console.error("checkTrailingSpaces: Not yet implemented".red)
+    var matches = [];
+    function detect_trailing_spaces(code, filename) {
+        var lines = code.toString().split(/\r*\n/)
+        lines.forEach(function (line, index) {
+            if (trailingSpaceRegex.test(line)) {
+                matches.push([filename, (index+1), line].join(':'))
+            }
+        })
+        return code
+    }
+    function on_close() {
+        if (matches.length == 0) {
+            return
+        }
+        gutil.log("The following files have trailing spaces that " +
+            "need to be cleaned up:")
+        gutil.log(matches.join("\n").red)
+        throw new Error("Clean up files with trailing spaces (see above).")
+    }
+
+    gulp.src(trailingSpaceSources)
+        .pipe(vmap(detect_trailing_spaces))
+        .on("close", on_close)
 })
 
 

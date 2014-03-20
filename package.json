@@ -54,6 +54,7 @@
     "gulp-util": "^2.2.14",
     "jasmine-tapreporter": "^0.2.2",
     "gulp-replace": "^0.2.0",
-    "gulp-closure-compiler": "*"
+    "gulp-closure-compiler": "*",
+    "vinyl-map": "^1.0.1"
   }
 }
