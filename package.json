@@ -15,8 +15,8 @@
   },
   "bugs": "https://github.com/knockout/knockout/issues",
   "testling": {
-    "preprocess": "gulp",
-    "html": "spec/runner.html",
+    "preprocess": "gulp build runner",
+    "html": "runner.html",
     "browsers": [
       "ie/6..latest",
       "chrome/20..latest",
