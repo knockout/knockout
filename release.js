@@ -102,7 +102,7 @@ gulp.task('push-tags', ['reset'], function (done) {
 })
 
 
-module.exports = function release(version) {
+module.exports = function release(version, done) {
   // A.
   try {
     // may error if the directory exists
@@ -120,5 +120,6 @@ module.exports = function release(version) {
     fs.unlinkSync(debug_copy.dest)
     fs.unlinkSync(min_copy.dest)
     fs.rmdirSync(DEST)
+    done()
   })
 }

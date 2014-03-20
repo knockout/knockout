@@ -198,7 +198,7 @@ gulp.task("bump-major", bump('major'))
 
 gulp.task("release", ['build', 'build-debug'], function (done) {
     var version = "v" + pkg.version;
-    require('./release')(version);
+    require('./release')(version, done);
 })
 
 
