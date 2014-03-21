@@ -16,5 +16,8 @@ perf/*
 npm-debug.log
 node_modules
 
+# Knockout built files
 build/output/*
-
+runner.html
+runner.jquery.html
+runner.modernizr.html
