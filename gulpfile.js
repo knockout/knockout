@@ -1,42 +1,6 @@
 /*global module:false
 
-        Gulp task runner for
-        Knockout
-        ~~~~~~~~~~~~~~~~~~~~
-
-    $ gulp [task]
-
-Tasks
------
-
-$ gulp        (default task)
-Print some help.
-
-$ gulp clean
-: remove dist/ and build/output/*.js
-
-$ gulp watch
-: runner
-Starts a livereload server that causes runner[.jquery,.modernizr].html
-to reload whenever the source or spec scripts are updated.
-
-$ gulp build
-Creates build/output/knockout.min.js
-
-$ gulp build-debug
-Creates build/output/knockout.debug.js
-
-$ gulp (bump-patch | bump-minor | bump-major)
-Increments the version in ./*.json by the corresponding level. e.g.
-gulp bump-patch on 3.1.0 will increment to 3.1.1.
-
-$ gulp release
-: clean, build, build-debug
-Tag and publish a version of the repository that includes dist/knockout.js
-and dist/knockout.debug.js
-
-$ gulp runner
-: Create the runner[.jquery|.modernizr].html files from runner.template.html
+    Well orchestrated tasks for Knockout.
 
  */
 var
@@ -130,7 +94,7 @@ gulp.task("clean", function() {
     return gulp.src([buildDir + "*.js", destDir], {read: false})
         .pipe(plugins.clean())
 })
-gulp.tasks.clean.doc = "Remove build/output/*.js and dist/"
+gulp.tasks.clean.doc = "Remove build/output/*.js and dist/."
 
 
 //      lint
@@ -143,7 +107,7 @@ gulp.task("lint", ['checkTrailingSpaces'], function () {
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
-gulp.tasks.lint.doc = 'Check for fuzzies'
+gulp.tasks.lint.doc = 'Check for fuzzies.'
 
 
 gulp.task("test", ['build', 'runner'], function () {
@@ -179,7 +143,7 @@ gulp.task("checkTrailingSpaces", function () {
         .pipe(vmap(detect_trailing_spaces))
         .on("close", on_close)
 })
-gulp.tasks.test.doc = 'check for trailing whitespace'
+gulp.tasks.test.doc = 'Check for trailing whitespace.'
 
 
 gulp.task('build-debug', function () {
@@ -191,7 +155,7 @@ gulp.task('build-debug', function () {
         .pipe(plugins.replace("##VERSION##", pkg.version + "-debug"))
         .pipe(gulp.dest(buildDir))
 })
-gulp.tasks['build-debug'].doc = 'create build/output/knockout-latest.debug.js'
+gulp.tasks['build-debug'].doc = 'Create build/output/knockout-latest.debug.js'
 
 
 gulp.task("build", ['build-debug'], function () {
@@ -202,7 +166,7 @@ gulp.task("build", ['build-debug'], function () {
         .pipe(plugins.header(banner, {pkg: pkg}))
         .pipe(gulp.dest(buildDir))
 })
-gulp.tasks.build.doc = 'create build/output/knockout-latest.js'
+gulp.tasks.build.doc = 'Create build/output/knockout-latest.js'
 
 
 gulp.task("watch", ['runner'], function () {
@@ -218,7 +182,7 @@ gulp.task("watch", ['runner'], function () {
         server.changed(file.path)
     })
 })
-gulp.tasks.watch.doc = 'watch scripts and livereload runner.html if they change'
+gulp.tasks.watch.doc = 'Watch scripts; livereload runner.*.html on changes.'
 
 
 function bump(level) {
@@ -232,16 +196,16 @@ function bump(level) {
 gulp.task("bump-patch", bump('patch'))
 gulp.task("bump-minor", bump('minor'))
 gulp.task("bump-major", bump('major'))
-gulp.tasks['bump-patch'].doc = 'bump version from x.y.Z to x.y.Z+1'
-gulp.tasks['bump-minor'].doc = 'bump version from x.Y.z to x.Y+1.z'
-gulp.tasks['bump-major'].doc = 'bump version from X.y.z to X+1.y.z'
+gulp.tasks['bump-patch'].doc = 'Bump version from x.x.N to x.x.N+1'
+gulp.tasks['bump-minor'].doc = 'Bump version from x.N.x to x.N+1.x'
+gulp.tasks['bump-major'].doc = 'Bump version from N.x.x to N+1.x.x'
 
 
 gulp.task("release", ['build', 'build-debug'], function (done) {
     var version = "v" + pkg.version;
     require('./release')(version, done);
 })
-gulp.tasks.release.doc = 'create new release of Knockout; see release.js'
+gulp.tasks.release.doc = 'Create new release of Knockout; see release.js'
 
 
 gulp.task("runner", function () {
@@ -274,7 +238,7 @@ gulp.task("runner", function () {
         .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })
-gulp.tasks.runner.doc = 'create runner[.jquery|.modernizr].html'
+gulp.tasks.runner.doc = 'Create runner[.jquery|.modernizr].html'
 
 gulp.task('help', function () {
     gutil.log('')
@@ -294,7 +258,7 @@ gulp.task('help', function () {
     })
     gutil.log('')
 })
-gulp.tasks.help.doc = 'Print this message.'
+gulp.tasks.help.doc = 'Print this help message.'
 
 
 gulp.task('default', function () {
