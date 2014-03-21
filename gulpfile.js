@@ -12,8 +12,7 @@ var
     vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
 
-    // work around closure-compiler balking on testling
-    closureCompiler = try { require('gulp-closure-compiler') } catch (e) {},
+    closureCompiler = undefined,
 
     /* Variables */
     pkg = require('./package.json'),
@@ -92,6 +91,10 @@ var
     // make sure this matches the <script> in spec/runner.html
     livereload_port = 35728;
 
+try {
+    // work around closure-compiler balking on testling
+    closureCompiler = require('gulp-closure-compiler')
+} catch (e) {}
 
 gulp.task("clean", function() {
     return gulp.src([buildDir + "*.js", destDir, 'runner*.html'], {read: false})
