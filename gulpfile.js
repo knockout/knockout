@@ -92,10 +92,10 @@ var
 
 
 gulp.task("clean", function() {
-    return gulp.src([buildDir + "*.js", destDir], {read: false})
+    return gulp.src([buildDir + "*.js", destDir, 'runner*.html'], {read: false})
         .pipe(plugins.clean())
 })
-gulp.tasks.clean.doc = "Remove build/output/*.js and dist/."
+gulp.tasks.clean.doc = "Remove build/output/*.js and dist/. and runner*.html"
 
 
 //      lint
