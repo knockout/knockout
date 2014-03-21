@@ -14,6 +14,20 @@
     "url": "https://github.com/knockout/knockout.git"
   },
   "bugs": "https://github.com/knockout/knockout/issues",
+  "testling": {
+    "preprocess": "gulp build runner",
+    "html": "runner.html",
+    "browsers": [
+      "ie/6..latest",
+      "chrome/20..latest",
+      "firefox/3..latest",
+      "safari/5.0.5..latest",
+      "opera/11.0..latest",
+      "iphone/6..latest",
+      "ipad/6..latest",
+      "android-browser/4.2..latest"
+    ]
+  },
   "licenses": [
     {
       "type": "MIT",
