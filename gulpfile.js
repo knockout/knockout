@@ -11,7 +11,9 @@ var
     colors = require('colors'),
     vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
-    closureCompiler = require('gulp-closure-compiler'),
+
+    // work around closure-compiler balking on testling
+    closureCompiler = try { require('gulp-closure-compiler') } catch (e) {},
 
     /* Variables */
     pkg = require('./package.json'),
