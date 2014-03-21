@@ -130,6 +130,7 @@ gulp.task("clean", function() {
     return gulp.src([buildDir + "*.js", destDir], {read: false})
         .pipe(plugins.clean())
 })
+gulp.tasks.clean.doc = "Remove build/output/*.js and dist/"
 
 
 //      lint
@@ -142,6 +143,7 @@ gulp.task("lint", ['checkTrailingSpaces'], function () {
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
+gulp.tasks.lint.doc = 'Check for fuzzies'
 
 
 gulp.task("test", ['build', 'runner'], function () {
@@ -149,6 +151,7 @@ gulp.task("test", ['build', 'runner'], function () {
     return gulp.src(spec)
         .pipe(plugins.jasmine())
 })
+gulp.tasks.test.doc = 'run node tests (spec/spec.node.js)'
 
 
 gulp.task("checkTrailingSpaces", function () {
@@ -176,6 +179,7 @@ gulp.task("checkTrailingSpaces", function () {
         .pipe(vmap(detect_trailing_spaces))
         .on("close", on_close)
 })
+gulp.tasks.test.doc = 'check for trailing whitespace'
 
 
 gulp.task('build-debug', function () {
@@ -187,6 +191,7 @@ gulp.task('build-debug', function () {
         .pipe(plugins.replace("##VERSION##", pkg.version + "-debug"))
         .pipe(gulp.dest(buildDir))
 })
+gulp.tasks['build-debug'].doc = 'create build/output/knockout-latest.debug.js'
 
 
 gulp.task("build", ['build-debug'], function () {
@@ -197,6 +202,7 @@ gulp.task("build", ['build-debug'], function () {
         .pipe(plugins.header(banner, {pkg: pkg}))
         .pipe(gulp.dest(buildDir))
 })
+gulp.tasks.build.doc = 'create build/output/knockout-latest.js'
 
 
 gulp.task("watch", ['runner'], function () {
@@ -212,6 +218,7 @@ gulp.task("watch", ['runner'], function () {
         server.changed(file.path)
     })
 })
+gulp.tasks.watch.doc = 'watch scripts and livereload runner.html if they change'
 
 
 function bump(level) {
@@ -225,12 +232,16 @@ function bump(level) {
 gulp.task("bump-patch", bump('patch'))
 gulp.task("bump-minor", bump('minor'))
 gulp.task("bump-major", bump('major'))
+gulp.tasks['bump-patch'].doc = 'bump version from x.y.Z to x.y.Z+1'
+gulp.tasks['bump-minor'].doc = 'bump version from x.Y.z to x.Y+1.z'
+gulp.tasks['bump-major'].doc = 'bump version from X.y.z to X+1.y.z'
 
 
 gulp.task("release", ['build', 'build-debug'], function (done) {
     var version = "v" + pkg.version;
     require('./release')(version, done);
 })
+gulp.tasks.release.doc = 'create new release of Knockout; see release.js'
 
 
 gulp.task("runner", function () {
@@ -263,20 +274,32 @@ gulp.task("runner", function () {
         .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })
+gulp.tasks.runner.doc = 'create runner[.jquery|.modernizr].html'
 
-
-gulp.task('default', function () {
+gulp.task('help', function () {
     gutil.log('')
-    gutil.log("Specify a gulp task for Knockout, one of:".red)
+    gutil.log("Usage: gulp task".red)
     gutil.log('')
 
     Object.keys(gulp.tasks).sort().forEach(function (task_name) {
-        var tstr = "\t " + task_name.cyan,
-            task = gulp.tasks[task_name]
+        var tstr = "   " + task_name.cyan,
+            task = gulp.tasks[task_name];
         if (task.dep.length > 0) {
             tstr += " (runs: " + task.dep.join(", ") + ")"
         }
         gutil.log(tstr)
+        if (task.doc) {
+            gutil.log("      " + task.doc)
+        }
     })
+    gutil.log('')
+})
+gulp.tasks.help.doc = 'Print this message.'
+
+
+gulp.task('default', function () {
+    gutil.log('')
+    gutil.log("Usage: gulp task".red)
+    gutil.log('       Enter ' + 'gulp help'.cyan + ' for more info.')
     gutil.log('')
 })
