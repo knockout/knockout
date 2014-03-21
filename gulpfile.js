@@ -143,7 +143,7 @@ gulp.task("checkTrailingSpaces", function () {
         .pipe(vmap(detect_trailing_spaces))
         .on("close", on_close)
 })
-gulp.tasks.test.doc = 'Check for trailing whitespace.'
+gulp.tasks.checkTrailingSpaces.doc = 'Check for trailing whitespace.'
 
 
 gulp.task('build-debug', function () {
@@ -248,13 +248,15 @@ gulp.task('help', function () {
     Object.keys(gulp.tasks).sort().forEach(function (task_name) {
         var tstr = "   " + task_name.cyan,
             task = gulp.tasks[task_name];
+        if (!task.doc) {
+            // skip tasks with no doc string.
+            return;
+        }
         if (task.dep.length > 0) {
             tstr += " (runs: " + task.dep.join(", ") + ")"
         }
         gutil.log(tstr)
-        if (task.doc) {
-            gutil.log("      " + task.doc)
-        }
+        gutil.log("      " + task.doc)
     })
     gutil.log('')
 })
