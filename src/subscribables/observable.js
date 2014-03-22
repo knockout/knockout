@@ -1,6 +1,6 @@
 ko.observable = function (initialValue) {
-    var _priorValue;
     var _latestValue = initialValue;
+    var _priorValue = _latestValue;
 
     function observable() {
         if (arguments.length > 0) {
@@ -11,8 +11,13 @@ ko.observable = function (initialValue) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
+
+                if (ko.utils.valueIsPrimitive(_latestValue) && ko.utils.valueIsPrimitive(_priorValue)) {
+                    observable['notifySubscribers']({ 'value': _latestValue, 'priorValue': _priorValue }, "valueChange");
+                    _priorValue = _latestValue;
+                }
+
                 observable.valueHasMutated();
-                _priorValue = _latestValue;
             }
             return this; // Permits chained assignments
         }
@@ -27,8 +32,8 @@ ko.observable = function (initialValue) {
 
     if (DEBUG) observable._latestValue = _latestValue;
     observable.peek = function() { return _latestValue };
-    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue, null, _priorValue); }
-    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); };
+    observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); };
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
@@ -54,7 +59,7 @@ ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
     if (instance[protoProperty] === prototype) return true;
     return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain
-};
+}
 
 ko.isObservable = function (instance) {
     return ko.hasPrototype(instance, ko.observable);
