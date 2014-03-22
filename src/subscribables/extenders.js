@@ -9,15 +9,32 @@ ko.extenders = {
         // (2) For writable targets (observables, or writable dependent observables), we throttle *writes*
         //     so the target cannot change value synchronously or faster than a certain rate
         var writeTimeoutInstance = null;
-        return ko.dependentObservable({
+        var throttledValue = null;
+        var observable = ko.dependentObservable({
             'read': target,
             'write': function(value) {
                 clearTimeout(writeTimeoutInstance);
+                throttledValue = value;
                 writeTimeoutInstance = setTimeout(function() {
+                    writeTimeoutInstance = null;
                     target(value);
                 }, timeout);
             }
         });
+        // Add a flush method which performs an instant write to the target
+        observable.flush = function() {
+            if (writeTimeoutInstance !== null) {
+                clearTimeout(writeTimeoutInstance);
+                target(throttledValue);
+            }
+            // If the target has a flush method it is probably a
+            // dependentObservable which must perform the flush
+            // operation itself.
+            if ('flush' in target) {
+                target.flush();
+            }
+        }
+        return observable;
     },
 
     'rateLimit': function(target, options) {

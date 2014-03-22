@@ -34,6 +34,35 @@ describe("Throttled observables", function() {
             expect(notifiedValues[0]).toEqual("F");
         });
     });
+
+    it("Should notify subscribers immediately when calling the flush method", function() {
+        var observable = ko.observable('A').extend({ throttle: 100 });
+        var notifiedValues = [];
+        observable.subscribe(function(value) {
+            notifiedValues.push(value);
+        });
+
+        runs(function() {
+            // Mutate a few times
+            observable('B');
+            observable('C');
+            observable('D');
+            expect(notifiedValues.length).toEqual(0); // Should not notify synchronously
+        });
+
+        runs(function() {
+            observable.flush();
+            expect(notifiedValues.length).toEqual(1); // Should be notified instantly
+        });
+
+        // Wait until after timeout
+        waits(300);
+        runs(function() {
+            // A flushed observable should not be notified again
+            expect(notifiedValues.length).toEqual(1);
+            expect(notifiedValues[0]).toEqual("D");
+        });
+    });
 });
 
 describe("Throttled dependent observables", function() {
@@ -107,6 +136,42 @@ describe("Throttled dependent observables", function() {
         runs(function() {
             expect(evaluationCount).toEqual(2); // Finally, it's evaluated
             expect(asyncDepObs()).toEqual("D");
+        });
+    });
+
+    it("Should notify subscribers immediately when calling the flush method", function() {
+        var underlying = ko.observable();
+        var asyncDepObs = ko.dependentObservable(function() {
+            return underlying();
+        }).extend({ throttle: 100 });
+        var notifiedValues = [];
+        asyncDepObs.subscribe(function(value) {
+            notifiedValues.push(value);
+        });
+
+        // Check initial state
+        expect(asyncDepObs()).toBeUndefined();
+        runs(function() {
+            // Mutate
+            underlying('New value');
+            expect(asyncDepObs()).toBeUndefined(); // Should not update synchronously
+            expect(notifiedValues.length).toEqual(0);
+        });
+
+        // Still shouldn't have evaluated
+        runs(function() {
+            asyncDepObs.flush();
+            expect(asyncDepObs()).toEqual('New value');
+            expect(notifiedValues.length).toEqual(1);
+        });
+
+        // Now wait for throttle timeout
+        waits(300);
+        runs(function() {
+            // A flushed observable should not be notified again
+            expect(asyncDepObs()).toEqual('New value');
+            expect(notifiedValues.length).toEqual(1);
+            expect(notifiedValues[0]).toEqual('New value');
         });
     });
 });
