@@ -13,14 +13,23 @@ describe('Binding: CSS style', function() {
         expect(testNode.childNodes[0].style.backgroundColor).toEqual("");
     });
 
-
-    it('Should give the element the specified CSS style value', function () {
+    it('Should respect numeric 0 values', function () {
         var myObservable = new ko.observable(20);
         testNode.innerHTML = "<div data-bind='style: { opacity: opacityValue }'>Hallo</div>";
         ko.applyBindings({ opacityValue: myObservable }, testNode);
 
-        expect(+testNode.childNodes[0].style.opacity).toBe(20);
+        expect(testNode.childNodes[0].style.opacity).toBe("20");
         myObservable(0);
-        expect(+testNode.childNodes[0].style.opacity).toBe(0);
+        expect(testNode.childNodes[0].style.opacity).toBe("0");
+    });
+
+    it('Should infer numeric unit when not provided for appropriate styles', function () {
+        var myObservable = new ko.observable(200);
+        testNode.innerHTML = "<div data-bind='style: { width: widthValue }'>Hallo</div>";
+        ko.applyBindings({ widthValue: myObservable }, testNode);
+
+        expect(testNode.childNodes[0].style.width).toBe("200px");
+        myObservable(50);
+        expect(testNode.childNodes[0].style.width).toBe("50px");
     });
 });
