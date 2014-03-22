@@ -32,4 +32,24 @@ describe('Binding: CSS style', function() {
         myObservable(50);
         expect(testNode.childNodes[0].style.width).toBe("50px");
     });
+
+    it('Should convert css name to javascript name', function () {
+        var myObservable = new ko.observable("10pt");
+        testNode.innerHTML = "<div data-bind=\"style: { 'font-size': size }\">Hallo</div>";
+        ko.applyBindings({ size: myObservable }, testNode);
+
+        expect(testNode.childNodes[0].style.fontSize).toBe("10pt");
+        myObservable("12pt");
+        expect(testNode.childNodes[0].style.fontSize).toBe("12pt");
+    });
+
+    it('Should handle float correctly', function () {
+        var myObservable = new ko.observable("left");
+        testNode.innerHTML = "<div data-bind='style: { styleFloat: value }''>Hallo</div>";
+        ko.applyBindings({ value: myObservable }, testNode);
+
+        expect(testNode.childNodes[0].style.cssFloat).toBe("left");
+        myObservable("right");
+        expect(testNode.childNodes[0].style.cssFloat).toBe("right");
+    });
 });
