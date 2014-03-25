@@ -43,7 +43,8 @@ describe('Prototypes', function () {
 		expect(instance.computed()).toEqual(3);
 		expect(instance2.computed()).toEqual(4);
 	});
-	xit('Should create subscribable properties', function () {
+	it('Should throw a readable error if invalid proto is passed');
+	it('Should create subscribable properties', function () {
 		var proto = function () {};
 		ko.utils.protoObservable(proto, "property");
 		ko.utils.protoComputed(proto, "computed", function () {
@@ -52,5 +53,68 @@ describe('Prototypes', function () {
 		var instance = new proto();
 		expect(ko.isSubscribable(instance.property)).toEqual(true);
 		expect(ko.isSubscribable(instance.computed)).toEqual(true);
+	});
+	it("Should run create _ko_init on prototype", function () {
+		var proto = function () {};
+		ko.utils.protoObservable(proto, "property");
+		expect(typeof proto.prototype._ko_init).toEqual("function");
+	});
+	it("Should initialize all observables on _ko_init", function () {
+		var proto = function () {
+			this._ko_init();
+		};
+		ko.utils.protoObservable(proto, "property");
+		ko.utils.protoObservable(proto, "property2");
+		var instance = new proto();
+		expect(instance.property).toNotEqual(proto.prototype.property);
+		expect(instance.property2).toNotEqual(proto.prototype.property2);
+	});
+	it("Should create distinct subscriptions for observables", function () {
+		var proto = function () {
+			this._ko_init();
+		};
+		ko.utils.protoObservable(proto, "property");
+		ko.utils.protoObservable(proto, "property2");
+		var instance = new proto();
+		var valA, valB;
+		instance.property.subscribe(function (val) {
+			valA = val;
+		});
+		instance.property2.subscribe(function (val) {
+			valB = val;
+		});
+		instance.property("A");
+		instance.property2("B");
+		expect(valA).toEqual(instance.property());
+		expect(valB).toEqual(instance.property2());
+		expect(valA).toEqual("A");
+		expect(valB).toEqual("B");
+	});
+	it("Should create distinct subscriptions for computeds", function () {
+		var proto = function () {
+			this._ko_init();
+		};
+		ko.utils.protoObservable(proto, "property");
+		ko.utils.protoObservable(proto, "property2");
+		ko.utils.protoComputed(proto, "computed", function () {
+			return this.property();
+		});
+		ko.utils.protoComputed(proto, "computed2", function () {
+			return this.property2();
+		});
+		var instance = new proto();
+		var valA, valB;
+		instance.computed.subscribe(function (val) {
+			valA = val;
+		});
+		instance.computed2.subscribe(function (val) {
+			valB = val;
+		});
+		instance.property("A");
+		instance.property2("B");
+		expect(valA).toEqual(instance.property());
+		expect(valB).toEqual(instance.property2());
+		expect(valA).toEqual("A");
+		expect(valB).toEqual("B");
 	});
 });

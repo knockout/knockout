@@ -1,6 +1,18 @@
-ko.utils.protoObservable = function (proto, property) {
+ko.utils.protoObservable = function (ctor, property) {
+	var proto = ctor.prototype;
+	if (!proto._ko_init && !proto._ko_props) {
+		proto._ko_props = [];
+		proto._ko_init = function () {
+			for (var i = 0; i < proto._ko_props.length; i++) {
+				this[proto._ko_props[i]](); // initializes the property;
+			};
+		};
+	}
+	if (proto._ko_props instanceof Array) {
+		proto._ko_props.push(property);
+	}
 	var args = Array.prototype.slice.call(arguments, 2);
-	var factory = proto.prototype[property] = function () {
+	var factory = proto[property] = function () {
 		factory.lazyInit(this);
 		return this[property].apply(this, arguments);
 	};
@@ -17,9 +29,21 @@ ko.utils.protoObservable = function (proto, property) {
 	return factory;
 };
 
-ko.utils.protoComputed = function (proto, property) {
+ko.utils.protoComputed = function (ctor, property) {
+	var proto = ctor.prototype;
+	if (!proto._ko_init && !proto._ko_props) {
+		proto._ko_props = [];
+		proto._ko_init = function () {
+			for (var i = 0; i < proto._ko_props.length; i++) {
+				this[proto._ko_props[i]](); // initializes the property;
+			};
+		};
+	}
+	if (proto._ko_props instanceof Array) {
+		proto._ko_props.push(property);
+	}
 	var args = Array.prototype.slice.call(arguments, 2);
-	var factory = proto.prototype[property] = function () {
+	var factory = proto[property] = function () {
 		factory.lazyInit(this);
 		return this[property].apply(this, arguments);
 	};
@@ -29,7 +53,6 @@ ko.utils.protoComputed = function (proto, property) {
 	factory.subscribe = function () {
 		throw new Error("protoObservable & protoComputed don't support subscribe before the subscribable has been initialized. Try adding this._ko_init() to your constructor.");
 	}
-
 	factory.notifySubscribers = function () {
 		throw new Error("protoObservable & protoComputed don't support notifySubscribers before the subscribable has been initialized. Try adding this._ko_init() to your constructor.");
 	}
