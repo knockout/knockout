@@ -66,7 +66,7 @@ describe('Components: Default loader', function() {
         var templateProviderCallback,
             viewModelProviderCallback,
             createViewModelFunction = function() { },
-            domNodeArray = [],
+            docFrag = document.createDocumentFragment(),
             didResolveDefinition = false,
             config = {
                 template: { require: 'path/templateModule' },
@@ -91,7 +91,7 @@ describe('Components: Default loader', function() {
         // Start the loading process
         testConfigObject(config, function(definition) {
             didResolveDefinition = true;
-            expect(definition.template).toBe(domNodeArray);
+            expect(definition.template).toBe(docFrag);
             expect(definition.createViewModel).toBe(createViewModelFunction);
         });
 
@@ -104,7 +104,7 @@ describe('Components: Default loader', function() {
         expect(didResolveDefinition).toBe(false);
 
         // When the other one completes, the definition is supplied
-        templateProviderCallback(domNodeArray);
+        templateProviderCallback(docFrag);
         expect(didResolveDefinition).toBe(true);
     });
 
@@ -127,8 +127,8 @@ describe('Components: Default loader', function() {
 
         // Resolve it all
         testConfigObject({ require: 'componentmodule' }, function(definition) {
-            expect(definition.template.length).toBe(1);
-            expect(definition.template[0]).toContainText('Hello world');
+            expect(definition.template.childNodes.length).toBe(1);
+            expect(definition.template.childNodes[0]).toContainText('Hello world');
 
             var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 12.3 });
             expect(viewModel.receivedValue).toBe(12.3);
@@ -136,23 +136,24 @@ describe('Components: Default loader', function() {
     });
 
     describe('Configuration formats', function() {
-        describe('Templates are normalised to arrays of DOM nodes', function() {
+        describe('Templates are normalised to document fragments', function() {
 
-            it('Can be configured as a DOM node array', function() {
-                var domNodeArray = [ document.createElement('div'), document.createElement('p') ];
-                testConfigObject({ template: domNodeArray }, function(definition) {
-                    expect(definition.template).toBe(domNodeArray);
+            it('Can be configured as a document fragment', function() {
+                var docFrag = document.createDocumentFragment();
+                testConfigObject({ template: docFrag }, function(definition) {
+                    expect(definition.template).toBe(docFrag);
                 });
             });
 
             it('Can be configured as a string of markup', function() {
                 testConfigObject({ template: '<p>Some text</p><div>More stuff</div>' }, function(definition) {
-                    // Converts to standard array-of-DOM-nodes format
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('P');
-                    expect(definition.template[0]).toContainText('Some text');
-                    expect(definition.template[1].tagName).toBe('DIV');
-                    expect(definition.template[1]).toContainText('More stuff');
+                    // Converts to standard document fragment format
+                    expect(definition.template.nodeType).toBe(11);
+                    expect(definition.template.childNodes.length).toBe(2);
+                    expect(definition.template.childNodes[0].tagName).toBe('P');
+                    expect(definition.template.childNodes[0]).toContainText('Some text');
+                    expect(definition.template.childNodes[1].tagName).toBe('DIV');
+                    expect(definition.template.childNodes[1]).toContainText('More stuff');
                 });
             });
 
@@ -163,13 +164,17 @@ describe('Components: Default loader', function() {
                 document.body.appendChild(testElem);
 
                 testConfigObject({ template: { element: 'some-template-element' } }, function(definition) {
-                    // Converts to standard array-of-DOM-nodes format
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('P');
-                    expect(definition.template[0]).toContainText('Some text');
-                    expect(definition.template[1].tagName).toBe('DIV');
-                    expect(definition.template[1]).toContainText('More stuff');
+                    // Converts to standard document fragment format
+                    expect(definition.template.nodeType).toBe(11);
+                    expect(definition.template.childNodes.length).toBe(2);
+                    expect(definition.template.childNodes[0].tagName).toBe('P');
+                    expect(definition.template.childNodes[0]).toContainText('Some text');
+                    expect(definition.template.childNodes[1].tagName).toBe('DIV');
+                    expect(definition.template.childNodes[1]).toContainText('More stuff');
                     testElem.parentNode.removeChild(testElem);
+
+                    // Doesn't destroy the input element
+                    expect(testElem.childNodes.length).toBe(2);
                 });
             });
 
@@ -178,34 +183,39 @@ describe('Components: Default loader', function() {
                 testElem.innerHTML = '<p>Some text</p><div>More stuff</div>';
 
                 testConfigObject({ template: { element: testElem } }, function(definition) {
-                    // Converts to standard array-of-DOM-nodes format
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('P');
-                    expect(definition.template[0]).toContainText('Some text');
-                    expect(definition.template[1].tagName).toBe('DIV');
-                    expect(definition.template[1]).toContainText('More stuff');
+                    // Converts to standard document fragment format
+                    expect(definition.template.nodeType).toBe(11);
+                    expect(definition.template.childNodes.length).toBe(2);
+                    expect(definition.template.childNodes[0].tagName).toBe('P');
+                    expect(definition.template.childNodes[0]).toContainText('Some text');
+                    expect(definition.template.childNodes[1].tagName).toBe('DIV');
+                    expect(definition.template.childNodes[1]).toContainText('More stuff');
+
+                    // Doesn't destroy the input element
+                    expect(testElem.childNodes.length).toBe(2);
                 });
             });
 
-            it('Can be configured as an AMD module whose value is a DOM node array', function() {
-                var domNodeArray = [ document.createElement('div'), document.createElement('p') ];
-                mockAmdEnvironment(this, { 'some/module/path': domNodeArray });
+            it('Can be configured as an AMD module whose value is a document fragment', function() {
+                var docFrag = document.createDocumentFragment();
+                mockAmdEnvironment(this, { 'some/module/path': docFrag });
 
                 testConfigObject({ template: { require: 'some/module/path' } }, function(definition) {
-                    expect(definition.template).toBe(domNodeArray);
+                    expect(definition.template).toBe(docFrag);
                 });
             });
 
             it('Can be configured as an AMD module whose value is markup', function() {
-                var domNodeArray = [ document.createElement('div'), document.createElement('p') ];
                 mockAmdEnvironment(this, { 'some/module/path': '<div>Hello world</div><p>The end</p>' });
 
                 testConfigObject({ template: { require: 'some/module/path' } }, function(definition) {
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('DIV');
-                    expect(definition.template[0]).toContainText('Hello world');
-                    expect(definition.template[1].tagName).toBe('P');
-                    expect(definition.template[1]).toContainText('The end');
+                    // Converts to standard document fragment format
+                    expect(definition.template.nodeType).toBe(11);
+                    expect(definition.template.childNodes.length).toBe(2);
+                    expect(definition.template.childNodes[0].tagName).toBe('DIV');
+                    expect(definition.template.childNodes[0]).toContainText('Hello world');
+                    expect(definition.template.childNodes[1].tagName).toBe('P');
+                    expect(definition.template.childNodes[1]).toContainText('The end');
                 });
             });
 
@@ -275,7 +285,7 @@ describe('Components: Default loader', function() {
             it('Can be configured as an AMD module', function() {
                 var moduleObject = {
                         // The module can have any values that are valid as the input to the whole resolution process
-                        template: [],
+                        template: document.createDocumentFragment(),
                         viewModel: function(params) { this.receivedValue = params.suppliedValue; }
                     };
                 mockAmdEnvironment(this, { 'some/module/path': moduleObject });

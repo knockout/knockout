@@ -231,7 +231,7 @@ describe('Components: Loader registry', function() {
 
     it('Only commences a single loading process, even if multiple requests arrive before loading has completed', function() {
         // Set up a mock AMD environment that logs calls
-        var someModuleTemplate = [],
+        var someModuleTemplate = document.createDocumentFragment(),
             someComponentModule = { template: someModuleTemplate },
             requireCallLog = [];
         this.restoreAfter(window, 'require');

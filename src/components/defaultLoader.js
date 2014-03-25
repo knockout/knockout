@@ -58,7 +58,7 @@
 
     // Takes a config object of the form { template: ..., viewModel: ... }, and asynchronously convert it
     // into the standard component definition format:
-    //    { template: <ArrayOfDomNodes>, createViewModel: function(componentInfo, params) { ... } }.
+    //    { template: documentFragment, createViewModel: function(componentInfo, params) { ... } }.
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
@@ -106,20 +106,21 @@
     function resolveTemplate(errorMessagePrefix, templateConfig, callback) {
         if (typeof templateConfig === 'string') {
             // Markup - parse it
-            callback(ko.utils.parseHtmlFragment(templateConfig));
-        } else if (templateConfig instanceof Array) {
-            // Assume already an array of DOM nodes - pass through unchanged
+            var nodeArray = ko.utils.parseHtmlFragment(templateConfig);
+            callback(elementListToDocumentFragment(nodeArray, false /* shouldClone */));
+        } else if (isDocumentFragment(templateConfig)) {
+            // Pass through document fragments unchanged
             callback(templateConfig);
         } else if (templateConfig['element']) {
             var element = templateConfig['element'];
             if (isDomElement(element)) {
                 // Element instance - use its child nodes
-                callback(ko.utils.makeArray(element.childNodes));
+                callback(elementListToDocumentFragment(element.childNodes, true /* shouldClone */));
             } else if (typeof element === 'string') {
                 // Element ID - find it, then use its child nodes
                 var elemInstance = document.getElementById(element);
                 if (elemInstance) {
-                    callback(ko.utils.makeArray(elemInstance.childNodes));
+                    callback(elementListToDocumentFragment(elemInstance.childNodes, true /* shouldClone */));
                 } else {
                     err(errorMessagePrefix + 'Cannot find element with ID ' + templateConfig);
                 }
@@ -129,8 +130,8 @@
         } else if (typeof templateConfig['require'] === 'string') {
             // AMD module
             requireAmdModule(errorMessagePrefix, templateConfig['require'], function(module) {
-                // Continue resolution using the module value, which might be a DOM node array,
-                // a markup string, a callback function, or even a DOM element instance
+                // Continue resolution using the module value, which might be a document fragment,
+                // a markup string, or even a DOM element instance
                 resolveTemplate(errorMessagePrefix, module, callback);
             });
         } else {
@@ -179,6 +180,23 @@
         } else {
             return obj && obj.tagName && obj.nodeType === 1;
         }
+    }
+
+    function isDocumentFragment(obj) {
+        if (window.DocumentFragment) {
+            return obj instanceof DocumentFragment;
+        } else {
+            return obj && obj.nodeType === 11;
+        }
+    }
+
+    function elementListToDocumentFragment(elementList, shouldClone) {
+        // elementList can be a real array, or the .childNodes property of a DOM element
+        var docFrag = document.createDocumentFragment();
+        for (var i = 0, j = elementList.length; i < j; i++) {
+            docFrag.appendChild(shouldClone ? elementList[i].cloneNode(true) : elementList[i]);
+        }
+        return docFrag;
     }
 
     function requireAmdModule(errorMessagePrefix, amdModuleName, callback) {
