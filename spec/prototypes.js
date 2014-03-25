@@ -117,4 +117,24 @@ describe('Prototypes', function () {
 		expect(valA).toEqual("A");
 		expect(valB).toEqual("B");
 	});
+	it("Should work in data-bindings", function () {
+		var node = document.createElement('DIV');
+		node.setAttribute('data-bind', 'text: $data.property');
+		var proto = function () {};
+		ko.utils.protoObservable(proto, "property");
+		var instance = new proto();
+		ko.applyBindings(instance, node);
+		instance.property("A");
+		expect(node.innerHTML.toEqual("A");
+	});
+	it("Should work in data-bindings without explicit object reference", function () {
+		var node = document.createElement('DIV');
+		node.setAttribute('data-bind', 'text: property');
+		var proto = function () {};
+		ko.utils.protoObservable(proto, "property");
+		var instance = new proto();
+		ko.applyBindings(instance, node);
+		instance.property("A");
+		expect(node.innerHTML.toEqual("A");
+	});
 });
