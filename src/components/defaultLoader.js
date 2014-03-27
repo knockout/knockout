@@ -42,17 +42,13 @@
         },
 
         'loadComponent': function(componentName, config, callback) {
-            var errorMessagePrefix = 'Component \'' + componentName + '\': ';
-
-            if (typeof config['require'] === 'string') {
-                // The config is the value of an AMD module
-                requireAmdModule(errorMessagePrefix, config['require'], function(module) {
-                    resolveConfig(errorMessagePrefix, componentName, module, callback);
-                });
-            } else {
-                // The config is a { template: ..., viewModel: ... } object
-                resolveConfig(errorMessagePrefix, componentName, config, callback);
+            function errorCallback(message) {
+                throw new Error('Component \'' + componentName + '\': ' + message);
             }
+
+            possiblyGetConfigFromAmd(errorCallback, config, function(loadedConfig) {
+                resolveConfig(errorCallback, componentName, loadedConfig, callback);
+            });
         }
     };
 
@@ -62,48 +58,41 @@
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
-    function resolveConfig(errorMessagePrefix, componentName, config, callback) {
+    function resolveConfig(errorCallback, componentName, config, callback) {
         var result = {},
-            hasResolvedTemplate = false,
-            hasResolvedViewModel = false,
-            hasIssuedCallback = false,
+            makeCallBackWhenZero = 2,
             tryIssueCallback = function() {
-                if (hasResolvedTemplate && hasResolvedViewModel && !hasIssuedCallback) {
-                    hasIssuedCallback = true;
+                if (--makeCallBackWhenZero === 0) {
                     callback(result);
                 }
-            };
+            },
+            templateConfig = config['template'],
+            viewModelConfig = config['viewModel'];
 
-        if (config['template']) {
-            resolveTemplate(errorMessagePrefix, config['template'], function(resolvedTemplate) {
-                result['template'] = resolvedTemplate;
-                hasResolvedTemplate = true;
-                tryIssueCallback();
+        if (templateConfig) {
+            possiblyGetConfigFromAmd(errorCallback, templateConfig, function(loadedConfig) {
+                resolveTemplate(errorCallback, loadedConfig, function(resolvedTemplate) {
+                    result['template'] = resolvedTemplate;
+                    tryIssueCallback();
+                });
             });
         } else {
-            hasResolvedTemplate = true;
+            tryIssueCallback();
         }
 
-        if (config['viewModel']) {
-            resolveViewModel(errorMessagePrefix, config['viewModel'], function(resolvedViewModel) {
-                result['createViewModel'] = resolvedViewModel;
-                hasResolvedViewModel = true;
-                tryIssueCallback();
+        if (viewModelConfig) {
+            possiblyGetConfigFromAmd(errorCallback, viewModelConfig, function(loadedConfig) {
+                resolveViewModel(errorCallback, loadedConfig, function(resolvedViewModel) {
+                    result['createViewModel'] = resolvedViewModel;
+                    tryIssueCallback();
+                });
             });
         } else {
-            hasResolvedViewModel = true;
+            tryIssueCallback();
         }
-
-        // Handle the case where neither template nor viewmodel is defined, or
-        // where one of them is not defined and the other completes synchronously.
-        tryIssueCallback();
     }
 
-    function err(message) {
-        throw new Error(message);
-    }
-
-    function resolveTemplate(errorMessagePrefix, templateConfig, callback) {
+    function resolveTemplate(errorCallback, templateConfig, callback) {
         if (typeof templateConfig === 'string') {
             // Markup - parse it
             var nodeArray = ko.utils.parseHtmlFragment(templateConfig);
@@ -122,26 +111,19 @@
                 if (elemInstance) {
                     callback(elementListToDocumentFragment(elemInstance.childNodes, true /* shouldClone */));
                 } else {
-                    err(errorMessagePrefix + 'Cannot find element with ID ' + templateConfig);
+                    errorCallback('Cannot find element with ID ' + element);
                 }
             } else {
-                err(errorMessagePrefix + 'Unknown element type: ' + element);
+                errorCallback('Unknown element type: ' + element);
             }
-        } else if (typeof templateConfig['require'] === 'string') {
-            // AMD module
-            requireAmdModule(errorMessagePrefix, templateConfig['require'], function(module) {
-                // Continue resolution using the module value, which might be a document fragment,
-                // a markup string, or even a DOM element instance
-                resolveTemplate(errorMessagePrefix, module, callback);
-            });
         } else {
-            err(errorMessagePrefix + 'Unknown template value: ' + templateConfig);
+            errorCallback('Unknown template value: ' + templateConfig);
         }
     }
 
     var createViewModelKey = 'createViewModel';
 
-    function resolveViewModel(errorMessagePrefix, viewModelConfig, callback) {
+    function resolveViewModel(errorCallback, viewModelConfig, callback) {
         if (typeof viewModelConfig === 'function') {
             // Constructor - convert to standard factory function format
             // By design, this does *not* supply componentInfo to the constructor, as the intent is that
@@ -159,18 +141,11 @@
             callback(function (componentInfo, params) {
                 return fixedInstance;
             });
-        } else if (typeof viewModelConfig['require'] === 'string') {
-            // AMD module
-            requireAmdModule(errorMessagePrefix, viewModelConfig['require'], function(module) {
-                // Continue resolution using the module value, which might be of any
-                // of the allowed configuration formats for viewmodels
-                resolveViewModel(errorMessagePrefix, module, callback);
-            });
         } else if ('viewModel' in viewModelConfig) {
             // Resolved AMD module whose value is of the form { viewModel: ... }
-            resolveViewModel(errorMessagePrefix, viewModelConfig['viewModel'], callback);
+            resolveViewModel(errorCallback, viewModelConfig['viewModel'], callback);
         } else {
-            err(errorMessagePrefix + 'Unknown viewModel value: ' + viewModelConfig);
+            errorCallback('Unknown viewModel value: ' + viewModelConfig);
         }
     }
 
@@ -199,11 +174,16 @@
         return docFrag;
     }
 
-    function requireAmdModule(errorMessagePrefix, amdModuleName, callback) {
-        if (window['require']) {
-            require([amdModuleName], callback);
+    function possiblyGetConfigFromAmd(errorCallback, config, callback) {
+        if (typeof config['require'] === 'string') {
+            // The config is the value of an AMD module
+            if (window['require']) {
+                require([config['require']], callback);
+            } else {
+                errorCallback('Uses require, but no AMD loader is present');
+            }
         } else {
-            err(errorMessagePrefix + 'Uses require, but no AMD loader is present');
+            callback(config);
         }
     }
 
