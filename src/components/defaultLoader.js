@@ -47,7 +47,7 @@
             }
 
             possiblyGetConfigFromAmd(errorCallback, config, function(loadedConfig) {
-                resolveConfig(errorCallback, componentName, loadedConfig, callback);
+                resolveConfig(errorCallback, loadedConfig, callback);
             });
         }
     };
@@ -58,7 +58,7 @@
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
-    function resolveConfig(errorCallback, componentName, config, callback) {
+    function resolveConfig(errorCallback, config, callback) {
         var result = {},
             makeCallBackWhenZero = 2,
             tryIssueCallback = function() {
@@ -177,8 +177,8 @@
     function possiblyGetConfigFromAmd(errorCallback, config, callback) {
         if (typeof config['require'] === 'string') {
             // The config is the value of an AMD module
-            if (window['require']) {
-                require([config['require']], callback);
+            if (require || window['require']) {
+                (require || window['require'])([config['require']], callback);
             } else {
                 errorCallback('Uses require, but no AMD loader is present');
             }
