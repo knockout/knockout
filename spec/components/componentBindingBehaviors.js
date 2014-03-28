@@ -17,7 +17,6 @@ describe('Components: Component binding', function() {
     afterEach(function() {
         jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
-        ko.components.clearCachedDefinition(testComponentName);
     });
 
     it('Controls descendant bindings', function() {
@@ -165,8 +164,6 @@ describe('Components: Component binding', function() {
         this.after(function() {
             ko.components.unregister('component-alpha');
             ko.components.unregister('component-beta');
-            ko.components.clearCachedDefinition('component-alpha');
-            ko.components.clearCachedDefinition('component-beta');
         });
 
         function alphaViewModel(params) { this.alphaValue = params.suppliedValue; }
@@ -238,8 +235,6 @@ describe('Components: Component binding', function() {
         this.after(function() {
             ko.components.unregister('component-alpha');
             ko.components.unregister('component-beta');
-            ko.components.clearCachedDefinition('component-alpha');
-            ko.components.clearCachedDefinition('component-beta');
         });
 
         function alphaViewModel(params) { this.alphaValue = params.suppliedValue; }
@@ -441,7 +436,6 @@ describe('Components: Component binding', function() {
         this.after(function() {
             for (var i = 0; i < 4; i++) {
                 ko.components.unregister('component-' + i);
-                ko.components.clearCachedDefinition('component-' + i);
             }
         });
 

@@ -52,9 +52,11 @@
         }
     };
 
+    var createViewModelKey = 'createViewModel';
+
     // Takes a config object of the form { template: ..., viewModel: ... }, and asynchronously convert it
     // into the standard component definition format:
-    //    { template: documentFragment, createViewModel: function(componentInfo, params) { ... } }.
+    //    { template: <ArrayOfDomNodes>, createViewModel: function(componentInfo, params) { ... } }.
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
@@ -83,7 +85,7 @@
         if (viewModelConfig) {
             possiblyGetConfigFromAmd(errorCallback, viewModelConfig, function(loadedConfig) {
                 resolveViewModel(errorCallback, loadedConfig, function(resolvedViewModel) {
-                    result['createViewModel'] = resolvedViewModel;
+                    result[createViewModelKey] = resolvedViewModel;
                     tryIssueCallback();
                 });
             });
@@ -95,21 +97,23 @@
     function resolveTemplate(errorCallback, templateConfig, callback) {
         if (typeof templateConfig === 'string') {
             // Markup - parse it
-            var nodeArray = ko.utils.parseHtmlFragment(templateConfig);
-            callback(elementListToDocumentFragment(nodeArray, false /* shouldClone */));
-        } else if (isDocumentFragment(templateConfig)) {
-            // Pass through document fragments unchanged
+            callback(ko.utils.parseHtmlFragment(templateConfig));
+        } else if (templateConfig instanceof Array) {
+            // Assume already an array of DOM nodes - pass through unchanged
             callback(templateConfig);
+        } else if (isDocumentFragment(templateConfig)) {
+            // Document fragment - use its child nodes
+            callback(ko.utils.makeArray(templateConfig.childNodes));
         } else if (templateConfig['element']) {
             var element = templateConfig['element'];
             if (isDomElement(element)) {
-                // Element instance - use its child nodes
-                callback(elementListToDocumentFragment(element.childNodes, true /* shouldClone */));
+                // Element instance - copy its child nodes
+                callback(ko.utils.cloneNodes(element.childNodes));
             } else if (typeof element === 'string') {
-                // Element ID - find it, then use its child nodes
+                // Element ID - find it, then copy its child nodes
                 var elemInstance = document.getElementById(element);
                 if (elemInstance) {
-                    callback(elementListToDocumentFragment(elemInstance.childNodes, true /* shouldClone */));
+                    callback(ko.utils.cloneNodes(elemInstance.childNodes));
                 } else {
                     errorCallback('Cannot find element with ID ' + element);
                 }
@@ -120,8 +124,6 @@
             errorCallback('Unknown template value: ' + templateConfig);
         }
     }
-
-    var createViewModelKey = 'createViewModel';
 
     function resolveViewModel(errorCallback, viewModelConfig, callback) {
         if (typeof viewModelConfig === 'function') {
@@ -150,7 +152,7 @@
     }
 
     function isDomElement(obj) {
-        if (window.HTMLElement) {
+        if (window['HTMLElement']) {
             return obj instanceof HTMLElement;
         } else {
             return obj && obj.tagName && obj.nodeType === 1;
@@ -158,20 +160,11 @@
     }
 
     function isDocumentFragment(obj) {
-        if (window.DocumentFragment) {
+        if (window['DocumentFragment']) {
             return obj instanceof DocumentFragment;
         } else {
             return obj && obj.nodeType === 11;
         }
-    }
-
-    function elementListToDocumentFragment(elementList, shouldClone) {
-        // elementList can be a real array, or the .childNodes property of a DOM element
-        var docFrag = document.createDocumentFragment();
-        for (var i = 0, j = elementList.length; i < j; i++) {
-            docFrag.appendChild(shouldClone ? elementList[i].cloneNode(true) : elementList[i]);
-        }
-        return docFrag;
     }
 
     function possiblyGetConfigFromAmd(errorCallback, config, callback) {

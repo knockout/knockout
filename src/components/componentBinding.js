@@ -67,7 +67,7 @@
             throw new Error('Component \'' + componentName + '\' has no template');
         }
 
-        var clonedNodesArray = ko.utils.makeArray(template.cloneNode(true).childNodes);
+        var clonedNodesArray = ko.utils.cloneNodes(template);
         ko.virtualElements.setDomNodeChildren(element, clonedNodesArray);
     }
 
