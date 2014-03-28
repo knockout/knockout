@@ -3,12 +3,13 @@
     Well orchestrated tasks for Knockout.
 
  */
+require('colors')
+
 var
     /* Imports */
     fs = require('fs'),
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
-    colors = require('colors'),
     vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
     yaml = require("js-yaml"),

@@ -104,7 +104,7 @@ sources:
   - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
 
 # Test files
-node_spec: spec/spec.node.js
+node_spec: spec/helpers/spec.node.js
 
 spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
