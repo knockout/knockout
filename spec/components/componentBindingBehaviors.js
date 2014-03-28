@@ -74,17 +74,24 @@ describe('Components: Component binding', function() {
     });
 
     it('Passes componentInfo (with prepopulated element) and params to the component\'s viewmodel factory', function() {
-        ko.components.register(testComponentName, {
+        var componentConfig = {
             template: '<div data-bind="text: 123">I have been prepopulated and not bound yet</div>',
             viewModel: {
                 createViewModel: function(componentInfo, params) {
                     expect(componentInfo.element).toContainText('I have been prepopulated and not bound yet');
                     expect(params).toBe(testComponentParams);
+
+                    //verify that createViewModel is the same function and was called with the component definition as the context
+                    expect(this.createViewModel).toBe(componentConfig.viewModel.createViewModel);
+                    expect(this.template).toBeDefined();
+
                     componentInfo.element.childNodes[0].setAttribute('data-bind', 'text: someValue');
                     return { someValue: 'From the viewmodel' };
                 }
             }
-        });
+        };
+
+        ko.components.register(testComponentName, componentConfig);
         ko.applyBindings(outerViewModel, testNode);
         jasmine.Clock.tick(1);
 
