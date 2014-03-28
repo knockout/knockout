@@ -5,8 +5,8 @@
 require('./helpers/beforeEach');
 
 
-// Tests run by Node. These are also in specs.json i.e. tests run in
-// the browser.
+// Tests run by Node. These are also in spec_files in knockout.config.yaml
+//  i.e. tests run in the browser.
 require('./arrayEditDetectionBehaviors');
 require('./asyncBehaviors');
 require('./dependentObservableBehaviors');

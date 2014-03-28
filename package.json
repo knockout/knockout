@@ -56,6 +56,7 @@
     "gulp-replace": "^0.2.0",
     "gulp-closure-compiler": "*",
     "vinyl-map": "^1.0.1",
-    "gulp-exec": "^1.0.4"
+    "gulp-exec": "^1.0.4",
+    "js-yaml": "^3.0.2"
   }
 }
