@@ -37,20 +37,24 @@ var
         scriptsDir + 'extern-post.js'
     ]),
 
-    CDN_ROOT = "http://cdnjs.cloudflare.com/ajax/libs/",
-    JASMINE_CDN = CDN_ROOT + "jasmine/1.3.1/jasmine.js",
-    JASMINE_HTML_CDN = CDN_ROOT + "jasmine/1.3.1/jasmine-html.js",
+    LIB_ROOT = "spec/helpers/lib/",
+    // In due course, when upgrading to Jasmine 2.0, the spec/helper/
+    // files could be replaced with node_modules/jasmine-core/lib/jasmine-core
+    JASMINE_JS = LIB_ROOT + "jasmine.js",
+    JASMINE_HTML_JS = LIB_ROOT + "jasmine-html.js",
     // jQuery & Modernizr are optional; see runner task
-    JQUERY_CDN = CDN_ROOT + "jquery/1.11.0/jquery.min.js",
-    MODERNIZR_CDN = CDN_ROOT + "modernizr/2.7.1/modernizr.min.js",
+    JQUERY_CDN = "node_modules/jquery/dist/jquery.js",
+    // When Modernizr finally makes it into npm it could perhaps be installed
+    // that way. It is also notably in grunt-modernizr.
+    MODERNIZR_CDN = LIB_ROOT + "modernizr.js",
 
     // scripts that are loaded by the browser during testing;
     // in runner.template.html the respective comments are replace by
     // the respective <script> tags
     setup_scripts = [
             "http://localhost:35728/livereload.js",
-            JASMINE_CDN,
-            JASMINE_HTML_CDN,
+            JASMINE_JS,
+            JASMINE_HTML_JS,
             "node_modules/jasmine-tapreporter/src/tapreporter.js",
             "spec/helpers/beforeEach.js",
             "spec/helpers/jasmine.browser.js",
@@ -170,10 +174,11 @@ gulp.task("build", ['build-debug'], function () {
 
 gulp.task("watch", ['runner'], function () {
     var server = plugins.livereload(livereload_port),
+        runner_deps = ['spec/helpers/runner.template.html', 'gulpfile.js'],
         watched = [].concat(sources, spec_scripts, setup_scripts,
             build_scripts, ['runner.html'])
     // recompile runner.*.html as needed
-    gulp.watch(['spec/helpers/runner.template.html']).on('change', function () {
+    gulp.watch(runner_deps).on('change', function () {
         gulp.start('runner')
     })
     // reload the browser when any of the watched files change
