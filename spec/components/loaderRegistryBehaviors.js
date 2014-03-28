@@ -264,7 +264,7 @@ describe('Components: Loader registry', function() {
             expect(requireCallLog.length).toBe(1);
         });
 
-        // And when the loading eventually completes, both requests are satisifed with the same definition
+        // And when the loading eventually completes, both requests are satisfied with the same definition
         waitsFor(function() { return definition1 }, 300);
         runs(function() {
             expect(definition1.template).toBe(someModuleTemplate);
@@ -278,7 +278,7 @@ describe('Components: Loader registry', function() {
         });
     });
 
-    function getComponentDefinition(componentName, assertionCallback, usingMockClock) {
+    function getComponentDefinition(componentName, assertionCallback) {
         var loadedDefinition,
             hasCompleted = false;
         runs(function() {

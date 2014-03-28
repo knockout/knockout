@@ -4,7 +4,6 @@ describe('Components: Default loader', function() {
 
     afterEach(function() {
         ko.components.unregister(testComponentName);
-        ko.components.clearCachedDefinition(testComponentName);
     });
 
     it('Allows registration of arbitrary component config objects, reports that they are registered, and allows unregistration', function() {
