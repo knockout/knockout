@@ -227,6 +227,79 @@ describe('Components: Component binding', function() {
         expect(alphaViewModelInstance.alphaWasDisposed).toBe(true);
     });
 
+    it('Supports binding to an observable that contains name/params, rebuilding the component if that observable changes, disposing the old viewmodel and nodes', function() {
+        this.after(function() {
+            ko.components.unregister('component-alpha');
+            ko.components.unregister('component-beta');
+            ko.components.clearCachedDefinition('component-alpha');
+            ko.components.clearCachedDefinition('component-beta');
+        });
+
+        function alphaViewModel(params) { this.alphaValue = params.suppliedValue; }
+        function betaViewModel(params)  { this.betaValue  = params.suppliedValue; }
+
+        alphaViewModel.prototype.dispose = function() {
+            expect(arguments.length).toBe(0);
+            this.alphaWasDisposed = true;
+
+            // Disposal happens *before* the DOM is torn down, in case some custom cleanup is required
+            // Note that you'd have to have captured the element via createViewModel, so this is only
+            // for extensibility scenarios - we don't generally recommend that component viewmodels
+            // should interact directly with their DOM, as that breaks MVVM encapsulation.
+            expect(testNode).toContainText('Alpha value is 123.');
+        };
+
+        ko.components.register('component-alpha', {
+            viewModel: alphaViewModel,
+            template: '<div class="alpha">Alpha value is <span data-bind="text: alphaValue"></span>.</div>'
+        });
+
+        ko.components.register('component-beta', {
+            viewModel: betaViewModel,
+            template: '<div class="beta">Beta value is <span data-bind="text: betaValue"></span>.</div>'
+        });
+
+        outerViewModel.testComponentBindingValue = ko.observable({
+            name: 'component-alpha',
+            params: {
+                suppliedValue: 123
+            }
+        });
+
+        // Instantiate the first component
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+
+        // See it appeared, and the expected subscriptions were registered
+        var firstAlphaTemplateNode = testNode.firstChild.firstChild,
+            alphaViewModelInstance = ko.dataFor(firstAlphaTemplateNode);
+        expect(firstAlphaTemplateNode.className).toBe('alpha');
+        expect(testNode).toContainText('Alpha value is 123.');
+        expect(outerViewModel.testComponentBindingValue.getSubscriptionsCount()).toBe(1);
+        expect(alphaViewModelInstance.alphaWasDisposed).not.toBe(true);
+
+        // Store some data on a DOM node so we can check it was cleaned later
+        ko.utils.domData.set(firstAlphaTemplateNode, 'TestValue', 'Hello');
+
+        // Can switch to the other component by changing observable,
+        // but it happens asynchronously (because the component has to be loaded)
+        outerViewModel.testComponentBindingValue({
+            name: 'component-beta',
+            params: {
+                suppliedValue: 456
+            }
+        });
+
+        expect(testNode).toContainText('Alpha value is 123.');
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText('Beta value is 456.');
+
+        // Cleans up by disposing obsolete subscriptions, viewmodels, and cleans DOM nodes
+        expect(outerViewModel.testComponentBindingValue.getSubscriptionsCount()).toBe(1);
+        expect(ko.utils.domData.get(firstAlphaTemplateNode, 'TestValue')).toBe(undefined); // Got cleaned
+        expect(alphaViewModelInstance.alphaWasDisposed).toBe(true);
+    });
+
     it('Rebuilds the component if params change in a way that is forced to unwrap inside the binding, disposing the old viewmodel and nodes', function() {
         function testViewModel(params) {
             this.myData = params.someData;
