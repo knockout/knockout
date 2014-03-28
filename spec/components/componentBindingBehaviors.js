@@ -15,33 +15,43 @@ describe('Components: Component binding', function() {
     });
 
     afterEach(function() {
+        jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
         ko.components.clearCachedDefinition(testComponentName);
     });
 
     it('Controls descendant bindings', function() {
-        testNode.innerHTML = '<div data-bind="if: true, component: {}"></div>'
+        testNode.innerHTML = '<div data-bind="if: true, component: \'dummy\'"></div>';
         expect(function() { ko.applyBindings(null, testNode); })
             .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
     });
 
-    it('Throws if no name is specified', function() {
+    it('Throws if no name is specified (name provided directly)', function() {
+        testNode.innerHTML = '<div data-bind="component: \'\'"></div>';
+        expect(function() { ko.applyBindings(null, testNode); })
+            .toThrowContaining('No component name specified');
+    });
+
+    it('Throws if no name is specified (using options object)', function() {
         delete testComponentBindingValue.name;
         expect(function() { ko.applyBindings(outerViewModel, testNode); })
             .toThrowContaining('No component name specified');
     });
 
-    //it('Throws if the component name is unknown', function() {
-        // Unfortunately, there's no way to make assertions about exceptions thrown in the global context,
-        // which these ones are, because they are in response to an asynchronous process. If anyone knows
-        // a reasonable, cross-browser way to make such assertions with Jasmine, please tell us!
-        // (Note that when using Jasmine's mocked clock, Jasmine actually catches and swallows such exceptions,
-        // because they really happen during its mocked setTimeout callback, so it could be possible.)
-    //});
+    it('Throws if the component name is unknown', function() {
+        expect(function() {
+            ko.applyBindings(outerViewModel, testNode);
+            jasmine.Clock.tick(1);
+        }).toThrow("Unknown component 'test-component'");
+    });
 
-    //it('Throws if the component definition has no template', function() {
-        // Likewise, we don't have a way to assert about this, but the behavior is required.
-    //});
+    it('Throws if the component definition has no template', function() {
+        ko.components.register(testComponentName, {});
+        expect(function() {
+            ko.applyBindings(outerViewModel, testNode);
+            jasmine.Clock.tick(1);
+        }).toThrow("Component 'test-component' has no template");
+    });
 
     it('Replaces the element\'s contents with a clone of the template', function() {
         var testTemplate = document.createDocumentFragment();
@@ -51,7 +61,9 @@ describe('Components: Component binding', function() {
         testTemplate.childNodes[0].innerHTML = 'Hello';
         testTemplate.childNodes[2].innerHTML = 'World';
         ko.components.register(testComponentName, { template: testTemplate });
-        ko.applyBindings(outerViewModel, testNode);
+
+        // Bind using just the component name since we're not setting any params
+        ko.applyBindings({ testComponentBindingValue: testComponentName }, testNode);
 
         // See the template asynchronously shows up
         jasmine.Clock.tick(1);
