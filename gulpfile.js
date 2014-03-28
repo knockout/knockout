@@ -56,7 +56,7 @@ gulp.task("clean", function() {
 
 gulp.task("lint", ['checkTrailingSpaces'], function () {
     //   Config with .jshintrc; see http://www.jshint.com/docs/options/
-    return gulp.src(sources)
+    return gulp.src(config.sources)
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
@@ -121,7 +121,7 @@ gulp.task("watch", ['runner'], function () {
             'gulpfile.js',
             'knockout.config.yaml',
         ],
-        watched = [].concat(sources, config.spec_files, setup_scripts,
+        watched = [].concat(config.sources, config.spec_files, setup_scripts,
             build_scripts, ['runner.html'])
 
     // recompile runner.*.html as needed
