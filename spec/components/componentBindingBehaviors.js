@@ -347,17 +347,19 @@ describe('Components: Component binding', function() {
             requireCallbacks[moduleNames[0]] = callback;
         };
 
-        // Define three separate components so we can switch between them
+        // Define four separate components so we can switch between them
         var constructorCallLog = [];
         function testViewModel1(params) { constructorCallLog.push([1, params]); }
         function testViewModel2(params) { constructorCallLog.push([2, params]); }
         function testViewModel3(params) { constructorCallLog.push([3, params]); }
+        function testViewModel4(params) { constructorCallLog.push([4, params]); }
         testViewModel3.prototype.dispose = function() { this.wasDisposed = true; };
         ko.components.register('component-1', { viewModel: { require: 'module-1' }, template: '<div>Component 1 template</div>' });
         ko.components.register('component-2', { viewModel: { require: 'module-2' }, template: '<div>Component 2 template</div>' });
         ko.components.register('component-3', { viewModel: { require: 'module-3' }, template: '<div>Component 3 template</div>' });
+        ko.components.register('component-4', { viewModel: { require: 'module-4' }, template: '<div>Component 4 template</div>' });
         this.after(function() {
-            for (var i = 0; i < 3; i++) {
+            for (var i = 0; i < 4; i++) {
                 ko.components.unregister('component-' + i);
                 ko.components.clearCachedDefinition('component-' + i);
             }
@@ -409,6 +411,15 @@ describe('Components: Component binding', function() {
         expect(constructorCallLog.length).toBe(2);
         expect(testNode).toContainText('Component 2 template');
         expect(viewModelInstance.wasDisposed).toBe(true);
+
+        // Show also that we won't leak memory by applying bindings to nodes
+        // after they were disposed (e.g., because they were removed from the document)
+        testComponentBindingValue.name('component-4');
+        jasmine.Clock.tick(1);
+        ko.cleanNode(testNode.firstChild); // Dispose the node before the module loading completes
+        requireCallbacks['module-4'](testViewModel4);
+        expect(constructorCallLog.length).toBe(2); // No extra constructor calls
+        expect(testNode).toContainText('Component 2 template'); // No attempt to modify the DOM
     });
 
     it('Supports virtual elements', function() {
