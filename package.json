@@ -2,7 +2,7 @@
   "name": "knockout",
   "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
   "homepage": "http://knockoutjs.com/",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "license": "MIT",
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",
@@ -55,6 +55,7 @@
     "jasmine-tapreporter": "^0.2.2",
     "gulp-replace": "^0.2.0",
     "gulp-closure-compiler": "*",
-    "vinyl-map": "^1.0.1"
+    "vinyl-map": "^1.0.1",
+    "gulp-exec": "^1.0.4"
   }
 }

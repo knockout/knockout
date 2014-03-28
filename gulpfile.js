@@ -42,11 +42,12 @@ var
     // files could be replaced with node_modules/jasmine-core/lib/jasmine-core
     JASMINE_JS = LIB_ROOT + "jasmine.js",
     JASMINE_HTML_JS = LIB_ROOT + "jasmine-html.js",
+    JASMINE_CSS = LIB_ROOT + "jasmine.css",
     // jQuery & Modernizr are optional; see runner task
-    JQUERY_CDN = "node_modules/jquery/dist/jquery.js",
+    JQUERY_JS = "node_modules/jquery/dist/jquery.js",
     // When Modernizr finally makes it into npm it could perhaps be installed
     // that way. It is also notably in grunt-modernizr.
-    MODERNIZR_CDN = LIB_ROOT + "modernizr.js",
+    MODERNIZR_JS = LIB_ROOT + "modernizr.js",
 
     // scripts that are loaded by the browser during testing;
     // in runner.template.html the respective comments are replace by
@@ -67,7 +68,7 @@ var
 
     // Destination files
     buildDir = 'build/output/',
-    destDir = "dest/",
+    distDir = "dist/",
     build = {
         debug: 'knockout-latest.debug.js',
         main: 'knockout-latest.js',
@@ -101,7 +102,7 @@ try {
 } catch (e) {}
 
 gulp.task("clean", function() {
-    return gulp.src([buildDir + "*.js", destDir, 'runner*.html'], {read: false})
+    return gulp.src([buildDir + "*.js", distDir, 'runner*.html'], {read: false})
         .pipe(plugins.clean())
 })
 
@@ -201,8 +202,61 @@ gulp.task("bump-minor", bump('minor'))
 gulp.task("bump-major", bump('major'))
 
 gulp.task("release", ['build', 'build-debug'], function (done) {
-    var version = "v" + pkg.version;
-    require('./release')(version, done);
+    // Release a new version; See also
+    // https://github.com/knockout/knockout/issues/1039#issuecomment-37897655
+    //
+    // A. Create dest/ and copies build/output/knockout.js and
+    //    build/output/knockout-latest.debug.js to dest/
+    // B.  1. git add dist -f
+    //     2. git commit -a -m "<MSG>"
+    //     3. git tag "<VERSION>"
+    //     4. git reset HEAD^1
+    //     5. git push --tags
+    // C. removes dest/
+    //
+    // TODO: gulp-git might be handy when it works, but at the moment it lacks
+    // the capacity to stream the items below in order.
+    //
+    //   Handy reference
+    //   ~~~~~~~~~~~~~~~~~
+    //   Here is a reminder for some related tasks.
+    //   To delete tag:
+    //     $ git tag -d vX.X.X
+    //   To unpublish a tag:
+    //     $ git push origin :refs/tags/vX.X.X
+    //   To publish to npm:
+    //     $ npm publish
+    //
+    var options = {
+        distDir: distDir,
+        version: "v" + pkg.version,
+      }, commands = {
+        add: "git add -f <%= distDir %>",
+        commit: 'git commit -a -m \"(task) Release <%= options.version %> \"',
+        tag: "git tag '<%= options.version %>' -m '(task) Tag <%= options.version %>'",
+        reset: "git reset HEAD^1",
+        push_tags: "git push origin master --tags"
+      };
+
+    // A.
+    try {
+        // may error if the directory exists
+        fs.mkdirSync(distDir)
+    } catch (e) {}
+    fs.writeFileSync(distDir + "knockout.min.js",
+        fs.readFileSync(buildDir + build.main))
+    fs.writeFileSync(distDir + "knockout.debug.js",
+        fs.readFileSync(buildDir + build.debug))
+
+    // B.
+    return gulp.src(options.distDir, {read: false})
+        .pipe(plugins.exec(commands.add, options))
+        .pipe(plugins.exec(commands.commit, options))
+        .pipe(plugins.exec(commands.tag, options))
+        .pipe(plugins.exec(commands.reset, options))
+        .pipe(plugins.exec(commands.push_tags, options))
+        // C.
+        .pipe(plugins.clean())
 })
 
 
@@ -224,16 +278,17 @@ gulp.task("runner", function () {
         // create vanilla runner
         .pipe(plugins.rename("runner.html"))
         .pipe(plugins.replace("AUTOGEN", AUTOGEN_WARNING))
+        .pipe(plugins.replace("JASMINE_CSS", JASMINE_CSS))
         .pipe(replace("SETUP", setup_scripts))
         .pipe(replace("SOURCE", sources))
         .pipe(replace("SPECS", spec_scripts))
         .pipe(gulp.dest("./"))
         // create runner with jquery
-        .pipe(replace("JQUERY_CDN", [JQUERY_CDN]))
+        .pipe(replace("JQUERY_JS", [JQUERY_JS]))
         .pipe(plugins.rename("runner.jquery.html"))
         .pipe(gulp.dest("./"))
         // create runner with modernizr
-        .pipe(replace("MODERNIZR_CDN", [MODERNIZR_CDN]))
+        .pipe(replace("MODERNIZR_JS", [MODERNIZR_JS]))
         .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })
