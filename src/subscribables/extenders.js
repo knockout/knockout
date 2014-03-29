@@ -43,8 +43,10 @@ ko.extenders = {
     }
 };
 
+var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
 function valuesArePrimitiveAndEqual(a, b) {
-    return ko.utils.valueIsPrimitive(a) ? (a === b) : false;
+    var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
+    return oldValueIsPrimitive ? (a === b) : false;
 }
 
 function throttle(callback, timeout) {

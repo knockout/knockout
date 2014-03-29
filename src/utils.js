@@ -55,8 +55,6 @@ ko.utils = (function () {
     var isIe6 = ieVersion === 6,
         isIe7 = ieVersion === 7;
 
-    var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
-
     function isClickOnCheckableElement(element, eventType) {
         if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
         if (eventType.toLowerCase() != "click") return false;
@@ -528,10 +526,6 @@ ko.utils = (function () {
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
-        },
-
-        valueIsPrimitive: function (value) {
-            return value === null || typeof(value) in primitiveTypes;
         }
     }
 }());
@@ -559,7 +553,6 @@ ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
-ko.exportSymbol('utils.valueIsPrimitive', ko.utils.valueIsPrimitive);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {
