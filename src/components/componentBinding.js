@@ -74,7 +74,7 @@
     function createViewModel(componentDefinition, element, componentParams) {
         var componentViewModelFactory = componentDefinition['createViewModel'];
         return componentViewModelFactory
-            ? componentViewModelFactory.call(componentDefinition, { element: element }, componentParams)
+            ? componentViewModelFactory.call(componentDefinition, componentParams, { element: element })
             : componentParams; // Template-only component
     }
 

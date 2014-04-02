@@ -72,11 +72,11 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0].childNodes[0]).not.toBe(testTemplate[0]);
     });
 
-    it('Passes componentInfo (with prepopulated element) and params to the component\'s viewmodel factory', function() {
+    it('Passes params and componentInfo (with prepopulated element) to the component\'s viewmodel factory', function() {
         var componentConfig = {
             template: '<div data-bind="text: 123">I have been prepopulated and not bound yet</div>',
             viewModel: {
-                createViewModel: function(componentInfo, params) {
+                createViewModel: function(params, componentInfo) {
                     expect(componentInfo.element).toContainText('I have been prepopulated and not bound yet');
                     expect(params).toBe(testComponentParams);
 
@@ -382,7 +382,7 @@ describe('Components: Component binding', function() {
         var createViewModelCallCount = 0;
         ko.components.register(testComponentName, {
             viewModel: {
-                createViewModel: function(componentInfo, params) {
+                createViewModel: function(params, componentInfo) {
                     createViewModelCallCount++;
                     return { someData: params.someData() };
                 }

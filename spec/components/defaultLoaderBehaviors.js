@@ -129,7 +129,7 @@ describe('Components: Default loader', function() {
             expect(definition.template.length).toBe(1);
             expect(definition.template[0]).toContainText('Hello world');
 
-            var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 12.3 });
+            var viewModel = definition.createViewModel({ suppliedValue: 12.3 }, null /* componentInfo */);
             expect(viewModel.receivedValue).toBe(12.3);
         });
     });
@@ -251,7 +251,7 @@ describe('Components: Default loader', function() {
                 var myConstructor = function(params) { this.receivedValue = params.suppliedValue; };
 
                 testConfigObject({ viewModel: myConstructor }, function(definition) {
-                    var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 123 });
+                    var viewModel = definition.createViewModel({ suppliedValue: 123 }, null /* componentInfo */);
                     expect(viewModel.receivedValue).toBe(123);
                 });
             });
@@ -260,7 +260,7 @@ describe('Components: Default loader', function() {
                 var myInstance = {};
 
                 testConfigObject({ viewModel: { instance: myInstance } }, function(definition) {
-                    var viewModel = definition.createViewModel(null /* componentInfo */, null /* params */);
+                    var viewModel = definition.createViewModel(null /* params */, null /* componentInfo */);
                     expect(viewModel).toBe(myInstance);
                 });
             });
@@ -279,7 +279,7 @@ describe('Components: Default loader', function() {
                 mockAmdEnvironment(this, { 'some/module/path': myConstructor });
 
                 testConfigObject({ viewModel: { require: 'some/module/path' } }, function(definition) {
-                    var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 234 });
+                    var viewModel = definition.createViewModel({ suppliedValue: 234 }, null /* componentInfo */);
                     expect(viewModel.receivedValue).toBe(234);
                 });
             });
@@ -289,7 +289,7 @@ describe('Components: Default loader', function() {
                 mockAmdEnvironment(this, { 'some/module/path': { viewModel: myConstructor } });
 
                 testConfigObject({ viewModel: { require: 'some/module/path' } }, function(definition) {
-                    var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 345 });
+                    var viewModel = definition.createViewModel({ suppliedValue: 345 }, null /* componentInfo */);
                     expect(viewModel.receivedValue).toBe(345);
                 });
             });
@@ -307,7 +307,7 @@ describe('Components: Default loader', function() {
                 testConfigObject({ require: 'some/module/path' }, function(definition) {
                     expect(definition.template).toBe(moduleObject.template);
 
-                    var viewModel = definition.createViewModel(null /* componentInfo */, { suppliedValue: 567 });
+                    var viewModel = definition.createViewModel({ suppliedValue: 567 }, null /* componentInfo */);
                     expect(viewModel.receivedValue).toBe(567);
                 });
             });

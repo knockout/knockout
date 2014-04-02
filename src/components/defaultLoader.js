@@ -56,7 +56,7 @@
 
     // Takes a config object of the form { template: ..., viewModel: ... }, and asynchronously convert it
     // into the standard component definition format:
-    //    { template: <ArrayOfDomNodes>, createViewModel: function(componentInfo, params) { ... } }.
+    //    { template: <ArrayOfDomNodes>, createViewModel: function(params, componentInfo) { ... } }.
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
@@ -131,7 +131,7 @@
             // By design, this does *not* supply componentInfo to the constructor, as the intent is that
             // componentInfo contains non-viewmodel data (e.g., the component's element) that should only
             // be used in factory functions, not viewmodel constructors.
-            callback(function (componentInfo, params) {
+            callback(function (params /*, componentInfo */) {
                 return new viewModelConfig(params);
             });
         } else if (typeof viewModelConfig[createViewModelKey] === 'function') {
@@ -140,7 +140,7 @@
         } else if ('instance' in viewModelConfig) {
             // Fixed object instance - promote to createViewModel format for API consistency
             var fixedInstance = viewModelConfig['instance'];
-            callback(function (componentInfo, params) {
+            callback(function (params, componentInfo) {
                 return fixedInstance;
             });
         } else if ('viewModel' in viewModelConfig) {
