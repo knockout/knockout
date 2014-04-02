@@ -42,13 +42,18 @@
         },
 
         'loadComponent': function(componentName, config, callback) {
-            function errorCallback(message) {
-                throw new Error('Component \'' + componentName + '\': ' + message);
-            }
-
+            var errorCallback = makeErrorCallback(componentName);
             possiblyGetConfigFromAmd(errorCallback, config, function(loadedConfig) {
-                resolveConfig(errorCallback, loadedConfig, callback);
+                resolveConfig(componentName, errorCallback, loadedConfig, callback);
             });
+        },
+
+        'loadTemplate': function(componentName, templateConfig, callback) {
+            resolveTemplate(makeErrorCallback(componentName), templateConfig, callback);
+        },
+
+        'loadViewModel': function(componentName, viewModelConfig, callback) {
+            resolveViewModel(makeErrorCallback(componentName), viewModelConfig, callback);
         }
     };
 
@@ -60,7 +65,7 @@
     // Since both template and viewModel may need to be resolved asynchronously, both tasks are performed
     // in parallel, and the results joined when both are ready. We don't depend on any promises infrastructure,
     // so this is implemented manually below.
-    function resolveConfig(errorCallback, config, callback) {
+    function resolveConfig(componentName, errorCallback, config, callback) {
         var result = {},
             makeCallBackWhenZero = 2,
             tryIssueCallback = function() {
@@ -73,7 +78,7 @@
 
         if (templateConfig) {
             possiblyGetConfigFromAmd(errorCallback, templateConfig, function(loadedConfig) {
-                resolveTemplate(errorCallback, loadedConfig, function(resolvedTemplate) {
+                ko.components._getFirstResultFromLoaders('loadTemplate', [componentName, loadedConfig], function(resolvedTemplate) {
                     result['template'] = resolvedTemplate;
                     tryIssueCallback();
                 });
@@ -84,7 +89,7 @@
 
         if (viewModelConfig) {
             possiblyGetConfigFromAmd(errorCallback, viewModelConfig, function(loadedConfig) {
-                resolveViewModel(errorCallback, loadedConfig, function(resolvedViewModel) {
+                ko.components._getFirstResultFromLoaders('loadViewModel', [componentName, loadedConfig], function(resolvedViewModel) {
                     result[createViewModelKey] = resolvedViewModel;
                     tryIssueCallback();
                 });
@@ -178,6 +183,12 @@
         } else {
             callback(config);
         }
+    }
+
+    function makeErrorCallback(componentName) {
+        return function (message) {
+            throw new Error('Component \'' + componentName + '\': ' + message);
+        };
     }
 
     ko.exportSymbol('components.register', ko.components.register);

@@ -17,7 +17,9 @@
 
         clearCachedDefinition: function(componentName) {
             delete loadedDefinitionsCache[componentName];
-        }
+        },
+
+        _getFirstResultFromLoaders: getFirstResultFromLoaders
     };
 
     function getObjectOwnProperty(obj, propName) {

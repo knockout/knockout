@@ -134,6 +134,97 @@ describe('Components: Default loader', function() {
         });
     });
 
+    it('Can be asked to resolve a template directly', function() {
+        var templateConfig = '<span>Markup string</span><div>More</div>',
+            didLoad = false;
+        ko.components.defaultLoader.loadTemplate('any-component', templateConfig, function(result) {
+            expect(result.length).toBe(2);
+            expect(result[0].tagName).toBe('SPAN');
+            expect(result[1].tagName).toBe('DIV');
+            expect(result[0].innerHTML).toBe('Markup string');
+            expect(result[1].innerHTML).toBe('More');
+            didLoad = true;
+        });
+        expect(didLoad).toBe(true);
+    });
+
+    it('Can be asked to resolve a viewmodel directly', function() {
+        var testConstructor = function(params) { this.suppliedParams = params; },
+            didLoad = false;
+        ko.components.defaultLoader.loadViewModel('any-component', testConstructor, function(result) {
+            // Result is of the form: function(params, componentInfo) { ... }
+            var testParams = {},
+                resultInstance = result(testParams, null /* componentInfo */);
+            expect(resultInstance instanceof testConstructor).toBe(true);
+            expect(resultInstance.suppliedParams).toBe(testParams);
+            didLoad = true;
+        });
+        expect(didLoad).toBe(true);
+    });
+
+    it('Will load templates via \'loadTemplate\' on any other registered loader that precedes it', function() {
+        var testLoader = {
+            loadTemplate: function(componentName, templateConfig, callback) {
+                expect(componentName).toBe(testComponentName);
+                expect(templateConfig.customThing).toBe(123);
+                callback(ko.utils.parseHtmlFragment('<div>Hello world</div>'));
+            },
+            loadViewModel: function(componentName, viewModelConfig, callback) {
+                // Fall through to other loaders
+                callback(null);
+            }
+        };
+
+        this.restoreAfter(ko.components, 'loaders');
+        ko.components.loaders = [testLoader, ko.components.defaultLoader];
+
+        var config = {
+            template: { customThing: 123 }, // The custom loader understands this format and will handle it
+            viewModel: { instance: {} }     // The default loader understands this format and will handle it
+        };
+        testConfigObject(config, function(definition) {
+            expect(definition.template.length).toBe(1);
+            expect(definition.template[0]).toContainText('Hello world');
+
+            var viewModel = definition.createViewModel(null, null);
+            expect(viewModel).toBe(config.viewModel.instance);
+        });
+    });
+
+    it('Will load viewmodels via \'loadViewModel\' on any other registered loader that precedes it', function() {
+        var testParams = {}, testComponentInfo = {}, testViewModel = {};
+        var testLoader = {
+            loadTemplate: function(componentName, templateConfig, callback) {
+                // Fall through to other loaders
+                callback(null);
+            },
+            loadViewModel: function(componentName, viewModelConfig, callback) {
+                expect(componentName).toBe(testComponentName);
+                expect(viewModelConfig.customThing).toBe(456);
+                callback(function(params, componentInfo) {
+                    expect(params).toBe(testParams);
+                    expect(componentInfo).toBe(testComponentInfo);
+                    return testViewModel;
+                });
+            }
+        };
+
+        this.restoreAfter(ko.components, 'loaders');
+        ko.components.loaders = [testLoader, ko.components.defaultLoader];
+
+        var config = {
+            template: '<div>Hello world</div>', // The default loader understands this format and will handle it
+            viewModel: { customThing: 456 }     // The custom loader understands this format and will handle it
+        };
+        testConfigObject(config, function(definition) {
+            expect(definition.template.length).toBe(1);
+            expect(definition.template[0]).toContainText('Hello world');
+
+            var viewModel = definition.createViewModel(testParams, testComponentInfo);
+            expect(viewModel).toBe(testViewModel);
+        });
+    });
+
     describe('Configuration formats', function() {
         describe('Templates are normalised to arrays of DOM nodes', function() {
 
