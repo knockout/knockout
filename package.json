@@ -32,8 +32,8 @@
     { "type": "MIT", "url": "http://www.opensource.org/licenses/mit-license.php" }
   ],
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.0",
-    "closure-compiler": "~0.2.1"
+    "grunt": "0.4.4",
+    "grunt-cli": "0.1.13",
+    "closure-compiler": "0.2.3"
   }
 }
