@@ -18,15 +18,6 @@ var
     pkg = require('./package.json'),
     config = yaml.safeLoad(fs.readFileSync('./knockout.config.yaml', 'utf8')),
 
-    // [].concat.apply flattens the list
-    build_scripts = [].concat.apply([], [
-        config.scriptsDir + 'extern-pre.js',
-        config.scriptsDir + 'amd-pre.js',
-        config.sources,
-        config.scriptsDir + 'amd-post.js',
-        config.scriptsDir + 'extern-post.js'
-    ]),
-
     // scripts that are loaded by the browser during testing;
     // in runner.template.html the respective comments are replace by
     // the respective <script> tags
@@ -95,8 +86,11 @@ gulp.task("checkTrailingSpaces", function () {
 })
 
 gulp.task('build-debug', function () {
-    return gulp.src(build_scripts)
+    return gulp.src(config.sources)
         .pipe(plugins.concat(config.build.debug))
+        // amd + extern
+        .pipe(plugins.header(config.build.headers.join("\n")))
+        .pipe(plugins.footer(config.build.footers.join("\n")))
         .pipe(plugins.header("(function(){\nvar DEBUG=true;\n"))
         .pipe(plugins.header(config.banner, { pkg: pkg }))
         .pipe(plugins.footer("})();\n"))
@@ -105,13 +99,62 @@ gulp.task('build-debug', function () {
 })
 
 gulp.task("build", ['build-debug'], function () {
-    var closureCompiler = require('gulp-closure-compiler');
+    var closure = require('closure-compiler'),
+        through = require('through'),
+        file = gutil.File,
+        file = [];
 
-    return gulp.src(config.buildDir + config.build.debug)
-        .pipe(plugins.replace("var DEBUG=true", "/** @const */var DEBUG=false"))
-        .pipe(closureCompiler(config.closure_options))
-        .pipe(plugins.rename(config.build.main))
+    // This is all quite similar to gulp-closure-compiler,
+    // except that plugin does not support taking streams
+    // i.e. it only takes individual files, which does not
+    // agree with the injection of code or concatenation
+    // strategy Knockout uses to combine sources in-order with
+    // headers and footers added to that.
+    function buffer(stream) {
+        // This is a degenerate buffer because we have already
+        // called `concat`, meaning we are given one file.
+        file = stream;
+    }
+
+    function make() {
+        var code = file.contents.toString(),
+            self = this;
+
+        function on_compiled(err, stdout, stderr) {
+            if (err) {
+                throw new Error({
+                    error: err,
+                    stdout: stdout,
+                    stderr: stderr
+                })
+            }
+            self.emit("data", new gutil.File({
+                cwd: file.cwd,
+                base: file.base,
+                path: file.path,
+                contents: new Buffer(stdout.replace(/\r\n/g, "\n"))
+            }))
+            self.emit("end")
+        }
+
+        closure.compile(code, config.closure_options, on_compiled);
+    }
+
+    return gulp.src(config.sources)
+        // combine into one source
+        .pipe(plugins.concat(config.build.main))
+        // add directive for closure compiler
+        .pipe(plugins.header("/** const */var DEBUG=false;"))
+        // amd + extern
+        .pipe(plugins.header(config.build.headers.join("\n")))
+        .pipe(plugins.footer(config.build.footers.join("\n")))
+        // compile
+        .pipe(through(buffer, make))
+        // license / header comment
         .pipe(plugins.header(config.banner, {pkg: pkg}))
+        // sub version
+        .pipe(plugins.replace("##VERSION##", pkg.version))
+        // copy to build directory
         .pipe(gulp.dest(config.buildDir))
 })
 
@@ -123,7 +166,7 @@ gulp.task("watch", ['runner'], function () {
             'knockout.config.yaml',
         ],
         watched = [].concat(config.sources, config.spec_files, setup_scripts,
-            build_scripts, ['runner.html'])
+            ['runner.html'])
 
     // recompile runner.*.html as needed
     gulp.watch(runner_deps).on('change', function () {
