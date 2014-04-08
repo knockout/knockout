@@ -14,6 +14,44 @@ buildDir: build/output/
 build:
   main: knockout-latest.js
   debug: knockout-latest.debug.js
+  headers:
+  # This is from what was build/fragments/extern-pre.js:
+  - |
+    (function(undefined){
+    // (0, eval)('this') is a robust way to get a reference to the global object
+    // For details, see http://stackoverflow.com/questions/14119988#14120023
+    var window = this || (0, eval)('this'),
+        document = window['document'],
+        navigator = window['navigator'],
+        jQuery = window["jQuery"],
+        JSON = window["JSON"];
+
+  # This is from what was build/fragments/amd-pre.js:
+  - |
+    (function(factory) {
+    // Support three module loading scenarios
+    if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+        // [1] CommonJS/Node.js
+        var target = module['exports'] || exports; // module.exports is for Node.js
+        factory(target);
+    } else if (typeof define === 'function' && define['amd']) {
+        // [2] AMD anonymous module
+        define(['exports'], factory);
+    } else {
+        // [3] No module loader (plain <script> tag) - put directly in global namespace
+        factory(window['ko'] = {});
+    }
+    }(function(koExports){
+
+  footers:
+  # This is from what was build/fragments/amd-post.js:
+  - |
+    }));
+
+  # This is from what was build/fragments/extern-post.js
+  - |
+    }());
+
 
 # Created in tagged 'release' versions
 distDir: dist/
@@ -43,6 +81,7 @@ PACKAGE_FILES:
 # Closure compiler
 closure_options:
   compilation_level: ADVANCED_OPTIMIZATIONS
+  output_wrapper: "(function() {%output%})();"
 
 # Files that have their trailing spaces checked on lint
 trailingSpaceSources:
