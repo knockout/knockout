@@ -101,8 +101,7 @@ gulp.task('build-debug', function () {
 gulp.task("build", ['build-debug'], function () {
     var closure = require('closure-compiler'),
         through = require('through'),
-        file = gutil.File,
-        file = [];
+        file;
 
     // This is all quite similar to gulp-closure-compiler,
     // except that plugin does not support taking streams
@@ -112,7 +111,7 @@ gulp.task("build", ['build-debug'], function () {
     // headers and footers added to that.
     function buffer(stream) {
         // This is a degenerate buffer because we have already
-        // called `concat`, meaning we are given one file.
+        // called `concat`, meaning we are given one vinyl pipe/file.
         file = stream;
     }
 
