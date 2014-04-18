@@ -32,6 +32,7 @@ if (process.argv.length > 2 && process.argv[2] == '--source') {
 require('./arrayEditDetectionBehaviors');
 require('./asyncBehaviors');
 require('./dependentObservableBehaviors');
+require('./pureComputedBehaviors');
 require('./expressionRewritingBehaviors');
 require('./extenderBehaviors');
 require('./mappingHelperBehaviors');
