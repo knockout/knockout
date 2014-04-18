@@ -164,6 +164,18 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual(2);
     });
 
+    it('Should prevent recursive calling of read function while sleeping', function() {
+        // It doesn't really make sense to use the value of a pure computed within itself since there's no way to
+        // prevent infinite recursion (a pure computed should never alter external state). Knockout prevents a computed
+        // from being evaluated recursively to at least prevent things from breaking internally if this happens.
+        var observable = ko.observable('A'),
+            computed = ko.pureComputed(function() {
+                return '' + observable() + computed();
+            });
+
+        expect(computed()).toEqual('Aundefined');
+    });
+
     describe('Context', function() {
         it('Should accurately report initial evaluation', function() {
             var evaluationCount = 0,

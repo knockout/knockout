@@ -80,6 +80,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             _suppressDisposalUntilDisposeWhenReturnsFalse = false;
         }
 
+        _isBeingEvaluated = true;
+
         // When sleeping, recalculate the value and return.
         if (isSleeping) {
             try {
@@ -95,15 +97,15 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     isInitial: isInitial
                 });
                 _dependenciesCount = 0;
+                isInitial = false;
                 _latestValue = readFunction.call(evaluatorFunctionTarget);
             } finally {
                 ko.dependencyDetection.end();
-                isInitial = false;
+                _isBeingEvaluated = false;
             }
             return;
         }
 
-        _isBeingEvaluated = true;
         try {
             // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
             // Then, during evaluation, we cross off any that are in fact still being used.
@@ -129,6 +131,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
             _subscriptionsToDependencies = {};
             _dependenciesCount = 0;
+            isInitial = false;
 
             try {
                 var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
@@ -143,7 +146,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     });
                 }
 
-                isInitial = false;
                 _needsEvaluation = false;
             }
 
