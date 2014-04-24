@@ -20,6 +20,7 @@ knockoutDebugCallback([
     'src/virtualElements.js',
     'src/components/loaderRegistry.js',
     'src/components/defaultLoader.js',
+    'src/components/customElements.js',
     'src/binding/bindingProvider.js',
     'src/binding/bindingAttributeSyntax.js',
     'src/components/componentBinding.js',
