@@ -36,29 +36,34 @@
         var paramsAttribute = elem.getAttribute('params');
 
         if (paramsAttribute) {
-            var params = nativeBindingProviderInstance['parseBindingsString'](paramsAttribute, bindingContext, elem, { 'valueAccessors': true });
-            return ko.utils.objectMap(params, function(paramValue, paramName) {
-                // Does the evaluation of the parameter value unwrap any observables?
-                var computed = ko.computed(paramValue, null, { 'disposeWhenNodeIsRemoved': elem }),
-                    computedValue = computed.peek();
-                if (!computed.isActive()) {
-                    // No it doesn't, so there's no need for any computed wrapper. Just pass through the supplied value directly.
-                    // Example: "someVal: firstName, age: 123" (whether or not firstName is an observable/computed)
-                    return computedValue;
-                } else {
-                    // Yes it does. Is the resulting value itself observable?
-                    if (!ko.isObservable(computedValue)) {
-                        // No it isn't, so supply a computed property whose value is the result of the binding expression.
-                        // Example: "someVal: firstName().length"
-                        return computed;
+            var params = nativeBindingProviderInstance['parseBindingsString'](paramsAttribute, bindingContext, elem, { 'valueAccessors': true }),
+                rawParamComputedValues = ko.utils.objectMap(params, function(paramValue, paramName) {
+                    return ko.computed(paramValue, null, { 'disposeWhenNodeIsRemoved': elem });
+                }),
+                result = ko.utils.objectMap(rawParamComputedValues, function(paramValueComputed, paramName) {
+                    // Does the evaluation of the parameter value unwrap any observables?
+                    if (!paramValueComputed.isActive()) {
+                        // No it doesn't, so there's no need for any computed wrapper. Just pass through the supplied value directly.
+                        // Example: "someVal: firstName, age: 123" (whether or not firstName is an observable/computed)
+                        return paramValueComputed.peek();
                     } else {
-                        // Yes it is, so create a further wrapper that supplies the inner unwrapped value (otherwise
-                        // the component would have to double-unwrap this parameter to get the intended value).
-                        // Example: "someVal: manager().firstName" (where firstName is observable)
-                        return ko.computed(function() { return ko.utils.unwrapObservable(computed()); }, null, { 'disposeWhenNodeIsRemoved': elem });
+                        // Yes it does. Supply a computed property that unwraps both the outer (binding expression)
+                        // level of observability, and any inner (resulting model value) level of observability.
+                        // This means the component doesn't have to worry about multiple unwrapping.
+                        return ko.computed(function() {
+                            return ko.unwrap(paramValueComputed());
+                        }, null, { 'disposeWhenNodeIsRemoved': elem });
                     }
-                }
-            });
+                });
+
+            // Give access to the raw computeds, as long as that wouldn't overwrite any custom param also called 'raw'
+            // This is in case the developer wants to react to outer (binding) observability separately from inner
+            // (model value) observability seperately, or in case the model value observable has subobservables.
+            if (!result.hasOwnProperty('$raw')) {
+                result['$raw'] = rawParamComputedValues;
+            }
+
+            return result;
         } else {
             return null;
         }

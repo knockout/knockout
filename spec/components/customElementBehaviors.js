@@ -89,13 +89,24 @@ describe('Components: Custom elements', function() {
         var suppliedParams = [];
         ko.components.register('test-component', {
             template: 'Ignored',
-            viewModel: function(params) { suppliedParams.push(params); }
+            viewModel: function(params) {
+                suppliedParams.push(params);
+
+                // The raw value for each param is a computed giving the literal value
+                ko.utils.objectForEach(params, function(key, value) {
+                    if (key !== '$raw') {
+                        expect(ko.isComputed(params.$raw[key])).toBe(true);
+                        expect(params.$raw[key]()).toBe(value);
+                    }
+                });
+            }
         });
 
         testNode.innerHTML = '<test-component params="nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: \'mystr\'"></test-component>';
         ko.applyBindings(null, testNode);
         jasmine.Clock.tick(1);
 
+        delete suppliedParams[0].$raw; // Don't include '$raw' in the following assertion, as we only want to compare supplied values
         expect(suppliedParams).toEqual([{ nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: 'mystr' }]);
     });
 
@@ -106,6 +117,10 @@ describe('Components: Custom elements', function() {
                 this.receivedobservable = params.suppliedobservable;
                 expect(this.receivedobservable.subprop).toBe('subprop');
                 this.dispose = function() { this.wasDisposed = true; };
+
+                // The $raw value for this param is a computed giving the observable instance
+                expect(ko.isComputed(params.$raw.suppliedobservable)).toBe(true);
+                expect(params.$raw.suppliedobservable()).toBe(params.suppliedobservable);
             }
         });
 
@@ -141,6 +156,12 @@ describe('Components: Custom elements', function() {
                 // See we didn't get the original observable instance. Instead we got a computed property.
                 expect(this.receivedobservable).not.toBe(rootViewModel.myobservable);
                 expect(ko.isComputed(this.receivedobservable)).toBe(true);
+
+                // The $raw value for this param is a computed property whose value is raw result
+                // of evaluating the binding value. Since the raw result in this case is itself not
+                // observable, it's the same value as the regular (non-$raw) supplied parameter.
+                expect(ko.isComputed(params.$raw.suppliedobservable)).toBe(true);
+                expect(params.$raw.suppliedobservable()).toBe(params.suppliedobservable());
             }
         });
 
@@ -179,6 +200,15 @@ describe('Components: Custom elements', function() {
 
                 // See we received a computed, not either of the original observables
                 expect(ko.isComputed(this.myval)).toBe(true);
+
+                // See we can reach the original inner observable directly if needed via $raw
+                // (e.g., because it has subobservables or similar)
+                var originalObservable = params.$raw.somevalue();
+                expect(ko.isObservable(originalObservable)).toBe(true);
+                expect(ko.isComputed(originalObservable)).toBe(false);
+                if (originalObservable() === 'inner1') {
+                    expect(originalObservable).toBe(innerObservable); // See there's no wrapper
+                }
             }
         });
 
@@ -217,6 +247,23 @@ describe('Components: Custom elements', function() {
         expect(outerObservable.getSubscriptionsCount()).toBe(0);
         expect(innerObservable.getSubscriptionsCount()).toBe(0);
         expect(newInnerObservable.getSubscriptionsCount()).toBe(0);
+    });
+
+    it('Supplies any custom parameter called "$raw" in preference to the function that yields raw parameter values', function() {
+        var constructorCallCount = 0,
+            suppliedValue = {};
+        ko.components.register('test-component', {
+            template: 'Ignored',
+            viewModel: function(params) {
+                constructorCallCount++;
+                expect(params.$raw).toBe(suppliedValue);
+            }
+        });
+
+        testNode.innerHTML = '<test-component params="$raw: suppliedValue"></test-component>';
+        ko.applyBindings({ suppliedValue: suppliedValue }, testNode);
+        jasmine.Clock.tick(1);
+        expect(constructorCallCount).toBe(1);
     });
 
     it('Disposes the component when the custom element is cleaned', function() {
