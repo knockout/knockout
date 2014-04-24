@@ -19,7 +19,7 @@
                     throw new Error('Cannot use the "component" binding on a custom element matching a component');
                 }
 
-                var componentBindingValue = { 'name': componentName };
+                var componentBindingValue = { 'name': componentName, 'params': getComponentParamsFromCustomElement(node, bindingContext) };
 
                 allBindings['component'] = valueAccessors
                     ? function() { return componentBindingValue; }
@@ -28,5 +28,39 @@
         }
 
         return allBindings;
+    }
+
+    var nativeBindingProviderInstance = new ko.bindingProvider();
+
+    function getComponentParamsFromCustomElement(elem, bindingContext) {
+        var paramsAttribute = elem.getAttribute('params');
+
+        if (paramsAttribute) {
+            var params = nativeBindingProviderInstance['parseBindingsString'](paramsAttribute, bindingContext, elem, { 'valueAccessors': true });
+            return ko.utils.objectMap(params, function(paramValue, paramName) {
+                // Does the evaluation of the parameter value unwrap any observables?
+                var computed = ko.computed(paramValue, null, { 'disposeWhenNodeIsRemoved': elem }),
+                    computedValue = computed.peek();
+                if (!computed.isActive()) {
+                    // No it doesn't, so there's no need for any computed wrapper. Just pass through the supplied value directly.
+                    // Example: "someVal: firstName, age: 123" (whether or not firstName is an observable/computed)
+                    return computedValue;
+                } else {
+                    // Yes it does. Is the resulting value itself observable?
+                    if (!ko.isObservable(computedValue)) {
+                        // No it isn't, so supply a computed property whose value is the result of the binding expression.
+                        // Example: "someVal: firstName().length"
+                        return computed;
+                    } else {
+                        // Yes it is, so create a further wrapper that supplies the inner unwrapped value (otherwise
+                        // the component would have to double-unwrap this parameter to get the intended value).
+                        // Example: "someVal: manager().firstName" (where firstName is observable)
+                        return ko.computed(function() { return ko.utils.unwrapObservable(computed()); }, null, { 'disposeWhenNodeIsRemoved': elem });
+                    }
+                }
+            });
+        } else {
+            return null;
+        }
     }
 })();

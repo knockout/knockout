@@ -71,7 +71,7 @@ describe('Components: Custom elements', function() {
         testNode.innerHTML = '<test-component></test-component>';
         var customElem = testNode.childNodes[0];
         expect(customElem.tagName).toBe('TEST-COMPONENT');
-        
+
         ko.applyBindings(null, customElem);
         jasmine.Clock.tick(1);
         expect(customElem.innerHTML).toBe('custom element');
@@ -83,5 +83,164 @@ describe('Components: Custom elements', function() {
 
         expect(function() { ko.applyBindings(null, testNode); })
             .toThrowContaining('Cannot use the "component" binding on a custom element matching a component');
+    });
+
+    it('Is possible to pass literal values', function() {
+        var suppliedParams = [];
+        ko.components.register('test-component', {
+            template: 'Ignored',
+            viewModel: function(params) { suppliedParams.push(params); }
+        });
+
+        testNode.innerHTML = '<test-component params="nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: \'mystr\'"></test-component>';
+        ko.applyBindings(null, testNode);
+        jasmine.Clock.tick(1);
+
+        expect(suppliedParams).toEqual([{ nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: 'mystr' }]);
+    });
+
+    it('Is possible to pass observable instances', function() {
+        ko.components.register('test-component', {
+            template: '<p>the observable: <span data-bind="text: receivedobservable"></span></p>',
+            viewModel: function(params) {
+                this.receivedobservable = params.suppliedobservable;
+                expect(this.receivedobservable.subprop).toBe('subprop');
+                this.dispose = function() { this.wasDisposed = true; };
+            }
+        });
+
+        // See we can supply an observable instance, which is received with no wrapper around it
+        var myobservable = ko.observable(1);
+        myobservable.subprop = 'subprop';
+        testNode.innerHTML = '<test-component params="suppliedobservable: myobservable"></test-component>';
+        ko.applyBindings({ myobservable: myobservable }, testNode);
+        jasmine.Clock.tick(1);
+        var viewModelInstance = ko.dataFor(testNode.firstChild.firstChild);
+        expect(testNode.firstChild).toContainText('the observable: 1');
+
+        // See the observable instance can mutate, without causing the component to tear down
+        myobservable(2);
+        expect(testNode.firstChild).toContainText('the observable: 2');
+        expect(ko.dataFor(testNode.firstChild.firstChild)).toBe(viewModelInstance); // Didn't create a new instance
+        expect(viewModelInstance.wasDisposed).not.toBe(true);
+    });
+
+    it('Is possible to pass expressions that can vary observably', function() {
+        var rootViewModel = {
+                myobservable: ko.observable('Alpha')
+            },
+            constructorCallCount = 0;
+
+        ko.components.register('test-component', {
+            template: '<p>the string reversed: <span data-bind="text: receivedobservable"></span></p>',
+            viewModel: function(params) {
+                constructorCallCount++;
+                this.receivedobservable = params.suppliedobservable;
+                this.dispose = function() { this.wasDisposed = true; };
+
+                // See we didn't get the original observable instance. Instead we got a computed property.
+                expect(this.receivedobservable).not.toBe(rootViewModel.myobservable);
+                expect(ko.isComputed(this.receivedobservable)).toBe(true);
+            }
+        });
+
+        // Bind, using an expression that evaluates the observable during binding
+        testNode.innerHTML = '<test-component params=\'suppliedobservable: myobservable().split("").reverse().join("")\'></test-component>';
+        ko.applyBindings(rootViewModel, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.firstChild).toContainText('the string reversed: ahplA');
+        var componentViewModelInstance = ko.dataFor(testNode.firstChild.firstChild);
+        expect(constructorCallCount).toBe(1);
+        expect(rootViewModel.myobservable.getSubscriptionsCount()).toBe(1);
+
+        // See that mutating the underlying observable modifies the supplied computed property,
+        // but doesn't cause the component to tear down
+        rootViewModel.myobservable('Beta');
+        expect(testNode.firstChild).toContainText('the string reversed: ateB');
+        expect(constructorCallCount).toBe(1);
+        expect(ko.dataFor(testNode.firstChild.firstChild)).toBe(componentViewModelInstance); // No new viewmodel needed
+        expect(componentViewModelInstance.wasDisposed).not.toBe(true);
+        expect(rootViewModel.myobservable.getSubscriptionsCount()).toBe(1); // No extra subscription needed
+
+        // See also that subscriptions to the evaluated observables are disposed
+        // when the custom element is cleaned
+        ko.cleanNode(testNode);
+        expect(componentViewModelInstance.wasDisposed).toBe(true);
+        expect(rootViewModel.myobservable.getSubscriptionsCount()).toBe(0);
+    });
+
+    it('Is possible to pass expressions that can vary observably and evaluate as observable instances', function() {
+        var constructorCallCount = 0;
+        ko.components.register('test-component', {
+            template: '<p>the value: <span data-bind="text: myval"></span></p>',
+            viewModel: function(params) {
+                constructorCallCount++;
+                this.myval = params.somevalue;
+
+                // See we received a computed, not either of the original observables
+                expect(ko.isComputed(this.myval)).toBe(true);
+            }
+        });
+
+        // Bind to a viewmodel with nested observables; see the expression is evaluated as expected
+        // The component itself doesn't have to know or care that the supplied value is nested - the
+        // custom element syntax takes care of producing a single computed property that gives the
+        // unwrapped inner value.
+        var innerObservable = ko.observable('inner1'),
+            outerObservable = ko.observable({ inner: innerObservable });
+        testNode.innerHTML = '<test-component params="somevalue: outer().inner"></test-component>';
+        ko.applyBindings({ outer: outerObservable }, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText('the value: inner1');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(1);
+
+        // See we can mutate the inner value and see the result show up
+        innerObservable('inner2');
+        expect(testNode).toContainText('the value: inner2');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(1);
+
+        // See we can mutate the outer value and see the result show up (cleaning subscriptions to the old inner value)
+        var newInnerObservable = ko.observable('newinner');
+        outerObservable({ inner: newInnerObservable });
+        expect(testNode).toContainText('the value: newinner');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(0);
+        expect(newInnerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(1);
+
+        // See that subscriptions are disposed when the component is
+        ko.cleanNode(testNode);
+        expect(outerObservable.getSubscriptionsCount()).toBe(0);
+        expect(innerObservable.getSubscriptionsCount()).toBe(0);
+        expect(newInnerObservable.getSubscriptionsCount()).toBe(0);
+    });
+
+    it('Disposes the component when the custom element is cleaned', function() {
+        // This is really a behavior of the component binding, not custom elements.
+        // This spec just shows that custom elements don't break it for any reason.
+        var componentViewModel = {
+            dispose: function() {
+                this.wasDisposed = true;
+            }
+        };
+        ko.components.register('test-component', {
+            template: 'custom element',
+            viewModel: { instance: componentViewModel }
+        });
+        testNode.innerHTML = '<test-component></test-component>';
+
+        // See it binds properly
+        ko.applyBindings(null, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.firstChild).toContainHtml('custom element');
+
+        // See the viewmodel is disposed when the corresponding DOM element is
+        expect(componentViewModel.wasDisposed).not.toBe(true);
+        ko.cleanNode(testNode.firstChild);
+        expect(componentViewModel.wasDisposed).toBe(true);
     });
 });
