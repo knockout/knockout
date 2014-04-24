@@ -51,7 +51,7 @@
                         // level of observability, and any inner (resulting model value) level of observability.
                         // This means the component doesn't have to worry about multiple unwrapping.
                         return ko.computed(function() {
-                            return ko.unwrap(paramValueComputed());
+                            return ko.utils.unwrapObservable(paramValueComputed());
                         }, null, { 'disposeWhenNodeIsRemoved': elem });
                     }
                 });
