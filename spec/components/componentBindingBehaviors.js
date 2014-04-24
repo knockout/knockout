@@ -366,6 +366,25 @@ describe('Components: Component binding', function() {
         expect(viewModelInstance.wasDisposed).toBe(true);
     });
 
+    it('Does not inject the template or instantiate the viewmodel if the element was cleaned before component loading completed', function() {
+        var numConstructorCalls = 0;
+        ko.components.register(testComponentName, {
+            viewModel: function() { numConstructorCalls++; },
+            template: '<div>Should not be used</div>'
+        });
+
+        // Bind an instance of the component; grab its viewmodel
+        ko.applyBindings(outerViewModel, testNode);
+
+        // Before the component finishes loading, clean the DOM
+        ko.cleanNode(testNode.firstChild);
+
+        // Now wait and see that, after loading finishes, the component wasn't used
+        jasmine.Clock.tick(1);
+        expect(numConstructorCalls).toBe(0);
+        expect(testNode.firstChild).toContainHtml('');
+    });
+
     it('Does not automatically subscribe to any observables you evaluate during createViewModel or a viewmodel constructor', function() {
         // This clarifies that, if a developer wants to react when some observable parameter
         // changes, then it's their responsibility to subscribe to it or use a computed.
