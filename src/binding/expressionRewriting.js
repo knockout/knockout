@@ -111,15 +111,16 @@ ko.expressionRewriting = (function () {
             function callPreprocessHook(obj) {
                 return (obj && obj['preprocess']) ? (val = obj['preprocess'](val, key, processKeyValue)) : true;
             }
-            if (!callPreprocessHook(ko['getBindingHandler'](key)))
-                return;
+            if (!bindingParams) {
+                if (!callPreprocessHook(ko['getBindingHandler'](key)))
+                    return;
 
-            if (twoWayBindings[key] && (writableVal = getWriteableValue(val))) {
-                // For two-way bindings, provide a write method in case the value
-                // isn't a writable observable.
-                propertyAccessorResultStrings.push("'" + key + "':function(_z){" + writableVal + "=_z}");
+                if (twoWayBindings[key] && (writableVal = getWriteableValue(val))) {
+                    // For two-way bindings, provide a write method in case the value
+                    // isn't a writable observable.
+                    propertyAccessorResultStrings.push("'" + key + "':function(_z){" + writableVal + "=_z}");
+                }
             }
-
             // Values are wrapped in a function so that each value can be accessed independently
             if (makeValueAccessors) {
                 val = 'function(){return ' + val + ' }';
@@ -130,6 +131,7 @@ ko.expressionRewriting = (function () {
         var resultStrings = [],
             propertyAccessorResultStrings = [],
             makeValueAccessors = bindingOptions['valueAccessors'],
+            bindingParams = bindingOptions['bindingParams'],
             keyValueArray = typeof bindingsStringOrKeyValueArray === "string" ?
                 parseObjectLiteral(bindingsStringOrKeyValueArray) : bindingsStringOrKeyValueArray;
 

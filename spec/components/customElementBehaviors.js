@@ -110,6 +110,37 @@ describe('Components: Custom elements', function() {
         expect(suppliedParams).toEqual([{ nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: 'mystr' }]);
     });
 
+    it('Should not confuse parameters with bindings', function() {
+        this.restoreAfter(ko, 'getBindingHandler');
+        var bindings = [];
+        ko.getBindingHandler = function(bindingKey) {
+            bindings.push(bindingKey);
+        };
+
+        ko.components.register('test-component', {});
+        testNode.innerHTML = '<test-component params="value: value"></test-component>';
+        ko.applyBindings({value: 123}, testNode);
+
+        // The only binding it should look up is "component"
+        expect(bindings).toEqual(['component']);
+    });
+
+    it('Should update component when observable view model changes', function() {
+        ko.components.register('test-component', {
+            template: '<p>the value: <span data-bind="text: textToShow"></span></p>'
+        });
+
+        testNode.innerHTML = '<test-component params="textToShow: value"></test-component>';
+        var vm = ko.observable({ value: 'A' });
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText("the value: A");
+
+        vm({ value: 'Z' });
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText("the value: Z");
+    });
+
     it('Is possible to pass observable instances', function() {
         ko.components.register('test-component', {
             template: '<p>the observable: <span data-bind="text: receivedobservable"></span></p>',
