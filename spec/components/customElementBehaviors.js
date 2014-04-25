@@ -375,40 +375,4 @@ describe('Components: Custom elements', function() {
             throw ex;
         }
     });
-
-    it('Gives a useful exception message if you try to use a custom element that has not been preregistered on IE < 9', function() {
-        this.after(function() {
-            ko.components.unregister('outer-component');
-            ko.components.unregister('inner-component');
-        });
-
-        // Set up a redirection from <unknown-element> to <inner-component>
-        // Since 'unknown-element' isn't actually the name of a registered component,
-        // the IE < 9 shim won't be applied to it, so it won't actually be usable.
-        this.restoreAfter(ko.components, 'getComponentNameForNode');
-        ko.components.getComponentNameForNode = function(node) {
-            switch (node.tagName.toLowerCase()) {
-                case 'outer-component': return 'outer-component';
-                case 'unknown-element': return 'inner-component';
-                default: return null;
-            }
-        }
-
-        ko.components.register('inner-component', { template: 'the inner component' });
-        ko.components.register('outer-component', { template: '<unknown-element></unknown-element>' });
-        testNode.innerHTML = '<outer-component></outer-component>';
-
-        // See the component show up, or we get a suitable exception message
-        ko.applyBindings(null, testNode);
-        try {
-            jasmine.Clock.tick(1);
-        } catch(ex) {
-            // For IE < 9, the exception message should provide a useful hint about what went wrong
-            expect(ex.message).toBe('Cannot add nodes to <UNKNOWN-ELEMENT>. If this is a component, be sure to preregister it for IE < 9 support.\n\nOriginal exception: Unexpected call to method or property access.');
-            return;
-        }
-
-        // The alternative acceptable outcome is that the above actually works, which it does on HTML5-era browsers
-        expect(testNode).toContainHtml('<outer-component><unknown-element>the inner component</unknown-element></outer-component>');
-    });
 });

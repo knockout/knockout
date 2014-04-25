@@ -95,23 +95,5 @@
                 return newDocFrag;
             };
         })(document.createDocumentFragment);
-
-        // To aid debugging if you mistakenly try to use non-preregistered components on IE < 9,
-        // patch setDomNodeChildren to catch the error
-        ko.utils.setDomNodeChildren = (function(originalFunction) {
-            return function(node) {
-                try {
-                    return originalFunction.apply(this, arguments);
-                } catch (ex) {
-                    var tagName = node && node.tagName,
-                        msg = ex && ex.message;
-                    if (tagName && msg && msg.indexOf('Unexpected call to method or property access.') >= 0) {
-                        var newMessage = 'Cannot add nodes to <' + tagName + '>. If this is a component, be sure to preregister it for IE < 9 support.';
-                        ex.message = newMessage + '\n\nOriginal exception: ' + msg;
-                    }
-                    throw ex;
-                }
-            }
-        })(ko.utils.setDomNodeChildren);
     }
 })();
