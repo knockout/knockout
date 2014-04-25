@@ -360,8 +360,20 @@ describe('Components: Custom elements', function() {
         testNode.innerHTML = initialMarkup;
 
         ko.applyBindings({ outerval: { innerval: 'my value' } }, testNode);
-        jasmine.Clock.tick(1);
-        expect(testNode).toContainText('hello [the outer component [the inner component with value [my value]] goodbye] world');
+        try {
+            jasmine.Clock.tick(1);
+            expect(testNode).toContainText('hello [the outer component [the inner component with value [my value]] goodbye] world');
+        } catch(ex) {
+            if (ex.message.indexOf('Unexpected call to method or property access.') >= 0) {
+                // On IE < 9, this scenario is only supported if you have referenced jQuery.
+                // So don't consider this to be a failure if jQuery isn't referenced.
+                if (!window.jQuery) {
+                    return;
+                }
+            }
+
+            throw ex;
+        }
     });
 
     it('Gives a useful exception message if you try to use a custom element that has not been preregistered on IE < 9', function() {
