@@ -316,8 +316,8 @@ ko.utils = (function () {
 
         registerEventHandler: function (element, eventType, handler) {
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
-            if (!mustUseAttachEvent && jQuery) {
-                jQuery(element)['bind'](eventType, handler);
+            if (!mustUseAttachEvent && jQueryInstance) {
+                jQueryInstance(element)['bind'](eventType, handler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, handler, false);
             else if (typeof element.attachEvent != "undefined") {
@@ -344,8 +344,8 @@ ko.utils = (function () {
             // In both cases, we'll use the click method instead.
             var useClickWorkaround = isClickOnCheckableElement(element, eventType);
 
-            if (jQuery && !useClickWorkaround) {
-                jQuery(element)['trigger'](eventType);
+            if (jQueryInstance && !useClickWorkaround) {
+                jQueryInstance(element)['trigger'](eventType);
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
                     var eventCategory = knownEventTypesByEventName[eventType] || "HTMLEvents";
