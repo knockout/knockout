@@ -57,8 +57,8 @@ describe('Components: Component binding', function() {
         testTemplate.appendChild(document.createElement('div'));
         testTemplate.appendChild(document.createTextNode(' '));
         testTemplate.appendChild(document.createElement('span'));
-        testTemplate.childNodes[0].innerHTML = 'Hello';
-        testTemplate.childNodes[2].innerHTML = 'World';
+        testTemplate.childNodes[0].innerHTML = 'hello';
+        testTemplate.childNodes[2].innerHTML = 'world';
         ko.components.register(testComponentName, { template: testTemplate });
 
         // Bind using just the component name since we're not setting any params
@@ -66,7 +66,7 @@ describe('Components: Component binding', function() {
 
         // See the template asynchronously shows up
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0].innerHTML).toBe('<div>Hello</div> <span>World</span>');
+        expect(testNode.childNodes[0]).toContainHtml('<div>hello</div> <span>world</span>');
 
         // Also be sure it's a clone
         expect(testNode.childNodes[0].childNodes[0]).not.toBe(testTemplate[0]);
@@ -516,9 +516,9 @@ describe('Components: Component binding', function() {
     });
 
     it('Supports virtual elements', function() {
-        testNode.innerHTML = 'Hello! <!-- ko component: testComponentBindingValue --><!-- /ko --> Goodbye.';
+        testNode.innerHTML = 'Hello! <!-- ko component: testComponentBindingValue -->&nbsp;<!-- /ko --> Goodbye.';
         ko.components.register(testComponentName, {
-            template: 'Your param is <span data-bind="text: someData"></span>'
+            template: 'Your param is <span data-bind="text: someData">&nbsp;</span>'
         });
         testComponentParams.someData = ko.observable(123);
 
