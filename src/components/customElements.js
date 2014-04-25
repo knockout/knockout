@@ -68,4 +68,50 @@
             return null;
         }
     }
+
+    // --------------------------------------------------------------------------------
+    // Compatibility code for older (pre-HTML5) IE browsers
+
+    if (ko.utils.ieVersion < 9) {
+        // Whenever you preregister a component, enable it as a custom element in the current document
+        ko.components['register'] = (function(originalFunction) {
+            return function(componentName) {
+                document.createElement(componentName); // Allows IE<9 to parse markup containing the custom element
+                return originalFunction.apply(this, arguments);
+            }
+        })(ko.components['register']);
+
+        // Whenever you create a document fragment, enable all preregistered component names as custom elements
+        // This is needed to make innerShiv/jQuery HTML parsing correctly handle the custom elements
+        document.createDocumentFragment = (function(originalFunction) {
+            return function() {
+                var newDocFrag = originalFunction(),
+                    allComponents = ko.components._allRegisteredComponents;
+                for (var componentName in allComponents) {
+                    if (allComponents.hasOwnProperty(componentName)) {
+                        newDocFrag.createElement(componentName);
+                    }
+                }
+                return newDocFrag;
+            };
+        })(document.createDocumentFragment);
+
+        // To aid debugging if you mistakenly try to use non-preregistered components on IE < 9,
+        // patch setDomNodeChildren to catch the error
+        ko.utils.setDomNodeChildren = (function(originalFunction) {
+            return function(node) {
+                try {
+                    return originalFunction.apply(this, arguments);
+                } catch (ex) {
+                    var tagName = node && node.tagName,
+                        msg = ex && ex.message;
+                    if (tagName && msg && msg.indexOf('Unexpected call to method or property access.') >= 0) {
+                        var newMessage = 'Cannot add nodes to <' + tagName + '>. If this is a component, be sure to preregister it for IE < 9 support.';
+                        ex.message = newMessage + '\n\nOriginal exception: ' + msg;
+                    }
+                    throw ex;
+                }
+            }
+        })(ko.utils.setDomNodeChildren);
+    }
 })();

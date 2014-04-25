@@ -30,7 +30,7 @@ describe('Components: Custom elements', function() {
         this.restoreAfter(ko.components, 'getComponentNameForNode');
 
         // Set up a getComponentNameForNode function that maps "A" tags to test-component
-        testNode.innerHTML = '<div>hello <a></a> <b>ignored</b></div>';
+        testNode.innerHTML = '<div>hello <a>&nbsp;</a> <b>ignored</b></div>';
         ko.components.getComponentNameForNode = function(node) {
             return node.tagName === 'A' ? 'test-component' : null;
         }
@@ -70,7 +70,7 @@ describe('Components: Custom elements', function() {
         ko.components.register('test-component', { template: 'custom element'});
         testNode.innerHTML = '<test-component></test-component>';
         var customElem = testNode.childNodes[0];
-        expect(customElem.tagName).toBe('TEST-COMPONENT');
+        expect(customElem.tagName.toLowerCase()).toBe('test-component');
 
         ko.applyBindings(null, customElem);
         jasmine.Clock.tick(1);
@@ -320,5 +320,83 @@ describe('Components: Custom elements', function() {
         expect(componentViewModel.wasDisposed).not.toBe(true);
         ko.cleanNode(testNode.firstChild);
         expect(componentViewModel.wasDisposed).toBe(true);
+    });
+
+    it('Can nest custom elements', function() {
+        ko.utils.parseHtmlFragment('');
+        
+        // Note that, for custom elements to work properly on IE < 9, you *must*:
+        // (1) Reference jQuery
+        // (2) Register any component that will be used as a custom element
+        //     (e.g., ko.components.register(...)) *before* the browser parses any
+        //     markup containing that custom element
+        //
+        // The reason for (2) is the same as the well-known issue that IE < 9 cannot
+        // parse markup containing HTML5 elements unless you've already called
+        // document.createElement(thatElementName) first. Our old-IE compatibility
+        // code causes this to happen automatically for all registered components.
+        //
+        // The reason for (1) is that KO's built-in simpleHtmlParse logic uses .innerHTML
+        // on a <div> that is not attached to any document, which means the trick from
+        // (1) does not work. Referencing jQuery overrides the HTML parsing logic to
+        // uses jQuery's, which uses a temporary document fragment, and our old-IE compatibility
+        // code has patched createDocumentFragment to enable preregistered components
+        // to act as custom elements in that document fragment. If we wanted, we could
+        // amend simpleHtmlParse to use a document fragment, but it seems unlikely that
+        // anyone targetting IE < 9 would not be using jQuery.
+
+        this.after(function() {
+            ko.components.unregister('outer-component');
+            ko.components.unregister('inner-component');
+        });
+
+        ko.components.register('inner-component', {
+            template: 'the inner component with value [<span data-bind="text: innerval"></span>]'
+        });
+        ko.components.register('outer-component', {
+            template: 'the outer component [<inner-component params="innerval: outerval.innerval"></inner-component>] goodbye'
+        });
+        var initialMarkup = '<div>hello [<outer-component params="outerval: outerval"></outer-component>] world</div>';
+        testNode.innerHTML = initialMarkup;
+
+        ko.applyBindings({ outerval: { innerval: 'my value' } }, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText('hello [the outer component [the inner component with value [my value]] goodbye] world');
+    });
+
+    it('Gives a useful exception message if you try to use a custom element that has not been preregistered on IE < 9', function() {
+        this.after(function() {
+            ko.components.unregister('outer-component');
+            ko.components.unregister('inner-component');
+        });
+
+        // Set up a redirection from <unknown-element> to <inner-component>
+        // Since 'unknown-element' isn't actually the name of a registered component,
+        // the IE < 9 shim won't be applied to it, so it won't actually be usable.
+        this.restoreAfter(ko.components, 'getComponentNameForNode');
+        ko.components.getComponentNameForNode = function(node) {
+            switch (node.tagName.toLowerCase()) {
+                case 'outer-component': return 'outer-component';
+                case 'unknown-element': return 'inner-component';
+                default: return null;
+            }
+        }
+
+        ko.components.register('inner-component', { template: 'the inner component' });
+        ko.components.register('outer-component', { template: '<unknown-element></unknown-element>' });
+        testNode.innerHTML = '<outer-component></outer-component>';
+
+        // See the component show up, or we get a suitable exception message
+        ko.applyBindings(null, testNode);
+        try {
+            jasmine.Clock.tick(1);
+        } catch(ex) {
+            // For IE < 9, the exception message should provide a useful hint about what went wrong
+            expect(ex.message).toBe('Cannot add nodes to <UNKNOWN-ELEMENT>. If this is a component, be sure to preregister it for IE < 9 support.\n\nOriginal exception: Unexpected call to method or property access.');
+            return;
+        }
+
+        // The alternative acceptable outcome is that the above actually works, which it does on HTML5-era browsers
+        expect(testNode).toContainHtml('<outer-component><unknown-element>the inner component</unknown-element></outer-component>');
     });
 });

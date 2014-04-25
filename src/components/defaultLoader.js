@@ -201,4 +201,7 @@
 
     // By default, the default loader is the only registered component loader
     ko.components['loaders'].push(ko.components.defaultLoader);
+
+    // Privately expose the underlying config registry for use in old-IE shim
+    ko.components._allRegisteredComponents = defaultConfigRegistry;
 })();
