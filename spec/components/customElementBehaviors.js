@@ -323,8 +323,6 @@ describe('Components: Custom elements', function() {
     });
 
     it('Can nest custom elements', function() {
-        ko.utils.parseHtmlFragment('');
-        
         // Note that, for custom elements to work properly on IE < 9, you *must*:
         // (1) Reference jQuery
         // (2) Register any component that will be used as a custom element
