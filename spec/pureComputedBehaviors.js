@@ -164,20 +164,26 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual(2);
     });
 
-    it('Should prevent recursive calling of read function while sleeping', function() {
+    it('Should prevent recursive calling of read function', function() {
         // It doesn't really make sense to use the value of a pure computed within itself since there's no way to
-        // prevent infinite recursion (a pure computed should never alter external state). Knockout prevents a computed
-        // from being evaluated recursively to at least prevent things from breaking internally if this happens.
+        // prevent infinite recursion (a pure computed should never alter external state). So expect an error
+        // if a pure computed is referenced recursively.
         var observable = ko.observable('A'),
             computed = ko.pureComputed(function() {
                 return '' + observable() + computed();
             });
 
-        expect(computed()).toEqual('Aundefined');
+        // While sleeping
+        expect(computed).toThrow();
+
+        // While awake
+        expect(function() {
+            ko.computed(computed);
+        }).toThrow();
     });
 
     describe('Context', function() {
-        it('Should accurately report initial evaluation', function() {
+        it('Should not define initial evaluation', function() {
             var evaluationCount = 0,
                 computed = ko.pureComputed(function() {
                     ++evaluationCount;
@@ -185,11 +191,12 @@ describe('Pure Computed', function() {
                 });
 
             expect(evaluationCount).toEqual(0);     // no evaluation yet
-            expect(computed()).toEqual(true);       // first access causes evaluation; value of isInitial was true
+            expect(computed()).toEqual(undefined);  // isInitial is always undefined for a pure computed
             expect(evaluationCount).toEqual(1);     // single evaluation
 
-            expect(computed()).toEqual(false);       // second access causes evaluation; value of isInitial was false
-            expect(evaluationCount).toEqual(2);     // second evaluation
+            ko.computed(computed);                  // wake up computed by subscribing to it
+            expect(evaluationCount).toEqual(2);     // which causes a second evaluation
+            expect(computed()).toEqual(undefined);  // isInitial is still undefined
         });
 
         it('Should accurately report the number of dependencies', function() {

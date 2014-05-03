@@ -5,9 +5,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _suppressDisposalUntilDisposeWhenReturnsFalse = false,
         _isDisposed = false,
         readFunction = evaluatorFunctionOrOptions,
-        canAutoDispose = true,
-        isSleeping = false,
-        isInitial = true;
+        pure = false,
+        isSleeping = false;
 
     if (readFunction && typeof readFunction == "object") {
         // Single-parameter syntax - everything is on this "options" param
@@ -57,6 +56,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
     function evaluateImmediate(suppressChangeNotification) {
         if (_isBeingEvaluated) {
+            if (pure) {
+                throw Error("A 'pure' computed must not be called recursively");
+            }
             // If the evaluation of a ko.computed causes side effects, it's possible that it will trigger its own re-evaluation.
             // This is not desirable (it's hard for a developer to realise a chain of dependencies might cause this, and they almost
             // certainly didn't intend infinite re-evaluations). So, for predictability, we simply prevent ko.computeds from causing
@@ -94,10 +96,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                         }
                     },
                     computed: dependentObservable,
-                    isInitial: isInitial
+                    isInitial: undefined
                 });
                 _dependenciesCount = 0;
-                isInitial = false;
                 _latestValue = readFunction.call(evaluatorFunctionTarget);
             } finally {
                 ko.dependencyDetection.end();
@@ -126,12 +127,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     }
                 },
                 computed: dependentObservable,
-                isInitial: isInitial
+                isInitial: pure ? undefined : !_dependenciesCount        // If we're evaluating when there are no previous dependencies, it must be the first time
             });
 
             _subscriptionsToDependencies = {};
             _dependenciesCount = 0;
-            isInitial = false;
 
             try {
                 var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
@@ -163,7 +163,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             _isBeingEvaluated = false;
         }
 
-        if (canAutoDispose && !_dependenciesCount)
+        if (!pure && !_dependenciesCount)
             dispose();
     }
 
@@ -235,9 +235,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
     };
 
-    if (options['canSleep']) {
+    if (options['pure']) {
+        pure = true;
         isSleeping = true;     // Starts off sleeping; will awake on the first subscription
-        canAutoDispose = false;
         dependentObservable.beforeSubscriptionAdd = function () {
             // If asleep, wake up the computed and evaluate to register any dependencies.
             if (isSleeping) {
@@ -325,9 +325,9 @@ ko.exportSymbol('isComputed', ko.isComputed);
 
 ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget) {
     if (typeof evaluatorFunctionOrOptions === 'function') {
-        return ko.computed(evaluatorFunctionOrOptions, evaluatorFunctionTarget, {'canSleep':true});
+        return ko.computed(evaluatorFunctionOrOptions, evaluatorFunctionTarget, {'pure':true});
     } else {
-        evaluatorFunctionOrOptions['canSleep'] = true;
+        evaluatorFunctionOrOptions['pure'] = true;
         return ko.computed(evaluatorFunctionOrOptions, evaluatorFunctionTarget);
     }
 }
