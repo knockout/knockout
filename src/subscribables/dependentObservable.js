@@ -34,6 +34,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _subscriptionsToDependencies = {};
         _dependenciesCount = 0;
         _needsEvaluation = false;
+        readFunction = null;
     }
 
     function evaluatePossiblyAsync() {
