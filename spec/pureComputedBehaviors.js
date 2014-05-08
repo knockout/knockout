@@ -33,19 +33,28 @@ describe('Pure Computed', function() {
         expect(invokedWriteWithValue).toEqual("some value");
     });
 
-    it('Should describe itself as sleeping initially', function () {
-        var computed = ko.pureComputed(function () { });
-        expect(computed.isSleeping()).toEqual(true);
-    });
-
-    it('Should describe itself as active initially (always "active" while sleeping)', function() {
+    it('Should describe itself as active initially', function() {
         var computed = ko.pureComputed(function () { });
         expect(computed.isActive()).toEqual(true);
     });
 
-    it('Should evaluate on each access while sleeping', function () {
+    it('Should describe itself as inactive if the evaluator has no dependencies on its first run', function() {
+        var computed = ko.pureComputed(function () { });
+        computed(); // access the computed to evaluate it
+        expect(computed.isActive()).toEqual(false);
+    });
+
+    it('Should describe itself as active if the evaluator has dependencies on its first run', function() {
+        var observable = ko.observable('initial'),
+            computed = ko.computed(observable);
+        computed(); // access the computed to evaluate it
+        expect(computed.isActive()).toEqual(true);
+    });
+
+    it('Should evaluate on each access while sleeping if not disposed', function () {
         var timesEvaluated = 0,
-            computed = ko.pureComputed(function () { return ++timesEvaluated; });
+            data = ko.observable(),
+            computed = ko.pureComputed(function () { data(); return ++timesEvaluated; });
 
         expect(timesEvaluated).toEqual(0);
 
@@ -92,11 +101,8 @@ describe('Pure Computed', function() {
             computed = ko.pureComputed(data),
             notifiedValues = [];
 
-        expect(computed.isSleeping()).toEqual(true);
-
         // Subscribe to computed; the dependency should now be tracked
         computed.subscribe(function (value) { notifiedValues.push(value); });
-        expect(computed.isSleeping()).toEqual(false);
         expect(data.getSubscriptionsCount()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
 
@@ -113,12 +119,12 @@ describe('Pure Computed', function() {
             computed = ko.pureComputed(data),
             subscription = computed.subscribe(function () {});
 
-        expect(computed.isSleeping()).toEqual(false);
         expect(data.getSubscriptionsCount()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
 
+        // Dispose the subscription to the computed
         subscription.dispose();
-        expect(computed.isSleeping()).toEqual(true);
+        // It goes to sleep, disposing its subscription to the observable
         expect(data.getSubscriptionsCount()).toEqual(0);
         expect(computed.getDependenciesCount()).toEqual(1);
     });
@@ -139,28 +145,27 @@ describe('Pure Computed', function() {
         expect(timesEvaluated).toEqual(2);
 
         // Double check that disposing subscriptions puts the pure computed to sleep
-        expect(pureComputed.isSleeping()).toEqual(false);
         computed.dispose();
-        expect(pureComputed.isSleeping()).toEqual(true);
+        expect(data.getSubscriptionsCount()).toEqual(0);
     });
 
     it('Should be able to re-evaluate a sleeping computed that previously threw an exception', function() {
-        var shouldThrow = false, value = 1,
+        var shouldThrow = ko.observable(false), observableValue = ko.observable(1),
             computed = ko.pureComputed(function() {
-                if (shouldThrow) {
+                if (shouldThrow()) {
                     throw Error("Error during computed evaluation");
                 } else {
-                    return value;
+                    return observableValue();
                 }
             });
 
         expect(computed()).toEqual(1);
 
-        value = 2;
-        shouldThrow = true;
+        observableValue(2);
+        shouldThrow(true);
         expect(computed).toThrow("Error during computed evaluation");
 
-        shouldThrow = false;
+        shouldThrow(false);
         expect(computed()).toEqual(2);
     });
 
@@ -184,9 +189,11 @@ describe('Pure Computed', function() {
 
     describe('Context', function() {
         it('Should not define initial evaluation', function() {
-            var evaluationCount = 0,
+            var observable = ko.observable(1),
+                evaluationCount = 0,
                 computed = ko.pureComputed(function() {
                     ++evaluationCount;
+                    observable();   // for dependency
                     return ko.computedContext.isInitial();
                 });
 
@@ -224,23 +231,6 @@ describe('Pure Computed', function() {
 
             expect(computed()).toEqual(2);     // second evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
-        });
-
-        it('Should accurately report when computed is sleeping', function() {
-            var computed = ko.pureComputed(function() {
-                    return ko.computedContext.isSleeping();
-                });
-
-            expect(computed()).toEqual(true);       // compueted is sleeping
-
-            var subscription = computed.subscribe(function () {});
-            expect(computed()).toEqual(false);       // compueted is not sleeping
-
-            subscription.dispose();
-            expect(computed()).toEqual(true);       // compueted is sleeping again
-
-            // value outside of computed is undefined
-            expect(ko.computedContext.isSleeping()).toBeUndefined();
         });
     });
 });

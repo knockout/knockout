@@ -320,11 +320,6 @@ describe('Dependent Observable', function() {
         expect(ko.isWriteableObservable(instance)).toEqual(true);
     });
 
-    it('Should describe itself as not sleeping', function () {
-        var computed = ko.computed(function () { });
-        expect(computed.isSleeping()).toEqual(false);
-    });
-
     it('Should allow deferring of evaluation (and hence dependency detection)', function () {
         var timesEvaluated = 0;
         var instance = ko.computed({
