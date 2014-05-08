@@ -60,3 +60,4 @@ ko.computedContext = ko.dependencyDetection = (function () {
 ko.exportSymbol('computedContext', ko.computedContext);
 ko.exportSymbol('computedContext.getDependenciesCount', ko.computedContext.getDependenciesCount);
 ko.exportSymbol('computedContext.isInitial', ko.computedContext.isInitial);
+ko.exportSymbol('computedContext.isSleeping', ko.computedContext.isSleeping);

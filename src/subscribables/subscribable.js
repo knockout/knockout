@@ -27,17 +27,17 @@ var ko_subscribable_fn = {
 
         var subscription = new ko.subscription(self, boundCallback, function () {
             ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
+            if (self.afterSubscriptionRemove)
+                self.afterSubscriptionRemove(event);
         });
 
-        // This will force a computed with deferEvaluation to evaluate before any subscriptions
-        // are registered.
-        if (self.peek) {
-            self.peek();
-        }
+        if (self.beforeSubscriptionAdd)
+            self.beforeSubscriptionAdd(event);
 
         if (!self._subscriptions[event])
             self._subscriptions[event] = [];
         self._subscriptions[event].push(subscription);
+
         return subscription;
     },
 
