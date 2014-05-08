@@ -5,7 +5,7 @@
   "version": "3.1.0",
   "license": "MIT",
   "author": "The Knockout.js team",
-  "main": "build/output/knockout-latest.debug.js",
+  "main": "build/output/knockout.js",
   "scripts": {
     "prepublish": "grunt",
     "test": "node spec/runner.node.js"
@@ -17,7 +17,7 @@
   "bugs": "https://github.com/knockout/knockout/issues",
   "testling": {
     "preprocess": "build/build.sh",
-    "html": "spec/runner.html?src=build/output/knockout-latest.js&testling=true",
+    "html": "spec/runner.html?src=build/output/knockout.min.js&testling=true",
     "browsers": [
       "ie/6..latest",
       "chrome/20..latest",

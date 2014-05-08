@@ -1,0 +1,10 @@
+{
+    "name": "knockout",
+    "version": "3.0.0",
+    "main": "./build/output/knockout.js",
+    "ignore": [
+        "**/.*"
+        ],
+    "dependencies": {
+    }
+}
