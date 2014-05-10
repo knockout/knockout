@@ -38,7 +38,7 @@ This will apply the CSS class `profitWarning` whenever the `currentProfit` value
         }, viewModel);
 
         // Causes the "profitPositive" class to be removed and "profitWarning" class to be added
-        viewModel.curcrentProfit(-50);
+        viewModel.currentProfit(-50);
     </script>
 
 This will apply the CSS class `profitPositive` when the `currentProfit` value is positive, otherwise it will apply the `profitWarning` CSS class.
