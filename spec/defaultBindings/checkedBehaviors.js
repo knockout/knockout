@@ -339,4 +339,14 @@ describe('Binding: Checked', function() {
         ko.utils.triggerEvent(testNode.childNodes[2], "click");
         expect(testNode.childNodes[0].checked).toEqual(true);
     });
+
+    it('When checkbox has a value attribute and a checkedValue property throw error', function() {
+        var prevCheckSetting = ko.bindingHandlers['disallow-value-and-checkedValue'];
+        ko.bindingHandlers['checkedValue']['disallow-value-and-checkedValue'] = true;
+        testNode.innerHTML = '<input type="radio" value="1" data-bind="checkedValue: 1" />';
+        expect(function(){
+            ko.applyBindings({}, testNode);
+        }).toThrow();
+        ko.bindingHandlers['checkedValue']['disallow-value-and-checkedValue'] = prevCheckSetting;
+    })
 });
