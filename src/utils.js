@@ -266,17 +266,6 @@ ko.utils = (function () {
                     string.toString().replace(/^[\s\xa0]+|[\s\xa0]+$/g, '');
         },
 
-        stringTokenize: function (string, delimiter) {
-            var result = [];
-            var tokens = (string || "").split(delimiter);
-            for (var i = 0, j = tokens.length; i < j; i++) {
-                var trimmed = ko.utils.stringTrim(tokens[i]);
-                if (trimmed !== "")
-                    result.push(trimmed);
-            }
-            return result;
-        },
-
         stringStartsWith: function (string, startsWith) {
             string = string || "";
             if (startsWith.length > string.length)
