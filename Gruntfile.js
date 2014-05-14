@@ -151,7 +151,7 @@ module.exports = function(grunt) {
         );
     });
 
-    grunt.registerTask('dist', ['clean'], function() {
+    grunt.registerTask('dist', function() {
         // Update the version in bower.json
         var bowerConfig = grunt.file.readJSON('bower.json'),
             version = grunt.config('pkg.version');
