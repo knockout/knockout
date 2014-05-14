@@ -27,6 +27,10 @@ module.exports = function(grunt) {
             debug: './build/output/knockout-latest.debug.js',
             min: './build/output/knockout-latest.js'
         },
+        dist: {
+            debug: './dist/knockout.debug.js',
+            min: './dist/knockout.js'
+        },
         test: {
             phantomjs: 'spec/runner.phantom.js',
             node: 'spec/runner.node.js'
@@ -145,6 +149,29 @@ module.exports = function(grunt) {
                 }
             }
         );
+    });
+
+    grunt.registerTask('dist', ['clean'], function() {
+        // Update the version in bower.json
+        var bowerConfig = grunt.file.readJSON('bower.json'),
+            version = grunt.config('pkg.version');
+        bowerConfig.version = version;
+        grunt.file.write('bower.json', JSON.stringify(bowerConfig, true, 2));
+
+        var buildConfig = grunt.config('build'),
+            distConfig = grunt.config('dist');
+        grunt.file.copy(buildConfig.debug, distConfig.debug);
+        grunt.file.copy(buildConfig.min, distConfig.min);
+
+        console.log('To publish, run:');
+        console.log('    git add bower.json');
+        console.log('    git add -f ' + distConfig.debug);
+        console.log('    git add -f ' + distConfig.min);
+        console.log('    git checkout head');
+        console.log('    git commit -m \'Version ' + version + ' for distribution\'');
+        console.log('    git tag -a v' + version + ' -m \'Add tag v' + version + '\'');
+        console.log('    git checkout master');
+        console.log('    git push origin --tags');
     });
 
     // Default task.
