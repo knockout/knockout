@@ -207,6 +207,56 @@ describe('Binding: Value', function() {
         expect(myobservable()).toEqual("some user-entered value");
     });
 
+    it('Should delay reading value and updating observable when prefixing an event with "after"', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+        expect(myobservable()).toEqual("123");  // observable is not changed yet
+
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some user-entered value");  // it's changed after a delay
+    });
+
+    it('Should ignore "unchanged" notifications from observable during delayed event processing', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+
+        // Notification of previous value (unchanged) is ignored
+        myobservable.valueHasMutated();
+        expect(testNode.childNodes[0].value).toEqual("some user-entered value");
+
+        // Observable is updated to new element value
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some user-entered value");
+    });
+
+    it('Should not ignore actual change notifications from observable during delayed event processing', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+
+        // New value is written to input element
+        myobservable("some value from the server");
+        expect(testNode.childNodes[0].value).toEqual("some value from the server");
+
+        // New value remains when event is processed
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some value from the server");
+    });
+
     it('On IE < 10, should handle autofill selection by treating "propertychange" followed by "blur" as a change event', function() {
         // This spec describes the awkward choreography of events needed to detect changes to text boxes on IE < 10,
         // because it doesn't fire regular "change" events when the user selects an autofill entry. It isn't applicable
