@@ -72,6 +72,37 @@ describe('Observable', function() {
         expect(notifiedValues[1]).toEqual('B');
     });
 
+    it('Should notify subscribers with the prior value using "valueChange" topic', function () {
+        var instance = new ko.observable();
+        var changes = [];
+        instance.subscribe(function (change) {
+            changes.push(change);
+        }, null, "valueChange");
+
+        instance('A');
+        instance('B');
+
+        expect(changes.length).toEqual(2);
+        expect(changes[0].priorValue).toEqual(undefined);
+        expect(changes[1].priorValue).toEqual('A');
+        expect(changes[0].value).toEqual('A');
+        expect(changes[1].value).toEqual('B');
+    });
+
+
+    it('Should not notify subscribers with "valueChange" topic with non-primitives', function () {
+        var instance = new ko.observable().extend({ notify: "always" });
+        var changes = [];
+        instance.subscribe(function (change) {
+            changes.push(change);
+        }, null, "valueChange");
+
+        instance({});
+        instance({});
+
+        expect(changes.length).toEqual(0);
+    });
+
     it('Should be able to tell it that its value has mutated, at which point it notifies subscribers', function () {
         var instance = new ko.observable();
         var notifiedValues = [];
@@ -254,11 +285,12 @@ describe('Observable', function() {
         };
         instance(456);
 
-        expect(interceptedNotifications.length).toEqual(2);
+        expect(interceptedNotifications.length).toEqual(3);
         expect(interceptedNotifications[0].eventName).toEqual("beforeChange");
-        expect(interceptedNotifications[1].eventName).toEqual("None");
+        expect(interceptedNotifications[1].eventName).toEqual("valueChange");
+        expect(interceptedNotifications[2].eventName).toEqual("None");
         expect(interceptedNotifications[0].value).toEqual(123);
-        expect(interceptedNotifications[1].value).toEqual(456);
+        expect(interceptedNotifications[2].value).toEqual(456);
     });
 
     it('Should inherit any properties defined on ko.subscribable.fn or ko.observable.fn', function() {
