@@ -54,7 +54,8 @@ describe('JSON posting', function() {
             submitter: function(x) { submittedForm = x; }
         });
 
-        expect(submittedForm.longString.value.length).toEqual(longStringJson.length);
-        expect(submittedForm.longString.value).toEqual(longStringJson);
+        var submittedValue = ko.utils.getFormFields(submittedForm, 'longString')[0].value;
+        expect(submittedValue.length).toEqual(longStringJson.length);
+        expect(submittedValue).toEqual(longStringJson);
     });
 });

@@ -513,12 +513,14 @@ ko.utils = (function () {
             for (var key in data) {
                 // Since 'data' this is a model object, we include all properties including those inherited from its prototype
                 var input = document.createElement("input");
+                input.type = "hidden";
                 input.name = key;
                 input.value = ko.utils.stringifyJson(ko.utils.unwrapObservable(data[key]));
                 form.appendChild(input);
             }
             objectForEach(params, function(key, value) {
                 var input = document.createElement("input");
+                input.type = "hidden";
                 input.name = key;
                 input.value = value;
                 form.appendChild(input);
