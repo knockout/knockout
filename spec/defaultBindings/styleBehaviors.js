@@ -12,4 +12,18 @@ describe('Binding: CSS style', function() {
         myObservable(undefined);
         expect(testNode.childNodes[0].style.backgroundColor).toEqual("");
     });
+
+    it('Should be able to apply the numeric value zero to a style', function() {
+        // Represents https://github.com/knockout/knockout/issues/972
+        testNode.innerHTML = "<div data-bind='style: { width: 0 }'></div>";
+        ko.applyBindings(null, testNode);
+        expect(testNode.childNodes[0].style.width).toBe("0px");
+    });
+
+    it('Should be able to use "false" to remove a style', function() {
+        // Verifying that the fix for 972 doesn't break this existing behaviour
+        testNode.innerHTML = "<div style='width: 100px' data-bind='style: { width: false }'></div>";
+        ko.applyBindings(null, testNode);
+        expect(testNode.childNodes[0].style.width).toBe("");
+    });
 });
