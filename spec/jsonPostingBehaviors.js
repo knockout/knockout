@@ -44,4 +44,17 @@ describe('JSON posting', function() {
         expect(ko.utils.getFormFields(submittedForm, '__RequestVe').length).toEqual(0);
         expect(ko.utils.getFormFields(submittedForm, 'authenticity_token')[0].value).toEqual('wantedval2');
 	});
+
+    it('Should not truncate large values', function() {
+        // Represents https://github.com/knockout/knockout/issues/1252
+        var longString = new Array(1000000).join('a'),
+            longStringJson = JSON.stringify(longString),
+            submittedForm;
+        ko.utils.postJson("http://example.com", { longString: longString }, {
+            submitter: function(x) { submittedForm = x; }
+        });
+
+        expect(submittedForm.longString.value.length).toEqual(longStringJson.length);
+        expect(submittedForm.longString.value).toEqual(longStringJson);
+    });
 });
