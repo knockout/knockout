@@ -110,6 +110,32 @@ describe('Components: Custom elements', function() {
         expect(suppliedParams).toEqual([{ nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: 'mystr' }]);
     });
 
+    it('Supplies an empty params object (with empty $raw) if a custom element has no params attribute', function() {
+        var suppliedParams = [];
+        ko.components.register('test-component', {
+            template: 'Ignored',
+            viewModel: function(params) { suppliedParams.push(params); }
+        });
+
+        testNode.innerHTML = '<test-component></test-component>';
+        ko.applyBindings(null, testNode);
+        jasmine.Clock.tick(1);
+        expect(suppliedParams).toEqual([{ $raw: {} }]);
+    });
+
+    it('Supplies an empty params object (with empty $raw) if a custom element has an empty whitespace params attribute', function() {
+        var suppliedParams = [];
+        ko.components.register('test-component', {
+            template: 'Ignored',
+            viewModel: function(params) { suppliedParams.push(params); }
+        });
+
+        testNode.innerHTML = '<test-component params=" "></test-component>';
+        ko.applyBindings(null, testNode);
+        jasmine.Clock.tick(1);
+        expect(suppliedParams).toEqual([{ $raw: {} }]);
+    });
+
     it('Should not confuse parameters with bindings', function() {
         this.restoreAfter(ko, 'getBindingHandler');
         var bindings = [];
