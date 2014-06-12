@@ -164,9 +164,9 @@
             arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
                 context['$index'] = index;
             });
-            var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
+            var templateName = ko.isObservable(template) ? template() : typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
-        }
+        };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
