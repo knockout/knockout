@@ -177,7 +177,6 @@
                 context['$index'] = index;
             });
 
-            
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
         }
