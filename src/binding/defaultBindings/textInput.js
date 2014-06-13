@@ -1,7 +1,7 @@
 (function () {
 
 if (window && window.navigator) {
-    // Detect Opera version because Opera 10 doesn't fully support the input event
+    // Detect Opera and Safari versions because some old versions don't fully support the 'input' event
     var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version());
 
     var safariVersion = window.navigator.userAgent.match(/^(?:(?!chrome).)*version\/(.*) safari/i);
@@ -11,10 +11,10 @@ if (window && window.navigator) {
 }
 
 // IE 8 and 9 have bugs that prevent the normal events from firing when the value changes.
-// But it does fires the selectionchange event on many of those, presumably because the
-// cursor is moving and that counts as the selection changing. The selectionchange event is
+// But it does fire the 'selectionchange' event on many of those, presumably because the
+// cursor is moving and that counts as the selection changing. The 'selectionchange' event is
 // fired at the document level only and doesn't directly indicate which element changed. We
-// set up just one event handler for the document and use activeElement to determine which
+// set up just one event handler for the document and use 'activeElement' to determine which
 // element was changed.
 if (ko.utils.ieVersion < 10) {
     var selectionChangeRegisteredName = ko.utils.domData.nextKey(),
@@ -58,8 +58,12 @@ ko.bindingHandlers['textInput'] = {
 
         var deferUpdateModel = function (event) {
             if (!timeoutHandle) {
-                var handler = DEBUG ? updateModel.bind(element, {type: event.type}) : updateModel;
+                // The elementValueBeforeEvent variable is set *only* during the brief gap between an
+                // event firing and the updateModel function running. This allows us to ignore model
+                // updates that are from the previous state of the element, usually due to techniques
+                // such as rateLimit. Such updates, if not ignored, can cause keystrokes to be lost.
                 elementValueBeforeEvent = element.value;
+                var handler = DEBUG ? updateModel.bind(element, {type: event.type}) : updateModel;
                 timeoutHandle = setTimeout(handler, 4);
             }
         };
@@ -80,7 +84,6 @@ ko.bindingHandlers['textInput'] = {
             // will move the cursor to the end of the input, which would be bad while the user is typing.
             if (element.value !== modelValue) {
                 previousElementValue = modelValue;  // Make sure we ignore events (propertychange) that result from updating the value
-
                 element.value = modelValue;
             }
         };
