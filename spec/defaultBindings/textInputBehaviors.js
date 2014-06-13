@@ -201,25 +201,93 @@ describe('Binding: TextInput', function() {
     });
 
     it('Should write only changed values to observable', function () {
-        var observable = ko.observable(), previousValue;
-        var valueForEditing = ko.computed({
-            read: observable,
-            write: function(newValue) {
-                expect(newValue).not.toEqual(previousValue);
-                previousValue = newValue;
-                observable(newValue);
-            }
-        });
+        var model = { writtenValue: '' };
 
-        testNode.innerHTML = "<input data-bind='textInput: valueForEditing' />";
-        ko.applyBindings({ valueForEditing: valueForEditing}, testNode);
+        testNode.innerHTML = "<input data-bind='textInput: writtenValue' />";
+        ko.applyBindings(model, testNode);
 
         testNode.childNodes[0].value = "1234";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        expect(valueForEditing()).toEqual("1234");
+        expect(model.writtenValue).toEqual("1234");
 
         // trigger change event with the same value
+        model.writtenValue = undefined;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
-        expect(valueForEditing()).toEqual("1234");
+        expect(model.writtenValue).toBeUndefined();
     });
+
+    if (typeof DEBUG != 'undefined' && DEBUG) {
+        // The textInput binds to different events depending on the browser.
+        // But the DEBUG version allows us to force it to bind to specific events for testing purposes.
+
+        describe('Event processing', function () {
+            beforeEach(function() {
+                this.restoreAfter(ko.bindingHandlers.textInput, '_forceUpdateOn');
+                ko.bindingHandlers.textInput._forceUpdateOn = ['afterkeydown'];
+                jasmine.Clock.useMock();
+            });
+
+            it('Should update observable asynchronously', function () {
+                var myobservable = new ko.observable("123");
+                testNode.innerHTML = "<input data-bind='textInput:someProp' />";
+                ko.applyBindings({ someProp: myobservable }, testNode);
+                ko.utils.triggerEvent(testNode.childNodes[0], "keydown");
+                testNode.childNodes[0].value = "some user-entered value";
+                expect(myobservable()).toEqual("123");  // observable is not changed yet
+
+                jasmine.Clock.tick(20);
+                expect(myobservable()).toEqual("some user-entered value");  // it's changed after a delay
+            });
+
+            it('Should ignore "unchanged" notifications from observable during delayed event processing', function () {
+                var myobservable = new ko.observable("123");
+                testNode.innerHTML = "<input data-bind='textInput:someProp' />";
+                ko.applyBindings({ someProp: myobservable }, testNode);
+                ko.utils.triggerEvent(testNode.childNodes[0], "keydown");
+                testNode.childNodes[0].value = "some user-entered value";
+
+                // Notification of previous value (unchanged) is ignored
+                myobservable.valueHasMutated();
+                expect(testNode.childNodes[0].value).toEqual("some user-entered value");
+
+                // Observable is updated to new element value
+                jasmine.Clock.tick(20);
+                expect(myobservable()).toEqual("some user-entered value");
+            });
+
+            it('Should not ignore actual change notifications from observable during delayed event processing', function () {
+                var myobservable = new ko.observable("123");
+                testNode.innerHTML = "<input data-bind='textInput:someProp' />";
+                ko.applyBindings({ someProp: myobservable }, testNode);
+                ko.utils.triggerEvent(testNode.childNodes[0], "keydown");
+                testNode.childNodes[0].value = "some user-entered value";
+
+                // New value is written to input element
+                myobservable("some value from the server");
+                expect(testNode.childNodes[0].value).toEqual("some value from the server");
+
+                // New value remains when event is processed
+                jasmine.Clock.tick(20);
+                expect(myobservable()).toEqual("some value from the server");
+            });
+
+            it('Should update model property using earliest available event', function () {
+                var model = { someProp: '123' };
+                testNode.innerHTML = "<input data-bind='textInput:someProp' />";
+                ko.applyBindings(model, testNode);
+
+                ko.utils.triggerEvent(testNode.childNodes[0], "keydown");
+                testNode.childNodes[0].value = "some user-entered value";
+                ko.utils.triggerEvent(testNode.childNodes[0], "change");
+                expect(model.someProp).toEqual("some user-entered value");  // it's changed immediately
+                expect(testNode.childNodes[0]._ko_textInputProcessedEvent).toEqual("change");   // using the change event
+
+                // even after a delay, the keydown event isn't processed
+                model.someProp = undefined;
+                jasmine.Clock.tick(20);
+                expect(model.someProp).toBeUndefined();
+                expect(testNode.childNodes[0]._ko_textInputProcessedEvent).toEqual("change");
+            });
+        });
+    }
 });

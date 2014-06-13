@@ -1,6 +1,6 @@
 (function () {
 
-if (window) {
+if (window && window.navigator) {
     // Detect Opera version because Opera 10 doesn't fully support the input event
     var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version());
 
@@ -43,21 +43,24 @@ ko.bindingHandlers['textInput'] = {
             timeoutHandle,
             elementValueBeforeEvent;
 
-        var updateModel = function () {
+        var updateModel = function (event) {
             clearTimeout(timeoutHandle);
             elementValueBeforeEvent = timeoutHandle = undefined;
 
             var elementValue = element.value;
             if (previousElementValue !== elementValue) {
+                // Provide a way for tests to know exactly which event was processed
+                if (DEBUG && event) element['_ko_textInputProcessedEvent'] = event.type;
                 previousElementValue = elementValue;
                 ko.expressionRewriting.writeValueToProperty(valueAccessor(), allBindings, 'textInput', elementValue);
             }
         };
 
-        var deferUpdateModel = function () {
+        var deferUpdateModel = function (event) {
             if (!timeoutHandle) {
+                var handler = DEBUG ? updateModel.bind(element, {type: event.type}) : updateModel;
                 elementValueBeforeEvent = element.value;
-                timeoutHandle = setTimeout(updateModel, 4);
+                timeoutHandle = setTimeout(handler, 4);
             }
         };
 
@@ -86,45 +89,56 @@ ko.bindingHandlers['textInput'] = {
             ko.utils.registerEventHandler(element, event, handler);
         };
 
-        if (ko.utils.ieVersion < 9) {
-            // Internet Explorer <=8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
-            // any property of an element changes. Unlike 'input', it also fires if a property is changed from JavaScript code,
-            // but that's an acceptable compromise for this binding.
-            onEvent('propertychange', function(event) {
-                if (event.propertyName === 'value') {
-                    updateModel();
+        if (DEBUG && ko.bindingHandlers['textInput']['_forceUpdateOn']) {
+            // Provide a way for tests to specify exactly which events are bound
+            ko.utils.arrayForEach(ko.bindingHandlers['textInput']['_forceUpdateOn'], function(eventName) {
+                if (eventName.slice(0,5) == 'after') {
+                    onEvent(eventName.slice(5), deferUpdateModel);
+                } else {
+                    onEvent(eventName, updateModel);
                 }
             });
-
-            if (ko.utils.ieVersion == 8) {
-                // IE 8 has a bug where it fails to fire 'propertychange' on the first update following a value change from
-                // JavaScript code. To fix this, we bind to the following events also.
-                onEvent('keyup', updateModel);      // A single keystoke
-                onEvent('keydown', updateModel);    // The first character when a key is held down
-
-                registerForSelectionChangeEvent(element, updateModel);  // 'selectionchange' covers cut, paste, drop, delete, etc.
-                onEvent('dragend', deferUpdateModel);
-            }
         } else {
-            // All other supported browsers support the 'input' event, which fires whenver the content of element is changed
-            // through the user interface.
-            onEvent('input', updateModel);
+            if (ko.utils.ieVersion < 9) {
+                // Internet Explorer <=8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
+                // any property of an element changes. Unlike 'input', it also fires if a property is changed from JavaScript code,
+                // but that's an acceptable compromise for this binding.
+                onEvent('propertychange', function(event) {
+                    if (event.propertyName === 'value') {
+                        updateModel();
+                    }
+                });
 
-            if (ko.utils.ieVersion == 9) {
-                // Internet Explorer 9 doesn't fire the 'input' event when deleting text, including using
-                // the backspace, delete, or ctrl-x keys, clicking the 'x' to clear the input, dragging text
-                // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
-                // can detect all of those except dragging text out of the field, for which we use 'dragend'.
-                registerForSelectionChangeEvent(element, updateModel);
-                onEvent('dragend', deferUpdateModel);
-            } else if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
-                // Safari <5 doesn't fire the 'input' event for <textarea> elements, but it does fire
-                // 'textInput'.
-                onEvent('textInput', updateModel);
-            } else if (operaVersion < 11) {
-                // Opera 10 doesn’t fire the 'input' event for cut, paste, undo & drop operations on <input>
-                // elements. We can try to catch some of those using 'keydown'.
-                onEvent('keydown', deferUpdateModel);
+                if (ko.utils.ieVersion == 8) {
+                    // IE 8 has a bug where it fails to fire 'propertychange' on the first update following a value change from
+                    // JavaScript code. To fix this, we bind to the following events also.
+                    onEvent('keyup', updateModel);      // A single keystoke
+                    onEvent('keydown', updateModel);    // The first character when a key is held down
+
+                    registerForSelectionChangeEvent(element, updateModel);  // 'selectionchange' covers cut, paste, drop, delete, etc.
+                    onEvent('dragend', deferUpdateModel);
+                }
+            } else {
+                // All other supported browsers support the 'input' event, which fires whenever the content of the element is changed
+                // through the user interface.
+                onEvent('input', updateModel);
+
+                if (ko.utils.ieVersion == 9) {
+                    // Internet Explorer 9 doesn't fire the 'input' event when deleting text, including using
+                    // the backspace, delete, or ctrl-x keys, clicking the 'x' to clear the input, dragging text
+                    // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
+                    // can detect all of those except dragging text out of the field, for which we use 'dragend'.
+                    registerForSelectionChangeEvent(element, updateModel);
+                    onEvent('dragend', deferUpdateModel);
+                } else if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
+                    // Safari <5 doesn't fire the 'input' event for <textarea> elements, but it does fire
+                    // 'textInput'.
+                    onEvent('textInput', updateModel);
+                } else if (operaVersion < 11) {
+                    // Opera 10 doesn’t fire the 'input' event for cut, paste, undo & drop operations on <input>
+                    // elements. We can try to catch some of those using 'keydown'.
+                    onEvent('keydown', deferUpdateModel);
+                }
             }
         }
 
@@ -139,7 +153,7 @@ ko.expressionRewriting.twoWayBindings['textInput'] = true;
 // textinput is an alias textInput
 ko.bindingHandlers['textinput'] = {
     // preprocess is the only way to set up a full alias
-    preprocess: function (value, name, addBinding) {
+    'preprocess': function (value, name, addBinding) {
         addBinding('textInput', value);
     }
 };
