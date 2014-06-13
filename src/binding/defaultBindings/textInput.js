@@ -1,13 +1,17 @@
 (function () {
 
 if (window && window.navigator) {
-    // Detect Opera and Safari versions because some old versions don't fully support the 'input' event
-    var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version());
+    var parseVersion = function (matches) {
+        if (matches) {
+            return parseFloat(matches[1]);
+        }
+    };
 
-    var safariVersion = window.navigator.userAgent.match(/^(?:(?!chrome).)*version\/(.*) safari/i);
-    if (safariVersion) {
-        safariVersion = parseInt(safariVersion[1]);
-    }
+    // Detect various browser versions because some old versions don't fully support the 'input' event
+    var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()),
+        userAgent = window.navigator.userAgent,
+        safariVersion = parseVersion(userAgent.match(/^(?:(?!chrome).)*version\/(.*) safari/i)),
+        firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]*) /));
 }
 
 // IE 8 and 9 have bugs that prevent the normal events from firing when the value changes.
@@ -141,6 +145,10 @@ ko.bindingHandlers['textInput'] = {
                     // Opera 10 doesn’t fire the 'input' event for cut, paste, undo & drop operations on <input>
                     // elements. We can try to catch some of those using 'keydown'.
                     onEvent('keydown', deferUpdateModel);
+                } else if (firefoxVersion < 3.5) {
+                    // Firefox 2 (maybe others) doesn't fire the 'input' event when text is dropped into the input
+                    // But it does fire the proprietary event 'dragdrop'.
+                    onEvent('dragdrop', updateModel);
                 }
             }
         }
