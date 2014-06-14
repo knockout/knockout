@@ -7,6 +7,15 @@ ko.bindingHandlers['value'] = {
         var propertyChangedFired = false;
         var elementValueBeforeEvent = null;
 
+        // If the value binding is placed on a radio/checkbox, then just pass through to checkedValue and quit
+        if (element.tagName.toLowerCase() == "input" && (element.type == "checkbox" || element.type == "radio")) {
+            ko.computed(function () {
+                ko.bindingHandlers['checkedValue']['update'](element, valueAccessor);
+            }, this,  { disposeWhenNodeIsRemoved: element });
+
+            return;
+        }
+
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
@@ -94,6 +103,7 @@ ko.bindingHandlers['value'] = {
         };
 
         ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
-    }
+    },
+    'update': function() {} // Keep for backwards compatibility with code that may have wrapped value binding
 };
 ko.expressionRewriting.twoWayBindings['value'] = true;

@@ -595,4 +595,42 @@ describe('Binding: Value', function() {
             });
         });
     });
+
+    describe('Acts like \'checkedValue\' on a checkbox or radio', function() {
+        it('Should update value, but not respond to events when on a checkbox', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<input type='checkbox' data-bind='value: myObservable' />";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            var checkbox = testNode.childNodes[0];
+            expect(checkbox.value).toEqual('B');
+
+            observable('C');
+            expect(checkbox.value).toEqual('C');
+
+            checkbox.value = 'D';
+            ko.utils.triggerEvent(checkbox, "change");
+
+            // observable does not update, as we are not handling events when on a checkbox/radio
+            expect(observable()).toEqual('C');
+        });
+
+        it('Should update value, but not respond to events when on a radio', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<input type='radio' data-bind='value: myObservable' />";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            var radio = testNode.childNodes[0];
+            expect(radio.value).toEqual('B');
+
+            observable('C');
+            expect(radio.value).toEqual('C');
+
+            radio.value = 'D';
+            ko.utils.triggerEvent(radio, "change");
+
+            // observable does not update, as we are not handling events when on a checkbox/radio
+            expect(observable()).toEqual('C');
+        });
+    });
 });
