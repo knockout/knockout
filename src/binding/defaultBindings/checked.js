@@ -12,7 +12,7 @@ ko.bindingHandlers['checked'] = {
             }
 
             return element.value;
-        }, null, { disposeWhenNodeIsRemoved: element });
+        });
 
         function updateModel() {
             // This updates the model value from the view value.
