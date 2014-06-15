@@ -10,8 +10,8 @@ if (window && window.navigator) {
     // Detect various browser versions because some old versions don't fully support the 'input' event
     var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()),
         userAgent = window.navigator.userAgent,
-        safariVersion = parseVersion(userAgent.match(/^(?:(?!chrome).)*version\/(.*) safari/i)),
-        firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]*) /));
+        safariVersion = parseVersion(userAgent.match(/^(?:(?!chrome).)*version\/([^ ]*) safari/i)),
+        firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]*)/));
 }
 
 // IE 8 and 9 have bugs that prevent the normal events from firing when the value changes.
@@ -107,18 +107,19 @@ ko.bindingHandlers['textInput'] = {
             });
         } else {
             if (ko.utils.ieVersion < 9) {
-                // Internet Explorer <=8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
+                // Internet Explorer <= 8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
                 // any property of an element changes. Unlike 'input', it also fires if a property is changed from JavaScript code,
                 // but that's an acceptable compromise for this binding.
                 onEvent('propertychange', function(event) {
                     if (event.propertyName === 'value') {
-                        updateModel();
+                        updateModel(event);
                     }
                 });
 
                 if (ko.utils.ieVersion == 8) {
                     // IE 8 has a bug where it fails to fire 'propertychange' on the first update following a value change from
-                    // JavaScript code. To fix this, we bind to the following events also.
+                    // JavaScript code. It also doesn't fire if you clear the entire value. To fix this, we bind to the following
+                    // events too.
                     onEvent('keyup', updateModel);      // A single keystoke
                     onEvent('keydown', updateModel);    // The first character when a key is held down
 
@@ -145,10 +146,13 @@ ko.bindingHandlers['textInput'] = {
                     // Opera 10 doesn’t fire the 'input' event for cut, paste, undo & drop operations on <input>
                     // elements. We can try to catch some of those using 'keydown'.
                     onEvent('keydown', deferUpdateModel);
-                } else if (firefoxVersion < 3.5) {
-                    // Firefox 2 (maybe others) doesn't fire the 'input' event when text is dropped into the input
-                    // But it does fire the proprietary event 'dragdrop'.
-                    onEvent('dragdrop', updateModel);
+                } else if (firefoxVersion < 4.0) {
+                    // Firefox <= 3.6 doesn't fire the 'input' event when text is filled in through autocomplete
+                    onEvent('DOMAutoComplete', updateModel);
+
+                    // Firefox <=3.5 doesn't fire the 'input' event when text is dropped into the input.
+                    onEvent('dragdrop', updateModel);       // <3.5
+                    onEvent('drop', updateModel);           // 3.5
                 }
             }
         }
@@ -161,7 +165,7 @@ ko.bindingHandlers['textInput'] = {
 };
 ko.expressionRewriting.twoWayBindings['textInput'] = true;
 
-// textinput is an alias textInput
+// textinput is an alias for textInput
 ko.bindingHandlers['textinput'] = {
     // preprocess is the only way to set up a full alias
     'preprocess': function (value, name, addBinding) {
