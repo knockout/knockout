@@ -18,7 +18,7 @@ To register a binding, add it as a subproperty of `ko.bindingHandlers`:
         },
         update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             // This will be called once when the binding is first applied to an element,
-            // and again whenever the associated observable changes value.
+            // and again whenever any observables/computeds that are accessed change
             // Update the DOM element based on the supplied values here.
         }
     };
@@ -31,7 +31,7 @@ Note: you don't actually have to provide both `init` *and* `update` callbacks --
 
 ### The "update" callback
 
-Whenever the associated observable changes, KO will call your `update` callback, passing the following parameters:
+Knockout will call the `update` callback initially when the binding is applied to an element and track any dependencies (observables/computeds) that you access. When any of these dependencies change, the `update` callback will be called once again. The following parameters are passed to it:
 
  * `element` --- The DOM element involved in this binding
  * `valueAccessor` --- A JavaScript function that you can call to get the current model property that is involved in this binding. Call this without passing any parameters (i.e., call `valueAccessor()`) to get the current model property value. To easily accept both observable and plain values, call `ko.unwrap` on the returned value.
