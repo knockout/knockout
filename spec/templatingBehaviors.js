@@ -29,10 +29,6 @@ var dummyTemplateEngine = function (templates) {
     };
 
     this.renderTemplateSource = function (templateSource, bindingContext, options, callback) {
-        if (!callback) {
-            console.log(callback);
-        }
-
         var data = bindingContext['$data'];
         options = options || {};
         var templateText = templateSource.text();
