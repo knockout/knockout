@@ -46,7 +46,6 @@ var dummyTemplateEngine = function (templates) {
         with (bindingContext) {
             with (data || {}) {
                 with (options.templateRenderingVariablesInScope || {}) {
-                    // TODO fix async renderTemplate
                     // Dummy [renderTemplate:...] syntax
                     result = templateText.replace(/\[renderTemplate\:(.*?)\]/g, function (match, templateName) {
                         return ko.renderTemplate(templateName, data, options);
