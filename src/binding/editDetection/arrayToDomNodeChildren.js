@@ -13,19 +13,21 @@
         // Map this array value inside a dependentObservable so we re-map when any dependency changes
         var mappedNodes = [];
         var dependentObservable = ko.dependentObservable(function() {
-            var newMappedNodes = mapping(valueToMap, index, ko.utils.fixUpContinuousNodeArray(mappedNodes, containerNode)) || [];
+            mapping(valueToMap, index, ko.utils.fixUpContinuousNodeArray(mappedNodes, containerNode), function (newMappedNodes) {
+                newMappedNodes = newMappedNodes || [];
 
-            // On subsequent evaluations, just replace the previously-inserted DOM nodes
-            if (mappedNodes.length > 0) {
-                ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
-                if (callbackAfterAddingNodes)
-                    ko.dependencyDetection.ignore(callbackAfterAddingNodes, null, [valueToMap, newMappedNodes, index]);
-            }
+                // On subsequent evaluations, just replace the previously-inserted DOM nodes
+                if (mappedNodes.length > 0) {
+                    ko.utils.replaceDomNodes(mappedNodes, newMappedNodes);
+                    if (callbackAfterAddingNodes)
+                        ko.dependencyDetection.ignore(callbackAfterAddingNodes, null, [valueToMap, newMappedNodes, index]);
+                }
 
-            // Replace the contents of the mappedNodes array, thereby updating the record
-            // of which nodes would be deleted if valueToMap was itself later removed
-            mappedNodes.length = 0;
-            ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
+                // Replace the contents of the mappedNodes array, thereby updating the record
+                // of which nodes would be deleted if valueToMap was itself later removed
+                mappedNodes.length = 0;
+                ko.utils.arrayPushAll(mappedNodes, newMappedNodes);
+            });
         }, null, { disposeWhenNodeIsRemoved: containerNode, disposeWhen: function() { return !ko.utils.anyDomNodeIsAttachedToDocument(mappedNodes); } });
         return { mappedNodes : mappedNodes, dependentObservable : (dependentObservable.isActive() ? dependentObservable : undefined) };
     }
