@@ -1,5 +1,5 @@
 <script type="text/javascript" src="{{ page.pathprefix }}js/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-3.1.0.js"></script>
+<script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-latest.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/cufon-yui.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/titilliummaps.font.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/json2.js"></script>
@@ -40,4 +40,12 @@
             $(".leftColContents li:has(a[href$=" + urlFilename[1] + "])").addClass("active");
         }
     });
-</script> 
+</script>
+
+<!-- Normally, if using AMD, you'd reference your loader library (such as require.js) *first*,
+     and let it load other dependencies such as knockout.js itself. However, this documentation
+     site pre-dates our use of AMD and assumes 'ko' and other libraries as global objects in
+     many places. So for back-compatibility, we reference require.js *after* loading knockout.js
+     and various other libraries as globals. -->
+<script type="text/javascript" src="{{ page.pathprefix }}js/require.js"></script>
+<script type="text/javascript" src="{{ page.pathprefix }}js/require.config.js"></script>
