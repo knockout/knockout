@@ -54,10 +54,10 @@ Now, to use this component, you can reference it from any other view in your app
         list-style-type: none;
         background-color: rgba(0,0,0,0.1);
         padding: 1em; border-radius: 1em;
+        min-height: 3.5em;
     }
     .liveExample .product + .product { margin-top: 1em;  }
     .liveExample > button { margin: 0.5em 0; }
-    .liveExample .like-or-dislike-footer { font-size: 10px; font-style: italic; color:rgba(0,0,0,0.5); line-height: 15px; }
 </style>
 <script>{{ like_dislike_registration }}</script>
 
