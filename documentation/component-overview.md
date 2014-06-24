@@ -5,7 +5,7 @@ title: Components and Custom Elements - Overview
 
 **Components** are a powerful, clean way of organizing your UI code into self-contained, reusable chunks. They:
 
- * ...contain their own viewmodel and view (template)
+ * ...contain their own view, and usually (but optionally) their own viewmodel
  * ...can either be preloaded, or loaded asynchronously (on demand) via AMD or other module systems
  * ...can receive parameters, and/or emit changes to model data
  * ...can be composed together (nested) or inherited from other components
