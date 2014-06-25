@@ -1,6 +1,6 @@
 describe('JSON posting', function() {
     it('Should stringify and post the supplied data to a supplied URL', function () {
-    	var submittedForm;
+        var submittedForm;
         ko.utils.postJson('http://example.com/some/url', {myModel : {a : 1}}, { submitter : function(x) { submittedForm = x } });
 
         expect(submittedForm.action).toEqual('http://example.com/some/url');
@@ -11,39 +11,39 @@ describe('JSON posting', function() {
     });
 
     it('Given an existing form, should take the URL from the form\'s \'action\' attribute', function() {
-    	var existingForm = document.createElement("FORM");
-    	existingForm.action = 'http://example.com/blah';
+        var existingForm = document.createElement("FORM");
+        existingForm.action = 'http://example.com/blah';
 
-    	var submittedForm;
+        var submittedForm;
         ko.utils.postJson(existingForm, {myModel : {a : 1}}, { submitter : function(x) { submittedForm = x } });
 
         expect(submittedForm.action).toEqual('http://example.com/blah');
     });
 
     it('Given an existing form, should include any requested field values from that form', function() {
-    	var existingForm = document.createElement("FORM");
-    	existingForm.innerHTML = '<input name="someField" value="myValue"/><input name="anotherField" value="unwantedValue"/>';
+        var existingForm = document.createElement("FORM");
+        existingForm.innerHTML = '<input name="someField" value="myValue"/><input name="anotherField" value="unwantedValue"/>';
 
-    	var submittedForm;
+        var submittedForm;
         ko.utils.postJson(existingForm, {myModel : {a : 1}}, { includeFields : ['someField'], submitter : function(x) { submittedForm = x } });
 
         expect(ko.utils.getFormFields(submittedForm, 'someField')[0].value).toEqual('myValue');
         expect(ko.utils.getFormFields(submittedForm, 'anotherField').length).toEqual(0);
-	});
+    });
 
-	it('Given an existing form, should include Rails and ASP.NET MVC auth tokens by default', function() {
-    	var existingForm = document.createElement("FORM");
-    	existingForm.innerHTML = '<input name="__RequestVerificationToken_Lr4e" value="wantedval1"/>'
-    						   + '<input name="__RequestVe" value="unwantedval"/>'
-    						   + '<input name="authenticity_token" value="wantedval2"/>';
+    it('Given an existing form, should include Rails and ASP.NET MVC auth tokens by default', function() {
+        var existingForm = document.createElement("FORM");
+        existingForm.innerHTML = '<input name="__RequestVerificationToken_Lr4e" value="wantedval1"/>'
+                   + '<input name="__RequestVe" value="unwantedval"/>'
+                   + '<input name="authenticity_token" value="wantedval2"/>';
 
-    	var submittedForm;
+        var submittedForm;
         ko.utils.postJson(existingForm, {myModel : {a : 1}}, { submitter : function(x) { submittedForm = x } });
 
         expect(ko.utils.getFormFields(submittedForm, '__RequestVerificationToken_Lr4e')[0].value).toEqual('wantedval1');
         expect(ko.utils.getFormFields(submittedForm, '__RequestVe').length).toEqual(0);
         expect(ko.utils.getFormFields(submittedForm, 'authenticity_token')[0].value).toEqual('wantedval2');
-	});
+    });
 
     it('Should not truncate large values', function() {
         // Represents https://github.com/knockout/knockout/issues/1252
