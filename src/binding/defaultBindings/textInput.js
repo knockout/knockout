@@ -106,10 +106,11 @@ ko.bindingHandlers['textInput'] = {
                 }
             });
         } else {
-            if (ko.utils.ieVersion < 9) {
+            if (ko.utils.ieVersion < 10) {
                 // Internet Explorer <= 8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
                 // any property of an element changes. Unlike 'input', it also fires if a property is changed from JavaScript code,
-                // but that's an acceptable compromise for this binding.
+                // but that's an acceptable compromise for this binding. IE 9 does support 'input', but since it doesn't fire it
+                // when using autocomplete, we'll use 'propertychange' for it also.
                 onEvent('propertychange', function(event) {
                     if (event.propertyName === 'value') {
                         updateModel(event);
@@ -122,7 +123,13 @@ ko.bindingHandlers['textInput'] = {
                     // events too.
                     onEvent('keyup', updateModel);      // A single keystoke
                     onEvent('keydown', updateModel);    // The first character when a key is held down
-
+                }
+                if (ko.utils.ieVersion >= 8) {
+                    // Internet Explorer 9 doesn't fire the 'input' event when deleting text, including using
+                    // the backspace, delete, or ctrl-x keys, clicking the 'x' to clear the input, dragging text
+                    // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
+                    // can detect all of those except dragging text out of the field, for which we use 'dragend'.
+                    // These are also needed in IE8 because of the bug described above.
                     registerForSelectionChangeEvent(element, updateModel);  // 'selectionchange' covers cut, paste, drop, delete, etc.
                     onEvent('dragend', deferUpdateModel);
                 }
@@ -131,14 +138,7 @@ ko.bindingHandlers['textInput'] = {
                 // through the user interface.
                 onEvent('input', updateModel);
 
-                if (ko.utils.ieVersion == 9) {
-                    // Internet Explorer 9 doesn't fire the 'input' event when deleting text, including using
-                    // the backspace, delete, or ctrl-x keys, clicking the 'x' to clear the input, dragging text
-                    // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
-                    // can detect all of those except dragging text out of the field, for which we use 'dragend'.
-                    registerForSelectionChangeEvent(element, updateModel);
-                    onEvent('dragend', deferUpdateModel);
-                } else if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
+                if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
                     // Safari <5 doesn't fire the 'input' event for <textarea> elements (it does fire 'textInput'
                     // but only when typing). So we'll just catch as much as we can with keydown, cut, and paste.
                     onEvent('keydown', deferUpdateModel);
