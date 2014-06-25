@@ -139,12 +139,14 @@ ko.bindingHandlers['textInput'] = {
                     registerForSelectionChangeEvent(element, updateModel);
                     onEvent('dragend', deferUpdateModel);
                 } else if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
-                    // Safari <5 doesn't fire the 'input' event for <textarea> elements, but it does fire
-                    // 'textInput'.
-                    onEvent('textInput', updateModel);
+                    // Safari <5 doesn't fire the 'input' event for <textarea> elements (it does fire 'textInput'
+                    // but only when typing). So we'll just catch as much as we can with keydown, cut, and paste.
+                    onEvent('keydown', deferUpdateModel);
+                    onEvent('paste', deferUpdateModel);
+                    onEvent('cut', deferUpdateModel);
                 } else if (operaVersion < 11) {
-                    // Opera 10 doesn’t fire the 'input' event for cut, paste, undo & drop operations on <input>
-                    // elements. We can try to catch some of those using 'keydown'.
+                    // Opera 10 doesn't always fire the 'input' event for cut, paste, undo & drop operations.
+                    // We can try to catch some of those using 'keydown'.
                     onEvent('keydown', deferUpdateModel);
                 } else if (firefoxVersion < 4.0) {
                     // Firefox <= 3.6 doesn't fire the 'input' event when text is filled in through autocomplete
