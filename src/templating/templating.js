@@ -115,6 +115,20 @@
         });
     }
 
+    function resolveTemplateName(template, data, context) {
+        // The template can be specified as:
+        if (ko.isObservable(template)) {
+            // 1. An observable, with string value
+            return template();
+        } else if (typeof template === 'function') {
+            // 2. A function of (data, context) returning a string
+            return template(data, context);
+        } else {
+            // 3. A string
+            return template;
+        }
+    }
+
     ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
         if ((options['templateEngine'] || _templateEngine) == undefined)
@@ -134,10 +148,7 @@
                         ? dataOrBindingContext
                         : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
-                    // Support selecting template as a function of the data being rendered
-                    var templateName = ko.isObservable(template) ? template()
-                        : typeof(template) == 'function' ? template(bindingContext['$data'], bindingContext) : template;
-
+                    var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext);
                     executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options, function (renderedNodesArray) {
                         if (renderMode == "replaceNode") {
                             targetNodeOrNodeArray = renderedNodesArray;
@@ -167,7 +178,8 @@
             arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
                 context['$index'] = index;
             });
-            var templateName = typeof(template) == 'function' ? template(arrayValue, arrayItemContext) : template;
+
+            var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
             executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options, callback);
         }
 
