@@ -5,22 +5,21 @@ title: Components and Custom Elements - Overview
 
 **Components** are a powerful, clean way of organizing your UI code into self-contained, reusable chunks. They:
 
+ * ...can represent individual controls/widgets, or entire sections of your application
  * ...contain their own view, and usually (but optionally) their own viewmodel
  * ...can either be preloaded, or loaded asynchronously (on demand) via AMD or other module systems
- * ...can receive parameters, and/or emit changes to model data
+ * ...can receive parameters, and optionally write back changes to them or invoke callbacks
  * ...can be composed together (nested) or inherited from other components
  * ...can easily be packaged for reuse across projects
  * ...let you define your own conventions/logic for configuration and loading
 
 This pattern is beneficial for large applications, because it **simplifies development** through clear organization and encapsulation, and helps to **improve runtime performance** by incrementally loading your application code and templates as needed.
 
-**Custom elements** are a convenient syntax for consuming components. Instead of needing placeholder `<div>`s into which components are injected with bindings, you can use more self-descriptive markup with custom element names (e.g., `<voting-button>` or `<product-editor>`). Knockout takes care to ensure compatibility even with old browsers such as IE 6.
+**Custom elements** are an optional but convenient syntax for consuming components. Instead of needing placeholder `<div>`s into which components are injected with bindings, you can use more self-descriptive markup with custom element names (e.g., `<voting-button>` or `<product-editor>`). Knockout takes care to ensure compatibility even with old browsers such as IE 6.
 
 ### Example: A like/dislike widget
 
-You can register a component using `ko.components.register` (technically, registration is optional, but it's the easiest way to get started).
-
-A component definition specifies a `viewModel` and `template`. For example:
+To get started, you can register a component using `ko.components.register` (technically, registration is optional, but it's the easiest way to get started). A component definition specifies a `viewModel` and `template`. For example:
 
 {% capture like_dislike_registration %}
     ko.components.register('like-widget', {
@@ -88,7 +87,7 @@ Now, to use this component, you can reference it from any other view in your app
 {% endcapture %}
 {% include live-example-minimal.html %}
 
-In this example, the component both displays and edits an observable property on the `Product` view model class.
+In this example, the component both displays and edits an observable property called `userRating` on the `Product` view model class.
 
 ### Example: Loading the like/dislike widget from external files, on demand
 
