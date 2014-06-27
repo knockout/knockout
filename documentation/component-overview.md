@@ -150,7 +150,7 @@ If you open your browser developer tools' **Network** inspector before your firs
 
 More more detailed information, see:
 
- * [Defining and registering components](component-definitions.html)
+ * [Defining and registering components](component-registration.html)
  * [Using the `component` binding](component-binding.html)
  * [Using custom elements](component-custom-elements.html)
  * [Advanced: Custom component loaders](component-loader.html)
