@@ -78,10 +78,10 @@ When a `component` binding injects a component,
 
     This is an *asynchronous* process (it may involve requests to the server), and hence components are always injected asynchronously.
 
-      * Multiple component loaders may be consulted, until the first one recognises the component name and supplies a viewmodel/template. This process only takes place **once per component**, since Knockout caches the resulting definitions in memory.
-      * The default component loader supplies viewmodels/templates based on [what you have registered](component-registration.html). If applicable, this is the phase where it requests any specified AMD modules are requested from your AMD loader.
+      * Multiple component loaders may be consulted, until the first one recognises the component name and supplies a viewmodel/template. This process only takes place **once per component type**, since Knockout caches the resulting definitions in memory.
+      * The default component loader supplies viewmodels/templates based on [what you have registered](component-registration.html). If applicable, this is the phase where it requests any specified AMD modules from your AMD loader.
 
- 2. **The component template is injected into the container element**
+ 2. **The component template is cloned and injected into the container element**
 
     Any existing content is removed and discarded.
 
@@ -105,7 +105,7 @@ When a `component` binding injects a component,
 
  6. **The component is torn down, and the viewmodel is disposed**
 
-    If the `component` binding's `name` value changes observably, or if an enclosing control-flow binding causes the container element to be removed, then any `dispose` function on the viewmodel is called just before the container element is removed. See also: [disposal and memory management](#disposal-and-memory-management).
+    If the `component` binding's `name` value changes observably, or if an enclosing control-flow binding causes the container element to be removed, then any `dispose` function on the viewmodel is called just before the container element is removed from the DOM. See also: [disposal and memory management](#disposal-and-memory-management).
 
     Note: If the user navigates to an entirely different web page, browsers do this without asking any code running in the page to clean up. So in this case no `dispose` functions will be invoked. This is OK because the browser will automatically release the memory used by all objects that were in use.
 
