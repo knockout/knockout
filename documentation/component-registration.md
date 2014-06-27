@@ -273,9 +273,9 @@ What tends to be most useful in practice is creating AMD modules that have inlin
 For example, if the following is in a file at `path/my-component.js`,
 
     // Recommended AMD module pattern for a Knockout component that:
-    //  - Can be referenced with a single 'require' declaration and no extra config
+    //  - Can be referenced with just a single 'require' declaration
     //  - Can be included in a bundle using the r.js optimizer
-    define(['knockout', 'text!./my-component.html'], function(ko, templateMarkup) {
+    define(['knockout', 'text!./my-component.html'], function(ko, htmlString) {
         function MyComponentViewModel(params) {
             // Set up properties, etc.
         }
@@ -284,7 +284,7 @@ For example, if the following is in a file at `path/my-component.js`,
         MyComponentViewModel.prototype.doSomething = function() { ... };
 
         // Return component definition
-        return { viewModel: MyComponentViewModel, template: templateMarkup };
+        return { viewModel: MyComponentViewModel, template: htmlString };
     });
 
 ... and the template markup is in the file `path/my-component.html`, then you have these benefits:
