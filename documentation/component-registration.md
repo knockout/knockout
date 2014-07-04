@@ -289,7 +289,7 @@ For example, if the following is in a file at `path/my-component.js`,
 
 ... and the template markup is in the file `path/my-component.html`, then you have these benefits:
 
- * Applications can reference this trivially, i.e., `ko.components.register('my-component', { require: 'path/my-component' );`
+ * Applications can reference this trivially, i.e., `ko.components.register('my-component', { require: 'path/my-component' });`
  * You only need two files for the component - a viewmodel (`path/my-component.js`) and a template (`path/my-component.html`) - which is a very natural arrangement during development.
  * Since the dependency on the template is explicitly stated in the `define` call, this automatically works with the [`r.js` optimizer](http://requirejs.org/docs/optimization.html) or similar bundling tools. The entire component - viewmodel plus template - can therefore trivially be included in a bundle file during a build step.
    * Note: Since the r.js optimizer is very flexible, it has a lot of options and can take some time to set up. You may want to start from a ready-made example of Knockout components being optimized through r.js, in which case see [Yeoman](http://yeoman.io/) and the [generator-ko](https://www.npmjs.org/package/generator-ko) generator. Blog post coming soon.
