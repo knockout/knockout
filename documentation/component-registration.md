@@ -250,7 +250,7 @@ For example, if your component is inside some other element with an [`if` bindin
 
 For even better encapsulation, you can package a component into a single self-describing AMD module. Then you can reference a component as simply as:
 
-    ko.components.register('my-component', { require: 'some/module' );
+    ko.components.register('my-component', { require: 'some/module' });
 
 Notice that no viewmodel/template pair is specified. The AMD module itself can provide a viewmodel/template pair, using any of the definition formats listed above. For example, the file `some/module.js` could be declared as:
 
