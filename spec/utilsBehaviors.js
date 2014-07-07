@@ -36,9 +36,9 @@ describe('arrayForEach', function () {
         ko.utils.arrayForEach(["a", "b", "c"], callback);
 
         expect(callback.calls.length).toBe(3);
-        expect(callback.calls[0].args).toEqual(["a", 0]);
-        expect(callback.calls[1].args).toEqual(["b", 1]);
-        expect(callback.calls[2].args).toEqual(["c", 2]);
+        expect(callback.calls[0].args).toEqual(["a", 0, ["a", "b", "c"]]);
+        expect(callback.calls[1].args).toEqual(["b", 1, ["a", "b", "c"]]);
+        expect(callback.calls[2].args).toEqual(["c", 2, ["a", "b", "c"]]);
     });
 
     it('Should do nothing with empty arrays', function () {

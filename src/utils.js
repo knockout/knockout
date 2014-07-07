@@ -66,13 +66,17 @@ ko.utils = (function () {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
         arrayForEach: function (array, action) {
+            if (array && typeof array.forEach == 'function') {
+                return array.forEach(action);
+            }
             for (var i = 0, j = array.length; i < j; i++)
-                action(array[i], i);
+                action(array[i], i, array);
         },
 
         arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
+            if (array && typeof array.indexOf == 'function') {
+                return array.indexOf(item);
+            }
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
@@ -80,6 +84,9 @@ ko.utils = (function () {
         },
 
         arrayFirst: function (array, predicate, predicateOwner) {
+            if (array && typeof array.find == 'function') {
+                return array.find(predicate, predicateOwner);
+            }
             for (var i = 0, j = array.length; i < j; i++)
                 if (predicate.call(predicateOwner, array[i], i))
                     return array[i];
@@ -99,14 +106,18 @@ ko.utils = (function () {
         arrayGetDistinctValues: function (array) {
             array = array || [];
             var result = [];
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
-                    result.push(array[i]);
-            }
+            ko.utils.arrayForEach(array, function(item) {
+                if (ko.utils.arrayIndexOf(result, item) < 0)
+                    result.push(item);
+            });
+
             return result;
         },
 
         arrayMap: function (array, mapping) {
+            if (array && typeof array.map == 'function') {
+                return array.map(mapping);
+            }
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
@@ -115,6 +126,9 @@ ko.utils = (function () {
         },
 
         arrayFilter: function (array, predicate) {
+            if (array && typeof array.filter == 'function') {
+                return array.filter(predicate);
+            }
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
