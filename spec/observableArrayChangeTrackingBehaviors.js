@@ -74,6 +74,32 @@ describe('Observable Array change tracking', function() {
         });
     });
 
+    it('Converts a non array to an array', function() {
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observable('hello').extend({'trackArrayChanges':true}),
+                changelist1;
+
+            myArray.subscribe(function(changes) { changelist1 = changes; }, null, 'arrayChange');
+            myArray(1);
+
+            // See that, not only did it invoke compareArrays only once, but the
+            // return values from getChanges are the same array instances
+            expect(callLog.length).toBe(1);
+            expect(changelist1).toEqual([
+                { status: 'deleted', value: 'hello', index: 0 },
+                { status: 'added', value: 1, index: 0 }
+            ]);
+
+            // Objects get converted to Array
+            myArray({a: 1});
+            expect(callLog.length).toBe(2);
+            expect(changelist1).toEqual([
+                { status: 'deleted', value: 1, index: 0 },
+                { status: 'added', value: {a: 1}, index: 0 }
+            ]);
+        });
+    });
+
     it('Skips the diff algorithm when the array mutation is a known operation', function() {
         captureCompareArraysCalls(function(callLog) {
             var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
