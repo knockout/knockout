@@ -84,7 +84,7 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
 
  * Additional parameters 
 
-   * `checkedValue`
+   * <code id="checkedValue">checkedValue</code>
 
      If your binding also includes `checkedValue`, this defines the value used by the `checked` binding instead of the element's `value` attribute. This is useful if you want the value to be something other than a string (such as an integer or object), or you want the value set dynamically.
 
