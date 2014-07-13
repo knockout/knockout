@@ -8,10 +8,7 @@ ko.bindingHandlers['submit'] = {
             try { handlerReturnValue = value.call(bindingContext['$data'], element); }
             finally {
                 if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
-                    if (event.preventDefault)
-                        event.preventDefault();
-                    else
-                        event.returnValue = false;
+                    event.returnValue = false;
                 }
             }
         });
