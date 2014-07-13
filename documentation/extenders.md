@@ -3,7 +3,7 @@ layout: documentation
 title: Using extenders to augment observables
 ---
 
-Knockout observables provide the basic features necessary to support reading/writing values and notifying subscribers when that value changes. In some cases, though, you may wish to add additional functionality to an observable. This might include adding additional properties to the observable or intercepting writes by placing a writeable computed observable in front of the observable. Knockout extenders provide an easy and flexible way to do this type of augmentation to an observable.
+Knockout observables provide the basic features necessary to support reading/writing values and notifying subscribers when that value changes. In some cases, though, you may wish to add additional functionality to an observable. This might include adding additional properties to the observable or intercepting writes by placing a writable computed observable in front of the observable. Knockout extenders provide an easy and flexible way to do this type of augmentation to an observable.
 
 ### How to create an extender
 Creating an extender involves adding a function to the `ko.extenders` object. The function takes in the observable itself as the first argument and any options in the second argument. It can then either return the observable or return something new like a computed observable that uses the original observable in some way.
@@ -25,7 +25,7 @@ If the `firstName` observable's value was changed to `Ted`, then the console wou
 
 ### Live Example 1: Forcing input to be numeric
 
-This example creates an extender that forces writes to an observable to be numeric rounded to a configurable level of precision.  In this case, the extender will return a new writeable computed observable that will sit in front of the real observable intercepting writes.
+This example creates an extender that forces writes to an observable to be numeric rounded to a configurable level of precision.  In this case, the extender will return a new writable computed observable that will sit in front of the real observable intercepting writes.
 
 <style type="text/css">
    .error {  color: red; }
@@ -40,7 +40,7 @@ This example creates an extender that forces writes to an observable to be numer
 
 {% capture live_example_viewmodel %}
 ko.extenders.numeric = function(target, precision) {
-    //create a writeable computed observable to intercept writes to our observable
+    //create a writable computed observable to intercept writes to our observable
     var result = ko.computed({
         read: target,  //always return the original observables value
         write: function(newValue) {

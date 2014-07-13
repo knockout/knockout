@@ -28,15 +28,24 @@ Now you could bind UI elements to it, e.g.:
 
 ... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
 
+### Dependency chains just work
+
+Of course, you can create whole chains of computed observables if you wish. For example, you might have:
+
+* an **observable** called `items` representing a set of items
+* another **observable** called `selectedIndexes` storing which item indexes have been 'selected' by the user
+* a **computed observable** called `selectedItems` that returns an array of item objects corresponding to the selected indexes
+* another **computed observable** that returns `true` or `false` depending on whether any of `selectedItems` has some property (like being new or being unsaved). Some UI element, like a button, might be enabled or disabled based on this value.
+
+Changes to `items` or `selectedIndexes` will ripple through the chain of computed observables, which in turn will update any UI elements bound to them.
+
 ### Managing 'this'
 
-*Beginners may wish to skip this section - as long as you follow the same coding patterns as the examples, you won't need to know or care about it!*
-
-In case you're wondering what the second parameter to `ko.computed` is (the bit where we passed `this` in the preceding code), that defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
+The second parameter to `ko.computed` (the bit where we passed `this` in the above example) defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
 
 #### A popular convention that simplifies things
 
-There's a popular convention for avoiding the need to track `this` altogether: if your viewmodel's constructor copies a reference to `this` into a different variable (traditionally called `self`), you can then use `self` throughout your viewmodel and don't have to worry about it being redefined to refer to something else. For example:
+There's a popular convention that avoids the need to track `this` altogether: if your viewmodel's constructor copies a reference to `this` into a different variable (traditionally called `self`), you can then use `self` throughout your viewmodel and don't have to worry about it being redefined to refer to something else. For example:
 
     function AppViewModel() {
         var self = this;
@@ -49,17 +58,6 @@ There's a popular convention for avoiding the need to track `this` altogether: i
     }
 
 Because `self` is captured in the function's closure, it remains available and consistent in any nested functions, such as the `ko.computed` evaluator. This convention is even more useful when it comes to event handlers, as you'll see in many of the [live examples](../examples/).
-
-### Dependency chains just work
-
-Of course, you can create whole chains of computed observables if you wish. For example, you might have:
-
-* an **observable** called `items` representing a set of items
-* another **observable** called `selectedIndexes` storing which item indexes have been 'selected' by the user
-* a **computed observable** called `selectedItems` that returns an array of item objects corresponding to the selected indexes
-* another **computed observable** that returns `true` or `false` depending on whether any of `selectedItems` has some property (like being new or being unsaved). Some UI element, like a button, might be enabled or disabled based on this value.
-
-Then, changes to `items` or `selectedIndexes` will ripple through the chain of computed observables, which in turn updates any UI bound to them. Very tidy and elegant.
 
 ### Forcing computed observables to always notify subscribers
 
@@ -76,7 +74,7 @@ Normally, a computed observable updates and notifies its subscribers immediately
     // Ensure updates no more than once per 50-millisecond period
     myViewModel.fullName.extend({ rateLimit: 50 });
     
-# Determining if a property is a computed observable
+### Determining if a property is a computed observable
 
 In some scenarios, it is useful to programmatically determine if you are dealing with a computed observable. Knockout provides a utility function, `ko.isComputed` to help with this situation. For example, you might want to exclude computed observables from data that you are sending back to the server.
 
@@ -89,5 +87,5 @@ In some scenarios, it is useful to programmatically determine if you are dealing
 Additionally, Knockout provides similar functions that can operate on observables and computed observables:
 
 * `ko.isObservable` - returns true for observables, observable arrays, and all computed observables.
-* `ko.isWriteableObservable` - returns true for observable, observable arrays, and writeable computed observables.
+* `ko.isWriteableObservable` - returns true for observable, observable arrays, and writable computed observables.
 

@@ -11,12 +11,12 @@ A computed observable can be constructed using one of the following forms:
 
 1. `ko.computed( evaluator [, targetObject, options] )` --- This form supports the most common case of creating a computed observable.
   * `evaluator` --- A function that is used to evaluate the computed observable's current value.
-  * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](#managing_this) for more information.
+  * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](computedObservables.html#managing_this) for more information.
   * `options` --- An object with further properties for the computed observable. See the full list below.
 
 1. `ko.computed( options )` --- This single parameter form for creating a computed observable accepts a JavaScript object with any of the following properties.
   * `read` --- Required. A function that is used to evaluate the computed observable's current value.
-  * `write` --- Optional. If given, makes the computed observable writeable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
+  * `write` --- Optional. If given, makes the computed observable writable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
   * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
   * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
   * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
@@ -31,7 +31,7 @@ A computed observable provides the following functions:
 * `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
 * `getSubscriptionsCount()` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable.
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
-* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
+* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](computed-dependency-tracking.html#controlling_dependencies_using_peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly_subscribing_to_observables) to be notified of changes to the computed observable.
 
 ## Using the computed context
