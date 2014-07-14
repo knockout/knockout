@@ -428,7 +428,7 @@ describe('Components: Default loader', function() {
     function testTemplateFromElement(wrapperMarkup, elementId, extraAssertsCallback) {
         var testElem = document.createElement('div');
         testElem.innerHTML = wrapperMarkup.replace('{0}', '<p>Some text</p><div>More stuff</div>');
-        
+
         // If an element ID is supplied, use that (we're testing selection by ID)
         // otherwise use the element instance itself (we're testing explicitly-supplied element instances)
         var templateElem = testElem.childNodes[0],

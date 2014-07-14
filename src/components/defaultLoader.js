@@ -165,7 +165,7 @@
             case 'template':
                 return ko.utils.cloneNodes(elemInstance.content.childNodes);
             default:
-                return ko.utils.cloneNodes(elemInstance.childNodes);        
+                return ko.utils.cloneNodes(elemInstance.childNodes);
         }
     }
 
