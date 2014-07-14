@@ -81,7 +81,7 @@ Knockout will call your `init` function once for each DOM element that you use t
  * To set any initial state for the DOM element
  * To register any event handlers so that, for example, when the user clicks on or modifies the DOM element, you can change the state of the associated observable
 
-KO will pass exactly the same set of parameters that it passes to [the `update` callback](#the_update_callback).
+KO will pass exactly the same set of parameters that it passes to [the `update` callback](#the-update-callback).
 
 Continuing the previous example, you might want `slideVisible` to set the element to be instantly visible or invisible when the page first appears (without any animated slide), so that the animation only runs when the user changes the model state. You could do that as follows:
 

@@ -117,7 +117,7 @@ In this example, the `write` callback handles incoming values by splitting the i
 
 This is the exact opposite of the [Hello World](../examples/helloWorld.html) example, in that here the first and last names are not editable, but the combined full name is editable.
 
-The preceding view model code demonstrates the *single parameter syntax* for initializing computed observables. See the [computed observable reference](#computed_observable_reference) below for the full list of available options.
+The preceding view model code demonstrates the *single parameter syntax* for initializing computed observables. See the [computed observable reference](#computed-observable-reference) below for the full list of available options.
 
 ### Example 2: A value converter
 
@@ -244,7 +244,7 @@ A computed observable can be constructed using one of the following forms:
 
 1. `ko.computed( evaluator [, targetObject, options] )` --- This form supports the most common case of creating a computed observable.
   * `evaluator` --- A function that is used to evaluate the computed observable's current value.
-  * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](#managing_this) for more information.
+  * `targetObject` --- If given, defines the value of `this` whenever KO invokes your callback functions. See the section on [managing `this`](#managing-this) for more information.
   * `options` --- An object with further properties for the computed observable. See the full list below.
 
 1. `ko.computed( options )` --- This single parameter form for creating a computed observable accepts a JavaScript object with any of the following properties.
@@ -264,7 +264,7 @@ A computed observable provides the following functions:
 * `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
 * `getSubscriptionsCount()` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable.
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
-* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling_dependencies_using_peek)).
+* `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](#controlling-dependencies-using-peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly_subscribing_to_observables) to be notified of changes to the computed observable.
 
 ## Using the computed context
