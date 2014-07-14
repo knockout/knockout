@@ -113,12 +113,12 @@
             var element = templateConfig['element'];
             if (isDomElement(element)) {
                 // Element instance - copy its child nodes
-                callback(ko.utils.cloneNodes(element.childNodes));
+                callback(cloneNodesFromTemplateSourceElement(element));
             } else if (typeof element === 'string') {
                 // Element ID - find it, then copy its child nodes
                 var elemInstance = document.getElementById(element);
                 if (elemInstance) {
-                    callback(ko.utils.cloneNodes(elemInstance.childNodes));
+                    callback(cloneNodesFromTemplateSourceElement(elemInstance));
                 } else {
                     errorCallback('Cannot find element with ID ' + element);
                 }
@@ -153,6 +153,19 @@
             resolveViewModel(errorCallback, viewModelConfig['viewModel'], callback);
         } else {
             errorCallback('Unknown viewModel value: ' + viewModelConfig);
+        }
+    }
+
+    function cloneNodesFromTemplateSourceElement(elemInstance) {
+        switch (ko.utils.tagNameLower(elemInstance)) {
+            case 'script':
+                return ko.utils.parseHtmlFragment(elemInstance.text);
+            case 'textarea':
+                return ko.utils.parseHtmlFragment(elemInstance.value);
+            case 'template':
+                return ko.utils.cloneNodes(elemInstance.content.childNodes);
+            default:
+                return ko.utils.cloneNodes(elemInstance.childNodes);        
         }
     }
 
