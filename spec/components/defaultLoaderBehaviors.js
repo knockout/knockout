@@ -256,40 +256,49 @@ describe('Components: Default loader', function() {
             });
 
             it('Can be configured as an element ID', function() {
-                var testElem = document.createElement('div');
-                testElem.id = 'some-template-element';
-                testElem.innerHTML = '<p>Some text</p><div>More stuff</div>';
-                document.body.appendChild(testElem);
-
-                testConfigObject({ template: { element: 'some-template-element' } }, function(definition) {
-                    // Converts to standard array-of-DOM-nodes format
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('P');
-                    expect(definition.template[0]).toContainText('Some text');
-                    expect(definition.template[1].tagName).toBe('DIV');
-                    expect(definition.template[1]).toContainText('More stuff');
-                    testElem.parentNode.removeChild(testElem);
-
+                testTemplateFromElement('<div id="my-container-elem">{0}</div>', 'my-container-elem', function(templateSourceElem) {
                     // Doesn't destroy the input element
-                    expect(testElem.childNodes.length).toBe(2);
+                    expect(templateSourceElem.childNodes.length).toBe(2);
                 });
             });
 
-            it('Can be configured as a container element', function() {
-                var testElem = document.createElement('div');
-                testElem.innerHTML = '<p>Some text</p><div>More stuff</div>';
+            it('Can be configured as the ID of a <script> element', function() {
+                // Special case: the script's text should be interpreted as a markup string
+                testTemplateFromElement('<script id="my-script-elem" type="text/html">{0}</script>', 'my-script-elem');
+            });
 
-                testConfigObject({ template: { element: testElem } }, function(definition) {
-                    // Converts to standard array-of-DOM-nodes format
-                    expect(definition.template.length).toBe(2);
-                    expect(definition.template[0].tagName).toBe('P');
-                    expect(definition.template[0]).toContainText('Some text');
-                    expect(definition.template[1].tagName).toBe('DIV');
-                    expect(definition.template[1]).toContainText('More stuff');
+            it('Can be configured as the ID of a <textarea> element', function() {
+                // Special case: the textarea's value should be interpreted as a markup string
+                testTemplateFromElement('<textarea id="my-textarea-elem">{0}</textarea>', 'my-textarea-elem');
+            });
 
+            it('Can be configured as the ID of a <template> element', function() {
+                // Special case: the template's .content should be the source of nodes
+                document.createElement('template'); // Polyfill needed by IE <= 8
+                testTemplateFromElement('<template id="my-template-elem">{0}</template>', 'my-template-elem');
+            });
+
+            it('Can be configured as a regular element instance', function() {
+                testTemplateFromElement('<div>{0}</div>', /* elementId */ null, function(templateSourceElem) {
                     // Doesn't destroy the input element
-                    expect(testElem.childNodes.length).toBe(2);
+                    expect(templateSourceElem.childNodes.length).toBe(2);
                 });
+            });
+
+            it('Can be configured as a <script> element instance', function() {
+                // Special case: the script's text should be interpreted as a markup string
+                testTemplateFromElement('<script type="text/html">{0}</script>', /* elementId */ null);
+            });
+
+            it('Can be configured as a <textarea> element instance', function() {
+                // Special case: the textarea's value should be interpreted as a markup string
+                testTemplateFromElement('<textarea>{0}</textarea>', /* elementId */ null);
+            });
+
+            it('Can be configured as a <template> element instance', function() {
+                // Special case: the template's .content should be the source of nodes
+                document.createElement('template'); // Polyfill needed by IE <= 8
+                testTemplateFromElement('<template>{0}</template>', /* elementId */ null);
             });
 
             it('Can be configured as an AMD module whose value is a DOM node array', function() {
@@ -416,6 +425,37 @@ describe('Components: Default loader', function() {
         });
 
         waitsFor(function() { return didComplete; }, 1000);
+    }
+
+    function testTemplateFromElement(wrapperMarkup, elementId, extraAssertsCallback) {
+        var testElem = document.createElement('div');
+        document.body.appendChild(testElem); // Needed so it can be found by ID, and because IE<=8 won't parse its .innerHTML properly otherwise
+
+        // The 'ignored' prefix is needed for IE <= 8, which silently strips any <script> elements
+        // that are not preceded by something else. Nobody knows why.
+        testElem.innerHTML = 'ignored' + wrapperMarkup.replace('{0}', '<p>Some text</p><div>More stuff</div>');
+
+        // If an element ID is supplied, use that (we're testing selection by ID)
+        // otherwise use the element instance itself (we're testing explicitly-supplied element instances)
+        var templateElem = testElem.childNodes[1],
+            templateConfigValue = elementId || templateElem;
+
+        testConfigObject({ template: { element: templateConfigValue } }, function(definition) {
+            // Converts to standard array-of-DOM-nodes format
+            expect(definition.template.length).toBe(2);
+            expect(definition.template[0].tagName).toBe('P');
+            expect(definition.template[0]).toContainText('Some text');
+            expect(definition.template[1].tagName).toBe('DIV');
+            expect(definition.template[1]).toContainText('More stuff');
+
+            if (extraAssertsCallback) {
+                extraAssertsCallback(templateElem);
+            }
+
+            if (testElem.parentNode) {
+                testElem.parentNode.removeChild(testElem);
+            }
+        });
     }
 
     function mockAmdEnvironment(spec, definedModules) {

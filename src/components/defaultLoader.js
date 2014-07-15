@@ -113,12 +113,12 @@
             var element = templateConfig['element'];
             if (isDomElement(element)) {
                 // Element instance - copy its child nodes
-                callback(ko.utils.cloneNodes(element.childNodes));
+                callback(cloneNodesFromTemplateSourceElement(element));
             } else if (typeof element === 'string') {
                 // Element ID - find it, then copy its child nodes
                 var elemInstance = document.getElementById(element);
                 if (elemInstance) {
-                    callback(ko.utils.cloneNodes(elemInstance.childNodes));
+                    callback(cloneNodesFromTemplateSourceElement(elemInstance));
                 } else {
                     errorCallback('Cannot find element with ID ' + element);
                 }
@@ -154,6 +154,25 @@
         } else {
             errorCallback('Unknown viewModel value: ' + viewModelConfig);
         }
+    }
+
+    function cloneNodesFromTemplateSourceElement(elemInstance) {
+        switch (ko.utils.tagNameLower(elemInstance)) {
+            case 'script':
+                return ko.utils.parseHtmlFragment(elemInstance.text);
+            case 'textarea':
+                return ko.utils.parseHtmlFragment(elemInstance.value);
+            case 'template':
+                // For browsers with proper <template> element support (i.e., where the .content property
+                // gives a document fragment), use that document fragment.
+                if (isDocumentFragment(elemInstance.content)) {
+                    return ko.utils.cloneNodes(elemInstance.content.childNodes);
+                }
+        }
+
+        // Regular elements such as <div>, and <template> elements on old browsers that don't really
+        // understand <template> and just treat it as a regular container
+        return ko.utils.cloneNodes(elemInstance.childNodes);
     }
 
     function isDomElement(obj) {
