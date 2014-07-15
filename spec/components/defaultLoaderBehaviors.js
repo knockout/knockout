@@ -274,6 +274,7 @@ describe('Components: Default loader', function() {
 
             it('Can be configured as the ID of a <template> element', function() {
                 // Special case: the template's .content should be the source of nodes
+                document.createElement('template'); // Polyfill needed by IE <= 8
                 testTemplateFromElement('<template id="my-template-elem">{0}</template>', 'my-template-elem');
             });
 
@@ -296,6 +297,7 @@ describe('Components: Default loader', function() {
 
             it('Can be configured as a <template> element instance', function() {
                 // Special case: the template's .content should be the source of nodes
+                document.createElement('template'); // Polyfill needed by IE <= 8
                 testTemplateFromElement('<template>{0}</template>', /* elementId */ null);
             });
 
@@ -427,17 +429,16 @@ describe('Components: Default loader', function() {
 
     function testTemplateFromElement(wrapperMarkup, elementId, extraAssertsCallback) {
         var testElem = document.createElement('div');
-        testElem.innerHTML = wrapperMarkup.replace('{0}', '<p>Some text</p><div>More stuff</div>');
+        document.body.appendChild(testElem); // Needed so it can be found by ID, and because IE<=8 won't parse its .innerHTML properly otherwise
+
+        // The 'ignored' prefix is needed for IE <= 8, which silently strips any <script> elements
+        // that are not preceded by something else. Nobody knows why.
+        testElem.innerHTML = 'ignored' + wrapperMarkup.replace('{0}', '<p>Some text</p><div>More stuff</div>');
 
         // If an element ID is supplied, use that (we're testing selection by ID)
         // otherwise use the element instance itself (we're testing explicitly-supplied element instances)
-        var templateElem = testElem.childNodes[0],
+        var templateElem = testElem.childNodes[1],
             templateConfigValue = elementId || templateElem;
-
-        if (elementId) {
-            // Can only find by ID if in the document
-            document.body.appendChild(testElem);
-        }
 
         testConfigObject({ template: { element: templateConfigValue } }, function(definition) {
             // Converts to standard array-of-DOM-nodes format

@@ -163,10 +163,16 @@
             case 'textarea':
                 return ko.utils.parseHtmlFragment(elemInstance.value);
             case 'template':
-                return ko.utils.cloneNodes(elemInstance.content.childNodes);
-            default:
-                return ko.utils.cloneNodes(elemInstance.childNodes);
+                // For browsers with proper <template> element support (i.e., where the .content property
+                // gives a document fragment), use that document fragment.
+                if (isDocumentFragment(elemInstance.content)) {
+                    return ko.utils.cloneNodes(elemInstance.content.childNodes);
+                }
         }
+
+        // Regular elements such as <div>, and <template> elements on old browsers that don't really
+        // understand <template> and just treat it as a regular container
+        return ko.utils.cloneNodes(elemInstance.childNodes);
     }
 
     function isDomElement(obj) {
