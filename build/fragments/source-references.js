@@ -38,6 +38,7 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/style.js',
     'src/binding/defaultBindings/submit.js',
     'src/binding/defaultBindings/text.js',
+    'src/binding/defaultBindings/textInput.js',
     'src/binding/defaultBindings/uniqueName.js',
     'src/binding/defaultBindings/value.js',
     'src/binding/defaultBindings/visible.js',
