@@ -219,7 +219,7 @@ The following custom loader will take care of loading templates configured with 
 
     var viewModelCustomLoader = {
         loadViewModel: function(name, viewModelConfig, callback) {
-            if (viewModelConfig.fromExternalLoader) {
+            if (viewModelConfig.viaLoader) {
                 // You could use arbitrary logic, e.g., a third-party
                 // code loader, to asynchronously supply the constructor.
                 // For this example, just use a hard-coded constructor function.
