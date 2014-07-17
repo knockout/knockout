@@ -95,7 +95,7 @@ ko.applyBindings(new AppViewModel());
 
 ### Note 1: Referring to each array entry using $data
 
-As shown in the above examples, bindings within the `foreach` block can refer to properties on the array entries. For example, [Example 1](#example_1_iterating_over_an_array) referenced the `firstName` and `lastName` properties on each array entry.
+As shown in the above examples, bindings within the `foreach` block can refer to properties on the array entries. For example, [Example 1](#example-1-iterating-over-an-array) referenced the `firstName` and `lastName` properties on each array entry.
 
 But what if you want to refer to the array entry itself (not just one of its properties)? In that case, you can use the [special context property](binding-context.html) `$data`. Within a `foreach` block, it means "the current item". For example,
 
@@ -111,7 +111,7 @@ But what if you want to refer to the array entry itself (not just one of its pro
         });
     </script>
 
-If you wanted, you could use `$data` as a prefix when referencing properties on each entry. For example, you could rewrite part of [Example 1](#example_1_iterating_over_an_array) as follows:
+If you wanted, you could use `$data` as a prefix when referencing properties on each entry. For example, you could rewrite part of [Example 1](#example-1-iterating-over-an-array) as follows:
 
     <td data-bind="text: $data.firstName"></td>
 
