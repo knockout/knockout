@@ -132,11 +132,11 @@ If you want to have different custom element tag names, you can override `getCom
 
 You can use this technique if, for example, you want to control which subset of registered components may be used as custom elements.
 
-### Registering custom elements
+### Registering custom elements {#registering-custom-elements}
 
 If you are using the default component loader, and hence are registering your components using `ko.components.register`, then there is nothing extra you need to do. Components registered this way are immediately available for use as custom elements.
 
-If you have implemented a [custom component loader](component-loader.html), and are not using `ko.components.register`, then you need to tell Knockout about any element names you wish to use as custom elements. To do this, simply call `ko.components.register` - you don't need to specify any configuration, since your custom component loader won't be using the configuration anyway. For example,
+If you have implemented a [custom component loader](component-loaders.html), and are not using `ko.components.register`, then you need to tell Knockout about any element names you wish to use as custom elements. To do this, simply call `ko.components.register` - you don't need to specify any configuration, since your custom component loader won't be using the configuration anyway. For example,
 
     ko.components.register('my-custom-element', { /* No config needed */ });
 

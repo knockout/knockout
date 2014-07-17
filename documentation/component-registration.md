@@ -5,7 +5,7 @@ title: Component registration
 
 For Knockout to be able to load and instantiate your components, you must register them using `ko.components.register`, providing a configuration as described here.
 
-*Note: As an alternative, it's possible to implement a [custom component loader](component-loader.html) that fetches components by your own conventions instead of explicit configuration.*
+*Note: As an alternative, it's possible to implement a [custom component loader](component-loaders.html) that fetches components by your own conventions instead of explicit configuration.*
 
 * [Table of contents injected here]
 {:toc}
@@ -235,7 +235,7 @@ When you load a viewmodel or template via `require` declarations, e.g.,
 
 ...all Knockout does is call `require('some/module/name', callback)` and `require('text!some-template.html', callback)`, and uses the asynchronously-returned objects as the viewmodel and template definitions. So,
 
- * **This does not take a strict dependency on [require.js](http://requirejs.org/)** or any other particular module loader. *Any* module loader that provides an AMD-style `require` API will do. If you want to integrate with a module loader whose API is different, you can implement a [custom component loader](component-loader.html).
+ * **This does not take a strict dependency on [require.js](http://requirejs.org/)** or any other particular module loader. *Any* module loader that provides an AMD-style `require` API will do. If you want to integrate with a module loader whose API is different, you can implement a [custom component loader](component-loaders.html).
  * **Knockout does not interpret the module name** in any way - it merely passes it through to `require()`. So of course Knockout does not know or care about where your module files are loaded from. That's up to your AMD loader and how you've configured it.
  * **Knockout doesn't know or care whether your AMD modules are anonymous or not**. Typically we find it's most convenient for components to be defined as anonymous modules, but that concern is entirely separate from KO.
 
@@ -293,7 +293,3 @@ For example, if the following is in a file at `path/my-component.js`,
  * You only need two files for the component - a viewmodel (`path/my-component.js`) and a template (`path/my-component.html`) - which is a very natural arrangement during development.
  * Since the dependency on the template is explicitly stated in the `define` call, this automatically works with the [`r.js` optimizer](http://requirejs.org/docs/optimization.html) or similar bundling tools. The entire component - viewmodel plus template - can therefore trivially be included in a bundle file during a build step.
    * Note: Since the r.js optimizer is very flexible, it has a lot of options and can take some time to set up. You may want to start from a ready-made example of Knockout components being optimized through r.js, in which case see [Yeoman](http://yeoman.io/) and the [generator-ko](https://www.npmjs.org/package/generator-ko) generator. Blog post coming soon.
-
-## Default loader utility functions
-
-TODO: Document these on the "custom component loader" page.
