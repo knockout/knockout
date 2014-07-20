@@ -18,9 +18,14 @@ A computed observable can be constructed using one of the following forms:
   * `read` --- Required. A function that is used to evaluate the computed observable's current value.
   * `write` --- Optional. If given, makes the computed observable writable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
   * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
-  * `deferEvaluation` --- Optional. If this option is true, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
+  * `pure` --- Optional. If this option is `true`, the computed observable will be set up as a [*pure* computed observable](computed-pure.html). This option is an alternative to the `ko.pureComputed` constructor.
+  * `deferEvaluation` --- Optional. If this option is `true`, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
   * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
   * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
+  
+1. `ko.pureComputed( evaluator [, targetObject] )` --- Constructs a [*pure* computed observable](computed-pure.html) using the given evaluator function and optional object to use for `this`. Unlike `ko.computed`, this method doesn't accept an `options` parameter.
+
+1. `ko.pureComputed( options )` --- Constructs a *pure* computed observable using an `options` object. This accepts the `read`, `write`, and `owner` options described above.
 
 ## Using a computed observable
 
@@ -38,7 +43,7 @@ A computed observable provides the following functions:
 
 During the execution of a computed observable's evaluator function, you can access `ko.computedContext` to get information about the current computed property. It provides the following functions:
 
-* `isInitial()` --- A function that returns `true` if called during the first ever evaluation of the current computed observable, or `false` otherwise.
+* `isInitial()` --- A function that returns `true` if called during the first ever evaluation of the current computed observable, or `false` otherwise. For *pure* computed observables, `isInitial()` is always `undefined`.
 
 * `getDependenciesCount()` --- Returns the number of dependencies of the computed observable detected so far during the current evaluation.
   * Note: `ko.computedContext.getDependenciesCount()` is equivalent to calling `getDependenciesCount()` on the computed observable itself. The reason that it also exists on `ko.computedContext` is to provide a way of counting the dependencies during the first ever evaluation, before the computed observable has even finished being constructed.

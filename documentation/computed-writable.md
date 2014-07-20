@@ -41,7 +41,7 @@ Going back to the classic "first name + last name = full name" example, you can 
 {% capture live_example_view %}
     <div>First name: <span data-bind="text: firstName"></span></div>
     <div>Last name: <span data-bind="text: lastName"></span></div>
-    <div class="heading">Hello, <input data-bind="value: fullName"/></div>
+    <div class="heading">Hello, <input data-bind="textInput: fullName"/></div>
 {% endcapture %}
 {% include live-example-minimal.html %}
 
@@ -51,7 +51,7 @@ The preceding view model code demonstrates the *single parameter syntax* for ini
 
 ### Example 2: Selecting/deselecting all items
 
-When presenting the user with a list of selectable items, it's often useful to include a method to select or deselect all of the items. This can represented quite intuitively with a boolean value that represents whether all items are selected. When set to `true` it will select all items, and when set to `false` it will deselect them.
+When presenting the user with a list of selectable items, it is often useful to include a method to select or deselect all of the items. This can represented quite intuitively with a boolean value that represents whether all items are selected. When set to `true` it will select all items, and when set to `false` it will deselect them.
 
 <style type="text/css">
     #select-all-items label { display: block; }
@@ -65,8 +65,8 @@ When presenting the user with a list of selectable items, it's often useful to i
         this.selectedProduce = ko.observableArray([ 'Corn', 'Orange' ]);
         this.selectedAllProduce = ko.computed({
             read: function () {
-                // Using length is quick and is accurate if only items from the main 
-                // array are added to the selected array.
+                // Comparing length is quick and is accurate if only items from the
+                // main array are added to the selected array.
                 return this.selectedProduce().length === this.produce.length;
             },
             write: function (value) {
@@ -104,7 +104,8 @@ Sometimes you might want to represent a data point on the screen in a different 
                 return '$' + this.price().toFixed(2);
             },
             write: function (value) {
-                // Strip out unwanted characters, parse as float, then write the raw data back to the underlying "price" observable
+                // Strip out unwanted characters, parse as float, then write the 
+                // raw data back to the underlying "price" observable
                 value = parseFloat(value.replace(/[^\.\d]/g, ""));
                 this.price(isNaN(value) ? 0 : value); // Write to underlying storage
             },
@@ -115,8 +116,8 @@ Sometimes you might want to represent a data point on the screen in a different 
     ko.applyBindings(new MyViewModel());
 {% endcapture %}
 {% capture live_example_view %}
-    <div>Enter bid price: <input data-bind="value: formattedPrice"/></div>
-    <div>Raw value: <span data-bind="text: price"></span></div>
+    <div>Enter bid price: <input data-bind="textInput: formattedPrice"/></div>
+    <div>(Raw value: <span data-bind="text: price"></span>)</div>
 {% endcapture %}
 {% include live-example-minimal.html %}
 
@@ -155,8 +156,9 @@ Taking this a step further, you could also toggle an `isValid` flag depending on
     ko.applyBindings(new MyViewModel());
 {% endcapture %}
 {% capture live_example_view %}
-    <div>Enter a numeric value: <input data-bind="value: attemptedValue"/></div>
+    <div>Enter a numeric value: <input data-bind="textInput: attemptedValue"/></div>
     <div class="error" data-bind="visible: !lastInputWasValid()">That's not a number!</div>
+    <div>(Accepted value: <span data-bind="text: acceptedNumericValue"></span>)</div>
 {% endcapture %}
 {% include live-example-minimal.html %}
 
