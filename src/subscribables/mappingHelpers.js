@@ -28,7 +28,7 @@
         if (!canHaveProperties)
             return rootObject;
 
-        var outputProperties = toString.call(rootObject) === "[object Array]" ? [] : {};
+        var outputProperties = ko.utils.isArray(rootObject) ? [] : {};
         visitedObjects.save(rootObject, outputProperties);
 
         visitPropertiesOrArrayEntries(rootObject, function(indexer) {
