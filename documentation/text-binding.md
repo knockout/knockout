@@ -44,7 +44,7 @@ For example,
         var viewModel = {
             price: ko.observable(24.95)
         };
-        viewModel.priceRating = ko.computed(function() {
+        viewModel.priceRating = ko.pureComputed(function() {
             return this.price() > 50 ? "expensive" : "affordable";
         }, viewModel);
     </script>

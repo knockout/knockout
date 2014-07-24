@@ -28,6 +28,16 @@ Now you could bind UI elements to it, e.g.:
 
 ... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
 
+### *Pure* computed observables
+
+Starting with Knockout 3.2.0, you can use `ko.pureComputed` instead of `ko.computed` to define computed observables.
+
+    this.fullName = ko.pureComputed(function() {
+        return this.firstName() + " " + this.lastName();
+    }, this);
+
+*Pure* computed observables are not appropriate for all cases, but they provide memory and performance benefits for most applications. For more details about how this works, see the documentation for [*pure* computed observables](computed-pure.html).
+    
 ### Dependency chains just work
 
 Of course, you can create whole chains of computed observables if you wish. For example, you might have:
@@ -41,7 +51,7 @@ Changes to `items` or `selectedIndexes` will ripple through the chain of compute
 
 ### Managing 'this'
 
-The second parameter to `ko.computed` (the bit where we passed `this` in the above example) defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
+The second parameter to `ko.computed` or `ko.pureComputed` (the bit where we passed `this` in the above example) defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
 
 #### A popular convention that simplifies things
 
@@ -52,18 +62,18 @@ There's a popular convention that avoids the need to track `this` altogether: if
 
         self.firstName = ko.observable('Bob');
         self.lastName = ko.observable('Smith');
-        self.fullName = ko.computed(function() {
+        self.fullName = ko.pureComputed(function() {
             return self.firstName() + " " + self.lastName();
         });
     }
 
-Because `self` is captured in the function's closure, it remains available and consistent in any nested functions, such as the `ko.computed` evaluator. This convention is even more useful when it comes to event handlers, as you'll see in many of the [live examples](../examples/).
+Because `self` is captured in the function's closure, it remains available and consistent in any nested functions, such as the computed observable's evaluator. This convention is even more useful when it comes to event handlers, as you'll see in many of the [live examples](../examples/).
 
 ### Forcing computed observables to always notify subscribers
 
 When a computed observable returns a primitive value (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that a computed observable's subscribers are always notified on an update, even if the value is the same. You would apply the extender like this:
 
-    myViewModel.fullName = ko.computed(function() {
+    myViewModel.fullName = ko.pureComputed(function() {
         return myViewModel.firstName() + " " + myViewModel.lastName();
     }).extend({ notify: 'always' });
 

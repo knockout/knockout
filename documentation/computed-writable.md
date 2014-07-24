@@ -21,7 +21,7 @@ Going back to the classic "first name + last name = full name" example, you can 
         this.firstName = ko.observable('Planet');
         this.lastName = ko.observable('Earth');
 
-        this.fullName = ko.computed({
+        this.fullName = ko.pureComputed({
             read: function () {
                 return this.firstName() + " " + this.lastName();
             },
@@ -63,7 +63,7 @@ When presenting the user with a list of selectable items, it is often useful to 
     function MyViewModel() {
         this.produce = [ 'Apple', 'Banana', 'Celery', 'Corn', 'Orange', 'Spinach' ];
         this.selectedProduce = ko.observableArray([ 'Corn', 'Orange' ]);
-        this.selectedAllProduce = ko.computed({
+        this.selectedAllProduce = ko.pureComputed({
             read: function () {
                 // Comparing length is quick and is accurate if only items from the
                 // main array are added to the selected array.
@@ -99,7 +99,7 @@ Sometimes you might want to represent a data point on the screen in a different 
     function MyViewModel() {
         this.price = ko.observable(25.99);
 
-        this.formattedPrice = ko.computed({
+        this.formattedPrice = ko.pureComputed({
             read: function () {
                 return '$' + this.price().toFixed(2);
             },
@@ -139,7 +139,7 @@ Taking this a step further, you could also toggle an `isValid` flag depending on
         this.acceptedNumericValue = ko.observable(123);
         this.lastInputWasValid = ko.observable(true);
 
-        this.attemptedValue = ko.computed({
+        this.attemptedValue = ko.pureComputed({
             read: this.acceptedNumericValue,
             write: function (value) {
                 if (isNaN(value))

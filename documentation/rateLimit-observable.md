@@ -70,7 +70,7 @@ Try it:
 {% capture live_example_viewmodel %}
 function AppViewModel() {
     this.instantaneousValue = ko.observable();
-    this.delayedValue = ko.computed(this.instantaneousValue)
+    this.delayedValue = ko.pureComputed(this.instantaneousValue)
         .extend({ rateLimit: { method: "notifyWhenChangesStop", timeout: 400 } });
 
     // Keep a log of the throttled values
@@ -137,7 +137,7 @@ If you want to ensure that the subscribers are always notified of an update, eve
     myViewModel.fullName = ko.computed(function() {
         return myViewModel.firstName() + " " + myViewModel.lastName();
     }).extend({ notify: 'always', rateLimit: 500 });
-
+    
 ## Comparison with the throttle extender
 
 If you'd like to migrate code from using the deprecated `throttle` extender, you should note the following ways that the `rateLimit` extender is different from the `throttle` extender.

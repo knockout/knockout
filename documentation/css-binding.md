@@ -33,7 +33,7 @@ This will apply the CSS class `profitWarning` whenever the `currentProfit` value
         };
 
         // Evalutes to a positive value, so initially we apply the "profitPositive" class
-        viewModel.profitStatus = ko.computed(function() {
+        viewModel.profitStatus = ko.pureComputed(function() {
             return this.currentProfit() < 0 ? "profitWarning" : "profitPositive";
         }, viewModel);
 

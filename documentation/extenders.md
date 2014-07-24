@@ -41,7 +41,7 @@ This example creates an extender that forces writes to an observable to be numer
 {% capture live_example_viewmodel %}
 ko.extenders.numeric = function(target, precision) {
     //create a writable computed observable to intercept writes to our observable
-    var result = ko.computed({
+    var result = ko.pureComputed({
         read: target,  //always return the original observables value
         write: function(newValue) {
             var current = target(),

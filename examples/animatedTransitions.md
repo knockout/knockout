@@ -67,7 +67,7 @@ This example shows two ways to animate transitions:
             });
         };
 
-        this.planetsToShow = ko.computed(function() {
+        this.planetsToShow = ko.pureComputed(function() {
             // Represents a filtered list of planets
             // i.e., only those matching the "typeToShow" condition
             var desiredType = this.typeToShow();

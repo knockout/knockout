@@ -41,7 +41,7 @@ scripts/appViewModel.js
     define(['knockout-x.y.z'], function(ko) {
         return function appViewModel() {
             this.firstName = ko.observable('Bert');
-            this.firstNameCaps = ko.computed(function() {
+            this.firstNameCaps = ko.pureComputed(function() {
                 return this.firstName().toUpperCase();
             }, this);
         };

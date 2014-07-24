@@ -156,7 +156,7 @@ You must use `dispose` to release any resources that aren't inherently garbage-c
  * `setInterval` callbacks will continue to fire until explicitly cleared.
    * Use `clearInterval(handle)` to stop them, otherwise your viewmodel might be held in memory.
  * `ko.computed` properties continue to receive notifications from their dependencies until explicitly disposed.
-   * If a dependency is on an external object, then be sure to use `.dispose()` on the computed property, otherwise it (and possibly also your viewmodel) will be held in memory. Alternatively, consider using a `pureComputed` to avoid the need for manual disposal.
+   * If a dependency is on an external object, then be sure to use `.dispose()` on the computed property, otherwise it (and possibly also your viewmodel) will be held in memory. Alternatively, consider using a [*pure* computed](computed-pure.html) to avoid the need for manual disposal.
  * **Subscriptions** to observables continue to fire until explicitly disposed.
    * If you have subscribed to an external observable, be sure to use `.dispose()` on the subscription, otherwise the callback (and possibly also your viewmodel) will be held in memory.
  * Manually-created **event handlers** on external DOM elements, if created inside a `createViewModel` function (or even inside a regular component viewmodel, although to fit the MVVM pattern you shouldn't) must be removed.
@@ -169,6 +169,10 @@ For example:
     function SomeComponentViewModel() {
         this.myComputed = ko.computed(function() {
             return someExternalObservable() + 1;
+        }, this);
+
+        this.myPureComputed = ko.pureComputed(function() {
+            return someExternalObservable() + 2;
         }, this);
 
         this.mySubscription = someExternalObservable.subscribe(function(val) {
@@ -184,6 +188,7 @@ For example:
         this.myComputed.dispose();
         this.mySubscription.dispose();
         window.clearInterval(this.myIntervalHandle);
+        // this.myPureComputed doesn't need to be manually disposed.
     }
 
     ko.components.register('your-component-name', {
