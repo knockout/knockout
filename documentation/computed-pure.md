@@ -29,7 +29,7 @@ The standard method of defining a *pure* computed observable is to use `ko.pureC
         return this.firstName() + " " + this.lastName();
     }, this);
     
-Alternatively, you can use the use the `pure` option with `ko.computed`:
+Alternatively, you can use the `pure` option with `ko.computed`:
 
     this.fullName = ko.computed(function() {
         return this.firstName() + " " + this.lastName();
