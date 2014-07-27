@@ -15,6 +15,8 @@ So, Knockout doesn't just detect dependencies the first time the evaluator runs 
 
 The other neat trick is that declarative bindings are simply implemented as computed observables. So, if a binding reads the value of an observable, that binding becomes dependent on that observable, which causes that binding to be re-evaluated if the observable changes.
 
+*Pure* computed observables work slightly differently. For more details, see the documentation for [*pure* computed observables](computed-pure.html).
+
 ### Controlling dependencies using peek
 
 Knockout's automatic dependency tracking normally does exactly what you want. But you might sometimes need to control which observables will update your computed observable, especially if the computed observable performs some sort of action, such as making an Ajax request. The `peek` function lets you access an observable or computed observable without creating a dependency.
