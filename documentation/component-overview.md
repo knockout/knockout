@@ -107,7 +107,7 @@ Here's an example configuration:
 
 For this to work, the files [`files/component-like-widget.js`](files/component-like-widget.js) and [`files/component-like-widget.html`](files/component-like-widget.html) need to exist. Check them out (and *view source* on the .html one) - as you'll see, this is cleaner and more convenient that including the code inline in the definition.
 
-Also, you need to have referenced a suitable module loader library (such as [require.js](http://requirejs.org/)) or implemented a [custom component loader](component-loader.html) that knows how to grab your files.
+Also, you need to have referenced a suitable module loader library (such as [require.js](http://requirejs.org/)) or implemented a [custom component loader](component-loaders.html) that knows how to grab your files.
 
 **Using the component**
 
@@ -153,4 +153,4 @@ More more detailed information, see:
  * [Defining and registering components](component-registration.html)
  * [Using the `component` binding](component-binding.html)
  * [Using custom elements](component-custom-elements.html)
- * [Advanced: Custom component loaders](component-loader.html)
+ * [Advanced: Custom component loaders](component-loaders.html)

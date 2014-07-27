@@ -118,6 +118,11 @@ Example:
         };
     </script>
 
+### Note 3: Using the `value` binding with the `checked` binding
+
+The [`checked`](checked-binding.html) binding should be used to bind a view model property against the value of a checkbox (`<input type='checkbox'>`) or radio button (`<input type='radio'>`). If you do include the `value` binding with the `checked` binding on one of these elements, then the `value` binding will simply act like the [`checkedValue`](checked-binding.html#checkedValue) option that can be used with the `checked` binding and will control the value that is used for updating your view model.
+
 ### Dependencies
 
 None, other than the core Knockout library.
+
