@@ -49,4 +49,15 @@
      many places. So for back-compatibility, we reference require.js *after* loading knockout.js
      and various other libraries as globals. -->
 <script type="text/javascript" src="{{ page.pathprefix }}js/require.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}js/require.config.js"></script>
+<script type="text/javascript">
+require.config({
+    paths: {
+        'knockout': '{{ page.pathprefix }}downloads/knockout-latest',
+        'text':     '{{ page.pathprefix }}js/require.text'
+    }
+});
+
+// To keep the network tab clear when the visitor is running live examples,
+// preload the following.
+require(['text', 'knockout'], function() {});
+</script>
