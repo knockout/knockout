@@ -18,6 +18,7 @@ describe('Dependent Observable', function() {
     it('Should advertise that instances cannot have values written to them', function () {
         var instance = ko.computed(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(false);
+        expect(ko.isWritableObservable(instance)).toEqual(false);
     });
 
     it('Should require an evaluator function as constructor param', function () {
@@ -318,6 +319,7 @@ describe('Dependent Observable', function() {
             write: function() {}
         });
         expect(ko.isWriteableObservable(instance)).toEqual(true);
+        expect(ko.isWritableObservable(instance)).toEqual(true);
     });
 
     it('Should allow deferring of evaluation (and hence dependency detection)', function () {

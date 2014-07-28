@@ -38,6 +38,7 @@ describe('Observable', function() {
     it('Should advertise that instances can have values written to them', function () {
         var instance = new ko.observable(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(true);
+        expect(ko.isWritableObservable(instance)).toEqual(true);
     });
 
     it('Should be able to read back most recent value', function () {
