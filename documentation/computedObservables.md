@@ -97,5 +97,5 @@ In some scenarios, it is useful to programmatically determine if you are dealing
 Additionally, Knockout provides similar functions that can operate on observables and computed observables:
 
 * `ko.isObservable` - returns true for observables, observable arrays, and all computed observables.
-* `ko.isWriteableObservable` - returns true for observable, observable arrays, and writable computed observables.
+* `ko.isWritableObservable` - returns true for observables, observable arrays, and writable computed observables (also aliased as `ko.isWriteableObservable`).
 
