@@ -51,7 +51,7 @@ The preceding view model code demonstrates the *single parameter syntax* for ini
 
 ### Example 2: Selecting/deselecting all items
 
-When presenting the user with a list of selectable items, it is often useful to include a method to select or deselect all of the items. This can represented quite intuitively with a boolean value that represents whether all items are selected. When set to `true` it will select all items, and when set to `false` it will deselect them.
+When presenting the user with a list of selectable items, it is often useful to include a method to select or deselect all of the items. This can be represented quite intuitively with a boolean value that represents whether all items are selected. When set to `true` it will select all items, and when set to `false` it will deselect them.
 
 <style type="text/css">
     #select-all-items label { display: block; }
