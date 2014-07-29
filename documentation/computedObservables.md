@@ -41,7 +41,7 @@ Changes to `items` or `selectedIndexes` will ripple through the chain of compute
 
 ### Managing 'this'
 
-The second parameter to `ko.computed` or `ko.pureComputed` (the bit where we passed `this` in the above example) defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
+The second parameter to `ko.computed` (the bit where we passed `this` in the above example) defines the value of `this` when evaluating the computed observable. Without passing it in, it would not have been possible to refer to `this.firstName()` or `this.lastName()`. Experienced JavaScript coders will regard this as obvious, but if you're still getting to know JavaScript it might seem strange. (Languages like C# and Java never expect the programmer to set a value for `this`, but JavaScript does, because its functions themselves aren't part of any object by default.)
 
 #### A popular convention that simplifies things
 
@@ -52,7 +52,7 @@ There's a popular convention that avoids the need to track `this` altogether: if
 
         self.firstName = ko.observable('Bob');
         self.lastName = ko.observable('Smith');
-        self.fullName = ko.pureComputed(function() {
+        self.fullName = ko.computed(function() {
             return self.firstName() + " " + self.lastName();
         });
     }
