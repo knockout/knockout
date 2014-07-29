@@ -27,16 +27,6 @@ Now you could bind UI elements to it, e.g.:
     The name is <span data-bind="text: fullName"></span>
 
 ... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
-
-### *Pure* computed observables
-
-Starting with Knockout 3.2.0, you can use `ko.pureComputed` instead of `ko.computed` to define computed observables.
-
-    this.fullName = ko.pureComputed(function() {
-        return this.firstName() + " " + this.lastName();
-    }, this);
-
-*Pure* computed observables are not appropriate for all cases, but they provide memory and performance benefits for most applications. For more details about how this works, see the documentation for [*pure* computed observables](computed-pure.html).
     
 ### Dependency chains just work
 
@@ -68,6 +58,18 @@ There's a popular convention that avoids the need to track `this` altogether: if
     }
 
 Because `self` is captured in the function's closure, it remains available and consistent in any nested functions, such as the computed observable's evaluator. This convention is even more useful when it comes to event handlers, as you'll see in many of the [live examples](../examples/).
+
+### *Pure* computed observables
+
+If your computed observable simply calculates and returns a value based on some observable dependencies, then it's better to declare it as a `ko.pureComputed` instead of a `ko.computed`. For example:
+
+    this.fullName = ko.pureComputed(function() {
+        return this.firstName() + " " + this.lastName();
+    }, this);
+
+Since this computed is declared to be *pure* (i.e., its evaluator does not directly modify other objects or state), Knockout can more efficiently manage its re-evaluation and memory use. Knockout will automatically suspend or release it if no other code has an active dependency on it.
+
+Pure computeds were introduced in Knockout 3.2.0. See also: [more about pure computed observables](computed-pure.html).
 
 ### Forcing computed observables to always notify subscribers
 
