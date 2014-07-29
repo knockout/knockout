@@ -125,6 +125,8 @@ You should not use the *pure* feature for a computed observable that is meant to
             disposeWhenNodeIsRemoved: element
         });
 
+The reason you shouldn't use a *pure* computed if the evaluator has important side effects is simply that the evaluator will not run whenever the computed has no active subscribers (and so is sleeping). If it's important for the evaluator to always run when dependencies change, use a [regular computed](computedObservables.html) instead.
+
 #### Performance {#using-pure-computed-can-hurt-performance}
 
 There may be cases when using the *pure* feature for a computed observable results in higher computation overhead. A regular computed observable is re-evaluated only when one of its dependencies changes. But a *pure* computed observable is also re-evaluated each time it is accessed while *sleeping* and whenever it enters the *listening* state. Thus it is possible for a computed observable to be re-evaluated more often when using the *pure* feature than it would be otherwise.
