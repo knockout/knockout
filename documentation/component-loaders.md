@@ -109,7 +109,7 @@ So, `ko.components.loaders` is an array containing all the loaders currently ena
 
 ## Controlling precedence
 
-If you want your custom loader to take precidence over the default loader (so it gets the first opportunity to supply configuration/values), then add it to the *beginning* of the array. If you want the default loader to take precidence (so your custom loader is only called for components not explicitly registered), then add it to the *end* of the array.
+If you want your custom loader to take precedence over the default loader (so it gets the first opportunity to supply configuration/values), then add it to the *beginning* of the array. If you want the default loader to take precedence (so your custom loader is only called for components not explicitly registered), then add it to the *end* of the array.
 
 Example:
 
