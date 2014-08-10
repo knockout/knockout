@@ -107,7 +107,7 @@ Knockout allows you to use multiple component loaders simultaneously. This is us
 
 So, `ko.components.loaders` is an array containing all the loaders currently enabled. By default, this array contains just one item: `ko.components.defaultLoader`. To add additional loaders, simply insert them into the `ko.components.loaders` array.
 
-## Controlling precidence
+## Controlling precedence
 
 If you want your custom loader to take precidence over the default loader (so it gets the first opportunity to supply configuration/values), then add it to the *beginning* of the array. If you want the default loader to take precidence (so your custom loader is only called for components not explicitly registered), then add it to the *end* of the array.
 
