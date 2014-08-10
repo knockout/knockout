@@ -52,7 +52,7 @@ You might want to implement a custom component loader if you want to use naming 
 
 A custom component loader is simply an object whose properties are **any combination** of the following functions:
 
- * `getConfig(name, callback)`
+### `getConfig(name, callback)`
 
    ***Define this if:** you want to supply configurations programmatically based on names, e.g., to implement a naming convention.*
    
@@ -63,7 +63,7 @@ A custom component loader is simply an object whose properties are **any combina
    * You are not limited to supplying configuration objects in any standard format. You can supply arbitrary objects as long as your `loadComponent` function understands them.
    * If you do not want your loader to supply a configuration for the named component, then call `callback(null)`. Knockout will then consult any other registered loaders in sequence, until one supplies a non-`null` value.
 
- * `loadComponent(name, componentConfig, callback)`
+### `loadComponent(name, componentConfig, callback)`
    
    ***Define this if:** you want to take control over how component configurations are interpreted, e.g., if you do not want to use the standard `viewModel`/`template` pair format.*
 
@@ -76,7 +76,7 @@ A custom component loader is simply an object whose properties are **any combina
 
    * If you do not want your loader to supply a viewmodel/template pair for the given parameters, then call `callback(null)`. Knockout will then consult any other registered loaders in sequence, until one supplies a non-`null` value.
 
- * `loadTemplate(name, templateConfig, callback)`
+### `loadTemplate(name, templateConfig, callback)`
 
    ***Define this if:** you want to use custom logic to supply DOM nodes for a given template configuration (e.g., using an ajax request to fetch a template by URL).*
 
@@ -88,7 +88,7 @@ A custom component loader is simply an object whose properties are **any combina
 
    * If you do not want your loader to supply a template for the given parameters (e.g., because it does not recognize the configuration format), call `callback(null)`. Knockout will then consult any other registered loaders in sequence, until one supplies a non-`null` value.
 
- * `loadViewModel(name, templateConfig, callback)`
+### `loadViewModel(name, templateConfig, callback)`
 
    ***Define this if:** you want to use custom logic to supply a viewmodel factory for a given viewmodel configuration (e.g., integrating with a third-party module loader or dependency injection system).*
 
