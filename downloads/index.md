@@ -49,7 +49,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
-* [v3.2.0](knockout-3.2.0.js) ([debug](knockout-3.2.0.debug.js)) --- XXXX XX, 2014
+* [v3.2.0](knockout-3.2.0.js) ([debug](knockout-3.2.0.debug.js)) --- August 12th, 2014
 * [v3.2.0 Beta](knockout-3.2.0beta.js) ([debug](knockout-3.2.0beta.debug.js)) --- June 19th, 2014
 * [v3.1.0](knockout-3.1.0.js) ([debug](knockout-3.1.0.debug.js)) --- March 4th, 2014
 * [v3.1.0 Beta](knockout-3.1.0beta.js) ([debug](knockout-3.1.0beta.debug.js)) --- February 12th, 2014
