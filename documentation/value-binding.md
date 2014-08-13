@@ -42,24 +42,19 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
      * `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes. Note that this event is only raised by reasonably modern browsers (e.g., IE 9+).
      * `"keyup"` - updates your view model when the user releases a key
      * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
-     * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously.
-
-     Of these options, `"input"` is the best choice if you want to keep your view model updated in real-time, and you only need to support reasonably modern browsers such as IE 9+ (whereas `"afterkeydown"` is a good choice for older browsers). For example:
-
-            <p>Your value: <input data-bind="value: someValue, valueUpdate: 'input'" /></p>
-            <p>You have typed: <span data-bind="text: someValue"></span></p> <!-- updates in real-time -->
-
-            <script type="text/javascript">
-                var viewModel = {
-                    someValue: ko.observable("edit me")
-                };
-            </script>
+     * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously. This does not work in some mobile browsers.
+     
 
     * `valueAllowUnset`
 
-      See [Note 1](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
+      See [Note 2](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
 
-### Note 1: Working with drop-down lists (i.e., `<select>` elements)
+### Note 1: Getting value updates instantly from inputs
+
+If you are trying to bind an `<input type="text" />` or `<textarea>` to get instant updates to your viewmodel, use the [the `textInput` binding](textinput-binding.html). It has better support for browser edge cases than any combination of `valueUpdate` options.
+
+
+### Note 2: Working with drop-down lists (i.e., `<select>` elements)
 
 Knockout has special support for drop-down lists (i.e., `<select>` elements). The `value` binding works in conjunction with the `options` binding to let you read and write values that are arbitrary JavaScript objects, not just string values. This is very useful if you want to let the user select from a set of model objects. For examples of this, see [the `options` binding](options-binding.html) or for handling multi-select lists, see the documentation for [the `selectedOptions` binding](selectedOptions-binding.html).
 
@@ -90,7 +85,7 @@ In the above example, `selectedCountry` will retain the value `'Latvia'`, and th
 
 If `valueAllowUnset` had not been enabled, then Knockout would have overwritten `selectedCountry` with `undefined`, so that it would match the value of the `'Choose one...'` caption entry.
 
-### Note 2: Updating observable and non-observable property values
+### Note 3: Updating observable and non-observable property values
 
 If you use `value` to link a form element to an observable property, KO is able to set up a 2-way binding so that changes to either affect the other.
 
@@ -118,7 +113,7 @@ Example:
         };
     </script>
 
-### Note 3: Using the `value` binding with the `checked` binding
+### Note 4: Using the `value` binding with the `checked` binding
 
 The [`checked`](checked-binding.html) binding should be used to bind a view model property against the value of a checkbox (`<input type='checkbox'>`) or radio button (`<input type='radio'>`). If you do include the `value` binding with the `checked` binding on one of these elements, then the `value` binding will simply act like the [`checkedValue`](checked-binding.html#checkedValue) option that can be used with the `checked` binding and will control the value that is used for updating your view model.
 
