@@ -35,7 +35,7 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
 
  * Additional parameters
 
-   *  `valueUpdate`
+   * `valueUpdate` option
 
      If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. The following string values are the most commonly useful choices:
 
