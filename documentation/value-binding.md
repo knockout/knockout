@@ -35,7 +35,7 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
 
  * Additional parameters
 
-   * `valueUpdate` option
+   * **valueUpdate**
 
      If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. The following string values are the most commonly useful choices:
 
@@ -55,7 +55,7 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
                 };
             </script>
 
-    *  `valueAllowUnset`
+    *  **valueAllowUnset**
 
       See [Note 1](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
 
