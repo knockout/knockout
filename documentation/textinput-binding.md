@@ -8,8 +8,8 @@ The `textInput` binding links an `<input type="text" />` or a `<textarea>` with 
 
 ### Example
 
-    <p>Login name: <input type="text" name="username" data-bind="value: userName" /></p>
-    <p>Password: <input type="password" name="password" data-bind="value: userPassword" /></p>
+    <p>Login name: <input type="text" name="username" data-bind="textInput: userName" /></p>
+    <p>Password: <input type="password" name="password" data-bind="textInput: userPassword" /></p>
 
     ViewModel:
     <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
