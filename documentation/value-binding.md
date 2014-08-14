@@ -35,14 +35,14 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
 
  * Additional parameters
 
-    * `valueUpdate`
+   *  `valueUpdate`
 
      If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. The following string values are the most commonly useful choices:
 
-      * `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes. Note that this event is only raised by reasonably modern browsers (e.g., IE 9+).
-      * `"keyup"` - updates your view model when the user releases a key
-      * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
-      * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously.
+     *  `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes. Note that this event is only raised by reasonably modern browsers (e.g., IE 9+).
+     *  `"keyup"` - updates your view model when the user releases a key
+     *  `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
+     *  `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously.
 
      Of these options, `"input"` is the best choice if you want to keep your view model updated in real-time, and you only need to support reasonably modern browsers such as IE 9+ (whereas `"afterkeydown"` is a good choice for older browsers). For example:
 
@@ -55,7 +55,7 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
                 };
             </script>
 
-    * `valueAllowUnset`
+    *  `valueAllowUnset`
 
       See [Note 1](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
 

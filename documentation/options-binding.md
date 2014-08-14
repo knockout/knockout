@@ -93,7 +93,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
  * Additional parameters
 
-    * `optionsCaption`
+   * `optionsCaption`
 
      Sometimes, you might not want to select any particular option by default. But a single-select drop-down list usually starts with some item selected, so how can you avoid preselecting something? The usual solution is to prefix the list of options with a special dummy option that just reads "Select an item" or "Please choose an option" or similar, and have that one selected by default.
 
@@ -103,19 +103,19 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
      KO will prefix the list of items with one that displays the text "Select an item..." and has the value `undefined`. So, if `myChosenValue` holds the value `undefined` (which observables do by default), then the dummy option will be selected. If the `optionsCaption` parameter is an observable, then the text of the initial item will update as the observable's value changes.
 
-    * `optionsText`
+   * `optionsText`
 
      See Example 3 above to see how you can bind `options` to an array of arbitrary JavaScript object - not just strings. In this case, you need to choose which of the objects' properties should be displayed as the text in the drop-down list or multi-select list. Example 3 shows how you can specify that property name by passing an additional parameter called `optionsText`.
 
      If you don't want to display just a simple property value as the text for each item in the dropdown, you can pass a JavaScript function for the `optionsText` option and supply your own arbitrary logic for computing the displayed text in terms of the represented object. See Example 4 above, which shows how you could generate the displayed text by concatenating together multiple property values.
 
-    * `optionsValue`
+   * `optionsValue`
 
      Similar to `optionsText`, you can also pass an additional parameter called `optionsValue` to specify which of the objects' properties should be used to set the `value` attribute on the `<option>` elements that KO generates. You can also specify a JavaScript function to determine this value. This function will receive the selected item as its only argument and should return a string to use for the `<option>` element's value attribute.
 
      Typically you'd only want to use `optionsValue` as a way of ensuring that KO can correctly retain selection when you update the set of available options. For example, if you're repeatedly getting a list of "car" objects via Ajax calls and want to ensure that the selected car is preserved, you might need to set `optionsValue` to `"carId"` or whatever unique identifier each "car" object has, otherwise KO won't necessarily know which of the previous "car" objects corresponds to which of the new ones.
 
-    * `optionsIncludeDestroyed`
+   * `optionsIncludeDestroyed`
 
      Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a non-destructive delete. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy_and_destroyall_note_usually_relevant_to_ruby_on_rails_developers_only).
 
@@ -123,7 +123,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
      `<select data-bind='options: myOptions, optionsIncludeDestroyed: true'></select>`
 
-    * `optionsAfterRender`
+   * `optionsAfterRender`
 
      If you need to run some further custom logic on the generated `option` elements, you can use the `optionsAfterRender` callback. See Note 2 below.
 
@@ -131,7 +131,7 @@ Note that the only difference between examples 3 and 4 is the `optionsText` valu
 
      For a multi-select list, you can read and write the selection state using `selectedOptions`. Technically this is a separate binding, so it has [its own documentation](selectedOptions-binding.html).
 
-    * `valueAllowUnset`
+   * `valueAllowUnset`
 
      If you want Knockout to allow your model property to take values that have no corresponding entry in your `<select>` element (and display this by making the `<select>` element blank), then see [documentation for `valueAllowUnset`](value-binding.html#using-valueallowunset-with-select-elements).
 
