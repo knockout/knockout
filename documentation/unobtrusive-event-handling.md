@@ -22,7 +22,7 @@ These helper functions can be used in event handlers that are attached unobtrusi
 
 Better yet, this techinique could be used to support event delegation.  jQuery's `live/delegate/on` functions are an easy way to make this happen:
 
-    $(".remove").live("click", function() {
+    $(".container").on("click", ".remove", function() {
         viewModel.items.remove(ko.dataFor(this));
     });
 
@@ -85,7 +85,7 @@ var PeopleModel = function() {
 ko.applyBindings(new PeopleModel());
 
 //attach event handlers
-$("#people").delegate(".remove", "click", function() {
+$("#people").on("click", ".remove", function() {
     //retrieve the context
     var context = ko.contextFor(this),
         parentArray = context.$parent.people || context.$parent.children;
@@ -96,7 +96,7 @@ $("#people").delegate(".remove", "click", function() {
     return false;
 });
 
-$("#people").delegate(".add", "click", function() {
+$("#people").on("click", ".add", function() {
     //retrieve the context
     var context = ko.contextFor(this),
         childName = context.$data.name() + " child",

@@ -1,4 +1,4 @@
-<script type="text/javascript" src="{{ page.pathprefix }}js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="{{ page.pathprefix }}js/jquery-1.11.1.min.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-latest.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/cufon-yui.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/titilliummaps.font.js"></script>
@@ -38,7 +38,7 @@
         // Highlight current left-hand-nav menu item
         var urlFilename = location.href.match(/\/([^\/]+)$/);
         if (urlFilename) {
-            $(".leftColContents li:has(a[href$=" + urlFilename[1] + "])").addClass("active");
+            $(".leftColContents li:has(a[href$='" + urlFilename[1] + "'])").addClass("active");
         }
     });
 </script>
