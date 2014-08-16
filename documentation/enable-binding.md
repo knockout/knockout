@@ -27,17 +27,17 @@ In this example, the "Your cellphone number" text box will initially be disabled
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
    
-   A value that controls whether or not the associated DOM element should be enabled.
+    A value that controls whether or not the associated DOM element should be enabled.
    
-   Non-boolean values are interpreted loosely as boolean. For example, `0` and `null` are treated as `false`, whereas `21` and non-`null` objects are treated as `true`.
+    Non-boolean values are interpreted loosely as boolean. For example, `0` and `null` are treated as `false`, whereas `21` and non-`null` objects are treated as `true`.
    
-   If your parameter references an observable value, the binding will update the enabled/disabled state whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the state once and will not do so again later.   
+    If your parameter references an observable value, the binding will update the enabled/disabled state whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the state once and will not do so again later.   
       
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+     * None
 
 ### Note: Using arbitrary JavaScript expressions
 

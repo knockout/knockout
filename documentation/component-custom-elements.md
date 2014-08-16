@@ -85,22 +85,22 @@ In the following example,
 
 ... the component viewmodel's `params` parameter will contain three values:
 
- * `simpleExpression`
-   * This will be the numeric value `2`. It will not be an observable or computed value, since there are no observables involved.
+  * `simpleExpression`
+      * This will be the numeric value `2`. It will not be an observable or computed value, since there are no observables involved.
 
-     In general, if a parameter's evaluation does not involve evaluating an observable (in this case, the value did not involve observables at all), then the value is passed literally. If the value was an object, then the child component could mutate it, but since it's not observable the parent would not know the child had done so.
+        In general, if a parameter's evaluation does not involve evaluating an observable (in this case, the value did not involve observables at all), then the value is passed literally. If the value was an object, then the child component could mutate it, but since it's not observable the parent would not know the child had done so.
 
- * `simpleObservable`
-   * This will be the [`ko.observable`](observables.html) instance declared on the parent viewmodel as `myObservable`. It is not a wrapper --- it's the actual same instance as referenced by the parent. So if the child viewmodel writes to this observable, the parent viewmodel will receive that change.
+  * `simpleObservable`
+      * This will be the [`ko.observable`](observables.html) instance declared on the parent viewmodel as `myObservable`. It is not a wrapper --- it's the actual same instance as referenced by the parent. So if the child viewmodel writes to this observable, the parent viewmodel will receive that change.
 
-     In general, if a parameter's evaluation does not involve evaluating an observable (in this case, the observable was simply passed without evaluating it), then the value is passed literally.
+        In general, if a parameter's evaluation does not involve evaluating an observable (in this case, the observable was simply passed without evaluating it), then the value is passed literally.
 
- * `observableExpression`
-   * This one is trickier. The expression itself, when evaluated, reads an observable. That observable's value could change over time, so the expression result could change over time.
+  * `observableExpression`
+      * This one is trickier. The expression itself, when evaluated, reads an observable. That observable's value could change over time, so the expression result could change over time.
 
-     To ensure that the child component can react to changes in the expression value, Knockout **automatically upgrades this parameter to a computed property**. So, the child component will be able to read `params.observableExpression()` to get the current value, or use `params.observableExpression.subscribe(...)`, etc.
+        To ensure that the child component can react to changes in the expression value, Knockout **automatically upgrades this parameter to a computed property**. So, the child component will be able to read `params.observableExpression()` to get the current value, or use `params.observableExpression.subscribe(...)`, etc.
 
-     In general, with custom elements, if a parameter's evaluation involves evaluating an observable, then Knockout automatically constructs a `ko.computed` value to give the expression's result, and supplies that to the component.
+        In general, with custom elements, if a parameter's evaluation involves evaluating an observable, then Knockout automatically constructs a `ko.computed` value to give the expression's result, and supplies that to the component.
 
 In summary, the general rule is:
 

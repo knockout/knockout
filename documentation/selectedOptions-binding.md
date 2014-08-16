@@ -29,17 +29,17 @@ Note: To control which element in a single-select drop-down list is selected, yo
     
 ### Parameters
 
- * Main parameter
+  * Main parameter
    
-   This should be an array (or an observable array). KO sets the element's selected options to match the contents of the array. Any previous selection state will be overwritten.
+    This should be an array (or an observable array). KO sets the element's selected options to match the contents of the array. Any previous selection state will be overwritten.
    
-   If your parameter is an observable array, the binding will update the element's selection whenever the array changes (e.g., via `push`, `pop` or [other observable array methods](observableArrays.html)). If the parameter isn't observable, it will only set the element's selection state once and will not update it again later.
+    If your parameter is an observable array, the binding will update the element's selection whenever the array changes (e.g., via `push`, `pop` or [other observable array methods](observableArrays.html)). If the parameter isn't observable, it will only set the element's selection state once and will not update it again later.
    
-   Whether or not the parameter is an observable array, KO will detect when the user selects or deselects an item in the multi-select list, and will update the array to match. This is how you can read which of the options is selected.
+    Whether or not the parameter is an observable array, KO will detect when the user selects or deselects an item in the multi-select list, and will update the array to match. This is how you can read which of the options is selected.
       
- * Additional parameters 
+  * Additional parameters 
 
-   None
+      * None
    
 ### Note: Letting the user select from arbitrary JavaScript objects
 

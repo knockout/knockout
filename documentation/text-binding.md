@@ -20,17 +20,17 @@ Typically this is useful with elements like `<span>` or `<em>` that traditionall
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
 
-   Knockout sets the element's content to a text node with your parameter value. Any previous content will be overwritten.
+    Knockout sets the element's content to a text node with your parameter value. Any previous content will be overwritten.
 
-   If this parameter is an observable value, the binding will update the element's text whenever the value changes. If the parameter isn't observable, it will only set the element's text once and will not update it again later.
+    If this parameter is an observable value, the binding will update the element's text whenever the value changes. If the parameter isn't observable, it will only set the element's text once and will not update it again later.
 
-   If you supply something other than a number or a string (e.g., you pass an object or an array), the displayed text will be equivalent to `yourParameter.toString()`
+    If you supply something other than a number or a string (e.g., you pass an object or an array), the displayed text will be equivalent to `yourParameter.toString()`
 
- * Additional parameters
+  * Additional parameters
 
-   * None
+      * None
 
 ### Note 1: Using functions and expressions to detemine text values
 

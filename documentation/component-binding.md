@@ -44,29 +44,29 @@ Note: In more realistic cases, you would typically load component viewmodels and
 
 There are two ways to use the `component` binding:
 
- * **Shorthand syntax**
+  * **Shorthand syntax**
    
-   If you pass just a string, it is interpreted as a component name. The named component is then injected without supplying any parameters to it. Example:
+    If you pass just a string, it is interpreted as a component name. The named component is then injected without supplying any parameters to it. Example:
 
-         <div data-bind='component: "my-component"'></div>
+        <div data-bind='component: "my-component"'></div>
 
-     The shorthand value can also be observable. In this case, if it changes, the `component` binding will [dispose](#disposal-and-memory-management) the old component instance, and inject the newly-referenced component. Example:
+    The shorthand value can also be observable. In this case, if it changes, the `component` binding will [dispose](#disposal-and-memory-management) the old component instance, and inject the newly-referenced component. Example:
 
-         <div data-bind='component: observableWhoseValueIsAComponentName'></div>
+        <div data-bind='component: observableWhoseValueIsAComponentName'></div>
 
- * **Full syntax**
+  * **Full syntax**
 
-   To supply parameters to the component, pass an object with the following properties:
+    To supply parameters to the component, pass an object with the following properties:
 
-   * `name` --- the name of the component to inject. Again, this can be observable.
-   * `params` --- an object that will be passed on to the component. Typically this is a key-value object containing multiple parameters, and is typically received by the component's viewmodel constructor.
+      * `name` --- the name of the component to inject. Again, this can be observable.
+      * `params` --- an object that will be passed on to the component. Typically this is a key-value object containing multiple parameters, and is typically received by the component's viewmodel constructor.
 
-   Example:
+    Example:
 
-         <div data-bind='component: {
-             name: "shopping-cart",
-             params: { mode: "detailed-list", items: productsList }
-         }'></div>
+        <div data-bind='component: {
+            name: "shopping-cart",
+            params: { mode: "detailed-list", items: productsList }
+        }'></div>
 
 Note that whenever a component is removed (either because the `name` observable changed, or because an enclosing control-flow binding removed the entire element), the removed component is [disposed](#disposal-and-memory-management)
 

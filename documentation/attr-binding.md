@@ -22,15 +22,15 @@ This will set the element's `href` attribute to `year-end.html` and the element'
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
    
-   You should pass a JavaScript object in which the property names correspond to attribute names, and the values correspond to the attribute values you wish to apply.
+    You should pass a JavaScript object in which the property names correspond to attribute names, and the values correspond to the attribute values you wish to apply.
  
-   If your parameter references an observable value, the binding will update the attribute whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the attribute once and will not update it later.
+    If your parameter references an observable value, the binding will update the attribute whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the attribute once and will not update it later.
    
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+     * None
    
 ### Note: Applying attributes whose names aren't legal JavaScript variable names
 

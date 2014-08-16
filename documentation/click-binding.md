@@ -26,15 +26,15 @@ Each time you click the button, this will invoke `incrementClickCounter()` on th
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
 
-   The function you want to bind to the element's `click` event.
+    The function you want to bind to the element's `click` event.
 
-   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `click: someObject.someFunction`.
+    You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `click: someObject.someFunction`.
 
- * Additional parameters
+  * Additional parameters
 
-   * None
+     * None
 
 ### Note 1: Passing a "current item" as a parameter to your handler function
 

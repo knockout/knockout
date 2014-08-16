@@ -80,7 +80,7 @@ Let's update the code for `randomOrder`, this time using KO's virtual element AP
         }
     };
 
-Notice how, instead of using APIs like `domElement.firstChild`, we're now using `ko.virtualElements.firstChild(domOrVirtualElement)`. The `randomOrder` binding will now correctly work with virtual elements, e.g., `<!-- ko randomOrder: true -->...<!-- /ko -->`. 
+Notice how, instead of using APIs like `domElement.firstChild`, we're now using `ko.virtualElements.firstChild(domOrVirtualElement)`. The `randomOrder` binding will now correctly work with virtual elements, e.g., `<!-- ko randomOrder: true -->...<!-- /ko -->`.
 
 Also, `randomOrder` will still work with regular DOM elements, because all of the `ko.virtualElements` APIs are backwardly compatible with regular DOM elements.
 
@@ -88,32 +88,32 @@ Also, `randomOrder` will still work with regular DOM elements, because all of th
 
 Knockout provides the following functions for working with virtual elements.
 
-* `ko.virtualElements.allowedBindings`
+  * `ko.virtualElements.allowedBindings`
 
-  An object whose keys determine which bindings are usable with virtual elements. Set `ko.virtualElements.allowedBindings.mySuperBinding = true` to allow `mySuperBinding` to be used with virtual elements. 
+    An object whose keys determine which bindings are usable with virtual elements. Set `ko.virtualElements.allowedBindings.mySuperBinding = true` to allow `mySuperBinding` to be used with virtual elements.
 
-* `ko.virtualElements.emptyNode(containerElem)`
+  * `ko.virtualElements.emptyNode(containerElem)`
 
-  Removes all child nodes from the real or virtual element `containerElem` (cleaning away any data associated with them to avoid memory leaks).
+    Removes all child nodes from the real or virtual element `containerElem` (cleaning away any data associated with them to avoid memory leaks).
 
-* `ko.virtualElements.firstChild(containerElem)`
+  * `ko.virtualElements.firstChild(containerElem)`
 
-  Returns the first child of the real or virtual element `containerElem`, or `null` if there are no children.
+    Returns the first child of the real or virtual element `containerElem`, or `null` if there are no children.
 
-* `ko.virtualElements.insertAfter(containerElem, nodeToInsert, insertAfter)`
+  * `ko.virtualElements.insertAfter(containerElem, nodeToInsert, insertAfter)`
 
-  Inserts `nodeToInsert` as a child of the real or virtual element `containerElem`, positioned immediately after `insertAfter` (where `insertAfter` must be a child of `containerElem`).
+    Inserts `nodeToInsert` as a child of the real or virtual element `containerElem`, positioned immediately after `insertAfter` (where `insertAfter` must be a child of `containerElem`).
 
-* `ko.virtualElements.nextSibling(node)`
+  * `ko.virtualElements.nextSibling(node)`
 
-  Returns the sibling node that follows `node` in its real or virtual parent element, or `null` if there is no following sibling.
+    Returns the sibling node that follows `node` in its real or virtual parent element, or `null` if there is no following sibling.
 
-* `ko.virtualElements.prepend(containerElem, nodeToPrepend)`
+  * `ko.virtualElements.prepend(containerElem, nodeToPrepend)`
 
-  Inserts `nodeToPrepend` as the first child of the real or virtual element `containerElem`.
+    Inserts `nodeToPrepend` as the first child of the real or virtual element `containerElem`.
 
-* `ko.virtualElements.setDomNodeChildren(containerElem, arrayOfNodes)`
+  * `ko.virtualElements.setDomNodeChildren(containerElem, arrayOfNodes)`
 
-  Removes all child nodes from the real or virtual element `containerElem` (in the process, cleaning away any data associated with them to avoid memory leaks), and then inserts all of the nodes from `arrayOfNodes` as its new children.
+    Removes all child nodes from the real or virtual element `containerElem` (in the process, cleaning away any data associated with them to avoid memory leaks), and then inserts all of the nodes from `arrayOfNodes` as its new children.
 
 Notice that this is *not* intended to be a complete replacement to the full set of regular DOM APIs. Knockout provides only a minimal set of virtual element APIs to make it possible to perform the kinds of transformations needed when implementing control flow bindings.

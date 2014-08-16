@@ -78,20 +78,20 @@ ko.applyBindings(new AppViewModel());
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
 
-   Pass the array that you wish to iterate over. The binding will output a section of markup for each entry.
+    Pass the array that you wish to iterate over. The binding will output a section of markup for each entry.
 
-   Alternatively, pass a JavaScript object literal with a property called `data` which is the array you wish to iterate over. The object
-   literal may also have other properties, such as `afterAdd` or `includeDestroyed` --- see below for details of these extra options and
-   examples of their use.
+    Alternatively, pass a JavaScript object literal with a property called `data` which is the array you wish to iterate over. The object
+    literal may also have other properties, such as `afterAdd` or `includeDestroyed` --- see below for details of these extra options and
+    examples of their use.
 
-   If the array you supply is observable, the `foreach` binding will respond to any future changes in the array's contents by adding or
-   removing corresponding sections of markup in the DOM.
+    If the array you supply is observable, the `foreach` binding will respond to any future changes in the array's contents by adding or
+    removing corresponding sections of markup in the DOM.
 
- * Additional parameters
+  * Additional parameters
 
-   * None
+      * None
 
 ### Note 1: Referring to each array entry using $data
 
@@ -244,34 +244,34 @@ Here's a trivial example that uses `afterAdd` to apply the classic "yellow fade"
 
 Full details:
 
- * `afterRender` --- is invoked each time the `foreach` block is duplicated and inserted into the document, both when `foreach` first initializes, and when new entries are added to the associated array later. Knockout will supply the following parameters to your callback:
+  * `afterRender` --- is invoked each time the `foreach` block is duplicated and inserted into the document, both when `foreach` first initializes, and when new entries are added to the associated array later. Knockout will supply the following parameters to your callback:
 
-   1. An array of the inserted DOM elements
-   2. The data item against which they are being bound
+      1. An array of the inserted DOM elements
+      2. The data item against which they are being bound
 
- * `afterAdd` --- is like `afterRender`, except it is invoked only when new entries are added to your array (and *not* when `foreach` first iterates over your array's initial contents). A common use for `afterAdd` is to call a method such as jQuery's `$(domNode).fadeIn()` so that you get animated transitions whenever items are added. Knockout will supply the following parameters to your callback:
+  * `afterAdd` --- is like `afterRender`, except it is invoked only when new entries are added to your array (and *not* when `foreach` first iterates over your array's initial contents). A common use for `afterAdd` is to call a method such as jQuery's `$(domNode).fadeIn()` so that you get animated transitions whenever items are added. Knockout will supply the following parameters to your callback:
 
-   1. A DOM node being added to the document
-   2. The index of the added array element
-   3. The added array element
+      1. A DOM node being added to the document
+      2. The index of the added array element
+      3. The added array element
 
- * `beforeRemove` --- is invoked when an array item has been removed, but before the corresponding DOM nodes have been removed. If you specify a `beforeRemove` callback, then *it becomes your responsibility to remove the DOM nodes*. The obvious use case here is calling something like jQuery's `$(domNode).fadeOut()` to animate the removal of the corresponding DOM nodes --- in this case, Knockout cannot know how soon it is allowed to physically remove the DOM nodes (who knows how long your animation will take?), so it is up to you to remove them. Knockout will supply the following parameters to your callback:
+  * `beforeRemove` --- is invoked when an array item has been removed, but before the corresponding DOM nodes have been removed. If you specify a `beforeRemove` callback, then *it becomes your responsibility to remove the DOM nodes*. The obvious use case here is calling something like jQuery's `$(domNode).fadeOut()` to animate the removal of the corresponding DOM nodes --- in this case, Knockout cannot know how soon it is allowed to physically remove the DOM nodes (who knows how long your animation will take?), so it is up to you to remove them. Knockout will supply the following parameters to your callback:
 
-   1. A DOM node that you should remove
-   2. The index of the removed array element
-   3. The removed array element
+      1. A DOM node that you should remove
+      2. The index of the removed array element
+      3. The removed array element
 
- * `beforeMove` --- is invoked when an array item has changed position in the array, but before the corresponding DOM nodes have been moved. Note that `beforeMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. You could use `beforeMove` to store the original screen coordinates of the affected elements so that you can animate their movements in the `afterMove` callback.  Knockout will supply the following parameters to your callback:
+  * `beforeMove` --- is invoked when an array item has changed position in the array, but before the corresponding DOM nodes have been moved. Note that `beforeMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. You could use `beforeMove` to store the original screen coordinates of the affected elements so that you can animate their movements in the `afterMove` callback.  Knockout will supply the following parameters to your callback:
 
-   1. A DOM node that may be about to move
-   2. The index of the moved array element
-   3. The moved array element
+      1. A DOM node that may be about to move
+      2. The index of the moved array element
+      3. The moved array element
 
- * `afterMove` --- is invoked after an array item has changed position in the array, and after `foreach` has updated the DOM to match. Note that `afterMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. Knockout will supply the following parameters to your callback:
+  * `afterMove` --- is invoked after an array item has changed position in the array, and after `foreach` has updated the DOM to match. Note that `afterMove` applies to all array elements whose indexes have changed, so if you insert a new item at the beginning of an array, then the callback (if specified) will fire for all other elements, since their index position has increased by one. Knockout will supply the following parameters to your callback:
 
-   1. A DOM node that may have moved
-   2. The index of the moved array element
-   3. The moved array element
+      1. A DOM node that may have moved
+      2. The index of the moved array element
+      3. The moved array element
 
 For examples of `afterAdd` and `beforeRemove` see [animated transitions](/examples/animatedTransitions.html).
 
