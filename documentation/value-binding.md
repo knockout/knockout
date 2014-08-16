@@ -23,31 +23,34 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
 
 ### Parameters
 
- * Main parameter
+*   Main parameter
 
-   KO sets the element's `value` property to your parameter value. Any previous value will be overwritten.
+    KO sets the element's `value` property to your parameter value. Any previous value will be overwritten.
 
-   If this parameter is an observable value, the binding will update the element's value whenever the value changes. If the parameter isn't observable, it will only set the element's value once and will not update it again later.
+    If this parameter is an observable value, the binding will update the element's value whenever the value changes. If the parameter isn't observable, it will only set the element's value once and will not update it again later.
 
-   If you supply something other than a number or a string (e.g., you pass an object or an array), the displayed text will be equivalent to `yourParameter.toString()` (that's usually not very useful, so it's best to supply string or numeric values).
+    If you supply something other than a number or a string (e.g., you pass an object or an array), the displayed text will be equivalent to `yourParameter.toString()` (that's usually not very useful, so it's best to supply string or numeric values).
 
-   Whenever the user edits the value in the associated form control, KO will update the property on your view model. KO will always attempt to update your view model when the value has been modified and a user transfers focus to another DOM node (i.e., on the `change` event), but you can also trigger updates based on other events by using the `valueUpdate` parameter described below.
+    Whenever the user edits the value in the associated form control, KO will update the property on your view model. KO will always attempt to update your view model when the value has been modified and a user transfers focus to another DOM node (i.e., on the `change` event), but you can also trigger updates based on other events by using the `valueUpdate` parameter described below.
 
- * Additional parameters
+*   Additional parameters
 
-   * `valueUpdate`
+    *   `valueUpdate`
 
-     If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. The following string values are the most commonly useful choices:
+        If your binding also includes a parameter called `valueUpdate`, this defines additional browser events KO should use to detect changes besides the `change` event. 
 
-     * `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes. Note that this event is only raised by reasonably modern browsers (e.g., IE 9+).
-     * `"keyup"` - updates your view model when the user releases a key
-     * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
-     * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously. This does not work in some mobile browsers.
-     
+        `<input type="text" data-bind="value: name, valueUpdate: 'afterkeydown'" />`
 
-    * `valueAllowUnset`
+        The following string values are the most commonly useful choices:
 
-      See [Note 2](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
+        *   `"input"` - updates your view model when the value of an `<input>` or `<textarea>` element changes. Note that this event is only raised by reasonably modern browsers (e.g., IE 9+).
+        *   `"keyup"` - updates your view model when the user releases a key
+        *   `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
+        *   `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously. This does not work in some mobile browsers.
+
+        *   `valueAllowUnset`
+
+            See [Note 2](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
 
 ### Note 1: Getting value updates instantly from inputs
 
