@@ -33,7 +33,7 @@ This will apply the CSS class `profitWarning` whenever the `currentProfit` value
         };
 
         // Evalutes to a positive value, so initially we apply the "profitPositive" class
-        viewModel.profitStatus = ko.computed(function() {
+        viewModel.profitStatus = ko.pureComputed(function() {
             return this.currentProfit() < 0 ? "profitWarning" : "profitPositive";
         }, viewModel);
 
@@ -45,29 +45,29 @@ This will apply the CSS class `profitPositive` when the `currentProfit` value is
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
    
-   If you are using static CSS class names, then you can pass a JavaScript object in which the property names are your CSS classes, and their values evaluate to `true` or `false` according to whether the class should currently be applied.
+    If you are using static CSS class names, then you can pass a JavaScript object in which the property names are your CSS classes, and their values evaluate to `true` or `false` according to whether the class should currently be applied.
  
-   You can set multiple CSS classes at once. For example, if your view model has a property called `isSevere`,
+    You can set multiple CSS classes at once. For example, if your view model has a property called `isSevere`,
    
-       <div data-bind="css: { profitWarning: currentProfit() < 0, majorHighlight: isSevere }">
+        <div data-bind="css: { profitWarning: currentProfit() < 0, majorHighlight: isSevere }">
 
-   You can even set multiple CSS classes based on the same condition by wrapping the names in quotes like:
+    You can even set multiple CSS classes based on the same condition by wrapping the names in quotes like:
 
-       <div data-bind="css: { profitWarning: currentProfit() < 0, 'major highlight': isSevere }">
+        <div data-bind="css: { profitWarning: currentProfit() < 0, 'major highlight': isSevere }">
    
-   Non-boolean values are interpreted loosely as boolean. For example, `0` and `null` are treated as `false`, whereas `21` and non-`null` objects are treated as `true`.
+    Non-boolean values are interpreted loosely as boolean. For example, `0` and `null` are treated as `false`, whereas `21` and non-`null` objects are treated as `true`.
    
-   If your parameter references an observable value, the binding will add or remove the CSS class whenever the observable value changes. If the parameter doesn't reference an observable value, it will only add or remove the class once and will not do so again later.
+    If your parameter references an observable value, the binding will add or remove the CSS class whenever the observable value changes. If the parameter doesn't reference an observable value, it will only add or remove the class once and will not do so again later.
 
-   If you want to use dynamic CSS class names, then you can pass a string that corresponds to the CSS class or classes that you want to add to the element. If the parameter references an observable value, then the binding will remove any previously added classes and add the class or classes corresponding to the observable's new value.
+    If you want to use dynamic CSS class names, then you can pass a string that corresponds to the CSS class or classes that you want to add to the element. If the parameter references an observable value, then the binding will remove any previously added classes and add the class or classes corresponding to the observable's new value.
    
-   As usual, you can use arbitrary JavaScript expressions or functions as parameter values. KO will evaluate them and use the resulting values to determine the appropriate CSS classes to add or remove.
+    As usual, you can use arbitrary JavaScript expressions or functions as parameter values. KO will evaluate them and use the resulting values to determine the appropriate CSS classes to add or remove.
    
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+      * None
 
 ### Note: Applying CSS classes whose names aren't legal JavaScript variable names
 

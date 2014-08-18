@@ -47,25 +47,25 @@ Now you can bind `click` like this:
 
 ### Binding preprocessor reference
 
-* `ko.bindingHandlers.<name>.preprocess(value, name, addBindingCallback)`
+  * `ko.bindingHandlers.<name>.preprocess(value, name, addBindingCallback)`
 
-  If defined, this function will be called for each `<name>` binding before the binding is evaluated.
+    If defined, this function will be called for each `<name>` binding before the binding is evaluated.
 
-  **Parameters:**
+    **Parameters:**
 
-  * `value`: the syntax associated with the binding value before Knockout attempts to parse it (e.g., for `yourBinding: 1 + 1`, the associated value is `"1 + 1"` as a string).
+      * `value`: the syntax associated with the binding value before Knockout attempts to parse it (e.g., for `yourBinding: 1 + 1`, the associated value is `"1 + 1"` as a string).
 
-  * `name`: the name of the binding (e.g., for `yourBinding: 1 + 1`, the name is `"yourBinding"` as a string).
+      * `name`: the name of the binding (e.g., for `yourBinding: 1 + 1`, the name is `"yourBinding"` as a string).
 
-  * `addBinding`: a callback function you can optionally use to insert another binding on the current element. This requires two parameters, `name` and `value`. For example, inside your `preprocess` function, call `addBinding('visible', 'acceptsTerms()');` to make Knockout behave as if the element had a `visible: acceptsTerms()` binding on it.
+      * `addBinding`: a callback function you can optionally use to insert another binding on the current element. This requires two parameters, `name` and `value`. For example, inside your `preprocess` function, call `addBinding('visible', 'acceptsTerms()');` to make Knockout behave as if the element had a `visible: acceptsTerms()` binding on it.
 
-  **Return value**:
+    **Return value**:
 
-  Your `preprocess` function must return the new string value to be parsed and passed to the binding, or return `undefined` to remove the binding.
+    Your `preprocess` function must return the new string value to be parsed and passed to the binding, or return `undefined` to remove the binding.
 
-  For example, if you return `'value + ".toUpperCase()"'` as a string, then `yourBinding: "Bert"` would be interpreted as if the markup contained `yourBinding: "Bert".toUpperCase()`. Knockout will parse the returned value in the normal way, so it has to be a legal JavaScript expression.
+    For example, if you return `'value + ".toUpperCase()"'` as a string, then `yourBinding: "Bert"` would be interpreted as if the markup contained `yourBinding: "Bert".toUpperCase()`. Knockout will parse the returned value in the normal way, so it has to be a legal JavaScript expression.
 
-  Don't return non-string values. That wouldn't make sense, because markup is always a string.
+    Don't return non-string values. That wouldn't make sense, because markup is always a string.
 
 ## Preprocessing DOM nodes
 
@@ -113,6 +113,6 @@ Now you can include a template in your view like this:
 
 ### Preprocessing Reference
 
-* `ko.bindingProvider.instance.preprocessNode(node)`
-    
+  * `ko.bindingProvider.instance.preprocessNode(node)`
+
     If defined, this function will be called for each DOM node before bindings are processed. The function can modify, remove, or replace `node`. Any new nodes must be inserted immediately before `node`, and if any nodes were added or `node` was removed, the function must return an array of the new nodes that are now in the document in place of `node`.

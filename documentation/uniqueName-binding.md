@@ -17,13 +17,13 @@ You won't need to use this often. It's only useful in a few rare cases, e.g.:
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
  
-   Pass `true` (or some value that evaluates as true) to enable the `uniqueName` binding, as in the preceding example.
+    Pass `true` (or some value that evaluates as true) to enable the `uniqueName` binding, as in the preceding example.
      
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+      * None
 
 ### Dependencies
 

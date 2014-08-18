@@ -1,5 +1,5 @@
 <script type="text/javascript" src="{{ page.pathprefix }}js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-3.1.0.js"></script>
+<script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-latest.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/cufon-yui.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/titilliummaps.font.js"></script>
 <script type="text/javascript" src="{{ page.pathprefix }}js/json2.js"></script>
@@ -10,7 +10,8 @@
 
 <script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script> 
 <script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script> 
-<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script> 
+<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
 <link type="text/css" rel="stylesheet" href="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/styles/shThemeFadeToGrey.css"/>  
 
 <script type="text/javascript">
@@ -40,4 +41,23 @@
             $(".leftColContents li:has(a[href$='" + urlFilename[1] + "'])").addClass("active");
         }
     });
-</script> 
+</script>
+
+<!-- Normally, if using AMD, you'd reference your loader library (such as require.js) *first*,
+     and let it load other dependencies such as knockout.js itself. However, this documentation
+     site pre-dates our use of AMD and assumes 'ko' and other libraries as global objects in
+     many places. So for back-compatibility, we reference require.js *after* loading knockout.js
+     and various other libraries as globals. -->
+<script type="text/javascript" src="{{ page.pathprefix }}js/require.js"></script>
+<script type="text/javascript">
+require.config({
+    paths: {
+        'knockout': '{{ page.pathprefix }}downloads/knockout-latest',
+        'text':     '{{ page.pathprefix }}js/require.text'
+    }
+});
+
+// To keep the network tab clear when the visitor is running live examples,
+// preload the following.
+require(['text', 'knockout'], function() {});
+</script>

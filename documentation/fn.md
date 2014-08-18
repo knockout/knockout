@@ -25,7 +25,7 @@ Then, your custom function will become available on all values of that type crea
 Here's a way to define a `filterByProperty` function that will become available on all subsequently-created `ko.observableArray` instances:
 
     ko.observableArray.fn.filterByProperty = function(propName, matchValue) {
-        return ko.computed(function() {
+        return ko.pureComputed(function() {
             var allItems = this(), matchingItems = [];
             for (var i = 0; i < allItems.length; i++) {
                 var current = allItems[i];
@@ -36,14 +36,14 @@ Here's a way to define a `filterByProperty` function that will become available 
         }, this);
     }
 
-This returns a new `ko.computed` value that provides a filtered view of the array, while leaving the original array unchanged. Because the filtered array is a `ko.computed`, it will be re-evaluated automatically whenever the underlying array changes.
+This returns a new computed value that provides a filtered view of the array, while leaving the original array unchanged. Because the filtered array is a computed observable, it will be re-evaluated whenever the underlying array changes.
 
 The following live example shows how you could use this:
 
 <script type="text/javascript">
 /*<![CDATA[*/
     ko.observableArray.fn.filterByProperty = function(propName, matchValue) {
-        return ko.computed(function() {
+        return ko.pureComputed(function() {
             var allItems = this(), matchingItems = [];
             for (var i = 0; i < allItems.length; i++) {
                 var current = allItems[i];
@@ -99,7 +99,7 @@ ko.applyBindings(new AppViewModel());
 
 If you tend to filter observable arrays a lot, adding a `filterByProperty` globally to all observable arrays might make your code tidier. But if you only need to filter occasionally, you could instead choose *not* to attach to `ko.observableArray.fn`, and instead just construct `doneTasks` by hand as follows:
 
-    this.doneTasks = ko.computed(function() {
+    this.doneTasks = ko.pureComputed(function() {
         var all = this.tasks(), done = [];
         for (var i = 0; i < all.length; i++)
             if (all[i].done())

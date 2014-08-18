@@ -8,27 +8,27 @@ The `template` binding populates the associated DOM element with the results of 
 
 There are two main ways of using templates:
 
- * *Native templating* is the mechanism that underpins `foreach`, `if`, `with`, and other control flow bindings. Internally, those control
-   flow bindings capture the HTML markup contained in your element, and use it as a template to render against an arbitrary data item.
-   This feature is built into Knockout and doesn't require any external library.
- * *String-based templating* is a way to connect Knockout to a third-party template engine. Knockout will pass your model values to
-   the external template engine and inject the resulting markup string into your document. See below for examples that use the *jquery.tmpl*
-   and *Underscore* template engines.
+  * *Native templating* is the mechanism that underpins `foreach`, `if`, `with`, and other control flow bindings. Internally, those control
+    flow bindings capture the HTML markup contained in your element, and use it as a template to render against an arbitrary data item.
+    This feature is built into Knockout and doesn't require any external library.
+  * *String-based templating* is a way to connect Knockout to a third-party template engine. Knockout will pass your model values to
+    the external template engine and inject the resulting markup string into your document. See below for examples that use the *jquery.tmpl*
+    and *Underscore* template engines.
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
 
-   * Shorthand syntax: If you just supply a string value, KO will interpret this as the ID of a template to render. The data it supplies to the template will be your current model object.
+      * Shorthand syntax: If you just supply a string value, KO will interpret this as the ID of a template to render. The data it supplies to the template will be your current model object.
 
-   * For more control, pass a JavaScript object with some combination of the following properties:
+      * For more control, pass a JavaScript object with some combination of the following properties:
 
-     * `name` --- the ID of an element that contains the template you wish to render - see [Note 5](#note-5-dynamically-choosing-which-template-is-used) for how to vary this programmatically.
-     * `data` --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your current model object.
-     * `if` --- if this parameter is provided, the template will only be rendered if the specified expression evaluates to `true` (or a `true`-ish value). This can be useful for preventing a null observable from being bound against a template before it is populated.
-     * `foreach` --- instructs KO to render the template in "foreach" mode - see [Note 2](#note-2-using-the-foreach-option-with-a-named-template) for details.
-     * `as` --- when used in conjunction with `foreach`, defines an alias for each item being rendered - see [Note 3](#note-3-using-as-to-give-an-alias-to-foreach-items) for details.
-     * `afterRender`, `afterAdd`, or `beforeRemove` --- callback functions to be invoked against the rendered DOM elements - see [Note 4](#note-4-using-afterrender-afteradd-and-beforeremove)
+          * `name` --- the ID of an element that contains the template you wish to render - see [Note 5](#note-5-dynamically-choosing-which-template-is-used) for how to vary this programmatically.
+          * `data` --- an object to supply as the data for the template to render. If you omit this parameter, KO will look for a `foreach` parameter, or will fall back on using your current model object.
+          * `if` --- if this parameter is provided, the template will only be rendered if the specified expression evaluates to `true` (or a `true`-ish value). This can be useful for preventing a null observable from being bound against a template before it is populated.
+          * `foreach` --- instructs KO to render the template in "foreach" mode - see [Note 2](#note-2-using-the-foreach-option-with-a-named-template) for details.
+          * `as` --- when used in conjunction with `foreach`, defines an alias for each item being rendered - see [Note 3](#note-3-using-as-to-give-an-alias-to-foreach-items) for details.
+          * `afterRender`, `afterAdd`, or `beforeRemove` --- callback functions to be invoked against the rendered DOM elements - see [Note 4](#note-4-using-afterrender-afteradd-and-beforeremove)
 
 ### Note 1: Rendering a named template
 

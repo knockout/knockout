@@ -16,7 +16,7 @@ title: Cart editor example
     .liveExample td select { height: 1.8em; white-space: nowrap; }
 </style>
 
-This example shows how computed observables can be chained together. Each cart line has a `ko.computed` property for its own subtotal, and these in turn are combined in a further `ko.computed` property for the grand total. When you change the data, your changes ripple out through this chain of computed properties, and all associated UI is updated.
+This example shows how computed observables can be chained together. Each cart line has a `ko.pureComputed` property for its own subtotal, and these in turn are combined in a further `ko.pureComputed` property for the grand total. When you change the data, your changes ripple out through this chain of computed properties, and all associated UI is updated.
 
 This example also demonstrates a simple way to create cascading dropdowns.
 
@@ -72,7 +72,7 @@ This example also demonstrates a simple way to create cascading dropdowns.
         self.category = ko.observable();
         self.product = ko.observable();
         self.quantity = ko.observable(1);
-        self.subtotal = ko.computed(function() {
+        self.subtotal = ko.pureComputed(function() {
             return self.product() ? self.product().price * parseInt("0" + self.quantity(), 10) : 0;
         });
 
@@ -86,7 +86,7 @@ This example also demonstrates a simple way to create cascading dropdowns.
         // Stores an array of lines, and from these, can work out the grandTotal
         var self = this;
         self.lines = ko.observableArray([new CartLine()]); // Put one line in by default
-        self.grandTotal = ko.computed(function() {
+        self.grandTotal = ko.pureComputed(function() {
             var total = 0;
             $.each(self.lines(), function() { total += this.subtotal() })
             return total;

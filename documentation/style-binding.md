@@ -24,21 +24,21 @@ This will set the element's `style.color` property to `red` whenever the `curren
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
    
-   You should pass a JavaScript object in which the property names correspond to style names, and the values correspond to the style values you wish to apply.
+    You should pass a JavaScript object in which the property names correspond to style names, and the values correspond to the style values you wish to apply.
  
-   You can set multiple style values at once. For example, if your view model has a property called `isSevere`,
+    You can set multiple style values at once. For example, if your view model has a property called `isSevere`,
    
-   `<div data-bind="style: { color: currentProfit() < 0 ? 'red' : 'black', fontWeight: isSevere() ? 'bold' : '' }">...</div>`
+    `<div data-bind="style: { color: currentProfit() < 0 ? 'red' : 'black', fontWeight: isSevere() ? 'bold' : '' }">...</div>`
    
-   If your parameter references an observable value, the binding will update the styles whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the styles once and will not update them later.
+    If your parameter references an observable value, the binding will update the styles whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the styles once and will not update them later.
    
-   As usual, you can use arbitrary JavaScript expressions or functions as parameter values. KO will evaluate them and use the resulting values to detemine the style values to apply.
+    As usual, you can use arbitrary JavaScript expressions or functions as parameter values. KO will evaluate them and use the resulting values to detemine the style values to apply.
    
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+      * None
 
 ### Note: Applying styles whose names aren't legal JavaScript variable names
 

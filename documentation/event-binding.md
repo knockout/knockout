@@ -33,15 +33,15 @@ Now, moving your mouse pointer on or off of the first element will invoke method
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
 
-   You should pass a JavaScript object in which the property names correspond to event names, and the values correspond to the function that you want to bind to the event.
+    You should pass a JavaScript object in which the property names correspond to event names, and the values correspond to the function that you want to bind to the event.
 
-   You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `event { mouseover: someObject.someFunction }`.
+    You can reference any JavaScript function - it doesn't have to be a function on your view model. You can reference a function on any object by writing `event { mouseover: someObject.someFunction }`.
 
- * Additional parameters
+  * Additional parameters
 
-   * None
+      * None
 
 ### Note 1: Passing a "current item" as a parameter to your handler function
 

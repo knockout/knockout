@@ -155,7 +155,7 @@ body { font-family: arial; font-size: 14px; }
 /* Columns */
 div.leftCol { position: absolute; width: 16em; padding-top: 1em; }
 div.rightCol { margin-left: 16em; }
-div.rightCol .sticker { min-height: 64em;}
+div.rightCol .sticker { min-height: 150em;}
 div.leftColContents { width: 15em; padding: 1em; }
 div.leftColBackground { background-color: black; opacity:0.5; position: absolute; 
 	width: 16em; height:100%; z-index: -1; 

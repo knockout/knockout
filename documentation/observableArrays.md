@@ -78,7 +78,7 @@ For more details about these `observableArray` functions, see the equivalent doc
  * `myObservableArray.removeAll(['Chad', 132, undefined])` removes all values that equal `'Chad'`, `123`, or `undefined` and returns them as an array
  * `myObservableArray.removeAll()` removes all values and returns them as an array
 
-### destroy and destroyAll (Note: Usually relevant to Ruby on Rails developers only)
+### destroy and destroyAll (Note: Usually relevant to Ruby on Rails developers only) {#destroy-and-destroyall}
 
 The `destroy` and `destroyAll` functions are mainly intended as a convenience for developers using Ruby on Rails:
 

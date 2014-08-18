@@ -1,0 +1,9 @@
+<div class="like-or-dislike" data-bind="visible: !chosenValue()">
+    <button data-bind="click: like">Like it</button>
+    <button data-bind="click: dislike">Dislike it</button>
+</div>
+
+<div class="result" data-bind="visible: chosenValue">
+    You <strong data-bind="text: chosenValue"></strong> it.
+    And this was loaded from an external file.
+</div>

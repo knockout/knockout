@@ -32,7 +32,7 @@ You don't have to define or manage these subscriptions manually. They are create
             this.numberOfClicks(0);
         };
 
-        this.hasClickedTooManyTimes = ko.computed(function() {
+        this.hasClickedTooManyTimes = ko.pureComputed(function() {
             return this.numberOfClicks() >= 3;
         }, this);
     };

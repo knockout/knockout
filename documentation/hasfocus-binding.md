@@ -63,17 +63,17 @@ ko.applyBindings(new PersonViewModel("Bert Bertington"));
 
 ### Parameters
 
- * Main parameter
+  * Main parameter
  
-   Pass `true` (or some value that evaluates as true) to focus the associated element. Otherwise, the associated element will be unfocused.
+    Pass `true` (or some value that evaluates as true) to focus the associated element. Otherwise, the associated element will be unfocused.
 
-   When the user manually focuses or unfocuses the element, your value will be set to `true` or `false` accordingly.
+    When the user manually focuses or unfocuses the element, your value will be set to `true` or `false` accordingly.
 
-   If the value you supply is observable, the `hasFocus` binding will update the element's focus state whenever that observable value changes.
+    If the value you supply is observable, the `hasFocus` binding will update the element's focus state whenever that observable value changes.
      
- * Additional parameters 
+  * Additional parameters 
 
-   * None
+      * None
 
 ### Dependencies
 
