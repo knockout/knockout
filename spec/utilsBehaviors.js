@@ -103,11 +103,11 @@ describe('arrayFirst', function () {
 
     beforeEach(function () {
         matchB = jasmine.createSpy('matchB').andCallFake(function (x) {
-            return x[0] === "b";
+            return x.charAt(0) === "b";
         });
 
         matchD = jasmine.createSpy('matchD').andCallFake(function (x) {
-            return x[0] === "d";
+            return x.charAt(0) === "d";
         });
     });
 

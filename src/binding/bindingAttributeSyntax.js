@@ -24,10 +24,11 @@
         // any child contexts, must be updated when the view model is changed.
         function updateContext() {
             // Most of the time, the context will directly get a view model object, but if a function is given,
-            // we call the function to retrieve the view model. If the function accesses any obsevables (or is
-            // itself an observable), the dependency is tracked, and those observables can later cause the binding
+            // we call the function to retrieve the view model. If the function accesses any obsevables or returns
+            // an observable, the dependency is tracked, and those observables can later cause the binding
             // context to be updated.
-            var dataItem = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
+            var dataItemOrObservable = isFunc ? dataItemOrAccessor() : dataItemOrAccessor,
+                dataItem = ko.utils.unwrapObservable(dataItemOrObservable);
 
             if (parentContext) {
                 // When a "parent" context is given, register a dependency on the parent context. Thus whenever the
@@ -52,7 +53,7 @@
                 // See https://github.com/SteveSanderson/knockout/issues/490
                 self['ko'] = ko;
             }
-            self['$rawData'] = dataItemOrAccessor;
+            self['$rawData'] = dataItemOrObservable;
             self['$data'] = dataItem;
             if (dataItemAlias)
                 self[dataItemAlias] = dataItem;
@@ -70,7 +71,7 @@
         }
 
         var self = this,
-            isFunc = typeof(dataItemOrAccessor) == "function",
+            isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor),
             nodes,
             subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen, disposeWhenNodeIsRemoved: true });
 
@@ -125,7 +126,12 @@
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties) {
-        return new ko.bindingContext(this['$rawData'], this, null, function(self) {
+        // If the parent context references an observable view model, "_subscribable" will always be the
+        // latest view model object. If not, "_subscribable" isn't set, and we can use the static "$data" value.
+        return new ko.bindingContext(this._subscribable || this['$data'], this, null, function(self, parentContext) {
+            // This "child" context doesn't directly track a parent observable view model,
+            // so we need to manually set the $rawData value to match the parent.
+            self['$rawData'] = parentContext['$rawData'];
             ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
         });
     };
@@ -253,7 +259,7 @@
                                 }
                             }
                         });
-                        cyclicDependencyStack.pop();
+                        cyclicDependencyStack.length--;
                     }
                     // Next add the current binding
                     result.push({ key: bindingKey, handler: binding });
@@ -289,26 +295,21 @@
             var provider = ko.bindingProvider['instance'],
                 getBindings = provider['getBindingAccessors'] || getBindingsAndMakeAccessors;
 
-            if (sourceBindings || bindingContext._subscribable) {
-                // When an obsevable view model is used, the binding context will expose an observable _subscribable value.
-                // Get the binding from the provider within a computed observable so that we can update the bindings whenever
-                // the binding context is updated.
-                var bindingsUpdater = ko.dependentObservable(
-                    function() {
-                        bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
-                        // Register a dependency on the binding context
-                        if (bindings && bindingContext._subscribable)
-                            bindingContext._subscribable();
-                        return bindings;
-                    },
-                    null, { disposeWhenNodeIsRemoved: node }
-                );
+            // Get the binding from the provider within a computed observable so that we can update the bindings whenever
+            // the binding context is updated or if the binding provider accesses observables.
+            var bindingsUpdater = ko.dependentObservable(
+                function() {
+                    bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
+                    // Register a dependency on the binding context to support obsevable view models.
+                    if (bindings && bindingContext._subscribable)
+                        bindingContext._subscribable();
+                    return bindings;
+                },
+                null, { disposeWhenNodeIsRemoved: node }
+            );
 
-                if (!bindings || !bindingsUpdater.isActive())
-                    bindingsUpdater = null;
-            } else {
-                bindings = ko.dependencyDetection.ignore(getBindings, provider, [node, bindingContext]);
-            }
+            if (!bindings || !bindingsUpdater.isActive())
+                bindingsUpdater = null;
         }
 
         var bindingHandlerThatControlsDescendantBindings;

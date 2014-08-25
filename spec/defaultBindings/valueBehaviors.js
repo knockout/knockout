@@ -220,6 +220,12 @@ describe('Binding: Value', function() {
             testNode.innerHTML = "<input data-bind='value:someProp' />";
             ko.applyBindings({ someProp: myobservable }, testNode);
 
+            // Simulate a blur occurring before the first real property change.
+            // See that no 'update' event fires.
+            ko.utils.triggerEvent(testNode.childNodes[0], "focus");
+            ko.utils.triggerEvent(testNode.childNodes[0], "blur");
+            expect(numUpdates).toEqual(0);
+
             // Simulate:
             // 1. Select from autofill
             // 2. Modify the textbox further
@@ -318,7 +324,29 @@ describe('Binding: Value', function() {
             expect(testNode.childNodes[0].selectedIndex).toEqual(2);
             observable("");
             expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+        });
 
+        it('When size > 1, should unselect all options when value is undefined, null, or \"\"', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<select size='2' data-bind='options:[\"A\", \"B\"], value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            // Nothing is selected when observable changed to undefined
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            observable(undefined);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+
+            // Nothing is selected when observable changed to null
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            observable(null);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+
+            // Nothing is selected when observable changed to ""
+            observable("B");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            observable("");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
         });
 
         it('Should update the model value when the UI is changed (setting it to undefined when the caption is selected)', function () {
@@ -384,7 +412,10 @@ describe('Binding: Value', function() {
             expect(testNode.childNodes[0].selectedIndex).toEqual(1);
 
             observable('D'); // This change should be rejected, as there's no corresponding option in the UI
-            expect(observable()).not.toEqual('D');
+            expect(observable()).toEqual('B');
+
+            observable(null); // This change should also be rejected
+            expect(observable()).toEqual('B');
         });
 
         it('Should support numerical option values, which are not implicitly converted to strings', function() {
@@ -427,6 +458,91 @@ describe('Binding: Value', function() {
 
             observable('C');
             expect(dropdown.selectedIndex).toEqual(2);
+        });
+
+        describe('Using valueAllowUnset option', function () {
+            it('Should display the caption when the model value changes to undefined, null, or \"\" when using \'options\' binding', function() {
+                var observable = ko.observable('B');
+                testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+                var select = testNode.childNodes[0];
+
+                select.selectedIndex = 2;
+                observable(undefined);
+                expect(select.selectedIndex).toEqual(0);
+
+                select.selectedIndex = 2;
+                observable(null);
+                expect(select.selectedIndex).toEqual(0);
+
+                select.selectedIndex = 2;
+                observable("");
+                expect(select.selectedIndex).toEqual(0);
+            });
+
+            it('Should display the caption when the model value changes to undefined, null, or \"\" when options specified directly', function() {
+                var observable = ko.observable('B');
+                testNode.innerHTML = "<select data-bind='value:myObservable, valueAllowUnset:true'><option value=''>Select...</option><option>A</option><option>B</option></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+                var select = testNode.childNodes[0];
+
+                select.selectedIndex = 2;
+                observable(undefined);
+                expect(select.selectedIndex).toEqual(0);
+
+                select.selectedIndex = 2;
+                observable(null);
+                expect(select.selectedIndex).toEqual(0);
+
+                select.selectedIndex = 2;
+                observable("");
+                expect(select.selectedIndex).toEqual(0);
+            });
+
+            it('Should select no option value if no option value matches the current model property value', function() {
+                var observable = ko.observable();
+                testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual(undefined);
+            });
+
+            it('Should select no option value if model value does\'t match any option value', function() {
+                var observable = ko.observable('B');
+                testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\", \"C\"], value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+
+                observable('D');
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+            });
+
+            it('Should maintain model value and update selection when options change', function() {
+                var observable = ko.observable("D");
+                var options = ko.observableArray(["A", "B"]);
+                testNode.innerHTML = "<select data-bind='options:myOptions, value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable, myOptions: options }, testNode);
+
+                // Initially nothing is selected because the value isn't in the options list
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
+
+                // Replace with new options that still don't contain the value
+                options(["B", "C"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
+
+                // Now update with options that do contain the value
+                options(["C", "D"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+                expect(observable()).toEqual("D");
+
+                // Update back to options that don't contain the value
+                options(["E", "F"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
+            });
         });
     });
 });

@@ -25,6 +25,7 @@ ko.bindingHandlers['value'] = {
                                        && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
         if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
             ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
+            ko.utils.registerEventHandler(element, "focus", function () { propertyChangedFired = false });
             ko.utils.registerEventHandler(element, "blur", function() {
                 if (propertyChangedFired) {
                     valueUpdateHandler();
@@ -44,18 +45,20 @@ ko.bindingHandlers['value'] = {
             ko.utils.registerEventHandler(element, eventName, handler);
         });
     },
-    'update': function (element, valueAccessor) {
-        var valueIsSelectOption = ko.utils.tagNameLower(element) === "select";
+    'update': function (element, valueAccessor, allBindings) {
         var newValue = ko.utils.unwrapObservable(valueAccessor());
         var elementValue = ko.selectExtensions.readValue(element);
         var valueHasChanged = (newValue !== elementValue);
 
         if (valueHasChanged) {
-            var applyValueAction = function () { ko.selectExtensions.writeValue(element, newValue); };
-            applyValueAction();
+            if (ko.utils.tagNameLower(element) === "select") {
+                var allowUnset = allBindings.get('valueAllowUnset');
+                var applyValueAction = function () {
+                    ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                };
+                applyValueAction();
 
-            if (valueIsSelectOption) {
-                if (newValue !== ko.selectExtensions.readValue(element)) {
+                if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
                     // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
                     // because you're not allowed to have a model value that disagrees with a visible UI selection.
                     ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
@@ -65,6 +68,8 @@ ko.bindingHandlers['value'] = {
                     // to apply the value as well.
                     setTimeout(applyValueAction, 0);
                 }
+            } else {
+                ko.selectExtensions.writeValue(element, newValue);
             }
         }
     }

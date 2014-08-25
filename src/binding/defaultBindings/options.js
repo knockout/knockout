@@ -1,3 +1,4 @@
+var captionPlaceholder = {};
 ko.bindingHandlers['options'] = {
     'init': function(element) {
         if (ko.utils.tagNameLower(element) !== "select")
@@ -18,14 +19,13 @@ ko.bindingHandlers['options'] = {
 
         var selectWasPreviouslyEmpty = element.length == 0;
         var previousScrollTop = (!selectWasPreviouslyEmpty && element.multiple) ? element.scrollTop : null;
-
         var unwrappedArray = ko.utils.unwrapObservable(valueAccessor());
         var includeDestroyed = allBindings.get('optionsIncludeDestroyed');
         var arrayToDomNodeChildrenOptions = {};
-        var captionPlaceholder = {};
         var captionValue;
-
+        var filteredArray;
         var previousSelectedValues;
+
         if (element.multiple) {
             previousSelectedValues = ko.utils.arrayMap(selectedOptions(), ko.selectExtensions.readValue);
         } else {
@@ -37,7 +37,7 @@ ko.bindingHandlers['options'] = {
                 unwrappedArray = [unwrappedArray];
 
             // Filter out any entries marked as destroyed
-            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
+            filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
                 return includeDestroyed || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
@@ -51,7 +51,6 @@ ko.bindingHandlers['options'] = {
             }
         } else {
             // If a falsy value is provided (e.g. null), we'll simply empty the select element
-            unwrappedArray = [];
         }
 
         function applyToObject(object, predicate, defaultValue) {
@@ -91,13 +90,11 @@ ko.bindingHandlers['options'] = {
         }
 
         // By using a beforeRemove callback, we delay the removal until after new items are added. This fixes a selection
-        // problem in IE<=8. See https://github.com/knockout/knockout/issues/1208
-        if (ko.utils.ieVersion <= 8) {
-            arrayToDomNodeChildrenOptions['beforeRemove'] =
-                function (option) {
-                    element.removeChild(option);
-                };
-        }
+        // problem in IE<=8 and Firefox. See https://github.com/knockout/knockout/issues/1208
+        arrayToDomNodeChildrenOptions['beforeRemove'] =
+            function (option) {
+                element.removeChild(option);
+            };
 
         function setSelectionCallback(arrayEntry, newOptions) {
             // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
@@ -122,25 +119,33 @@ ko.bindingHandlers['options'] = {
 
         ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, arrayToDomNodeChildrenOptions, callback);
 
-        // Determine if the selection has changed as a result of updating the options list
-        var selectionChanged;
-        if (element.multiple) {
-            // For a multiple-select box, compare the new selection count to the previous one
-            // But if nothing was selected before, the selection can't have changed
-            selectionChanged = previousSelectedValues.length && selectedOptions().length < previousSelectedValues.length;
-        } else {
-            // For a single-select box, compare the current value to the previous value
-            // But if nothing was selected before or nothing is selected now, just look for a change in selection
-            selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
-                ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
-                : (previousSelectedValues.length || element.selectedIndex >= 0);
-        }
+        ko.dependencyDetection.ignore(function () {
+            if (allBindings.get('valueAllowUnset') && allBindings['has']('value')) {
+                // The model value is authoritative, so make sure its value is the one selected
+                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+            } else {
+                // Determine if the selection has changed as a result of updating the options list
+                var selectionChanged;
+                if (element.multiple) {
+                    // For a multiple-select box, compare the new selection count to the previous one
+                    // But if nothing was selected before, the selection can't have changed
+                    selectionChanged = previousSelectedValues.length && selectedOptions().length < previousSelectedValues.length;
+                } else {
+                    // For a single-select box, compare the current value to the previous value
+                    // But if nothing was selected before or nothing is selected now, just look for a change in selection
+                    selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
+                        ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
+                        : (previousSelectedValues.length || element.selectedIndex >= 0);
+                }
 
-        // Ensure consistency between model value and selected option.
-        // If the dropdown was changed so that selection is no longer the same,
-        // notify the value or selectedOptions binding.
-        if (selectionChanged)
-            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
+                // Ensure consistency between model value and selected option.
+                // If the dropdown was changed so that selection is no longer the same,
+                // notify the value or selectedOptions binding.
+                if (selectionChanged) {
+                    ko.utils.triggerEvent(element, "change");
+                }
+            }
+        });
 
         // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
