@@ -3,11 +3,16 @@
 ko.bindingHandlers['checked'] = {
     'after': ['value', 'attr'],
     'init': function (element, valueAccessor, allBindings) {
-        function checkedValue() {
-            return allBindings['has']('checkedValue')
-                ? ko.utils.unwrapObservable(allBindings.get('checkedValue'))
-                : element.value;
-        }
+        var checkedValue = ko.pureComputed(function() {
+            // Treat "value" like "checkedValue" when it is included with "checked" binding
+            if (allBindings['has']('checkedValue')) {
+                return ko.utils.unwrapObservable(allBindings.get('checkedValue'));
+            } else if (allBindings['has']('value')) {
+                return ko.utils.unwrapObservable(allBindings.get('value'));
+            }
+
+            return element.value;
+        });
 
         function updateModel() {
             // This updates the model value from the view value.

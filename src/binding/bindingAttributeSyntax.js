@@ -425,8 +425,8 @@
 
     ko.applyBindings = function (viewModelOrBindingContext, rootNode) {
         // If jQuery is loaded after Knockout, we won't initially have access to it. So save it here.
-        if (!jQuery && window['jQuery']) {
-            jQuery = window['jQuery'];
+        if (!jQueryInstance && window['jQuery']) {
+            jQueryInstance = window['jQuery'];
         }
 
         if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))

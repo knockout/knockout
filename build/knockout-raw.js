@@ -1,5 +1,7 @@
 var DEBUG = true,
-    jQuery = window.jQuery;
+    // ensure these variables are defined (even if their values are undefined)
+    jQueryInstance = window.jQuery, // Use a different variable name (not 'jQuery') to avoid overwriting window.jQuery with 'undefined' on IE < 9
+    require = window.require;
 
 // This script adds <script> tags referencing each of the knockout.js source files in the correct order
 // It uses JSONP to fetch the list of source files from source-references.js
