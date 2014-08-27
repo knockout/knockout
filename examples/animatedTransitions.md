@@ -53,8 +53,7 @@ This example shows two ways to animate transitions:
             { name: "Jupiter", type: "gasgiant"},
             { name: "Saturn", type: "gasgiant"},
             { name: "Uranus", type: "gasgiant"},
-            { name: "Neptune", type: "gasgiant"},
-            { name: "Pluto", type: "rock"}
+            { name: "Neptune", type: "gasgiant"}
         ]);
 
         this.typeToShow = ko.observable("all");
