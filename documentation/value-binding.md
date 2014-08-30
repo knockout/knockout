@@ -44,9 +44,9 @@ Note: If you're working with checkboxes or radio buttons, use [the `checked` bin
           * `"keypress"` - updates your view model when the user has typed a key. Unlike `keyup`, this updates repeatedly while the user holds a key down
           * `"afterkeydown"` - updates your view model as soon as the user begins typing a character. This works by catching the browser's `keydown` event and handling the event asynchronously. This does not work in some mobile browsers.
 
-       * `valueAllowUnset`
+      * `valueAllowUnset`
 
-         See [Note 2](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
+        See [Note 2](#using-valueallowunset-with-select-elements) below. Note that `valueAllowUnset` is only applicable when using `value` to control selection on a `<select>` element. On other elements it has no effect.
 
 ### Note 1: Getting value updates instantly from inputs
 

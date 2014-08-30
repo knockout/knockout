@@ -233,7 +233,7 @@ When you load a viewmodel or template via `require` declarations, e.g.,
         template: { require: 'text!some-template.html' }
     });
 
-...all Knockout does is call `require('some/module/name', callback)` and `require('text!some-template.html', callback)`, and uses the asynchronously-returned objects as the viewmodel and template definitions. So,
+...all Knockout does is call `require(['some/module/name'], callback)` and `require(['text!some-template.html'], callback)`, and uses the asynchronously-returned objects as the viewmodel and template definitions. So,
 
  * **This does not take a strict dependency on [require.js](http://requirejs.org/)** or any other particular module loader. *Any* module loader that provides an AMD-style `require` API will do. If you want to integrate with a module loader whose API is different, you can implement a [custom component loader](component-loaders.html).
  * **Knockout does not interpret the module name** in any way - it merely passes it through to `require()`. So of course Knockout does not know or care about where your module files are loaded from. That's up to your AMD loader and how you've configured it.
@@ -241,10 +241,9 @@ When you load a viewmodel or template via `require` declarations, e.g.,
 
 #### AMD modules are loaded only on demand
 
-Knockout does not call `require(moduleName, ...)` until your component is being instantiated. This is how components get loaded on demand, not up front.
+Knockout does not call `require([moduleName], ...)` until your component is being instantiated. This is how components get loaded on demand, not up front.
 
 For example, if your component is inside some other element with an [`if` binding](if-binding.html) (or another control flow binding), then it will not cause the AMD module to be loaded until the `if` condition is true. Of course, if the AMD module was already loaded (e.g., in a preloaded bundle) then the `require` call will not trigger any additional HTTP requests, so you can control what is preloaded and what is loaded on demand.
-
 
 ## Registering components as a single AMD module
 
