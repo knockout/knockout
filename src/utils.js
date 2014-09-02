@@ -232,7 +232,7 @@ ko.utils = (function () {
 
                 // Rule [A]
                 while (continuousNodeArray.length && continuousNodeArray[0].parentNode !== parentNode)
-                    continuousNodeArray.shift();
+                    continuousNodeArray.splice(0, 1);
 
                 // Rule [B]
                 if (continuousNodeArray.length > 1) {
