@@ -10,8 +10,8 @@ ko.extenders['trackArrayChanges'] = function(target) {
         underlyingSubscribeFunction = target.subscribe;
 
     // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
-    target.subscribe = target['subscribe'] = function(callback, callbackTarget, event) {
-        if (event === arrayChangeEventName) {
+    target.subscribe = target['subscribe'] = function(callback, callbackTarget, eventOrOptions) {
+        if (eventOrOptions === arrayChangeEventName || (eventOrOptions && (eventOrOptions.event == arrayChangeEventName))) {
             trackChanges();
         }
         return underlyingSubscribeFunction.apply(this, arguments);
