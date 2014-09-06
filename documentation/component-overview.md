@@ -111,7 +111,7 @@ Also, you need to have referenced a suitable module loader library (such as [req
 
 **Using the component**
 
-Now `like-or-dislike` can be consumed in the same way as before, using either a [`component` binding](component-binding.html) or a [custom element](component-custom-element.html):
+Now `like-or-dislike` can be consumed in the same way as before, using either a [`component` binding](component-binding.html) or a [custom element](component-custom-elements.html):
 
 <script>{{ like_dislike_amd_registration }}</script>
 
