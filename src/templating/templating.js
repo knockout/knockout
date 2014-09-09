@@ -186,8 +186,8 @@
             activateBindingsOnContinuousNodeArray(addedNodesArray, arrayItemContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, arrayValue);
-                
-            // release the "cache" variable, so that it can be collected by 
+
+            // release the "cache" variable, so that it can be collected by
             // the GC when its value isn't used from within the bindings anymore.
             arrayItemContext = null;
         };
