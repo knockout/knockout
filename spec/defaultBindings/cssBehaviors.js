@@ -72,7 +72,5 @@ describe('Binding: CSS class name', function() {
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
         observable1("my-Rule");
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
-        observable1(undefined);
-        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
     });
 });
