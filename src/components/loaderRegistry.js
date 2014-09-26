@@ -7,8 +7,13 @@
             var cachedDefinition = getObjectOwnProperty(loadedDefinitionsCache, componentName);
             if (cachedDefinition) {
                 // It's already loaded and cached. Reuse the same definition object.
-                // Note that for API consistency, even cache hits complete asynchronously.
-                setTimeout(function() { callback(cachedDefinition) }, 0);
+                // Note that for API consistency, even cache hits complete asynchronously by default.
+                // You can bypass this by putting synchronous:true on your component config.
+                if (cachedDefinition.isSynchronousComponent) {
+                    callback(cachedDefinition.definition);
+                } else {
+                    setTimeout(function() { callback(cachedDefinition.definition); }, 0);
+                }
             } else {
                 // Join the loading process that is already underway, or start a new one.
                 loadComponentAndNotify(componentName, callback);
@@ -32,14 +37,20 @@
         if (!subscribable) {
             // It's not started loading yet. Start loading, and when it's done, move it to loadedDefinitionsCache.
             subscribable = loadingSubscribablesCache[componentName] = new ko.subscribable();
-            beginLoadingComponent(componentName, function(definition) {
-                loadedDefinitionsCache[componentName] = definition;
+            subscribable.subscribe(callback);
+
+            beginLoadingComponent(componentName, function(definition, config) {
+                var isSynchronousComponent = !!(config && config['synchronous']);
+                loadedDefinitionsCache[componentName] = { definition: definition, isSynchronousComponent: isSynchronousComponent };
                 delete loadingSubscribablesCache[componentName];
 
                 // For API consistency, all loads complete asynchronously. However we want to avoid
                 // adding an extra setTimeout if it's unnecessary (i.e., the completion is already
                 // async) since setTimeout(..., 0) still takes about 16ms or more on most browsers.
-                if (completedAsync) {
+                //
+                // You can bypass the 'always synchronous' feature by putting the synchronous:true
+                // flag on your component configuration when you register it.
+                if (completedAsync || isSynchronousComponent) {
                     subscribable['notifySubscribers'](definition);
                 } else {
                     setTimeout(function() {
@@ -48,8 +59,9 @@
                 }
             });
             completedAsync = true;
+        } else {
+            subscribable.subscribe(callback);
         }
-        subscribable.subscribe(callback);
     }
 
     function beginLoadingComponent(componentName, callback) {
@@ -57,14 +69,14 @@
             if (config) {
                 // We have a config, so now load its definition
                 getFirstResultFromLoaders('loadComponent', [componentName, config], function(definition) {
-                    callback(definition);
+                    callback(definition, config);
                 });
             } else {
                 // The component has no config - it's unknown to all the loaders.
                 // Note that this is not an error (e.g., a module loading error) - that would abort the
                 // process and this callback would not run. For this callback to run, all loaders must
                 // have confirmed they don't know about this component.
-                callback(null);
+                callback(null, null);
             }
         });
     }

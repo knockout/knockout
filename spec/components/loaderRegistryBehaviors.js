@@ -177,6 +177,68 @@ describe('Components: Loader registry', function() {
         wasAsync = true;
     });
 
+    it('Supplies component definition synchronously if the "synchronous" flag is provided and the loader completes synchronously', function() {
+        // Set up a synchronous loader that returns a component marked as synchronous
+        this.restoreAfter(ko.components, 'loaders');
+        var testSyncComponentConfig = { synchronous: true },
+            testSyncComponentDefinition = { },
+            syncComponentName = 'my-sync-component',
+            getConfigCallCount = 0;
+        ko.components.loaders = [{
+            getConfig: function(name, callback) {
+                getConfigCallCount++;
+                callback(testSyncComponentConfig);
+            },
+            loadComponent: function(name, config, callback) {
+                expect(config).toBe(testSyncComponentConfig);
+                callback(testSyncComponentDefinition);
+            }
+        }];
+
+        // See that the initial load can complete synchronously
+        var initialLoadCompletedSynchronously = false;
+        ko.components.get(syncComponentName, function(definition) {
+            expect(definition).toBe(testSyncComponentDefinition);
+            initialLoadCompletedSynchronously = true;
+        });
+        expect(initialLoadCompletedSynchronously).toBe(true);
+        expect(getConfigCallCount).toBe(1);
+
+        // See that subsequent cached loads can complete synchronously
+        var cachedLoadCompletedSynchronously = false;
+        ko.components.get(syncComponentName, function(definition) {
+            expect(definition).toBe(testSyncComponentDefinition);
+            cachedLoadCompletedSynchronously = true;
+        });
+        expect(cachedLoadCompletedSynchronously).toBe(true);
+        expect(getConfigCallCount).toBe(1); // Was cached, so no extra loads
+    });
+
+    it('Supplies component definition synchronously if the "synchronous" flag is provided and definition is already cached', function() {
+        // Set up an asynchronous loader chain that returns a component marked as synchronous
+        this.restoreAfter(ko.components, 'loaders');
+        this.after(function() { delete testComponentConfig.synchronous; });
+        testComponentConfig.synchronous = "trueish value";
+        ko.components.loaders = [loaderThatReturnsConfig, loaderThatReturnsDefinition];
+
+        // Perform an initial load to prime the cache. Also verify it's set up to be async.
+        var initialLoadWasAsync = false;
+        getComponentDefinition(testComponentName, function(initialDefinition) {
+            expect(initialLoadWasAsync).toBe(true);
+            expect(initialDefinition).toBe(testComponentDefinition);
+
+            // Perform a subsequent load and verify it completes synchronously, because
+            // the component config has the 'synchronous' flag
+            var cachedLoadWasSynchronous = false;
+            ko.components.get(testComponentName, function(cachedDefinition) {
+                cachedLoadWasSynchronous = true;
+                expect(cachedDefinition).toBe(testComponentDefinition);
+            });
+            expect(cachedLoadWasSynchronous).toBe(true);
+        });
+        initialLoadWasAsync = true; // We verify that this line runs *before* the definition load completes above
+    });
+
     it('By default, contains only the default loader', function() {
         expect(ko.components.loaders.length).toBe(1);
         expect(ko.components.loaders[0]).toBe(ko.components.defaultLoader);
