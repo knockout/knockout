@@ -290,4 +290,13 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toContainText('first childhidden child');
         expect(callbacks).toEqual(2);
     });
+
+    it('Should ignore the optionsAfterRender binding if the callback was not provided or not a function', function () {
+        testNode.innerHTML = "<select data-bind=\"options: someItems, optionsText: 'childprop', optionsAfterRender: callback\"></select>";
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+
+        ko.applyBindings({ someItems: someItems, callback: null }, testNode);
+        // Ensure bindings were applied normally
+        expect(testNode.childNodes[0]).toContainText('first child');
+    });
 });
