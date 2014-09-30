@@ -80,7 +80,7 @@ In the following example,
     <some-component
         params='simpleExpression: 1 + 1,
                 simpleObservable: myObservable,
-                observableExpression: myObservable() + 1'
+                observableExpression: myObservable() + 1'>
     </some-component>
 
 ... the component viewmodel's `params` parameter will contain three values:
