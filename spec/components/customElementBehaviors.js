@@ -399,4 +399,60 @@ describe('Components: Custom elements', function() {
             throw ex;
         }
     });
+
+    it('Is possible to set up components that receive, inject, and bind templates supplied by the user of the component (sometimes called "templated components" or "transclusion")', function() {
+        // This spec repeats assertions made in other specs elsewhere, but is useful to prove the end-to-end technique
+
+        this.after(function() {
+            ko.components.unregister('special-list');
+        });
+
+        // First define a reusable 'special-list' component that produces a <ul> in which the <li>s have special CSS classes
+        // It also injects and binds a supplied template for each list item
+        ko.components.register('special-list', {
+            template: '<ul class="my-special-list" data-bind="foreach: specialListItems">'
+                    +     '<li class="special-list-item" data-bind="template: { nodes: $parent.suppliedItemTemplate }">'
+                    +     '</li>'
+                    + '</ul>',
+            viewModel: {
+                createViewModel: function(params, componentInfo) {
+                    return {
+                        specialListItems: params.items,
+                        suppliedItemTemplate: componentInfo.templateNodes
+                    };
+                }
+            }
+        });
+
+        // Now make some view markup that uses <special-list> and supplies a template to be used inside each list item
+        testNode.innerHTML = '<h1>Cheeses</h1>'
+                           + '<special-list params="items: cheeses">'
+                           +     '<em data-bind="text: name"></em> has quality <em data-bind="text: quality"></em>'
+                           + '</special-list>';
+
+        // Finally, bind it all to some data
+        ko.applyBindings({
+            cheeses: [
+                { name: 'brie', quality: 7 },
+                { name: 'cheddar', quality: 9 },
+                { name: 'roquefort', quality: 3 }
+            ]
+        }, testNode);
+
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('Cheeses');
+        expect(testNode.childNodes[1].childNodes[0].tagName.toLowerCase()).toEqual('ul');
+        expect(testNode.childNodes[1].childNodes[0].className).toEqual('my-special-list');
+        expect(testNode.childNodes[1].childNodes[0]).toContainHtml(
+            '<li class="special-list-item" data-bind="template: { nodes: $parent.supplieditemtemplate }">'
+          +     '<em data-bind="text: name">brie</em> has quality <em data-bind="text: quality">7</em>'
+          + '</li>'
+          + '<li class="special-list-item" data-bind="template: { nodes: $parent.supplieditemtemplate }">'
+          +     '<em data-bind="text: name">cheddar</em> has quality <em data-bind="text: quality">9</em>'
+          + '</li>'
+          + '<li class="special-list-item" data-bind="template: { nodes: $parent.supplieditemtemplate }">'
+          +     '<em data-bind="text: name">roquefort</em> has quality <em data-bind="text: quality">3</em>'
+          + '</li>'
+        );
+    });
 });

@@ -539,7 +539,7 @@ describe('Templating', function() {
 
     it('Should not allow "nodes: someObservableArray"', function() {
         // See comment in implementation for reasoning
-        testNode.innerHTML = "<div data-bind='template: { nodes: myNodes, bypassDomNodeWrap: true }'>Should not use this inline template</div>";        
+        testNode.innerHTML = "<div data-bind='template: { nodes: myNodes, bypassDomNodeWrap: true }'>Should not use this inline template</div>";
         expect(function() {
             ko.applyBindings({ myNodes: ko.observableArray() }, testNode);
         }).toThrowContaining("The \"nodes\" option must be a plain, non-observable array");
