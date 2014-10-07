@@ -10,7 +10,9 @@
                 // Note that for API consistency, even cache hits complete asynchronously by default.
                 // You can bypass this by putting synchronous:true on your component config.
                 if (cachedDefinition.isSynchronousComponent) {
-                    callback(cachedDefinition.definition);
+                    ko.dependencyDetection.ignore(function() { // See comment in loaderRegistryBehaviors.js for reasoning
+                        callback(cachedDefinition.definition);
+                    });
                 } else {
                     setTimeout(function() { callback(cachedDefinition.definition); }, 0);
                 }

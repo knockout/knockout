@@ -212,6 +212,28 @@ describe('Components: Loader registry', function() {
         });
         expect(cachedLoadCompletedSynchronously).toBe(true);
         expect(getConfigCallCount).toBe(1); // Was cached, so no extra loads
+
+        // See that, if you use ko.components.get synchronously from inside a computed,
+        // it ignores dependencies read inside the callback. That is, the callback only
+        // fires once even if something it accesses changes.
+        // This represents @lavimc's comment on https://github.com/knockout/knockout/commit/ee6df1398e08e9cc85a7a90497b6d043562d0ed0
+        // This behavior might be debatable, since conceivably you might want your computed to
+        // react to observables accessed within the synchronous callback. However, developers
+        // are at risk of bugs if they do that, because the callback might always fire async
+        // if the component isn't yet loaded, then their computed would die early. The argument for
+        // this behavior, then, is that it prevents a really obscure and hard-to-repro race condition
+        // bug by stopping developers from relying on synchronous dependency detection here at all.
+        var someObservable = ko.observable('Initial'),
+            callbackCount = 0;
+        ko.computed(function() {
+            ko.components.get(syncComponentName, function(definition) {
+                callbackCount++;
+                someObservable();
+            })
+        });
+        expect(callbackCount).toBe(1);
+        someObservable('Modified');
+        expect(callbackCount).toBe(1); // No extra callback
     });
 
     it('Supplies component definition synchronously if the "synchronous" flag is provided and definition is already cached', function() {
