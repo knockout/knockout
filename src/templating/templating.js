@@ -224,6 +224,17 @@
             if (typeof bindingValue == "string" || bindingValue['name']) {
                 // It's a named template - clear the element
                 ko.virtualElements.emptyNode(element);
+            } else if ('nodes' in bindingValue) {
+                // We've been given an array of DOM nodes. Save them as the template source.
+                // There is no known use case for the node array being an observable array (if the output
+                // varies, put that behavior *into* your template - that's what templates are for), and
+                // the implementation would be a mess, so assert that it's not observable.
+                var nodes = bindingValue['nodes'] || [];
+                if (ko.isObservable(nodes)) {
+                    throw new Error('The "nodes" option must be a plain, non-observable array.');
+                }
+                var container = ko.utils.moveCleanedNodesToContainerElement(nodes); // This also removes the nodes from their current parent
+                new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
                 var templateNodes = ko.virtualElements.childNodes(element),
