@@ -106,6 +106,55 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: myvalue">some parameter value</div>');
     });
 
+    it('Injects and binds the component synchronously if it is flagged as synchronous and loads synchronously', function() {
+        ko.components.register(testComponentName, {
+            synchronous: true,
+            template: '<div data-bind="text: myvalue"></div>',
+            viewModel: function() { this.myvalue = 123; }
+        });
+
+        // Notice the absence of any 'jasmine.Clock.tick' call here. This is synchronous.
+        ko.applyBindings(outerViewModel, testNode);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: myvalue">123</div>');
+    });
+
+    it('Injects and binds the component synchronously if it is flagged as synchronous and already cached, even if it previously loaded asynchronously', function() {
+        // Set up a component that loads asynchonously, but is flagged as being injectable synchronously
+        this.restoreAfter(window, 'require');
+        var requireCallbacks = {};
+        window.require = function(moduleNames, callback) {
+            expect(moduleNames[0]).toBe('testViewModelModule');
+            setTimeout(function() {
+                var constructor = function(params) {
+                    this.viewModelProperty = params;
+                };
+                callback(constructor);
+            }, 0);
+        };
+
+        ko.components.register(testComponentName, {
+            synchronous: true,
+            template: '<div data-bind="text: viewModelProperty"></div>',
+            viewModel: { require: 'testViewModelModule' }
+        });
+
+        var testList = ko.observableArray(['first']);
+        testNode.innerHTML = '<div data-bind="foreach: testList">' +
+                                '<div data-bind="component: { name: \'test-component\', params: $data }"></div>' +
+                             '</div>';
+
+        // First injection is async, because the loader completes asynchronously
+        ko.applyBindings({ testList: testList }, testNode);
+        expect(testNode.childNodes[0]).toContainText('');
+        jasmine.Clock.tick(0);
+        expect(testNode.childNodes[0]).toContainText('first');
+
+        // Second (cached) injection is synchronous, because the component config says so.
+        // Notice the absence of any 'jasmine.Clock.tick' call here. This is synchronous.
+        testList.push('second');
+        expect(testNode.childNodes[0]).toContainText('firstsecond');
+    });
+
     it('Creates a binding context with the correct parent', function() {
         ko.components.register(testComponentName, {
             template: 'Parent is outer view model: <span data-bind="text: $parent.isOuterViewModel"></span>'
