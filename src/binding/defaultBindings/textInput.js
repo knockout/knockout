@@ -40,12 +40,60 @@ if (ko.utils.ieVersion < 10) {
     };
 }
 
+// Firefox < 33 has a bug that fields that aren't in focus don't receive any event when filled in
+// by the password manager. There are two times that this can happen. The first is when the page
+// is loaded: the fields are filled in just before the DOMContentLoaded event is fired. The
+// second is when a "username" field on the page is filled in by the user: this will fill in
+// the password field also without firing an event.
+if (firefoxVersion < 33) {
+    var inputsForOnLoad;
+    if (document.readyState == 'loading') {
+        inputsForOnLoad = [];
+        ko.utils.registerEventHandler(document, 'DOMContentLoaded', function (event) {
+            var handler;
+            while (handler = inputsForOnLoad.pop()) {
+                handler(event);
+            }
+            inputsForOnLoad = undefined;
+        });
+    }
+
+    var registerForAutoFillEvent = function (element, handler, deferHandler) {
+        if (inputsForOnLoad) {
+            inputsForOnLoad.push(handler);
+        }
+
+        // This logic is similar to how Firefox's password manager selects a pair of username/password fields
+        // See http://hg.mozilla.org/mozilla-central/file/0c8ae792f1c0/toolkit/components/passwordmgr/LoginManagerContent.jsm#l380
+        if (element.type == 'password' && element.form) {
+            var form = element.form,
+                elements = form.elements,
+                index = ko.utils.arrayIndexOf(elements, element),
+                testElem, userElem;
+            while (index--) {
+                testElem = elements[index];
+                if (testElem.type == 'password') {
+                    return;
+                }
+                if (!userElem && testElem.type == 'text') {
+                    userElem = testElem;
+                }
+            }
+            if (userElem) {
+                ko.utils.registerEventHandler(userElem, 'DOMAutoComplete', deferHandler);
+                ko.utils.registerEventHandler(userElem, 'blur', deferHandler);
+            }
+        }
+    };
+}
+
 ko.bindingHandlers['textInput'] = {
     'init': function (element, valueAccessor, allBindings) {
 
         var previousElementValue = element.value,
             timeoutHandle,
-            elementValueBeforeEvent;
+            elementValueBeforeEvent,
+            isTextArea = (ko.utils.tagNameLower(element) === "textarea");
 
         var updateModel = function (event) {
             clearTimeout(timeoutHandle);
@@ -138,7 +186,7 @@ ko.bindingHandlers['textInput'] = {
                 // through the user interface.
                 onEvent('input', updateModel);
 
-                if (safariVersion < 5 && ko.utils.tagNameLower(element) === "textarea") {
+                if (safariVersion < 5 && isTextArea) {
                     // Safari <5 doesn't fire the 'input' event for <textarea> elements (it does fire 'textInput'
                     // but only when typing). So we'll just catch as much as we can with keydown, cut, and paste.
                     onEvent('keydown', deferUpdateModel);
@@ -148,13 +196,20 @@ ko.bindingHandlers['textInput'] = {
                     // Opera 10 doesn't always fire the 'input' event for cut, paste, undo & drop operations.
                     // We can try to catch some of those using 'keydown'.
                     onEvent('keydown', deferUpdateModel);
-                } else if (firefoxVersion < 4.0) {
-                    // Firefox <= 3.6 doesn't fire the 'input' event when text is filled in through autocomplete
-                    onEvent('DOMAutoComplete', updateModel);
+                } else if (firefoxVersion < 33) {
+                    // Firefox < 33 doesn't fire any event when a field that's not in focus is changed by auto-fill.
+                    if (!isTextArea) {
+                        registerForAutoFillEvent(element, updateModel, deferUpdateModel);
+                    }
 
-                    // Firefox <=3.5 doesn't fire the 'input' event when text is dropped into the input.
-                    onEvent('dragdrop', updateModel);       // <3.5
-                    onEvent('drop', updateModel);           // 3.5
+                    if (firefoxVersion < 4) {
+                        // Firefox <= 3.6 doesn't fire the 'input' event when text is filled in through autocomplete.
+                        onEvent('DOMAutoComplete', updateModel);
+
+                        // Firefox <=3.5 doesn't fire the 'input' event when text is dropped into the input.
+                        onEvent('dragdrop', updateModel);       // <3.5
+                        onEvent('drop', updateModel);           // 3.5
+                    }
                 }
             }
         }
