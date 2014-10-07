@@ -100,6 +100,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 });
                 _dependenciesCount = 0;
                 _latestValue = readFunction.call(evaluatorFunctionTarget);
+
+                dependentObservable['notifySubscribers'](_latestValue, null, true /* Only subscribers in suspectorMode */);
+
             } finally {
                 ko.dependencyDetection.end();
                 _isBeingEvaluated = false;
@@ -153,9 +156,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     _latestValue = newValue;
                     if (DEBUG) dependentObservable._latestValue = _latestValue;
 
-                    if (suppressChangeNotification !== true) {  // Check for strict true value since setTimeout in Firefox passes a numeric value to the function
-                        dependentObservable["notifySubscribers"](_latestValue);
-                    }
+                    dependentObservable['notifySubscribers'](_latestValue, null, suppressChangeNotification == true /* Only subscribers in suspectorMode */);
                 }
             } finally {
                 _isBeingEvaluated = false;
@@ -236,23 +237,25 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     if (options['pure']) {
         pure = true;
         isSleeping = true;     // Starts off sleeping; will awake on the first subscription
-        dependentObservable.beforeSubscriptionAdd = function () {
+        dependentObservable.beforeSubscriptionAdd = function (event, subscriptionOptions) {
             // If asleep, wake up the computed and evaluate to register any dependencies.
-            if (isSleeping) {
+            if (isSleeping && !subscriptionOptions['spectatorMode']) {
                 isSleeping = false;
                 evaluateImmediate(true /* suppressChangeNotification */);
             }
         }
         dependentObservable.afterSubscriptionRemove = function () {
-            if (!dependentObservable.getSubscriptionsCount()) {
+            if (!dependentObservable.getSubscriptionsCount(false)) {
                 disposeAllSubscriptionsToDependencies();
                 isSleeping = _needsEvaluation = true;
             }
         }
     } else if (options['deferEvaluation']) {
         // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
-        dependentObservable.beforeSubscriptionAdd = function () {
-            peek();
+        dependentObservable.beforeSubscriptionAdd = function (event, subscriptionOptions) {
+            if (!subscriptionOptions['spectatorMode']) {
+                peek();
+            }
             delete dependentObservable.beforeSubscriptionAdd;
         }
     }

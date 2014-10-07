@@ -1,10 +1,12 @@
 
-ko.subscription = function (target, callback, disposeCallback) {
+ko.subscription = function (target, callback, disposeCallback, options) {
     this.target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
     this.isDisposed = false;
+    this.options = options;
     ko.exportProperty(this, 'dispose', this.dispose);
+    ko.exportProperty(this, 'options', this.options);
 };
 ko.subscription.prototype.dispose = function () {
     this.isDisposed = true;
@@ -19,20 +21,33 @@ ko.subscribable = function () {
 var defaultEvent = "change";
 
 var ko_subscribable_fn = {
-    subscribe: function (callback, callbackTarget, event) {
+    subscribe: function (callback, callbackTarget, options) {
         var self = this;
 
-        event = event || defaultEvent;
+        if (typeof options === "string") {
+            options = { event: options };
+        }
+        else if (!options) {
+            options = { event: defaultEvent }
+        } else if (!options.event) {
+            options.event = defaultEvent;
+        }
+
+        if (options.event !== "change" && options["suspectorMode"]) {
+            throw new Error("Suspector mode is currently only supported for the 'change' event");
+        }
+
+        var event = options.event;
         var boundCallback = callbackTarget ? callback.bind(callbackTarget) : callback;
 
         var subscription = new ko.subscription(self, boundCallback, function () {
             ko.utils.arrayRemoveItem(self._subscriptions[event], subscription);
             if (self.afterSubscriptionRemove)
-                self.afterSubscriptionRemove(event);
-        });
+                self.afterSubscriptionRemove(event, subscription.options);
+        }, options);
 
         if (self.beforeSubscriptionAdd)
-            self.beforeSubscriptionAdd(event);
+            self.beforeSubscriptionAdd(event, subscription.options);
 
         if (!self._subscriptions[event])
             self._subscriptions[event] = [];
@@ -41,16 +56,17 @@ var ko_subscribable_fn = {
         return subscription;
     },
 
-    "notifySubscribers": function (valueToNotify, event) {
+    "notifySubscribers": function (valueToNotify, event, spectatorsOnly) {
         event = event || defaultEvent;
-        if (this.hasSubscriptionsForEvent(event)) {
+        if (this.hasSubscriptionsForEvent(event, true)) {
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
                 for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
-                    if (!subscription.isDisposed)
+                    if (!subscription.isDisposed && (!spectatorsOnly || subscription.options['spectatorMode'])) {
                         subscription.callback(valueToNotify);
+                    }
                 }
             } finally {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
@@ -100,14 +116,37 @@ var ko_subscribable_fn = {
         };
     },
 
-    hasSubscriptionsForEvent: function(event) {
-        return this._subscriptions[event] && this._subscriptions[event].length;
+    hasSubscriptionsForEvent: function (event, includeSpectators) {
+        var array = this._subscriptions[event];
+
+        if (array) {
+            if (includeSpectators) {
+                return array.length ? true : false;
+            }
+            else {
+                for (var i = 0, j = array.length; i < j; i++) {
+                    if (!array[i].options['spectatorMode']) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     },
 
-    getSubscriptionsCount: function () {
+    getSubscriptionsCount: function (includeSpectators) {
         var total = 0;
         ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
-            total += subscriptions.length;
+            if (includeSpectators) {
+                total += subscriptions.length;
+            }
+            else {
+                for (var i = 0, j = subscriptions.length; i < j; i++) {
+                    if (!subscriptions[i].options['spectatorMode']) {
+                        total++;
+                    }
+                }
+            }
         });
         return total;
     },
