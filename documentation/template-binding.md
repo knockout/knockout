@@ -191,7 +191,7 @@ If your function accepts a second parameter, then it will receive the entire [bi
 
 In the vast majority of cases, Knockout's native templating and the `foreach`, `if`, `with` and other control flow bindings will be all you need to construct an arbitrarily sophisticated UI. But in case you wish to integrate with an external templating library, such as the [Underscore template engine](http://documentcloud.github.com/underscore/#template) or [jquery.tmpl](http://api.jquery.com/jquery.tmpl/), Knockout offers a way to do it.
 
-By default, Knockout comes with support for [jquery.tmpl](http://api.jquery.com/jquery.tmpl/). To use it, you need to reference the following libraries, in this order:
+By default, Knockout comes with support for [jquery.tmpl](https://github.com/BorisMoore/jquery-tmpl). To use it, you need to reference the following libraries, in this order:
 
     <!-- First jQuery -->     <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
     <!-- Then jQuery.tmpl --> <script src="jquery.tmpl.js"></script>
