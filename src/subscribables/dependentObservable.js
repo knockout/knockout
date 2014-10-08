@@ -100,6 +100,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 });
                 _dependenciesCount = 0;
                 _latestValue = readFunction.call(evaluatorFunctionTarget);
+                if (DEBUG) dependentObservable._latestValue = _latestValue;
             } finally {
                 ko.dependencyDetection.end();
                 _isBeingEvaluated = false;
