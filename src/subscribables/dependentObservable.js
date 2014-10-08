@@ -90,7 +90,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 var dependencyTracking = {};
                 ko.dependencyDetection.begin({
                     callback: function (subscribable, id) {
-                        if (!dependencyTracking[id]) {
+                        if (!_isDisposed && !dependencyTracking[id]) {
                             dependencyTracking[id] = 1;
                             ++_dependenciesCount;
                         }
@@ -103,6 +103,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
             } finally {
                 ko.dependencyDetection.end();
+                _needsEvaluation = false;
                 _isBeingEvaluated = false;
             }
         } else {
@@ -179,16 +180,16 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         } else {
             // Reading the value
             ko.dependencyDetection.registerDependency(dependentObservable);
-            if (_needsEvaluation)
+            if (isSleeping || _needsEvaluation)
                 evaluateImmediate(true /* suppressChangeNotification */);
             return _latestValue;
         }
     }
 
     function peek() {
-        // Peek won't re-evaluate, except to get the initial value when "deferEvaluation" is set, or while the computed is sleeping.
+        // Peek won't re-evaluate, except while the computed is sleeping or to get the initial value when "deferEvaluation" is set.
         // Those are the only times that both of these conditions will be satisfied.
-        if (_needsEvaluation && !_dependenciesCount)
+        if (isSleeping || (_needsEvaluation && !_dependenciesCount))
             evaluateImmediate(true /* suppressChangeNotification */);
         return _latestValue;
     }
@@ -241,13 +242,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             // If asleep, wake up the computed and evaluate to register any dependencies.
             if (isSleeping) {
                 isSleeping = false;
+                _needsEvaluation = true;
                 evaluateImmediate(true /* suppressChangeNotification */);
             }
         }
         dependentObservable.afterSubscriptionRemove = function () {
             if (!dependentObservable.getSubscriptionsCount()) {
                 disposeAllSubscriptionsToDependencies();
-                isSleeping = _needsEvaluation = true;
+                isSleeping = true;
             }
         }
     } else if (options['deferEvaluation']) {

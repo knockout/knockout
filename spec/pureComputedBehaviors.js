@@ -51,26 +51,38 @@ describe('Pure Computed', function() {
         expect(computed.isActive()).toEqual(true);
     });
 
-    it('Should evaluate on each access while sleeping if not disposed', function () {
+    it('Should evaluate on each access while sleeping when dependencies have changed', function () {
         var timesEvaluated = 0,
-            data = ko.observable(),
-            computed = ko.pureComputed(function () { data(); return ++timesEvaluated; });
+            data = ko.observable('A'),
+            computed = ko.pureComputed(function () { ++timesEvaluated; return data(); });
 
         expect(timesEvaluated).toEqual(0);
 
-        expect(computed()).toEqual(1);
+        expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(1);
 
-        expect(computed()).toEqual(2);
+        // Access after changing dependency causes re-evaluation
+        data('B');
+        expect(computed()).toEqual('B');
         expect(timesEvaluated).toEqual(2);
+
+        // Test a second time using peek
+        data('C');
+        expect(computed.peek()).toEqual('C');
+        expect(timesEvaluated).toEqual(3);
+
+        // Access without changing dependency also causes evaluation
+        // This matches current behavior but is not required by the spec
+        expect(computed()).toEqual('C');
+        expect(timesEvaluated).toEqual(4);
     });
 
     it('Should not subscribe to dependencies while sleeping', function() {
-        var data = ko.observable(1),
+        var data = ko.observable('A'),
             computed = ko.pureComputed(data);
 
         // Accessing the computed evaluates it
-        expect(computed()).toEqual(1);
+        expect(computed()).toEqual('A');
 
         // No subscription is registered on the depenedent observable
         expect(data.getSubscriptionsCount()).toEqual(0);
@@ -80,24 +92,24 @@ describe('Pure Computed', function() {
     });
 
     it('Should not evaluate after it has been disposed', function () {
-        var evaluateCount = 0,
-            observable = ko.observable(0),
-            computed = ko.pureComputed(function () { return ++evaluateCount + observable(); });
+        var timesEvaluated = 0,
+            data = ko.observable('A'),
+            computed = ko.pureComputed(function () { ++timesEvaluated; return data(); });
 
-        expect(computed()).toEqual(1);
-        expect(evaluateCount).toEqual(1);
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(1);
 
         computed.dispose();
         expect(computed.isActive()).toEqual(false);
 
         // These should not cause a new evaluation
-        observable(1);
-        expect(computed()).toEqual(1);
-        expect(evaluateCount).toEqual(1);
+        data('B');
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(1);
     });
 
     it('Should awaken and perform dependency detection when subscribed to', function() {
-        var data = ko.observable(1),
+        var data = ko.observable('A'),
             computed = ko.pureComputed(data),
             notifiedValues = [];
 
@@ -110,12 +122,12 @@ describe('Pure Computed', function() {
         expect(notifiedValues).toEqual([]);
 
         // Updating data should trigger the subscription
-        data(42);
-        expect(notifiedValues).toEqual([42]);
+        data('B');
+        expect(notifiedValues).toEqual(['B']);
     });
 
     it('Should go back to sleep when all subcriptions are disposed', function() {
-        var data = ko.observable(1),
+        var data = ko.observable('A'),
             computed = ko.pureComputed(data),
             subscription = computed.subscribe(function () {});
 
@@ -126,10 +138,11 @@ describe('Pure Computed', function() {
         subscription.dispose();
         // It goes to sleep, disposing its subscription to the observable
         expect(data.getSubscriptionsCount()).toEqual(0);
-        expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(1);     // dependency count of computed doesn't change
     });
 
-    it('Should minimized evaluations when accessed from a computed', function() {
+
+    it('Should minimize evaluations when accessed from a computed', function() {
         var timesEvaluated = 0,
             data = ko.observable('A'),
             pureComputed = ko.pureComputed(function () { ++timesEvaluated; return data(); }),
@@ -182,9 +195,35 @@ describe('Pure Computed', function() {
         expect(computed).toThrow();
 
         // While awake
+        observable('B');    // to ensure re-evaluation
         expect(function() {
             ko.computed(computed);
         }).toThrow();
+    });
+
+    it('Should not add dependencies if disposed during evaluation while sleeping', function () {
+        // This is a bit of a contrived example and likely won't occur in any actual applications.
+        // See https://github.com/knockout/knockout/issues/1041
+        var timesEvaluated = 0,
+            observableToTriggerDisposal = ko.observable(false),
+            observableGivingValue = ko.observable('A'),
+            computed = ko.pureComputed(function() {
+                if (observableToTriggerDisposal())
+                    computed.dispose();
+                ++timesEvaluated;
+                return observableGivingValue();
+            });
+
+        // Check initial state
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(2);
+
+        // Now cause a disposal during evaluation
+        observableToTriggerDisposal(true);
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(2);
+        expect(computed.getDependenciesCount()).toEqual(0);
     });
 
     describe('Context', function() {
@@ -201,6 +240,7 @@ describe('Pure Computed', function() {
             expect(computed()).toEqual(undefined);  // isInitial is always undefined for a pure computed
             expect(evaluationCount).toEqual(1);     // single evaluation
 
+            observable(2);
             ko.computed(computed);                  // wake up computed by subscribing to it
             expect(evaluationCount).toEqual(2);     // which causes a second evaluation
             expect(computed()).toEqual(undefined);  // isInitial is still undefined
@@ -229,6 +269,7 @@ describe('Pure Computed', function() {
             expect(computed()).toEqual(1);     // single evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
 
+            observable1(2);
             expect(computed()).toEqual(2);     // second evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
         });
