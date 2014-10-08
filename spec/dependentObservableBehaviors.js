@@ -355,6 +355,27 @@ describe('Dependent Observable', function() {
         expect(result()).toEqual(42);
     });
 
+    it('Should fire "awake" event when deferred computed is first evaluated', function() {
+        var data = ko.observable('A'),
+            computed = ko.computed({ read: data, deferEvaluation: true });
+
+        var notifySpy = jasmine.createSpy('notifySpy');
+        computed.subscribe(notifySpy, null, 'awake');
+
+        expect(notifySpy).not.toHaveBeenCalled();
+
+        expect(computed()).toEqual('A');
+        expect(notifySpy).toHaveBeenCalledWith('A');
+        expect(notifySpy.calls.length).toBe(1);
+
+        // Subscribing or updating data shouldn't trigger any more notifications
+        notifySpy.reset();
+        computed.subscribe(function() {});
+        data('B');
+        computed();
+        expect(notifySpy).not.toHaveBeenCalled();
+    });
+
     it('Should prevent recursive calling of read function', function() {
         var observable = ko.observable(0),
             computed = ko.computed(function() {

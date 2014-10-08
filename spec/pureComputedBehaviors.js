@@ -141,6 +141,30 @@ describe('Pure Computed', function() {
         expect(computed.getDependenciesCount()).toEqual(1);     // dependency count of computed doesn't change
     });
 
+    it('Should fire "awake" and "asleep" events when changing state', function() {
+        var data = ko.observable('A'),
+            computed = ko.pureComputed(data);
+
+        var notifySpy = jasmine.createSpy('notifySpy');
+        computed.subscribe(notifySpy.bind(null, 'awake'), null, 'awake');
+        computed.subscribe(notifySpy.bind(null, 'asleep'), null, 'asleep');
+
+        // Subscribing to non-change events doesn't awaken computed
+        expect(data.getSubscriptionsCount()).toEqual(0);
+
+        // Subscribe to computed; notifies with value
+        var subscription = computed.subscribe(function () {});
+        expect(notifySpy.argsForCall).toEqual([ ['awake', 'A'] ]);
+        expect(data.getSubscriptionsCount()).toEqual(1);
+
+        notifySpy.reset();
+        data('B');
+        expect(notifySpy).not.toHaveBeenCalled();
+
+        subscription.dispose();
+        expect(notifySpy.argsForCall).toEqual([ ['asleep', undefined] ]);
+        expect(data.getSubscriptionsCount()).toEqual(0);
+    });
 
     it('Should minimize evaluations when accessed from a computed', function() {
         var timesEvaluated = 0,
