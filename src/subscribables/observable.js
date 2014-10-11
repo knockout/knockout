@@ -27,10 +27,12 @@ ko.observable = function (initialValue) {
     observable.peek = function() { return _latestValue };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
+    observable.isObservableInternal_ = function() { return true };
 
     ko.exportProperty(observable, 'peek', observable.peek);
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
+    ko.exportProperty(observable, "isObservableInternal_", observable.isObservableInternal_);
 
     return observable;
 }
@@ -54,9 +56,15 @@ ko.hasPrototype = function(instance, prototype) {
     return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain
 };
 
+ko.hasIsObservableProperty = function(instance) {
+    if ((instance === null) || (instance === undefined)) return false;
+    return (typeof instance.isObservableInternal_ === 'function') && instance.isObservableInternal_();
+};
+
 ko.isObservable = function (instance) {
-    return ko.hasPrototype(instance, ko.observable);
-}
+    return (ko.hasPrototype(instance, ko.observable) || ko.hasIsObservableProperty(instance));
+};
+
 ko.isWriteableObservable = function (instance) {
     // Observable
     if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
@@ -66,7 +74,7 @@ ko.isWriteableObservable = function (instance) {
         return true;
     // Anything else
     return false;
-}
+};
 
 
 ko.exportSymbol('observable', ko.observable);
