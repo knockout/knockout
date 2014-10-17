@@ -122,6 +122,17 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainText('Parent is outer view model: true');
     });
 
+    it('Creates a binding context with $componentTemplateNodes giving the original child nodes', function() {
+        ko.components.register(testComponentName, {
+            template: 'Start<span data-bind="template: { nodes: $componentTemplateNodes }"></span>End'
+        });
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue"><em>original</em> child nodes</div>';
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+
+        expect(testNode.childNodes[0]).toContainHtml('start<span data-bind="template: { nodes: $componenttemplatenodes }"><em>original</em> child nodes</span>end');
+    });
+
     it('Passes nonobservable params to the component', function() {
         // Set up a component that logs its constructor params
         var receivedParams = [];

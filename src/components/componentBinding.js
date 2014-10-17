@@ -50,7 +50,9 @@
                     }
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
                     var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
-                        childBindingContext = bindingContext['createChildContext'](componentViewModel);
+                        childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
+                            ctx['$componentTemplateNodes'] = originalChildNodes;
+                        });
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
                 });
