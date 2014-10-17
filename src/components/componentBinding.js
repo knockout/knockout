@@ -51,6 +51,7 @@
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
                     var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
                         childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
+                            ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
                         });
                     currentViewModel = componentViewModel;
