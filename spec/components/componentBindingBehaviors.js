@@ -182,6 +182,32 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainHtml('start<span data-bind="template: { nodes: $componenttemplatenodes }"><em>original</em> child nodes</span>end');
     });
 
+    it('Creates a binding context with $component to reference the closest component viewmodel', function() {
+        this.after(function() {
+            ko.components.unregister('sub-component');
+        });
+
+        ko.components.register(testComponentName, {
+            template: '<span data-bind="with: { childContext: 123 }">'
+                          + 'In child context <!-- ko text: childContext --><!-- /ko -->, '
+                          + 'inside component with property <!-- ko text: $component.componentProp --><!-- /ko -->. '
+                          + '<div data-bind="component: \'sub-component\'"></div>'
+                      + '</span>',
+            viewModel: function() { return { componentProp: 456 }; }
+        });
+
+        // See it works with nesting - $component always refers to the *closest* component root
+        ko.components.register('sub-component', {
+            template: 'Now in sub-component with property <!-- ko text: $component.componentProp --><!-- /ko -->.',
+            viewModel: function() { return { componentProp: 789 }; }
+        });
+
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+
+        expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.');
+    });
+
     it('Passes nonobservable params to the component', function() {
         // Set up a component that logs its constructor params
         var receivedParams = [];
