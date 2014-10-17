@@ -72,13 +72,18 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0].childNodes[0]).not.toBe(testTemplate[0]);
     });
 
-    it('Passes params and componentInfo (with prepopulated element) to the component\'s viewmodel factory', function() {
+    it('Passes params and componentInfo (with prepopulated element and templateNodes) to the component\'s viewmodel factory', function() {
         var componentConfig = {
             template: '<div data-bind="text: 123">I have been prepopulated and not bound yet</div>',
             viewModel: {
                 createViewModel: function(params, componentInfo) {
                     expect(componentInfo.element).toContainText('I have been prepopulated and not bound yet');
                     expect(params).toBe(testComponentParams);
+                    expect(componentInfo.templateNodes.length).toEqual(3);
+                    expect(componentInfo.templateNodes[0]).toContainText('Here are some ');
+                    expect(componentInfo.templateNodes[1]).toContainText('template');
+                    expect(componentInfo.templateNodes[2]).toContainText(' nodes');
+                    expect(componentInfo.templateNodes[1].tagName.toLowerCase()).toEqual('em');
 
                     //verify that createViewModel is the same function and was called with the component definition as the context
                     expect(this.createViewModel).toBe(componentConfig.viewModel.createViewModel);
@@ -89,6 +94,7 @@ describe('Components: Component binding', function() {
                 }
             }
         };
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue">Here are some <em>template</em> nodes</div>';
 
         ko.components.register(testComponentName, componentConfig);
         ko.applyBindings(outerViewModel, testNode);
@@ -163,6 +169,17 @@ describe('Components: Component binding', function() {
         jasmine.Clock.tick(1);
 
         expect(testNode.childNodes[0]).toContainText('Parent is outer view model: true');
+    });
+
+    it('Creates a binding context with $componentTemplateNodes giving the original child nodes', function() {
+        ko.components.register(testComponentName, {
+            template: 'Start<span data-bind="template: { nodes: $componentTemplateNodes }"></span>End'
+        });
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue"><em>original</em> child nodes</div>';
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+
+        expect(testNode.childNodes[0]).toContainHtml('start<span data-bind="template: { nodes: $componenttemplatenodes }"><em>original</em> child nodes</span>end');
     });
 
     it('Passes nonobservable params to the component', function() {

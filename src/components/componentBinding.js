@@ -14,7 +14,8 @@
 
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
-                };
+                },
+                originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
             ko.utils.domNodeDisposal.addDisposeCallback(element, disposeAssociatedComponentViewModel);
 
@@ -48,8 +49,10 @@
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
-                    var componentViewModel = createViewModel(componentDefinition, element, componentParams),
-                        childBindingContext = bindingContext['createChildContext'](componentViewModel);
+                    var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
+                        childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
+                            ctx['$componentTemplateNodes'] = originalChildNodes;
+                        });
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
                 });
@@ -71,10 +74,10 @@
         ko.virtualElements.setDomNodeChildren(element, clonedNodesArray);
     }
 
-    function createViewModel(componentDefinition, element, componentParams) {
+    function createViewModel(componentDefinition, element, originalChildNodes, componentParams) {
         var componentViewModelFactory = componentDefinition['createViewModel'];
         return componentViewModelFactory
-            ? componentViewModelFactory.call(componentDefinition, componentParams, { element: element })
+            ? componentViewModelFactory.call(componentDefinition, componentParams, { 'element': element, 'templateNodes': originalChildNodes })
             : componentParams; // Template-only component
     }
 
