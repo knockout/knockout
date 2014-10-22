@@ -8,10 +8,13 @@ if (window && window.navigator) {
     };
 
     // Detect various browser versions because some old versions don't fully support the 'input' event
-    var operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()),
-        userAgent = window.navigator.userAgent,
-        safariVersion = parseVersion(userAgent.match(/^(?:(?!chrome).)*version\/([^ ]*) safari/i)),
-        firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]*)/));
+    var userAgent = window.navigator.userAgent, operaVersion, chromeVersion, safariVersion, firefoxVersion, ieVersion;
+
+    (operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()))
+        || (chromeVersion = parseVersion(userAgent.match(/Chrome\/([^ ]*)/)))
+        || (safariVersion = parseVersion(userAgent.match(/Version\/([^ ]*) Safari/)))
+        || (firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]*)/)))
+        || (ieVersion = ko.utils.ieVersion || parseVersion(userAgent.match(/MSIE ([^ ]*)/)));      // Detects up to IE 10
 }
 
 // IE 8 and 9 have bugs that prevent the normal events from firing when the value changes.
@@ -20,7 +23,7 @@ if (window && window.navigator) {
 // fired at the document level only and doesn't directly indicate which element changed. We
 // set up just one event handler for the document and use 'activeElement' to determine which
 // element was changed.
-if (ko.utils.ieVersion < 10) {
+if (ieVersion >= 8 && ieVersion < 10) {
     var selectionChangeRegisteredName = ko.utils.domData.nextKey(),
         selectionChangeHandlerName = ko.utils.domData.nextKey();
     var selectionChangeHandler = function(event) {
@@ -154,7 +157,7 @@ ko.bindingHandlers['textInput'] = {
                 }
             });
         } else {
-            if (ko.utils.ieVersion < 10) {
+            if (ieVersion < 10) {
                 // Internet Explorer <= 8 doesn't support the 'input' event, but does include 'propertychange' that fires whenever
                 // any property of an element changes. Unlike 'input', it also fires if a property is changed from JavaScript code,
                 // but that's an acceptable compromise for this binding. IE 9 does support 'input', but since it doesn't fire it
@@ -165,14 +168,14 @@ ko.bindingHandlers['textInput'] = {
                     }
                 });
 
-                if (ko.utils.ieVersion == 8) {
+                if (ieVersion == 8) {
                     // IE 8 has a bug where it fails to fire 'propertychange' on the first update following a value change from
                     // JavaScript code. It also doesn't fire if you clear the entire value. To fix this, we bind to the following
                     // events too.
                     onEvent('keyup', updateModel);      // A single keystoke
                     onEvent('keydown', updateModel);    // The first character when a key is held down
                 }
-                if (ko.utils.ieVersion >= 8) {
+                if (registerForSelectionChangeEvent) {
                     // Internet Explorer 9 doesn't fire the 'input' event when deleting text, including using
                     // the backspace, delete, or ctrl-x keys, clicking the 'x' to clear the input, dragging text
                     // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
@@ -196,6 +199,16 @@ ko.bindingHandlers['textInput'] = {
                     // Opera 10 doesn't always fire the 'input' event for cut, paste, undo & drop operations.
                     // We can try to catch some of those using 'keydown'.
                     onEvent('keydown', deferUpdateModel);
+                } else if (ieVersion == 10) {
+                    // Internet Explorer 10 sometimes doesn't fire 'input' when using autocomplete but does fire 'propertychange'.
+                    // Also it sometimes doesn't fire any event when an autocomplete item is selected. To ensure we don't lose the
+                    // update, check for changes on blur.
+                    onEvent('propertychange', function(event) {
+                        if (event.propertyName === 'value') {
+                            deferUpdateModel(event);
+                        }
+                    });
+                    onEvent('blur', updateModel);
                 } else if (firefoxVersion < 33) {
                     // Firefox < 33 doesn't fire any event when a field that's not in focus is changed by auto-fill.
                     if (!isTextArea) {
