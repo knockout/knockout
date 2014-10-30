@@ -371,8 +371,9 @@ ko.utils = (function () {
                 if(typeof node.classList=='object') {
                     node.classList.remove.apply(node.classList, node.classList);
                     node.classList.add.apply(node.classList,currentClassNames);
+                } else {
+                    node.className = currentClassNames.join(" ");
                 }
-                node.className = currentClassNames.join(" ");
             }
         },
 
