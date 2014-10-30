@@ -10,6 +10,7 @@ require('./helpers/beforeEach');
 require('./arrayEditDetectionBehaviors');
 require('./asyncBehaviors');
 require('./dependentObservableBehaviors');
+require('./pureComputedBehaviors');
 require('./expressionRewritingBehaviors');
 require('./extenderBehaviors');
 require('./mappingHelperBehaviors');
@@ -18,4 +19,3 @@ require('./observableArrayChangeTrackingBehaviors');
 require('./observableBehaviors');
 require('./subscribableBehaviors');
 require('./utilsBehaviors');
-

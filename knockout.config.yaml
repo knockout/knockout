@@ -18,30 +18,31 @@ build:
   # This is from what was build/fragments/extern-pre.js:
   - |
     (function(undefined){
-    // (0, eval)('this') is a robust way to get a reference to the global object
-    // For details, see http://stackoverflow.com/questions/14119988#14120023
-    var window = this || (0, eval)('this'),
-        document = window['document'],
-        navigator = window['navigator'],
-        jQuery = window["jQuery"],
-        JSON = window["JSON"];
+        // (0, eval)('this') is a robust way of getting a reference to the global object
+        // For details, see http://stackoverflow.com/questions/14119988/return-this-0-evalthis/14120023#14120023
+        var window = this || (0, eval)('this'),
+            document = window['document'],
+            navigator = window['navigator'],
+            jQueryInstance = window["jQuery"],
+            JSON = window["JSON"];
+
 
   # This is from what was build/fragments/amd-pre.js:
   - |
     (function(factory) {
-    // Support three module loading scenarios
-    if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
-        // [1] CommonJS/Node.js
-        var target = module['exports'] || exports; // module.exports is for Node.js
-        factory(target);
-    } else if (typeof define === 'function' && define['amd']) {
-        // [2] AMD anonymous module
-        define(['exports'], factory);
-    } else {
-        // [3] No module loader (plain <script> tag) - put directly in global namespace
-        factory(window['ko'] = {});
-    }
-    }(function(koExports){
+        // Support three module loading scenarios
+        if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+            // [1] CommonJS/Node.js
+            var target = module['exports'] || exports; // module.exports is for Node.js
+            factory(target, require);
+        } else if (typeof define === 'function' && define['amd']) {
+            // [2] AMD anonymous module
+            define(['exports', 'require'], factory);
+        } else {
+            // [3] No module loader (plain <script> tag) - put directly in global namespace
+            factory(window['ko'] = {});
+        }
+    }(function(koExports, require){
 
   footers:
   # This is from what was build/fragments/amd-post.js:
@@ -115,6 +116,10 @@ sources:
   - src/virtualElements.js
   - src/binding/bindingProvider.js
   - src/binding/bindingAttributeSyntax.js
+  - src/components/loaderRegistry.js
+  - src/components/defaultLoader.js
+  - src/components/customElements.js
+  - src/components/componentBinding.js
   - src/binding/defaultBindings/attr.js
   - src/binding/defaultBindings/checked.js
   - src/binding/defaultBindings/css.js
@@ -129,9 +134,11 @@ sources:
   - src/binding/defaultBindings/style.js
   - src/binding/defaultBindings/submit.js
   - src/binding/defaultBindings/text.js
+  - src/binding/defaultBindings/textInput.js
   - src/binding/defaultBindings/uniqueName.js
   - src/binding/defaultBindings/value.js
   - src/binding/defaultBindings/visible.js
+  # click depends on event - The order matters for specs, which includes each file individually
   - src/binding/defaultBindings/click.js
   - src/templating/templateEngine.js
   - src/templating/templateRewriting.js
@@ -141,6 +148,7 @@ sources:
   - src/binding/editDetection/arrayToDomNodeChildren.js
   - src/templating/native/nativeTemplateEngine.js
   - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
+
 
 # Test files
 node_spec: spec/helpers/spec.node.js
@@ -155,6 +163,7 @@ spec_files:
   - ./spec/observableArrayBehaviors.js
   - ./spec/observableArrayChangeTrackingBehaviors.js
   - ./spec/dependentObservableBehaviors.js
+  - ./spec/pureComputedBehaviors.js
   - ./spec/dependentObservableDomBehaviors.js
   - ./spec/extenderBehaviors.js
   - ./spec/domNodeDisposalBehaviors.js
