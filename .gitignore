@@ -11,7 +11,7 @@ desktop.ini
 .eprj
 perf/*
 *.orig
-
+*.bak
 .DS_Store
 npm-debug.log
 node_modules
@@ -21,3 +21,4 @@ build/output/*
 runner.html
 runner.jquery.html
 runner.modernizr.html
+dist

@@ -2,7 +2,7 @@
   "name": "knockout",
   "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
   "homepage": "http://knockoutjs.com/",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "license": "MIT",
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",

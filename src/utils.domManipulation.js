@@ -37,11 +37,11 @@
 
     function jQueryHtmlParse(html) {
         // jQuery's "parseHTML" function was introduced in jQuery 1.8.0 and is a documented public API.
-        if (jQuery['parseHTML']) {
-            return jQuery['parseHTML'](html) || []; // Ensure we always return an array and never null
+        if (jQueryInstance['parseHTML']) {
+            return jQueryInstance['parseHTML'](html) || []; // Ensure we always return an array and never null
         } else {
             // For jQuery < 1.8.0, we fall back on the undocumented internal "clean" function.
-            var elems = jQuery['clean']([html]);
+            var elems = jQueryInstance['clean']([html]);
 
             // As of jQuery 1.7.1, jQuery parses the HTML by appending it to some dummy parent nodes held in an in-memory document fragment.
             // Unfortunately, it never clears the dummy parent nodes from the document fragment, so it leaks memory over time.
@@ -61,8 +61,8 @@
     }
 
     ko.utils.parseHtmlFragment = function(html) {
-        return jQuery ? jQueryHtmlParse(html)   // As below, benefit from jQuery's optimisations where possible
-                      : simpleHtmlParse(html);  // ... otherwise, this simple logic will do in most common cases.
+        return jQueryInstance ? jQueryHtmlParse(html)   // As below, benefit from jQuery's optimisations where possible
+                              : simpleHtmlParse(html);  // ... otherwise, this simple logic will do in most common cases.
     };
 
     ko.utils.setHtml = function(node, html) {
@@ -78,8 +78,8 @@
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (jQuery) {
-                jQuery(node)['html'](html);
+            if (jQueryInstance) {
+                jQueryInstance(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.
                 var parsedNodes = ko.utils.parseHtmlFragment(html);

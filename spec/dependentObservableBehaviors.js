@@ -1,51 +1,45 @@
 
 describe('Dependent Observable', function() {
     it('Should be subscribable', function () {
-        var instance = new ko.dependentObservable(function () { });
+        var instance = ko.computed(function () { });
         expect(ko.isSubscribable(instance)).toEqual(true);
     });
 
     it('Should advertise that instances are observable', function () {
-        var instance = new ko.dependentObservable(function () { });
+        var instance = ko.computed(function () { });
         expect(ko.isObservable(instance)).toEqual(true);
     });
 
     it('Should advertise that instances are computed', function () {
-        var instance = new ko.dependentObservable(function () { });
+        var instance = ko.computed(function () { });
         expect(ko.isComputed(instance)).toEqual(true);
     });
 
     it('Should advertise that instances cannot have values written to them', function () {
-        var instance = new ko.dependentObservable(function () { });
+        var instance = ko.computed(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(false);
+        expect(ko.isWritableObservable(instance)).toEqual(false);
     });
 
     it('Should require an evaluator function as constructor param', function () {
-        var threw = false;
-        try { var instance = new ko.dependentObservable(); }
-        catch (ex) { threw = true; }
-        expect(threw).toEqual(true);
+        expect(function () { ko.computed(); }).toThrow();
     });
 
     it('Should be able to read the current value of the evaluator function', function () {
-        var instance = new ko.dependentObservable(function () { return 123; });
+        var instance = ko.computed(function () { return 123; });
         expect(instance()).toEqual(123);
     });
 
     it('Should not be able to write a value to it if there is no "write" callback', function () {
-        var instance = new ko.dependentObservable(function () { return 123; });
+        var instance = ko.computed(function () { return 123; });
 
-        var threw = false;
-        try { instance(456); }
-        catch (ex) { threw = true; }
-
+        expect(function () { instance(456); }).toThrow();
         expect(instance()).toEqual(123);
-        expect(threw).toEqual(true);
     });
 
     it('Should invoke the "write" callback, where present, if you attempt to write a value to it', function() {
         var invokedWriteWithValue, invokedWriteWithThis;
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function() {},
             write: function(value) { invokedWriteWithValue = value; invokedWriteWithThis = this; }
         });
@@ -84,7 +78,7 @@ describe('Dependent Observable', function() {
     it('Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters', function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function() {},
             write: function() { invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
             owner: someOwner
@@ -100,7 +94,7 @@ describe('Dependent Observable', function() {
 
     it('Should use the second arg (evaluatorFunctionTarget) for "this" when calling read/write if no options.owner was given', function() {
         var expectedThis = {}, actualReadThis, actualWriteThis;
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function() { actualReadThis = this },
             write: function() { actualWriteThis = this }
         }, expectedThis);
@@ -112,7 +106,7 @@ describe('Dependent Observable', function() {
     });
 
     it('Should be able to pass evaluator function using "options" parameter called "read"', function() {
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function () { return 123; }
         });
         expect(instance()).toEqual(123);
@@ -120,7 +114,7 @@ describe('Dependent Observable', function() {
 
     it('Should cache result of evaluator function and not call it again until dependencies change', function () {
         var timesEvaluated = 0;
-        var instance = new ko.dependentObservable(function () { timesEvaluated++; return 123; });
+        var instance = ko.computed(function () { timesEvaluated++; return 123; });
         expect(instance()).toEqual(123);
         expect(instance()).toEqual(123);
         expect(timesEvaluated).toEqual(1);
@@ -128,7 +122,7 @@ describe('Dependent Observable', function() {
 
     it('Should automatically update value when a dependency changes', function () {
         var observable = new ko.observable(1);
-        var depedentObservable = new ko.dependentObservable(function () { return observable() + 1; });
+        var depedentObservable = ko.computed(function () { return observable() + 1; });
         expect(depedentObservable()).toEqual(2);
 
         observable(50);
@@ -137,7 +131,7 @@ describe('Dependent Observable', function() {
 
     it('Should be able to use \'peek\' on an observable to avoid a dependency', function() {
         var observable = ko.observable(1),
-            computed = ko.dependentObservable(function () { return observable.peek() + 1; });
+            computed = ko.computed(function () { return observable.peek() + 1; });
         expect(computed()).toEqual(2);
 
         observable(50);
@@ -149,7 +143,7 @@ describe('Dependent Observable', function() {
         var observableB = new ko.observable("B");
         var observableToUse = "A";
         var timesEvaluated = 0;
-        var depedentObservable = new ko.dependentObservable(function () {
+        var depedentObservable = ko.computed(function () {
             timesEvaluated++;
             return observableToUse == "A" ? observableA() : observableB();
         });
@@ -175,7 +169,7 @@ describe('Dependent Observable', function() {
     it('Should notify subscribers of changes', function () {
         var notifiedValue;
         var observable = new ko.observable(1);
-        var depedentObservable = new ko.dependentObservable(function () { return observable() + 1; });
+        var depedentObservable = ko.computed(function () { return observable() + 1; });
         depedentObservable.subscribe(function (value) { notifiedValue = value; });
 
         expect(notifiedValue).toEqual(undefined);
@@ -186,7 +180,7 @@ describe('Dependent Observable', function() {
     it('Should notify "beforeChange" subscribers before changes', function () {
         var notifiedValue;
         var observable = new ko.observable(1);
-        var depedentObservable = new ko.dependentObservable(function () { return observable() + 1; });
+        var depedentObservable = ko.computed(function () { return observable() + 1; });
         depedentObservable.subscribe(function (value) { notifiedValue = value; }, null, "beforeChange");
 
         expect(notifiedValue).toEqual(undefined);
@@ -198,27 +192,27 @@ describe('Dependent Observable', function() {
     it('Should only update once when each dependency changes, even if evaluation calls the dependency multiple times', function () {
         var notifiedValues = [];
         var observable = new ko.observable();
-        var depedentObservable = new ko.dependentObservable(function () { return observable() * observable(); });
+        var depedentObservable = ko.computed(function () { return observable() * observable(); });
         depedentObservable.subscribe(function (value) { notifiedValues.push(value); });
         observable(2);
         expect(notifiedValues.length).toEqual(1);
         expect(notifiedValues[0]).toEqual(4);
     });
 
-    it('Should be able to chain dependentObservables', function () {
+    it('Should be able to chain computed observables', function () {
         var underlyingObservable = new ko.observable(1);
-        var dependent1 = new ko.dependentObservable(function () { return underlyingObservable() + 1; });
-        var dependent2 = new ko.dependentObservable(function () { return dependent1() + 1; });
-        expect(dependent2()).toEqual(3);
+        var computed1 = ko.computed(function () { return underlyingObservable() + 1; });
+        var computed2 = ko.computed(function () { return computed1() + 1; });
+        expect(computed2()).toEqual(3);
 
         underlyingObservable(11);
-        expect(dependent2()).toEqual(13);
+        expect(computed2()).toEqual(13);
     });
 
     it('Should be able to use \'peek\' on a computed observable to avoid a dependency', function () {
         var underlyingObservable = new ko.observable(1);
-        var computed1 = new ko.dependentObservable(function () { return underlyingObservable() + 1; });
-        var computed2 = new ko.dependentObservable(function () { return computed1.peek() + 1; });
+        var computed1 = ko.computed(function () { return underlyingObservable() + 1; });
+        var computed2 = ko.computed(function () { return computed1.peek() + 1; });
         expect(computed2()).toEqual(3);
         expect(computed2.isActive()).toEqual(false);
 
@@ -229,8 +223,8 @@ describe('Dependent Observable', function() {
     it('Should accept "owner" parameter to define the object on which the evaluator function should be called', function () {
         var model = new (function () {
             this.greeting = "hello";
-            this.fullMessageWithoutOwner = new ko.dependentObservable(function () { return this.greeting + " world" });
-            this.fullMessageWithOwner = new ko.dependentObservable(function () { return this.greeting + " world" }, this);
+            this.fullMessageWithoutOwner = ko.computed(function () { return this.greeting + " world" });
+            this.fullMessageWithOwner = ko.computed(function () { return this.greeting + " world" }, this);
         })();
         expect(model.fullMessageWithoutOwner()).toEqual("undefined world");
         expect(model.fullMessageWithOwner()).toEqual("hello world");
@@ -240,38 +234,38 @@ describe('Dependent Observable', function() {
         var underlyingObservable = new ko.observable(100);
         var timeToDispose = false;
         var timesEvaluated = 0;
-        var dependent = new ko.dependentObservable(
+        var computed = ko.computed(
             function () { timesEvaluated++; return underlyingObservable() + 1; },
             null,
             { disposeWhen: function () { return timeToDispose; } }
         );
         expect(timesEvaluated).toEqual(1);
-        expect(dependent.getDependenciesCount()).toEqual(1);
-        expect(dependent.isActive()).toEqual(true);
+        expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.isActive()).toEqual(true);
 
         timeToDispose = true;
         underlyingObservable(101);
         expect(timesEvaluated).toEqual(1);
-        expect(dependent.getDependenciesCount()).toEqual(0);
-        expect(dependent.isActive()).toEqual(false);
+        expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.isActive()).toEqual(false);
     });
 
     it('Should dispose itself as soon as disposeWhen returns true, as long as it isn\'t waiting for a DOM node to be removed', function() {
         var underlyingObservable = ko.observable(100),
-            dependent = ko.dependentObservable(
+            computed = ko.computed(
                 underlyingObservable,
                 null,
                 { disposeWhen: function() { return true; } }
             );
 
         expect(underlyingObservable.getSubscriptionsCount()).toEqual(0);
-        expect(dependent.isActive()).toEqual(false);
+        expect(computed.isActive()).toEqual(false);
     });
 
     it('Should delay disposal until after disposeWhen returns false if it is waiting for a DOM node to be removed', function() {
         var underlyingObservable = ko.observable(100),
             shouldDispose = true,
-            dependent = ko.dependentObservable(
+            computed = ko.computed(
                 underlyingObservable,
                 null,
                 { disposeWhen: function() { return shouldDispose; }, disposeWhenNodeIsRemoved: true }
@@ -280,56 +274,57 @@ describe('Dependent Observable', function() {
         // Even though disposeWhen returns true, it doesn't dispose yet, because it's
         // expecting an initial 'false' result to indicate the DOM node is still in the document
         expect(underlyingObservable.getSubscriptionsCount()).toEqual(1);
-        expect(dependent.isActive()).toEqual(true);
+        expect(computed.isActive()).toEqual(true);
 
         // Trigger the false result. Of course it still doesn't dispose yet, because
         // disposeWhen says false.
         shouldDispose = false;
         underlyingObservable(101);
         expect(underlyingObservable.getSubscriptionsCount()).toEqual(1);
-        expect(dependent.isActive()).toEqual(true);
+        expect(computed.isActive()).toEqual(true);
 
         // Now trigger a true result. This time it will dispose.
         shouldDispose = true;
         underlyingObservable(102);
         expect(underlyingObservable.getSubscriptionsCount()).toEqual(0);
-        expect(dependent.isActive()).toEqual(false);
+        expect(computed.isActive()).toEqual(false);
     });
 
     it('Should describe itself as active if the evaluator has dependencies on its first run', function() {
         var someObservable = ko.observable('initial'),
-            dependentObservable = new ko.dependentObservable(function () { return someObservable(); });
-        expect(dependentObservable.isActive()).toEqual(true);
+            computed = ko.computed(function () { return someObservable(); });
+        expect(computed.isActive()).toEqual(true);
     });
 
     it('Should describe itself as inactive if the evaluator has no dependencies on its first run', function() {
-        var dependentObservable = new ko.dependentObservable(function () { return 123; });
-        expect(dependentObservable.isActive()).toEqual(false);
+        var computed = ko.computed(function () { return 123; });
+        expect(computed.isActive()).toEqual(false);
     });
 
     it('Should describe itself as inactive if subsequent runs of the evaluator result in there being no dependencies', function() {
         var someObservable = ko.observable('initial'),
             shouldHaveDependency = true,
-            dependentObservable = new ko.dependentObservable(function () { return shouldHaveDependency && someObservable(); });
-        expect(dependentObservable.isActive()).toEqual(true);
+            computed = ko.computed(function () { return shouldHaveDependency && someObservable(); });
+        expect(computed.isActive()).toEqual(true);
 
         // Trigger a refresh
         shouldHaveDependency = false;
         someObservable('modified');
-        expect(dependentObservable.isActive()).toEqual(false);
+        expect(computed.isActive()).toEqual(false);
     });
 
     it('Should advertise that instances *can* have values written to them if you supply a "write" callback', function() {
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function() {},
             write: function() {}
         });
         expect(ko.isWriteableObservable(instance)).toEqual(true);
+        expect(ko.isWritableObservable(instance)).toEqual(true);
     });
 
     it('Should allow deferring of evaluation (and hence dependency detection)', function () {
         var timesEvaluated = 0;
-        var instance = new ko.dependentObservable({
+        var instance = ko.computed({
             read: function () { timesEvaluated++; return 123 },
             deferEvaluation: true
         });
@@ -362,7 +357,7 @@ describe('Dependent Observable', function() {
 
     it('Should prevent recursive calling of read function', function() {
         var observable = ko.observable(0),
-            computed = ko.dependentObservable(function() {
+            computed = ko.computed(function() {
                 // this both reads and writes to the observable
                 // will result in errors like "Maximum call stack size exceeded" (chrome)
                 // or "Out of stack space" (IE) or "too much recursion" (Firefox) if recursion
