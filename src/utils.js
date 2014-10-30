@@ -364,7 +364,7 @@ ko.utils = (function () {
         toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
             if (classNames) {
                 var cssClassNameRegex = /\S+/g,
-                    currentClassNames = (typeof node.classList=='object' ? node.classList+'' : node.className).match(cssClassNameRegex) || [];
+                    currentClassNames = (typeof node.classList==='object' ? node.classList+'' : node.className).match(cssClassNameRegex) || [];
                 ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
                     ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
                 });
