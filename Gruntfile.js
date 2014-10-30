@@ -7,9 +7,11 @@ module.exports = function(grunt) {
         // Metadata
         pkg: grunt.file.readJSON('package.json'),
         fragments: './build/fragments/',
-        banner: '// Knockout JavaScript library v<%= pkg.version %>\n' +
-                '// (c) Steven Sanderson - <%= pkg.homepage %>\n' +
-                '// License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)\n\n',
+        banner: '/*!\n' +
+                ' * Knockout JavaScript library v<%= pkg.version %>\n' +
+                ' * (c) Steven Sanderson - <%= pkg.homepage %>\n' +
+                ' * License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)\n' +
+                ' */\n\n',
 
         checktrailingspaces: {
             main: {
@@ -24,6 +26,10 @@ module.exports = function(grunt) {
         build: {
             debug: './build/output/knockout-latest.debug.js',
             min: './build/output/knockout-latest.js'
+        },
+        dist: {
+            debug: './dist/knockout.debug.js',
+            min: './dist/knockout.js'
         },
         test: {
             phantomjs: 'spec/runner.phantom.js',
@@ -143,6 +149,29 @@ module.exports = function(grunt) {
                 }
             }
         );
+    });
+
+    grunt.registerTask('dist', function() {
+        // Update the version in bower.json
+        var bowerConfig = grunt.file.readJSON('bower.json'),
+            version = grunt.config('pkg.version');
+        bowerConfig.version = version;
+        grunt.file.write('bower.json', JSON.stringify(bowerConfig, true, 2));
+
+        var buildConfig = grunt.config('build'),
+            distConfig = grunt.config('dist');
+        grunt.file.copy(buildConfig.debug, distConfig.debug);
+        grunt.file.copy(buildConfig.min, distConfig.min);
+
+        console.log('To publish, run:');
+        console.log('    git add bower.json');
+        console.log('    git add -f ' + distConfig.debug);
+        console.log('    git add -f ' + distConfig.min);
+        console.log('    git checkout head');
+        console.log('    git commit -m \'Version ' + version + ' for distribution\'');
+        console.log('    git tag -a v' + version + ' -m \'Add tag v' + version + '\'');
+        console.log('    git checkout master');
+        console.log('    git push origin --tags');
     });
 
     // Default task.
