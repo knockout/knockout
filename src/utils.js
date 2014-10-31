@@ -363,15 +363,14 @@ ko.utils = (function () {
 
         toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
             if (classNames) {
-                var cssClassNameRegex = /\S+/g,
-                    currentClassNames = (typeof node.classList==='object' ? node.classList+'' : node.className).match(cssClassNameRegex) || [];
-                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                    ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
-                });
-                if(typeof node.classList=='object') {
-                    node.classList.remove.apply(node.classList, node.classList);
-                    node.classList.add.apply(node.classList,currentClassNames);
+                var cssClassNameRegex = /\S+/g;
+                if(typeof node.classList === 'object') {
+                    node.classList[shoudHaveClass ? 'add' : 'remove'].apply(node.classList, classNames.match(cssClassNameRegex));
                 } else {
+                    var currentClassNames = node.className.match(cssClassNameRegex) || [];
+                    ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                        ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
+                    });
                     node.className = currentClassNames.join(" ");
                 }
             }
