@@ -477,46 +477,6 @@ describe('Components: Component binding', function() {
         expect(testNode.firstChild).toContainHtml('');
     });
 
-    it('Does not automatically subscribe to any observables you evaluate during createViewModel or a viewmodel constructor', function() {
-        // This clarifies that, if a developer wants to react when some observable parameter
-        // changes, then it's their responsibility to subscribe to it or use a computed.
-        // We don't rebuild the component just because you evaluated an observable from inside
-        // your viewmodel constructor, just like we don't if you evaluate one elsewhere
-        // in the viewmodel code.
-
-        // Note that currently, this behavior happens as a fluke of the implementation: because
-        // component loads always complete asynchronously, any observables accessed inside
-        // createViewModel or later don't get registered as dependencies on the binding computed.
-        // If we ever change that to support synchronous component loads, this test would
-        // start failing because we'd have broken this behavior.
-
-        var createViewModelCallCount = 0;
-        ko.components.register(testComponentName, {
-            viewModel: {
-                createViewModel: function(params, componentInfo) {
-                    createViewModelCallCount++;
-                    return { someData: params.someData() };
-                }
-            },
-            template: '<div data-bind="text: someData"></div>'
-        });
-
-        // Bind an instance
-        testComponentParams.someData = ko.observable('First');
-        ko.applyBindings(outerViewModel, testNode);
-        jasmine.Clock.tick(1);
-        expect(testNode).toContainText('First');
-        expect(createViewModelCallCount).toBe(1);
-
-        // See that changing the observable will have no effect, because the viewmodel
-        // itself doesn't subscribe to it.
-        testComponentParams.someData('Second');
-        jasmine.Clock.tick(1);
-        expect(testNode).toContainText('First');
-        expect(testComponentParams.someData.getSubscriptionsCount()).toBe(0);
-        expect(createViewModelCallCount).toBe(1); // ... and we didn't rebuild the component
-    });
-
     it('Disregards component load completions that are no longer relevant', function() {
         // This spec addresses the possibility of a race condition: if you change the
         // component name faster than the component loads complete, then we need to
@@ -620,5 +580,83 @@ describe('Components: Component binding', function() {
 
         testComponentParams.someData(456);
         expect(testNode).toContainText('Hello! Your param is 456 Goodbye.');
+    });
+
+    describe('Does not automatically subscribe to any observables you evaluate during createViewModel or a viewmodel constructor', function() {
+        // This clarifies that, if a developer wants to react when some observable parameter
+        // changes, then it's their responsibility to subscribe to it or use a computed.
+        // We don't rebuild the component just because you evaluated an observable from inside
+        // your viewmodel constructor, just like we don't if you evaluate one elsewhere
+        // in the viewmodel code.
+
+        it('when loaded asynchronously', function() {
+            ko.components.register(testComponentName, {
+                viewModel: {
+                    createViewModel: function(params, componentInfo) {
+                        return { someData: params.someData() };
+                    }
+                },
+                template: '<div data-bind="text: someData"></div>'
+            });
+
+            // Bind an instance
+            testComponentParams.someData = ko.observable('First');
+            ko.applyBindings(outerViewModel, testNode);
+            jasmine.Clock.tick(1);
+            expect(testNode).toContainText('First');
+            expect(testComponentParams.someData.getSubscriptionsCount()).toBe(0);
+
+            // See that changing the observable will have no effect
+            testComponentParams.someData('Second');
+            jasmine.Clock.tick(1);
+            expect(testNode).toContainText('First');
+        });
+
+        it('when loaded synchronously', function() {
+            ko.components.register(testComponentName, {
+                synchronous: true,
+                viewModel: {
+                    createViewModel: function(params, componentInfo) {
+                        return { someData: params.someData() };
+                    }
+                },
+                template: '<div data-bind="text: someData"></div>'
+            });
+
+            // Bind an instance
+            testComponentParams.someData = ko.observable('First');
+            ko.applyBindings(outerViewModel, testNode);
+            expect(testNode).toContainText('First');
+            expect(testComponentParams.someData.getSubscriptionsCount()).toBe(0);
+
+            // See that changing the observable will have no effect
+            testComponentParams.someData('Second');
+            expect(testNode).toContainText('First');
+        });
+
+        it('when cached component is loaded synchronously', function() {
+            ko.components.register(testComponentName, {
+                synchronous: true,
+                viewModel: {
+                    createViewModel: function(params, componentInfo) {
+                        return { someData: params.someData() };
+                    }
+                },
+                template: '<div data-bind="text: someData"></div>'
+            });
+
+            // Load the component manually so that the next load happens from the cache
+            ko.components.get(testComponentName, function() {});
+
+            // Bind an instance
+            testComponentParams.someData = ko.observable('First');
+            ko.applyBindings(outerViewModel, testNode);
+            expect(testNode).toContainText('First');
+            expect(testComponentParams.someData.getSubscriptionsCount()).toBe(0);
+
+            // See that changing the observable will have no effect
+            testComponentParams.someData('Second');
+            expect(testNode).toContainText('First');
+        });
     });
 });
