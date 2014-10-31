@@ -210,9 +210,10 @@ describe('Components: Custom elements', function() {
                 this.receivedobservable = params.suppliedobservable;
                 this.dispose = function() { this.wasDisposed = true; };
 
-                // See we didn't get the original observable instance. Instead we got a computed property.
+                // See we didn't get the original observable instance. Instead we got a read-only computed property.
                 expect(this.receivedobservable).not.toBe(rootViewModel.myobservable);
                 expect(ko.isComputed(this.receivedobservable)).toBe(true);
+                expect(ko.isWritableObservable(this.receivedobservable)).toBe(false);
 
                 // The $raw value for this param is a computed property whose value is raw result
                 // of evaluating the binding value. Since the raw result in this case is itself not
@@ -247,16 +248,17 @@ describe('Components: Custom elements', function() {
         expect(rootViewModel.myobservable.getSubscriptionsCount()).toBe(0);
     });
 
-    it('Is possible to pass expressions that can vary observably and evaluate as observable instances', function() {
+    it('Is possible to pass expressions that can vary observably and evaluate as writable observable instances', function() {
         var constructorCallCount = 0;
         ko.components.register('test-component', {
-            template: '<p>the value: <span data-bind="text: myval"></span></p>',
+            template: '<input data-bind="value: myval"/>',
             viewModel: function(params) {
                 constructorCallCount++;
                 this.myval = params.somevalue;
 
-                // See we received a computed, not either of the original observables
+                // See we received a writable computed, not either of the original observables
                 expect(ko.isComputed(this.myval)).toBe(true);
+                expect(ko.isWritableObservable(this.myval)).toBe(true);
 
                 // See we can reach the original inner observable directly if needed via $raw
                 // (e.g., because it has subobservables or similar)
@@ -278,26 +280,37 @@ describe('Components: Custom elements', function() {
         testNode.innerHTML = '<test-component params="somevalue: outer().inner"></test-component>';
         ko.applyBindings({ outer: outerObservable }, testNode);
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText('the value: inner1');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner1');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
 
         // See we can mutate the inner value and see the result show up
         innerObservable('inner2');
-        expect(testNode).toContainText('the value: inner2');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner2');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
 
+        // See that we can mutate the observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'inner3';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(innerObservable()).toEqual('inner3');
+
         // See we can mutate the outer value and see the result show up (cleaning subscriptions to the old inner value)
         var newInnerObservable = ko.observable('newinner');
         outerObservable({ inner: newInnerObservable });
-        expect(testNode).toContainText('the value: newinner');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('newinner');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(0);
         expect(newInnerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
+
+        // See that we can mutate the new observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'newinner2';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(newInnerObservable()).toEqual('newinner2');
+        expect(innerObservable()).toEqual('inner3');    // original one hasn't changed
 
         // See that subscriptions are disposed when the component is
         ko.cleanNode(testNode);
