@@ -62,6 +62,28 @@ ko.utils = (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
 
+    // Prefer node.classList, as it works with SVG.
+    // See https://github.com/knockout/knockout/issues/337
+    // and https://github.com/knockout/knockout/issues/1594
+    var cssClassNameRegex = /\S+/g,
+        nodesSupportClassList = document && 'classList' in document.createElement('div');
+
+    function toggleDomNodeClassWithClassName(node, classNames, shouldHaveClass) {
+        if (classNames) {
+            var currentClassNames = node.className.match(cssClassNameRegex) || [];
+            ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
+            });
+            node.className = currentClassNames.join(" ");
+        }
+    }
+
+    function toggleDomNodeClassWithClassList(node, classNames, shouldHaveClass) {
+        if (classNames) {
+            node.classList[shouldHaveClass ? 'add' : 'remove'].apply(node.classList, classNames.match(cssClassNameRegex))
+        }
+    }
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
@@ -361,20 +383,11 @@ ko.utils = (function () {
             return ko.isObservable(value) ? value.peek() : value;
         },
 
-        toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
-            if (classNames) {
-                var cssClassNameRegex = /\S+/g;
-                if(typeof node.classList === 'object') {
-                    node.classList[shoudHaveClass ? 'add' : 'remove'].apply(node.classList, classNames.match(cssClassNameRegex));
-                } else {
-                    var currentClassNames = node.className.match(cssClassNameRegex) || [];
-                    ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                        ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
-                    });
-                    node.className = currentClassNames.join(" ");
-                }
-            }
-        },
+        toggleDomNodeCssClass: nodesSupportClassList ? toggleDomNodeClassWithClassList : toggleDomNodeClassWithClassName,
+        // Expose the following for testing.
+        nodesSupportClassList: nodesSupportClassList,
+        toggleDomNodeClassWithClassList: toggleDomNodeClassWithClassList,
+        toggleDomNodeClassWithClassName: toggleDomNodeClassWithClassName,
 
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
