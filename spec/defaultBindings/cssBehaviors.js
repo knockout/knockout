@@ -60,4 +60,14 @@ describe('Binding: CSS class name', function() {
         observable1(true);
         expect(testNode.childNodes[0].className).toEqual("complex/className complex.className");
     });
+    
+    it('Should prefer classList method to attr className if the first one exists', function() {
+        var observable1 = new ko.observable();
+        testNode.innerHTML = "<svg data-bind='css: { someClass : someModelProperty }'></svg>";
+        ko.applyBindings({ someModelProperty: observable1 }, testNode);
+
+        expect(testNode.childNodes[0].classList+'').toEqual("");
+        observable1(true);
+        expect(testNode.childNodes[0].classList+'').toEqual("someClass");
+    });
 });
