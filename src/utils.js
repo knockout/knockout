@@ -384,10 +384,6 @@ ko.utils = (function () {
         },
 
         toggleDomNodeCssClass: nodesSupportClassList ? toggleDomNodeClassWithClassList : toggleDomNodeClassWithClassName,
-        // Expose the following for testing.
-        nodesSupportClassList: nodesSupportClassList,
-        toggleDomNodeClassWithClassList: toggleDomNodeClassWithClassList,
-        toggleDomNodeClassWithClassName: toggleDomNodeClassWithClassName,
 
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
