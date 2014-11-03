@@ -436,6 +436,70 @@ describe('Components: Component binding', function() {
         expect(secondViewModelInstance).not.toBe(firstViewModelInstance);
     });
 
+    it('Is possible to pass expressions that can vary observably and evaluate as writable observable instances', function() {
+        // This spec is copied, with small modifications, from customElementBehaviors.js to show that the same component
+        // definition can be used with the component binding and with custom elements.
+        var constructorCallCount = 0;
+        ko.components.register('test-component', {
+            template: '<input data-bind="value: myval"/>',
+            viewModel: function(params) {
+                constructorCallCount++;
+                this.myval = params.somevalue;
+
+                // See we received a writable observable
+                expect(ko.isWritableObservable(this.myval)).toBe(true);
+            }
+        });
+
+        // Bind to a viewmodel with nested observables; see the expression is evaluated as expected
+        // The component itself doesn't have to know or care that the supplied value is nested - the
+        // custom element syntax takes care of producing a single computed property that gives the
+        // unwrapped inner value.
+        var innerObservable = ko.observable('inner1'),
+            outerObservable = ko.observable({ inner: innerObservable });
+        testNode.innerHTML = '<div data-bind="component: { name: \'' + testComponentName + '\', params: { somevalue: outer().inner } }"></div>';
+        ko.applyBindings({ outer: outerObservable }, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner1');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(1);
+
+        // See we can mutate the inner value and see the result show up
+        innerObservable('inner2');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner2');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(1);
+
+        // See that we can mutate the observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'inner3';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(innerObservable()).toEqual('inner3');
+
+        // See we can mutate the outer value and see the result show up (cleaning subscriptions to the old inner value)
+        var newInnerObservable = ko.observable('newinner');
+        outerObservable({ inner: newInnerObservable });
+        jasmine.Clock.tick(1);              // modifying the outer observable causes the component to reload, which happens asynchronously
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('newinner');
+        expect(outerObservable.getSubscriptionsCount()).toBe(1);
+        expect(innerObservable.getSubscriptionsCount()).toBe(0);
+        expect(newInnerObservable.getSubscriptionsCount()).toBe(1);
+        expect(constructorCallCount).toBe(2);
+
+        // See that we can mutate the new observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'newinner2';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(newInnerObservable()).toEqual('newinner2');
+        expect(innerObservable()).toEqual('inner3');    // original one hasn't changed
+
+        // See that subscriptions are disposed when the component is
+        ko.cleanNode(testNode);
+        expect(outerObservable.getSubscriptionsCount()).toBe(0);
+        expect(innerObservable.getSubscriptionsCount()).toBe(0);
+        expect(newInnerObservable.getSubscriptionsCount()).toBe(0);
+    });
+
     it('Disposes the viewmodel if the element is cleaned', function() {
         function testViewModel() { }
         testViewModel.prototype.dispose = function() { this.wasDisposed = true; };

@@ -256,9 +256,11 @@ describe('Components: Custom elements', function() {
                 constructorCallCount++;
                 this.myval = params.somevalue;
 
-                // See we received a writable computed, not either of the original observables
-                expect(ko.isComputed(this.myval)).toBe(true);
+                // See we received a writable observable
                 expect(ko.isWritableObservable(this.myval)).toBe(true);
+
+                // See we received a computed, not either of the original observables
+                expect(ko.isComputed(this.myval)).toBe(true);
 
                 // See we can reach the original inner observable directly if needed via $raw
                 // (e.g., because it has subobservables or similar)
