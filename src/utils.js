@@ -551,16 +551,17 @@ if (!Function.prototype['bind']) {
     // In case the browser doesn't implement it natively, provide a JavaScript implementation. This implementation is based on the one in prototype.js
     Function.prototype['bind'] = function (object) {
         var originalFunction = this;
-		
-		if (arguments.length === 1) {
-			return function () {
-				return originalFunction.apply(object);
-			};
+        if (arguments.length === 1) {
+            return function () {
+                return originalFunction.apply(object, arguments);
+            };
         } else {
-			var args = Array.prototype.slice.call(arguments, 1);
-			return function () {
-				return originalFunction.apply(object, args.concat(Array.prototype.slice.call(arguments)));
-			};
+            var partialArgs = Array.prototype.slice.call(arguments, 1);
+            return function () {
+                var args = partialArgs.slice(0);
+                args.push.apply(args, arguments);
+                return originalFunction.apply(object, args);
+            };
         }
     };
 }
