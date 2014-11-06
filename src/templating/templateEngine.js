@@ -9,6 +9,7 @@
 //            //   - you might also want to make bindingContext.$parent, bindingContext.$parents,
 //            //     and bindingContext.$root available in the template too
 //            // - options gives you access to any other properties set on "data-bind: { template: options }"
+//            // - templateDocument is the document object of the template
 //            //
 //            // Return value: an array of DOM nodes
 //        }
@@ -26,7 +27,7 @@
 
 ko.templateEngine = function () { };
 
-ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
+ko.templateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options, templateDocument) {
     throw new Error("Override renderTemplateSource");
 };
 
@@ -51,7 +52,7 @@ ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateD
 
 ko.templateEngine.prototype['renderTemplate'] = function (template, bindingContext, options, templateDocument) {
     var templateSource = this['makeTemplateSource'](template, templateDocument);
-    return this['renderTemplateSource'](templateSource, bindingContext, options);
+    return this['renderTemplateSource'](templateSource, bindingContext, options, templateDocument);
 };
 
 ko.templateEngine.prototype['isTemplateRewritten'] = function (template, templateDocument) {

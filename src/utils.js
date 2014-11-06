@@ -175,8 +175,9 @@ ko.utils = (function () {
             // Ensure it's a real array, as we're about to reparent the nodes and
             // we don't want the underlying collection to change while we're doing that.
             var nodesArray = ko.utils.makeArray(nodes);
+            var templateDocument = (nodesArray[0] && nodesArray[0].ownerDocument) || document;
 
-            var container = document.createElement('div');
+            var container = templateDocument.createElement('div');
             for (var i = 0, j = nodesArray.length; i < j; i++) {
                 container.appendChild(ko.cleanNode(nodesArray[i]));
             }

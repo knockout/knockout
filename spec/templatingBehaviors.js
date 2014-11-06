@@ -28,8 +28,9 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
-    this.renderTemplateSource = function (templateSource, bindingContext, options) {
+    this.renderTemplateSource = function (templateSource, bindingContext, options, templateDocument) {
         var data = bindingContext['$data'];
+        templateDocument = templateDocument || document;
         options = options || {};
         var templateText = templateSource.text();
         if (typeof templateText == "function")
@@ -68,14 +69,14 @@ var dummyTemplateEngine = function (templates) {
 
         // Use same HTML parsing code as real template engine so as to trigger same combination of IE weirdnesses
         // Also ensure resulting nodelist is an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result));
+        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result, templateDocument));
     };
 
-    this.rewriteTemplate = function (template, rewriterCallback) {
+    this.rewriteTemplate = function (template, rewriterCallback, templateDocument) {
         // Only rewrite if the template isn't a function (can't rewrite those)
-        var templateSource = this.makeTemplateSource(template);
+        var templateSource = this.makeTemplateSource(template, templateDocument);
         if (typeof templateSource.text() != "function")
-            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
+            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback, templateDocument);
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };
@@ -1102,5 +1103,26 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes.length).toEqual(1);
         expect(testDocFrag.childNodes[0].tagName).toEqual("P");
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
+    });
+
+    it('Should be posible to render a template in an iframe', function () {
+        testNode.innerHTML = '<iframe src="iframetest.html"></iframe>';
+        var iframe = testNode.childNodes[0], loaded = false;
+        ko.utils.registerEventHandler(iframe, 'load', function() {
+            loaded = true;
+        });
+
+        waitsFor(function () {
+            return loaded;
+        }, 1000);
+
+        runs(function () {
+            var iframeBody = iframe.contentWindow.document.body;
+
+            ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "ABC" }));
+            ko.renderTemplate("someTemplate", null, null, iframeBody);
+            expect(iframeBody.childNodes.length).toEqual(1);
+            expect(iframeBody.innerHTML).toEqual("ABC");
+        });
     });
 })

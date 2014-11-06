@@ -4,7 +4,7 @@ ko.nativeTemplateEngine = function () {
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype.constructor = ko.nativeTemplateEngine;
-ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
+ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options, templateDocument) {
     var useNodesIfAvailable = !(ko.utils.ieVersion < 9), // IE<9 cloneNode doesn't work properly
         templateNodesFunc = useNodesIfAvailable ? templateSource['nodes'] : null,
         templateNodes = templateNodesFunc ? templateSource['nodes']() : null;
@@ -13,7 +13,7 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
         return ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
     } else {
         var templateText = templateSource['text']();
-        return ko.utils.parseHtmlFragment(templateText);
+        return ko.utils.parseHtmlFragment(templateText, templateDocument);
     }
 };
 
