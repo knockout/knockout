@@ -88,9 +88,23 @@ describe('Subscribable', function() {
 
     it('Should be able to retrieve the number of active subscribers', function() {
         var instance = new ko.subscribable();
-        instance.subscribe(function() { });
-        instance.subscribe(function() { }, null, "someSpecificEvent");
+        var sub1 = instance.subscribe(function() { });
+        var sub2 = instance.subscribe(function() { }, null, "someSpecificEvent");
+
         expect(instance.getSubscriptionsCount()).toEqual(2);
+        expect(instance.getSubscriptionsCount("change")).toEqual(1);
+        expect(instance.getSubscriptionsCount("someSpecificEvent")).toEqual(1);
+        expect(instance.getSubscriptionsCount("nonexistentEvent")).toEqual(0);
+
+        sub1.dispose();
+        expect(instance.getSubscriptionsCount()).toEqual(1);
+        expect(instance.getSubscriptionsCount("change")).toEqual(0);
+        expect(instance.getSubscriptionsCount("someSpecificEvent")).toEqual(1);
+
+        sub2.dispose();
+        expect(instance.getSubscriptionsCount()).toEqual(0);
+        expect(instance.getSubscriptionsCount("change")).toEqual(0);
+        expect(instance.getSubscriptionsCount("someSpecificEvent")).toEqual(0);
     });
 
     it('Should be possible to replace notifySubscribers with a custom handler', function() {

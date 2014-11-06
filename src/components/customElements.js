@@ -41,18 +41,26 @@
                     return ko.computed(paramValue, null, { disposeWhenNodeIsRemoved: elem });
                 }),
                 result = ko.utils.objectMap(rawParamComputedValues, function(paramValueComputed, paramName) {
+                    var paramValue = paramValueComputed.peek();
                     // Does the evaluation of the parameter value unwrap any observables?
                     if (!paramValueComputed.isActive()) {
                         // No it doesn't, so there's no need for any computed wrapper. Just pass through the supplied value directly.
                         // Example: "someVal: firstName, age: 123" (whether or not firstName is an observable/computed)
-                        return paramValueComputed.peek();
+                        return paramValue;
                     } else {
                         // Yes it does. Supply a computed property that unwraps both the outer (binding expression)
                         // level of observability, and any inner (resulting model value) level of observability.
-                        // This means the component doesn't have to worry about multiple unwrapping.
-                        return ko.computed(function() {
-                            return ko.utils.unwrapObservable(paramValueComputed());
-                        }, null, { disposeWhenNodeIsRemoved: elem });
+                        // This means the component doesn't have to worry about multiple unwrapping. If the value is a
+                        // writable observable, the computed will also be writable and pass the value on to the observable.
+                        return ko.computed({
+                            'read': function() {
+                                return ko.utils.unwrapObservable(paramValueComputed());
+                            },
+                            'write': ko.isWriteableObservable(paramValue) && function(value) {
+                                paramValueComputed()(value);
+                            },
+                            disposeWhenNodeIsRemoved: elem
+                        });
                     }
                 });
 

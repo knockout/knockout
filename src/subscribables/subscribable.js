@@ -104,12 +104,16 @@ var ko_subscribable_fn = {
         return this._subscriptions[event] && this._subscriptions[event].length;
     },
 
-    getSubscriptionsCount: function () {
-        var total = 0;
-        ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
-            total += subscriptions.length;
-        });
-        return total;
+    getSubscriptionsCount: function (event) {
+        if (event) {
+            return this._subscriptions[event] && this._subscriptions[event].length || 0;
+        } else {
+            var total = 0;
+            ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
+                total += subscriptions.length;
+            });
+            return total;
+        }
     },
 
     isDifferent: function(oldValue, newValue) {

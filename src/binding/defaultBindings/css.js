@@ -2,7 +2,7 @@ var classesWrittenByBindingKey = '__ko__cssValue';
 ko.bindingHandlers['css'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        if (typeof value == "object") {
+        if (value !== null && typeof value == "object") {
             ko.utils.objectForEach(value, function(className, shouldHaveClass) {
                 shouldHaveClass = ko.utils.unwrapObservable(shouldHaveClass);
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
