@@ -2,7 +2,10 @@
     This script is included in runner[.jquery|.modernize].js
  */
 var DEBUG = true,
-    jQuery = window.jQuery;
+
+    // Use a different variable name (not 'jQuery') to avoid overwriting
+    // window.jQuery with 'undefined' on IE < 9
+    jQueryInstance = window.jQuery;
 
 /*
     Some helper functions for jasmine on the browser

@@ -79,6 +79,13 @@ PACKAGE_FILES:
   - ./package.json
   - ./bower.json
 
+# Minifier
+# uglify | closure
+minifier: uglify
+
+# Uglify options
+uglify_options: {}
+
 # Closure compiler
 closure_options:
   compilation_level: ADVANCED_OPTIMIZATIONS
@@ -91,7 +98,7 @@ trailingSpaceSources:
   - 'build/fragments/*'
 
 # Listening for changes
-livereload_port: 35728
+livereload_port: 30397
 
 # Source files
 sources:
