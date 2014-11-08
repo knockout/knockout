@@ -483,7 +483,7 @@ describe('Templating', function() {
         var model = {
             testNodes: [
                 document.createTextNode("begin"),
-                document.createElement("div"),
+                document.createElement("span"),
                 document.createTextNode("end")
             ],
             testData: { name: ko.observable("alpha") }
@@ -491,11 +491,11 @@ describe('Templating', function() {
         model.testNodes[1].setAttribute("data-bind", "template: 'innerTemplate'"); // See that bindings are applied to the injected nodes
 
         ko.applyBindings(model, testNode);
-        expect(testNode.childNodes[0]).toContainHtml("begin<div>the name is alpha</div>end");
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is alpha</span>end");
 
         // The injected bindings update to match model changes as usual
         model.testData.name("beta");
-        expect(testNode.childNodes[0]).toContainHtml("begin<div>the name is beta</div>end");
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
     });
 
     it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {
@@ -504,7 +504,7 @@ describe('Templating', function() {
         // This time we'll check that the nodes array doesn't have to be a real array - it can be the .childNodes
         // property of a DOM element, which is subtly different.
         var templateContainer = document.createElement("div");
-        templateContainer.innerHTML = "[<div data-bind='text: name'></div>]";
+        templateContainer.innerHTML = "[<span data-bind='text: name'></span>]";
         var model = {
             testNodes: templateContainer.childNodes,
             testData: ko.observableArray([{ name: ko.observable("alpha") }, { name: "beta" }, { name: "gamma" }])

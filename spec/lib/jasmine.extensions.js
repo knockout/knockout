@@ -26,7 +26,7 @@ jasmine.Matchers.prototype.toContainHtml = function (expectedHtml) {
 };
 
 jasmine.nodeText = function(node) {
-    return 'textContent' in node ? node.textContent : node.innerText;
+    return node.nodeType == 3 ? node.data : 'textContent' in node ? node.textContent : node.innerText;
 }
 
 jasmine.Matchers.prototype.toContainText = function (expectedText) {

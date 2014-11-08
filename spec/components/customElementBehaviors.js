@@ -422,14 +422,13 @@ describe('Components: Custom elements', function() {
             ko.components.unregister('special-list');
         });
 
-        // First define a reusable 'special-list' component that produces a <ul> in which the <li>s have special CSS classes
-        // It also injects and binds a supplied template for each list item
+        // First define a reusable 'special-list' component that produces a <ul> in which the <li>s are filled with the supplied template
         // Note: It would be even simpler to write "template: { nodes: $componentTemplateNodes }", which would also work.
         //       However it's useful to have test coverage for the more longwinded approach of passing nodes via your
         //       viewmodel as well, so retaining the longer syntax for this test.
         ko.components.register('special-list', {
             template: '<ul class="my-special-list" data-bind="foreach: specialListItems">'
-                    +     '<li class="special-list-item" data-bind="template: { nodes: $component.suppliedItemTemplate }">'
+                    +     '<li data-bind="template: { nodes: $component.suppliedItemTemplate }">'
                     +     '</li>'
                     + '</ul>',
             viewModel: {
@@ -445,7 +444,7 @@ describe('Components: Custom elements', function() {
         // Now make some view markup that uses <special-list> and supplies a template to be used inside each list item
         testNode.innerHTML = '<h1>Cheeses</h1>'
                            + '<special-list params="items: cheeses">'
-                           +     '<em data-bind="text: name"></em> has quality <em data-bind="text: quality"></em>'
+                           +     '<em data-bind="text: name">x</em> has quality <em data-bind="text: quality">x</em>'
                            + '</special-list>';
 
         // Finally, bind it all to some data
@@ -462,13 +461,13 @@ describe('Components: Custom elements', function() {
         expect(testNode.childNodes[1].childNodes[0].tagName.toLowerCase()).toEqual('ul');
         expect(testNode.childNodes[1].childNodes[0].className).toEqual('my-special-list');
         expect(testNode.childNodes[1].childNodes[0]).toContainHtml(
-            '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+            '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">brie</em> has quality <em data-bind="text: quality">7</em>'
           + '</li>'
-          + '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+          + '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">cheddar</em> has quality <em data-bind="text: quality">9</em>'
           + '</li>'
-          + '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+          + '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">roquefort</em> has quality <em data-bind="text: quality">3</em>'
           + '</li>'
         );
