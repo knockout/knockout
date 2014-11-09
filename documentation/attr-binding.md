@@ -42,6 +42,14 @@ If you want to apply the attribute `data-something`, you *can't* write this:
 
     <div data-bind="attr: { 'data-something': someValue }">...</div>
 
+### Note: Using reserved words as attribute names in older browsers
+
+In older browsers (ie8 and below) using reserved javascript words as attribute names causes an error. You can get around this by quoting them like this:
+
+    <input data-bind="attr: { 'for': someValue }" />
+
+You can find a good list of reserved words on [Mozilla's MDN page here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#Keywords).
+
 ### Dependencies
 
 None, other than the core Knockout library.
