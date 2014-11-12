@@ -83,10 +83,10 @@ var dummyTemplateEngine = function (templates) {
 dummyTemplateEngine.prototype = new ko.templateEngine();
 
 describe('Templating', function() {
-    beforeEach(function() {
+    beforeEach(jasmine.prepareTestNode);
+    afterEach(function() {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
     });
-    beforeEach(jasmine.prepareTestNode);
 
     it('Template engines can return an array of DOM nodes', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ x: [document.createElement("div"), document.createElement("span")] }));
@@ -1104,25 +1104,4 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes[0].tagName).toEqual("P");
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
     });
-
-    it('Should be posible to render a template in an iframe', function () {
-        testNode.innerHTML = '<iframe src="iframetest.html"></iframe>';
-        var iframe = testNode.childNodes[0], loaded = false;
-        ko.utils.registerEventHandler(iframe, 'load', function() {
-            loaded = true;
-        });
-
-        waitsFor(function () {
-            return loaded;
-        }, 1000);
-
-        runs(function () {
-            var iframeBody = iframe.contentWindow.document.body;
-
-            ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "ABC" }));
-            ko.renderTemplate("someTemplate", null, null, iframeBody);
-            expect(iframeBody.childNodes.length).toEqual(1);
-            expect(iframeBody.innerHTML).toEqual("ABC");
-        });
-    });
-})
+});

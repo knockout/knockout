@@ -3,6 +3,7 @@
 
     function simpleHtmlParse(html, documentContext) {
         documentContext || (documentContext = document);
+        var windowContext = documentContext['parentWindow'] || documentContext['defaultView'] || window;
 
         // Based on jQuery's "clean" function, but only accounting for table-related elements.
         // If you have referenced jQuery, this won't be used anyway - KO will use jQuery's "clean" function directly
@@ -24,8 +25,8 @@
         // Go to html and back, then peel off extra wrappers
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
         var markup = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
-        if (typeof window['innerShiv'] == "function") {
-            div.appendChild(window['innerShiv'](markup));
+        if (typeof windowContext['innerShiv'] == "function") {
+            div.appendChild(windowContext['innerShiv'](markup));
         } else {
             div.innerHTML = markup;
         }
