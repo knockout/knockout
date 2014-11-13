@@ -218,3 +218,17 @@ spec_files:
   - ./spec/defaultBindings/valueBehaviors.js
   - ./spec/defaultBindings/visibleBehaviors.js
   - ./spec/defaultBindings/withBehaviors.js
+
+
+#       TESTING
+#
+# How many concurrent browser streams?
+test_streams: 2
+server_port: 8081
+
+# What Browserstack platforms will be tested?
+# Format here is { os_name: { os_ver: { browser_name: [browser_versions] }}}
+test_platforms:
+  windows:
+    8:
+      chrome: [35, 36]

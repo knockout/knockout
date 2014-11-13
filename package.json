@@ -14,20 +14,6 @@
     "url": "https://github.com/knockout/knockout.git"
   },
   "bugs": "https://github.com/knockout/knockout/issues",
-  "testling": {
-    "preprocess": "gulp runner",
-    "html": "runner.html",
-    "browsers": [
-      "ie/6..latest",
-      "chrome/20..latest",
-      "firefox/3..latest",
-      "safari/5.0.5..latest",
-      "opera/11.0..latest",
-      "iphone/6..latest",
-      "ipad/6..latest",
-      "android-browser/4.2..latest"
-    ]
-  },
   "licenses": [
     {
       "type": "MIT",
@@ -37,6 +23,7 @@
   "devDependencies": {
     "closure-compiler": "^0.2.6",
     "colors": "^1.0.3",
+    "extend": "^2.0.0",
     "gulp": "^3.8.10",
     "gulp-bump": "^0.1.11",
     "gulp-clean": "^0.3.1",
@@ -55,10 +42,14 @@
     "gulp-uglify": "^1.0.1",
     "gulp-util": "^2.2.20",
     "gulp-watch": "^0.5.4",
+    "gulp-webserver": "^0.8.7",
     "jasmine-tapreporter": "^0.2.2",
     "js-yaml": "^3.2.2",
     "jshint-stylish": "^1.0.0",
+    "lodash": "^2.4.1",
+    "q": "^1.1.1",
     "through": "^2.3.6",
-    "vinyl-map": "^1.0.1"
+    "vinyl-map": "^1.0.1",
+    "wd": "^0.3.11"
   }
 }

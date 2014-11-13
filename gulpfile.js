@@ -7,12 +7,15 @@ require('colors')
 
 var
     /* Imports */
+    _ = require('lodash'),
     fs = require('fs'),
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
     vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
     yaml = require("js-yaml"),
+    Q = require('q'),
+    http = require('http'),
 
     // Our settings
     pkg = require('./package.json'),
@@ -61,8 +64,78 @@ gulp.task("test:npm", ['build', 'runner'], function () {
         .pipe(plugins.jasmine({verbose: true}))
 })
 
-// TODO: test:phantomjs
-gulp.task('test', ['test:npm']);
+// Webdriver testing
+// This is a simpler version of what's in knockout-secure-binding.
+
+gulp.task('webserver', function () {
+    return gulp.src('./')
+        .pipe(plugins.webserver({port: config.server_port}));
+});
+
+gulp.task("test:webdriver", ['webserver'], function () {
+    var idx = 0,
+        failed_platforms = 0,
+        platforms = [],
+        streams = [],
+        runner = require('./spec/webdriverRunner.js');
+
+    _.each(config.test_platforms, function (os_version_browser_map, os) {
+        // os_version_browser_map maps a version of the os to an object
+        // with {browser:[versions]}.
+        _.each(os_version_browser_map, function(browsers_map, os_version) {
+            _.each(browsers_map, function(browser_versions, browser_name) {
+                _.each(browser_versions, function (browser_version) {
+                    platforms.push({
+                        os: os,
+                        os_version: os_version,
+                        browser: browser_name,
+                        browserName: browser_name,
+                        browser_version: browser_version,
+                        name: "" + os + "/" + os_version + " " + browser_name
+                            + ":" + browser_version,
+                    });
+                })
+            })
+        })
+    })
+
+    console.log("Platforms: ", _.pluck(platforms, 'name'))
+
+    function test_platform_promise() {
+        if (idx >= platforms.length) {
+            return
+        }
+        var platform = platforms[idx++];
+        return runner
+            .start_tests(platform, config)
+            .then(function () {
+              gutil.log(platform.name + ":  ✓  ".green + "all tests passed.")
+            })
+            .fail(function (msg) {
+                failed_platforms++;
+                gutil.log("Fail [" + platform.name + "] " + msg);
+            })
+            .then(function () {
+                // On to the next platform; chain the promises.
+                return test_platform_promise();
+            })
+    }
+
+    while (config.test_streams--) {
+        streams.push(test_platform_promise())
+    }
+
+    Q.all(streams)
+        .then(function () {
+            gutil.log("Tested " + idx + " platforms.");
+            gutil.log("" + failed_platforms + " platforms failed.");
+            process.exit(failed_platforms);
+        })
+        .done()
+})
+
+
+gulp.task('test', ['build', 'runner', 'test:npm']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];
