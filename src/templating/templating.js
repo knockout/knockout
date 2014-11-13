@@ -77,40 +77,42 @@
                                         : null;
     }
 
-    function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options) {
+    function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options, callback) {
         options = options || {};
         var firstTargetNode = targetNodeOrNodeArray && getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
         var templateDocument = firstTargetNode && firstTargetNode.ownerDocument;
         var templateEngineToUse = (options['templateEngine'] || _templateEngine);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse, templateDocument);
-        var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options, templateDocument);
 
-        // Loosely check result is an array of DOM nodes
-        if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
-            throw new Error("Template engine must return an array of DOM nodes");
+        templateEngineToUse['renderTemplate'](template, bindingContext, options, templateDocument, function (renderedNodesArray) {
 
-        var haveAddedNodesToParent = false;
-        switch (renderMode) {
-            case "replaceChildren":
-                ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray);
-                haveAddedNodesToParent = true;
-                break;
-            case "replaceNode":
-                ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray);
-                haveAddedNodesToParent = true;
-                break;
-            case "ignoreTargetNode": break;
-            default:
-                throw new Error("Unknown renderMode: " + renderMode);
-        }
+            // Loosely check result is an array of DOM nodes
+            if ((typeof renderedNodesArray.length != "number") || (renderedNodesArray.length > 0 && typeof renderedNodesArray[0].nodeType != "number"))
+                throw new Error("Template engine must return an array of DOM nodes");
 
-        if (haveAddedNodesToParent) {
-            activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
-            if (options['afterRender'])
-                ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
-        }
+            var haveAddedNodesToParent = false;
+            switch (renderMode) {
+                case "replaceChildren":
+                    ko.virtualElements.setDomNodeChildren(targetNodeOrNodeArray, renderedNodesArray);
+                    haveAddedNodesToParent = true;
+                    break;
+                case "replaceNode":
+                    ko.utils.replaceDomNodes(targetNodeOrNodeArray, renderedNodesArray);
+                    haveAddedNodesToParent = true;
+                    break;
+                case "ignoreTargetNode": break;
+                default:
+                    throw new Error("Unknown renderMode: " + renderMode);
+            }
 
-        return renderedNodesArray;
+            if (haveAddedNodesToParent) {
+                activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
+                if (options['afterRender'])
+                    ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
+            }
+
+            callback(renderedNodesArray);
+        });
     }
 
     function resolveTemplateName(template, data, context) {
@@ -146,13 +148,13 @@
                         ? dataOrBindingContext
                         : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
 
-                    var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext),
-                        renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
-
-                    if (renderMode == "replaceNode") {
-                        targetNodeOrNodeArray = renderedNodesArray;
-                        firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
-                    }
+                    var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext);
+                    executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options, function (renderedNodesArray) {
+                        if (renderMode == "replaceNode") {
+                            targetNodeOrNodeArray = renderedNodesArray;
+                            firstTargetNode = getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
+                        }
+                    });
                 },
                 null,
                 { disposeWhen: whenToDispose, disposeWhenNodeIsRemoved: activelyDisposeWhenNodeIsRemoved }
@@ -171,14 +173,14 @@
         var arrayItemContext;
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
-        var executeTemplateForArrayItem = function (arrayValue, index) {
+        var executeTemplateForArrayItem = function (arrayValue, index, oldMappedNodes, callback) {
             // Support selecting template as a function of the data being rendered
             arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
                 context['$index'] = index;
             });
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
-            return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
+            executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options, callback);
         }
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode

@@ -21,14 +21,14 @@ var dummyTemplateEngine = function (templates) {
         }
     }
 
-    this.makeTemplateSource = function(template) {
+    this.makeTemplateSource = function(template, templateDocument, callback) {
         if (typeof template == "string")
-            return new dummyTemplateSource(template); // Named template comes from the in-memory collection
+            callback(new dummyTemplateSource(template)); // Named template comes from the in-memory collection
         else if ((template.nodeType == 1) || (template.nodeType == 8))
-            return new ko.templateSources.anonymousTemplate(template); // Anonymous template
+            callback(new ko.templateSources.anonymousTemplate(template)); // Anonymous template
     };
 
-    this.renderTemplateSource = function (templateSource, bindingContext, options) {
+    this.renderTemplateSource = function (templateSource, bindingContext, options, callback) {
         var data = bindingContext['$data'];
         options = options || {};
         var templateText = templateSource.text();
@@ -68,14 +68,16 @@ var dummyTemplateEngine = function (templates) {
 
         // Use same HTML parsing code as real template engine so as to trigger same combination of IE weirdnesses
         // Also ensure resulting nodelist is an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result));
+        callback(ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result)));
     };
 
-    this.rewriteTemplate = function (template, rewriterCallback) {
+    this.rewriteTemplate = function (template, rewriterCallback, templateDocument) {
         // Only rewrite if the template isn't a function (can't rewrite those)
-        var templateSource = this.makeTemplateSource(template);
-        if (typeof templateSource.text() != "function")
-            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
+        var self = this;
+        this.makeTemplateSource(template, templateDocument, function (templateSource) {
+            if (typeof templateSource.text() != "function")
+                ko.templateEngine.prototype.rewriteTemplate.call(self, template, rewriterCallback);
+        });
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };

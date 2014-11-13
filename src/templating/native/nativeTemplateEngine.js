@@ -4,16 +4,16 @@ ko.nativeTemplateEngine = function () {
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype.constructor = ko.nativeTemplateEngine;
-ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options) {
+ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSource, bindingContext, options, callback) {
     var useNodesIfAvailable = !(ko.utils.ieVersion < 9), // IE<9 cloneNode doesn't work properly
         templateNodesFunc = useNodesIfAvailable ? templateSource['nodes'] : null,
         templateNodes = templateNodesFunc ? templateSource['nodes']() : null;
 
     if (templateNodes) {
-        return ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
+        callback(ko.utils.makeArray(templateNodes.cloneNode(true).childNodes));
     } else {
         var templateText = templateSource['text']();
-        return ko.utils.parseHtmlFragment(templateText);
+        callback(ko.utils.parseHtmlFragment(templateText));
     }
 };
 

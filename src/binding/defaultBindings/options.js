@@ -68,7 +68,7 @@ ko.bindingHandlers['options'] = {
         // The second is when an observable value for a specific array entry is updated.
         // oldOptions will be empty in the first case, but will be filled with the previously generated option in the second.
         var itemUpdate = false;
-        function optionForArrayItem(arrayEntry, index, oldOptions) {
+        function optionForArrayItem(arrayEntry, index, oldOptions, callback) {
             if (oldOptions.length) {
                 previousSelectedValues = oldOptions[0].selected ? [ ko.selectExtensions.readValue(oldOptions[0]) ] : [];
                 itemUpdate = true;
@@ -86,7 +86,7 @@ ko.bindingHandlers['options'] = {
                 var optionText = applyToObject(arrayEntry, allBindings.get('optionsText'), optionValue);
                 ko.utils.setTextContent(option, optionText);
             }
-            return [option];
+            callback([option]);
         }
 
         // By using a beforeRemove callback, we delay the removal until after new items are added. This fixes a selection

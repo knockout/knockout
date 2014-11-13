@@ -27,7 +27,7 @@
             return jQueryInstance['tmpl'](compiledTemplate, data, jQueryTemplateOptions);
         }
 
-        this['renderTemplateSource'] = function(templateSource, bindingContext, options) {
+        this['renderTemplateSource'] = function(templateSource, bindingContext, options, callback) {
             options = options || {};
             ensureHasReferencedJQueryTemplates();
 
@@ -49,7 +49,7 @@
             resultNodes['appendTo'](document.createElement("div")); // Using "appendTo" forces jQuery/jQuery.tmpl to perform necessary cleanup work
 
             jQueryInstance['fragments'] = {}; // Clear jQuery's fragment cache to avoid a memory leak after a large number of template renders
-            return resultNodes;
+            callback(resultNodes);
         };
 
         this['createJavaScriptEvaluatorBlock'] = function(script) {

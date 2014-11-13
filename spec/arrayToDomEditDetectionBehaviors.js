@@ -11,12 +11,12 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should populate the DOM node by mapping array elements', function () {
         var array = ["A", "B"];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             var output1 = document.createElement("DIV");
             var output2 = document.createElement("DIV");
             output1.innerHTML = arrayItem + "1";
             output2.innerHTML = arrayItem + "2";
-            return [output1, output2];
+            callback([output1, output2]);
         };
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, array, mapping);
         expect(testNode.childNodes.length).toEqual(4);
@@ -28,9 +28,9 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should only call the mapping function for new array elements', function () {
         var mappingInvocations = [];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             mappingInvocations.push(arrayItem);
-            return null;
+            callback(null);
         };
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B"], mapping);
         expect(mappingInvocations).toEqual(["A", "B"]);
@@ -42,12 +42,12 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should retain existing node instances if the array is unchanged', function () {
         var array = ["A", "B"];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             var output1 = document.createElement("DIV");
             var output2 = document.createElement("DIV");
             output1.innerHTML = arrayItem + "1";
             output2.innerHTML = arrayItem + "2";
-            return [output1, output2];
+            callback([output1, output2]);
         };
 
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, array, mapping);
@@ -61,11 +61,11 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should insert added nodes at the corresponding place in the DOM', function () {
         var mappingInvocations = [];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
             output.innerHTML = arrayItem;
-            return [output];
+            callback([output]);
         };
 
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B"], mapping);
@@ -80,11 +80,11 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should remove deleted nodes from the DOM', function () {
         var mappingInvocations = [];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
             output.innerHTML = arrayItem;
-            return [output];
+            callback([output]);
         };
 
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["first", "A", "middle1", "middle2", "B", "last"], mapping);
@@ -101,11 +101,11 @@ describe('Array to DOM node children mapping', function() {
         // Represents https://github.com/SteveSanderson/knockout/issues/413
         // Ideally, people wouldn't be mutating the generated DOM manually. But this didn't error in v2.0, so we should try to avoid introducing a break.
         var mappingInvocations = [];
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
             output.innerHTML = arrayItem;
-            return [output];
+            callback([output]);
         };
 
         ko.utils.setDomNodeChildrenFromArrayMapping(testNode, ["A", "B", "C"], mapping);
@@ -123,11 +123,11 @@ describe('Array to DOM node children mapping', function() {
 
     it('Should handle sequences of mixed insertions and deletions', function () {
         var mappingInvocations = [], countCallbackInvocations = 0;
-        var mapping = function (arrayItem) {
+        var mapping = function (arrayItem, index, oldMappedNodes, callback) {
             mappingInvocations.push(arrayItem);
             var output = document.createElement("DIV");
             output.innerHTML = ko.utils.unwrapObservable(arrayItem) || "null";
-            return [output];
+            callback([output]);
         };
         var callback = function(arrayItem, nodes) {
             ++countCallbackInvocations;
