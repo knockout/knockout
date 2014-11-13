@@ -210,9 +210,10 @@ describe('Components: Custom elements', function() {
                 this.receivedobservable = params.suppliedobservable;
                 this.dispose = function() { this.wasDisposed = true; };
 
-                // See we didn't get the original observable instance. Instead we got a computed property.
+                // See we didn't get the original observable instance. Instead we got a read-only computed property.
                 expect(this.receivedobservable).not.toBe(rootViewModel.myobservable);
                 expect(ko.isComputed(this.receivedobservable)).toBe(true);
+                expect(ko.isWritableObservable(this.receivedobservable)).toBe(false);
 
                 // The $raw value for this param is a computed property whose value is raw result
                 // of evaluating the binding value. Since the raw result in this case is itself not
@@ -247,13 +248,16 @@ describe('Components: Custom elements', function() {
         expect(rootViewModel.myobservable.getSubscriptionsCount()).toBe(0);
     });
 
-    it('Is possible to pass expressions that can vary observably and evaluate as observable instances', function() {
+    it('Is possible to pass expressions that can vary observably and evaluate as writable observable instances', function() {
         var constructorCallCount = 0;
         ko.components.register('test-component', {
-            template: '<p>the value: <span data-bind="text: myval"></span></p>',
+            template: '<input data-bind="value: myval"/>',
             viewModel: function(params) {
                 constructorCallCount++;
                 this.myval = params.somevalue;
+
+                // See we received a writable observable
+                expect(ko.isWritableObservable(this.myval)).toBe(true);
 
                 // See we received a computed, not either of the original observables
                 expect(ko.isComputed(this.myval)).toBe(true);
@@ -278,26 +282,37 @@ describe('Components: Custom elements', function() {
         testNode.innerHTML = '<test-component params="somevalue: outer().inner"></test-component>';
         ko.applyBindings({ outer: outerObservable }, testNode);
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText('the value: inner1');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner1');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
 
         // See we can mutate the inner value and see the result show up
         innerObservable('inner2');
-        expect(testNode).toContainText('the value: inner2');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('inner2');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
 
+        // See that we can mutate the observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'inner3';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(innerObservable()).toEqual('inner3');
+
         // See we can mutate the outer value and see the result show up (cleaning subscriptions to the old inner value)
         var newInnerObservable = ko.observable('newinner');
         outerObservable({ inner: newInnerObservable });
-        expect(testNode).toContainText('the value: newinner');
+        expect(testNode.childNodes[0].childNodes[0].value).toEqual('newinner');
         expect(outerObservable.getSubscriptionsCount()).toBe(1);
         expect(innerObservable.getSubscriptionsCount()).toBe(0);
         expect(newInnerObservable.getSubscriptionsCount()).toBe(1);
         expect(constructorCallCount).toBe(1);
+
+        // See that we can mutate the new observable from within the component
+        testNode.childNodes[0].childNodes[0].value = 'newinner2';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], 'change');
+        expect(newInnerObservable()).toEqual('newinner2');
+        expect(innerObservable()).toEqual('inner3');    // original one hasn't changed
 
         // See that subscriptions are disposed when the component is
         ko.cleanNode(testNode);
@@ -407,14 +422,13 @@ describe('Components: Custom elements', function() {
             ko.components.unregister('special-list');
         });
 
-        // First define a reusable 'special-list' component that produces a <ul> in which the <li>s have special CSS classes
-        // It also injects and binds a supplied template for each list item
+        // First define a reusable 'special-list' component that produces a <ul> in which the <li>s are filled with the supplied template
         // Note: It would be even simpler to write "template: { nodes: $componentTemplateNodes }", which would also work.
         //       However it's useful to have test coverage for the more longwinded approach of passing nodes via your
         //       viewmodel as well, so retaining the longer syntax for this test.
         ko.components.register('special-list', {
             template: '<ul class="my-special-list" data-bind="foreach: specialListItems">'
-                    +     '<li class="special-list-item" data-bind="template: { nodes: $component.suppliedItemTemplate }">'
+                    +     '<li data-bind="template: { nodes: $component.suppliedItemTemplate }">'
                     +     '</li>'
                     + '</ul>',
             viewModel: {
@@ -430,7 +444,7 @@ describe('Components: Custom elements', function() {
         // Now make some view markup that uses <special-list> and supplies a template to be used inside each list item
         testNode.innerHTML = '<h1>Cheeses</h1>'
                            + '<special-list params="items: cheeses">'
-                           +     '<em data-bind="text: name"></em> has quality <em data-bind="text: quality"></em>'
+                           +     '<em data-bind="text: name">x</em> has quality <em data-bind="text: quality">x</em>'
                            + '</special-list>';
 
         // Finally, bind it all to some data
@@ -447,13 +461,13 @@ describe('Components: Custom elements', function() {
         expect(testNode.childNodes[1].childNodes[0].tagName.toLowerCase()).toEqual('ul');
         expect(testNode.childNodes[1].childNodes[0].className).toEqual('my-special-list');
         expect(testNode.childNodes[1].childNodes[0]).toContainHtml(
-            '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+            '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">brie</em> has quality <em data-bind="text: quality">7</em>'
           + '</li>'
-          + '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+          + '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">cheddar</em> has quality <em data-bind="text: quality">9</em>'
           + '</li>'
-          + '<li class="special-list-item" data-bind="template: { nodes: $component.supplieditemtemplate }">'
+          + '<li data-bind="template: { nodes: $component.supplieditemtemplate }">'
           +     '<em data-bind="text: name">roquefort</em> has quality <em data-bind="text: quality">3</em>'
           + '</li>'
         );

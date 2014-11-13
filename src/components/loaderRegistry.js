@@ -53,6 +53,8 @@
                 // You can bypass the 'always synchronous' feature by putting the synchronous:true
                 // flag on your component configuration when you register it.
                 if (completedAsync || isSynchronousComponent) {
+                    // Note that notifySubscribers ignores any dependencies read within the callback.
+                    // See comment in loaderRegistryBehaviors.js for reasoning
                     subscribable['notifySubscribers'](definition);
                 } else {
                     setTimeout(function() {

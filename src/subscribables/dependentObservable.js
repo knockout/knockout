@@ -110,7 +110,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             try {
                 // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
                 // Then, during evaluation, we cross off any that are in fact still being used.
-                var disposalCandidates = _subscriptionsToDependencies, disposalCount = _dependenciesCount;
+                var disposalCandidates = _subscriptionsToDependencies,
+                    disposalCount = _dependenciesCount,
+                    isInitial = pure ? undefined : !_dependenciesCount;   // If we're evaluating when there are no previous dependencies, it must be the first time
+
                 ko.dependencyDetection.begin({
                     callback: function(subscribable, id) {
                         if (!_isDisposed) {
@@ -127,7 +130,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                         }
                     },
                     computed: dependentObservable,
-                    isInitial: pure ? undefined : !_dependenciesCount        // If we're evaluating when there are no previous dependencies, it must be the first time
+                    isInitial: isInitial
                 });
 
                 _subscriptionsToDependencies = {};
@@ -150,14 +153,18 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 }
 
                 if (dependentObservable.isDifferent(_latestValue, newValue)) {
-                    dependentObservable["notifySubscribers"](_latestValue, "beforeChange");
+                    notify(_latestValue, "beforeChange");
 
                     _latestValue = newValue;
                     if (DEBUG) dependentObservable._latestValue = _latestValue;
 
                     if (suppressChangeNotification !== true) {  // Check for strict true value since setTimeout in Firefox passes a numeric value to the function
-                        dependentObservable["notifySubscribers"](_latestValue);
+                        notify(_latestValue);
                     }
+                }
+
+                if (isInitial) {
+                    notify(_latestValue, "awake");
                 }
             } finally {
                 _isBeingEvaluated = false;
@@ -198,6 +205,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         return _needsEvaluation || _dependenciesCount > 0;
     }
 
+    function notify(value, event) {
+        dependentObservable["notifySubscribers"](value, event);
+    }
+
     // By here, "options" is always non-null
     var writeFunction = options["write"],
         disposeWhenNodeIsRemoved = options["disposeWhenNodeIsRemoved"] || options.disposeWhenNodeIsRemoved || null,
@@ -216,7 +227,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
     dependentObservable.peek = peek;
     dependentObservable.getDependenciesCount = function () { return _dependenciesCount; };
-    dependentObservable.hasWriteFunction = typeof options["write"] === "function";
+    dependentObservable.hasWriteFunction = typeof writeFunction === "function";
     dependentObservable.dispose = function () { dispose(); };
     dependentObservable.isActive = isActive;
 
@@ -238,25 +249,31 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     if (options['pure']) {
         pure = true;
         isSleeping = true;     // Starts off sleeping; will awake on the first subscription
-        dependentObservable.beforeSubscriptionAdd = function () {
+        dependentObservable.beforeSubscriptionAdd = function (event) {
             // If asleep, wake up the computed and evaluate to register any dependencies.
-            if (isSleeping) {
+            if (event == 'change' && isSleeping) {
                 isSleeping = false;
                 _needsEvaluation = true;
                 evaluateImmediate(true /* suppressChangeNotification */);
+                if (!_isDisposed) {     // test since evaluateImmediate could trigger disposal
+                    notify(_latestValue, "awake");
+                }
             }
         }
-        dependentObservable.afterSubscriptionRemove = function () {
-            if (!dependentObservable.getSubscriptionsCount()) {
+        dependentObservable.afterSubscriptionRemove = function (event) {
+            if (event == 'change' && !dependentObservable.hasSubscriptionsForEvent('change')) {
                 disposeAllSubscriptionsToDependencies();
                 isSleeping = true;
+                notify(undefined, "asleep");
             }
         }
     } else if (options['deferEvaluation']) {
         // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
-        dependentObservable.beforeSubscriptionAdd = function () {
-            peek();
-            delete dependentObservable.beforeSubscriptionAdd;
+        dependentObservable.beforeSubscriptionAdd = function (event) {
+            if (event == 'change' || event == 'beforeChange') {
+                peek();
+                delete dependentObservable.beforeSubscriptionAdd;
+            }
         }
     }
 
