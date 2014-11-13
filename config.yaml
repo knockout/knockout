@@ -157,9 +157,23 @@ sources:
   - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
 
 
-# Test files
-node_spec: spec/helpers/spec.node.js
+# Test files -- Node
+node_spec_files:
+  - ./spec/helpers/beforeEach.js
+  - ./spec/arrayEditDetectionBehaviors.js
+  - ./spec/asyncBehaviors.js
+  - ./spec/dependentObservableBehaviors.js
+  - ./spec/pureComputedBehaviors.js
+  - ./spec/expressionRewritingBehaviors.js
+  - ./spec/extenderBehaviors.js
+  - ./spec/mappingHelperBehaviors.js
+  - ./spec/observableArrayBehaviors.js
+  - ./spec/observableArrayChangeTrackingBehaviors.js
+  - ./spec/observableBehaviors.js
+  - ./spec/subscribableBehaviors.js
+  - ./spec/utilsBehaviors.js
 
+# Test files -- Phantom/etc
 spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/arrayToDomEditDetectionBehaviors.js

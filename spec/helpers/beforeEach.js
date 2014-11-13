@@ -60,7 +60,7 @@ matchers.toThrowContaining = function(expected) {
         var expectation = "Expected " + this.actual.toString() + notText + " to throw exception containing '" + expected + "'";
         var result = exception ? (", but it threw '" + exceptionMessage + "'") : ", but it did not throw anything";
         return expectation + result;
-    }
+    };
 
     return exception ? this.env.contains_(exceptionMessage, expected) : false;
 };

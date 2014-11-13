@@ -54,11 +54,15 @@ gulp.task("lint", ['checkTrailingSpaces'], function () {
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
 
-gulp.task("test", ['build', 'runner'], function () {
+gulp.task("test:npm", ['build', 'runner'], function () {
     global.ko = require("./" + config.buildDir + config.build.main)
-    return gulp.src(config.node_spec)
-        .pipe(plugins.jasmine())
+    global.DEBUG = true
+    return gulp.src(config.node_spec_files)
+        .pipe(plugins.jasmine({verbose: true}))
 })
+
+// TODO: test:phantomjs
+gulp.task('test', ['test:npm']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];
@@ -283,28 +287,43 @@ gulp.task("runner", function () {
         .pipe(gulp.dest("./"))
 })
 
+// a little help.
+var task_help = {
+    help: 'Print this help message.',
+    build: 'Create build/output/knockout-latest.js',
+    checkTrailingSpaces: 'Check for trailing whitespace.',
+    lint: 'Check for fuzzies.',
+    release: 'Create new release of Knockout; see release.js',
+    test: 'run node tests (spec/spec.node.js)',
+    watch: 'Watch scripts; livereload runner.*.html on changes.',
+    'build-debug': 'Create build/output/knockout-latest.debug.js',
+    'bump-major': 'Bump version from N.x.x to N+1.x.x',
+    'bump-minor': 'Bump version from x.N.x to x.N+1.x',
+    'bump-patch': 'Bump version from x.x.N to x.x.N+1',
+    clean: "Remove build/output/*.js and dist/. and runner*.html",
+    runner: 'Create runner[.jquery|.modernizr].html',
+}
+
 gulp.task('help', function () {
     gutil.log('')
     gutil.log("Usage: gulp task".red)
     gutil.log('')
 
-    Object.keys(gulp.tasks).sort().forEach(function (task_name) {
-        var tstr = "   " + task_name.cyan,
-            task = gulp.tasks[task_name];
-        if (!task.doc) {
-            // skip tasks with no doc string.
-            return;
-        }
-        if (task.dep.length > 0) {
-            tstr += " (runs: " + task.dep.join(", ") + ")"
-        }
-        gutil.log(tstr)
-        gutil.log("      " + task.doc)
-    })
+    Object.keys(task_help).sort()
+        .forEach(function (task_name) {
+            var tstr = "   " + task_name.cyan,
+                help_str = task_help[task_name],
+                task = gulp.tasks[task_name];
+            if (task.dep.length > 0) {
+                tstr += " [" + task.dep.join(", ") + "]";
+            }
+            gutil.log(tstr);
+            gutil.log("      " + help_str);
+        });
     gutil.log('')
 })
 
-// a little help.
+
 gulp.tasks.help.doc = 'Print this help message.'
 gulp.tasks.build.doc = 'Create build/output/knockout-latest.js'
 gulp.tasks.checkTrailingSpaces.doc = 'Check for trailing whitespace.'
