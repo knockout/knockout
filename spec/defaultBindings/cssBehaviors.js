@@ -82,4 +82,18 @@ describe('Binding: CSS classes', function() {
             expect(testNode.childNodes[0].getAttribute('class')).toEqual("Y x");
         });
     }
+
+    it('Should change dynamic CSS class(es) if null is specified', function() {
+        // See https://github.com/knockout/knockout/issues/1468
+        var observable1 = new ko.observable({});
+        testNode.innerHTML = "<div class='unrelatedClass1' data-bind='css: someModelProperty'>Hallo</div>";
+        ko.applyBindings({ someModelProperty: observable1 }, testNode);
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+        observable1("my-Rule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
+        observable1(null);
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+        observable1("my-Rule");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
+    });
 });
