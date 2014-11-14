@@ -8,5 +8,5 @@ env:
 before_script:
   - wget https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
   - "unzip BrowserStackLocal*"
-  - "./BrowserStackLocal $BS_KEY localhost,7777,0 &"
+  - "./BrowserStackLocal $BS_KEY -f `pwd`&"
   - sleep 1
