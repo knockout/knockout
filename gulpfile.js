@@ -107,11 +107,13 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
         .then(function () {
             var failed_platform_names = failed_platforms.map(function (fp) { return fp.name });
             gutil.log()
-            gutil.log("Webdriver tested " + idx + " platforms.\n" +
-                      "" + failed_platforms.length + " platforms failed." +
-                      "\n - " + failed_platform_names.sort().join("\n - "));
+            gutil.log("Webdriver tested " + idx + " platforms. " +
+                      "" + failed_platforms.length + " platforms failed.\n - " +
+                      failed_platform_names.sort().join("\n - "));
+            if (failed_platforms.length > 0)
+                // Force a non-zero return code from our process.
+                throw new Error("Some webdriver tests failed.")
             done();
-            process.exit(failed_platforms);
         })
         .done()
 })
