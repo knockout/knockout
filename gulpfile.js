@@ -87,11 +87,11 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
         return runner
             .start_tests(platform, config)
             .then(function () {
-              gutil.log("  ✓  ".green + platform.name)
+                gutil.log("  ✓  ".green + platform.name)
             })
             .fail(function (msg) {
                 failed_platforms.push(platform);
-                gutil.log("FAIL".bgRed.yellow + " " + platform.name + ":\n" + msg);
+                gutil.log("FAIL".bgRed.white.bold + " " + platform.name + ":\n" + msg);
             })
             .then(function () {
                 // On to the next platform; chain the promises.

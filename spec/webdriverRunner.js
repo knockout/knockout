@@ -51,8 +51,8 @@ function start_tests(platform, config) {
 
   process.on("SIGINT", on_sigint);
 
-  gutil.log();
-  gutil.log(platform.name.yellow + ": Starting.")
+  gutil.log(platform.name.blue +  " <-o-> Initiating browser")
+
   // gutil.log("Connecting to Webdriver at " + wd_host.blue + ":" + (""+wd_port).blue)
 
   function on_results(fails) {
@@ -62,6 +62,7 @@ function start_tests(platform, config) {
   }
 
   function on_fin() {
+    gutil.log(platform.name.yellow +  " <-/-> Closing browser connection")
     return browser
       .quit()
       .fin(function () {
@@ -73,8 +74,7 @@ function start_tests(platform, config) {
     .init(capabilities)
     .setAsyncScriptTimeout(config.webdriver.timeout)
     .get(uri)
-    .waitForConditionInBrowser("window.tests_complete", config.webdriver.timeout,
-                               config.webdriver.poll)
+    .waitForConditionInBrowser("window && window.tests_complete")
     .safeExecute("window.fails")
     .then(on_results)
     .fin(on_fin)
