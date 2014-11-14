@@ -7,7 +7,6 @@ require('colors')
 
 var
     /* Imports */
-    _ = require('lodash'),
     fs = require('fs'),
     gulp = require('gulp'),
     plugins = require("gulp-load-plugins")(),
@@ -66,40 +65,19 @@ gulp.task("test:npm", ['build', 'runner'], function () {
 
 // Webdriver testing
 // This is a simpler version of what's in knockout-secure-binding.
-
-gulp.task('webserver', function () {
-    return gulp.src('./')
-        .pipe(plugins.webserver({port: config.server_port}));
-});
-
-gulp.task("test:webdriver", ['webserver'], function () {
+gulp.task("test:webdriver", function (done) {
     var idx = 0,
-        failed_platforms = 0,
-        platforms = [],
+        failed_platforms = [],
+        platforms = config.test_platforms,
         streams = [],
         runner = require('./spec/webdriverRunner.js');
 
-    _.each(config.test_platforms, function (os_version_browser_map, os) {
-        // os_version_browser_map maps a version of the os to an object
-        // with {browser:[versions]}.
-        _.each(os_version_browser_map, function(browsers_map, os_version) {
-            _.each(browsers_map, function(browser_versions, browser_name) {
-                _.each(browser_versions, function (browser_version) {
-                    platforms.push({
-                        os: os,
-                        os_version: os_version,
-                        browser: browser_name,
-                        browserName: browser_name,
-                        browser_version: browser_version,
-                        name: "" + os + "/" + os_version + " " + browser_name
-                            + ":" + browser_version,
-                    });
-                })
-            })
-        })
-    })
-
-    console.log("Platforms: ", _.pluck(platforms, 'name'))
+    platforms.forEach(function(p) {
+        p.name = "" + (p.os||p.platform)+ "/" +
+                 (p.os_version||p.device) + " " +
+                 (p.browser||p.browserName) +
+                 (p.browser_version ? ":" + p.browser_version : '');
+    });
 
     function test_platform_promise() {
         if (idx >= platforms.length) {
@@ -109,11 +87,11 @@ gulp.task("test:webdriver", ['webserver'], function () {
         return runner
             .start_tests(platform, config)
             .then(function () {
-              gutil.log(platform.name + ":  ✓  ".green + "all tests passed.")
+              gutil.log("  ✓  ".green + platform.name)
             })
             .fail(function (msg) {
-                failed_platforms++;
-                gutil.log("Fail [" + platform.name + "] " + msg);
+                failed_platforms.push(platform);
+                gutil.log("FAIL".bgRed.yellow + " " + platform.name + ":\n" + msg);
             })
             .then(function () {
                 // On to the next platform; chain the promises.
@@ -127,8 +105,12 @@ gulp.task("test:webdriver", ['webserver'], function () {
 
     Q.all(streams)
         .then(function () {
+            var failed_platform_names = failed_platforms.map(function (fp) { return fp.name });
+            gutil.log()
             gutil.log("Tested " + idx + " platforms.");
-            gutil.log("" + failed_platforms + " platforms failed.");
+            gutil.log("" + failed_platforms.length + " platforms failed:" +
+                      "\n - " + failed_platform_names.join("\n - "));
+            done();
             process.exit(failed_platforms);
         })
         .done()
