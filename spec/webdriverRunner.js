@@ -1,17 +1,13 @@
 //
 //  Automated testing of Knockout
 //
-// Run local tests on Sauce Labs with:
-// $ WD_HOST=localhost
-//     WD_PORT=4445 SAUCE_USERNAME=brianmhunt
-//     SAUCE_ACCESS_KEY=... npm test
-// ^^^ requires Sauce Connect to be listening on 4445.
 //
 // Run local tests with BrowserStack with e.g.
 //  knockout $ ./BrowserStackLocal <<KEY>> -f `pwd`
 //  knockout $ WD_HOST=hub.browserstack.com WD_PORT=80
-//    BS_KEY=<<key>> BS_USER=brianhunt1
+//    WD_USER=brianhunt1 WD_TOKEN=<<key>>
 //    gulp test
+// 
 require('colors')
 
 var wd = require('wd'),
@@ -19,11 +15,10 @@ var wd = require('wd'),
     extend = require('extend'),
     path = require('path'),
     env = process.env,
-    username = env.BS_USER || env.WD_USER,
-    token = env.BS_KEY || env.WD_TOKEN;
+    token = env.WD_TOKEN;
 
-if (!username || !token) {
-  throw new Error("Set WD_USER and WD_TOKEN in your environment to that of your BrowserStack account.");
+if (!token) {
+  throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
 }
 
 var on_sigint = function () {
@@ -37,19 +32,19 @@ var on_sigint = function () {
 
 exports.start_tests =
 function start_tests(platform, config) {
-  var capabilities = extend({
+  var username = env.WD_USER || config.webdriver.user;
+      capabilities = extend({
         'browserstack.local': true,
         'tunner-identifier': env.TRAVIS_JOB_NUMBER || "",
         build: env.CI_AUTOMATE_BUILD || 'Manual',
         javascriptEnabled: true,
         name: 'Knockout',
-        project: env.BS_AUTOMATE_PROJECT || 'local - Knockout',
+        project: env.CI_AUTOMATE_PROJECT || 'local - Knockout',
         tags: ['CI'],
       }, platform),
       wd_host = env.WD_HOST || config.webdriver.host || 'localhost',
       wd_port = env.WD_PORT || config.webdriver.port || 4445,
-      // uri = 'http://localhost:' + config.server_port + '/runner.html',
-      uri = 'http://brianhunt1.browserstack.com/runner.html',
+      uri = 'http://' + username + '.browserstack.com/runner.html',
       browser =  wd.promiseChainRemote(
         wd_host, wd_port, username, token
       );
@@ -80,8 +75,6 @@ function start_tests(platform, config) {
     .get(uri)
     .waitForConditionInBrowser("window.tests_complete", config.webdriver.timeout,
                                config.webdriver.poll)
-    // .waitFor(wd.asserters.jsCondition('window.tests_complete', false),
-    //          config.webdriver.timeout, config.webdriver.poll)
     .safeExecute("window.fails")
     .then(on_results)
     .fin(on_fin)

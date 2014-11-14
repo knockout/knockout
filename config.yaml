@@ -240,6 +240,8 @@ webdriver:
   host: hub.browserstack.com
   timeout: 15000
   poll: 500
+  # Configure your own username by setting the WD_USER environment variable.
+  user: brianhunt1
 
 # What Browserstack platforms will be tested?
 # Available:
@@ -252,38 +254,38 @@ test_platforms:
   - {os: windows, os_version: 8, browser: chrome, browser_version: 38}
   - {os: windows, os_version: 8, browser: chrome, browser_version: 39}
   
-  # # Internet Explorer
-  # - {browser: IE, browser_version: 6.0, os : Windows, os_version : XP}
-  # - {browser: IE, browser_version: 7.0, os : Windows, os_version : XP}
-  # - {browser: IE, browser_version: 8.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 9.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 10.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 11.0, os: Windows, os_version: 7}
+  # Internet Explorer
+  - {browser: IE, browser_version: 6.0, os : Windows, os_version : XP}
+  - {browser: IE, browser_version: 7.0, os : Windows, os_version : XP}
+  - {browser: IE, browser_version: 8.0, os: Windows, os_version: 7}
+  - {browser: IE, browser_version: 9.0, os: Windows, os_version: 7}
+  - {browser: IE, browser_version: 10.0, os: Windows, os_version: 7}
+  - {browser: IE, browser_version: 11.0, os: Windows, os_version: 7}
 
-  # # Firefox
-  # - {browser: Firefox, browser_version: 4.0, os: Windows, os_version: XP}
+  # Firefox
+  - {browser: Firefox, browser_version: 4.0, os: Windows, os_version: XP}
 
-  # # Safari
-  # - {browser: Safari, browser_version: 5.1, os: Windows, os_version: XP}
-  # - {browser: Safari, browser_version: 6.1, os: OS X, os_version: Mountain Lion}
-  # - {browser: Safari, browser_version: 7.0, os: OS X, os_version: Mavericks}
+  # Safari
+  - {browser: Safari, browser_version: 5.1, os: Windows, os_version: XP}
+  - {browser: Safari, browser_version: 6.1, os: OS X, os_version: Mountain Lion}
+  - {browser: Safari, browser_version: 7.0, os: OS X, os_version: Mavericks}
 
-  # # Opera
-  # - {browser: Opera, browser_version: 12.15, os: Windows, os_version: 7}
+  # Opera
+  - {browser: Opera, browser_version: 12.15, os: Windows, os_version: 7}
 
-  # # iOS 6.1
-  # - {browserName: iPhone, platform: MAC, device: iPhone 5}
-  # # iOS 7
-  # - {browserName: iPhone, platform: MAC, device: iPhone 5C}
-  # - {browserName: iPad, platform: MAC, device: iPad Air}
+  # iOS 6.1
+  - {browserName: iPhone, platform: MAC, device: iPhone 5}
+  # iOS 7
+  - {browserName: iPhone, platform: MAC, device: iPhone 5C}
+  - {browserName: iPad, platform: MAC, device: iPad Air}
 
-  # # Android 4:
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy Note 10.1}
-  # # Android 4.1:
-  # - {browserName: android, platform: ANDROID, device: Google Nexus 7}
-  # # Android 4.2:
-  # - {browserName: android, platform: ANDROID, device: Google Nexus 4}
-  # # Android 4.3
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy S4}
-  # # Android 4.4:
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy S5}
+  # Android 4:
+  - {browserName: android, platform: ANDROID, device: Samsung Galaxy Note 10.1}
+  # Android 4.1:
+  - {browserName: android, platform: ANDROID, device: Google Nexus 7}
+  # Android 4.2:
+  - {browserName: android, platform: ANDROID, device: Google Nexus 4}
+  # Android 4.3
+  - {browserName: android, platform: ANDROID, device: Samsung Galaxy S4}
+  # Android 4.4:
+  - {browserName: android, platform: ANDROID, device: Samsung Galaxy S5}

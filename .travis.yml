@@ -3,12 +3,8 @@ node_js:
 - '0.10'
 env:
   global:
-  - SELENIUM_HOST=hub.browserstack.com
-  - SELENIUM_PORT=80
-  - BS_AUTOMATE_PROJECT="$TRAVIS_REPO_SLUG"
+  - CI_AUTOMATE_PROJECT="$TRAVIS_REPO_SLUG"
   - CI_AUTOMATE_BUILD="Travis build No. $TRAVIS_BUILD_NUMBER for $TRAVIS_REPO_SLUG"
-  - secure: nuCZZHw/AVWRtDOFdcO/jwzE4Z/feAMzS24QAbXZ5oqkzZt7DCh2XX1tBfV75y8qyYpPi5bt/I3CV69rFS3KG1B+d8JZmcj54V2BoHJMMAtUDwQNH279ABsx7vSiUOfQbFzsLhnY6myWciHmnzEfU3tUgBE50eGa/d0pnJwsI6w=
-  - secure: I5FXBnmVjI6iBrzURliaTcuq6zT8vaq7R635xpFy8erUNPiuX4g5TxMxWn9PjHTgGGZ9BXKFZA9uPHshHwpt3di1X319y+BfSyZ4Ozg3jquQG2gRc0FMHPcrRNLWf6uNiMyErYCjOV2zCncZDVKXfLSflIS7ebei8EBYUmK2KSA=
 before_script:
   - wget https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
   - "unzip BrowserStackLocal*"
