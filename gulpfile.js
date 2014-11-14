@@ -65,7 +65,7 @@ gulp.task("test:npm", ['build', 'runner'], function () {
 
 // Webdriver testing
 // This is a simpler version of what's in knockout-secure-binding.
-gulp.task("test:webdriver", function (done) {
+gulp.task("test:webdriver", ['build', 'runner'], function (done) {
     var idx = 0,
         failed_platforms = [],
         platforms = config.test_platforms,
@@ -107,9 +107,9 @@ gulp.task("test:webdriver", function (done) {
         .then(function () {
             var failed_platform_names = failed_platforms.map(function (fp) { return fp.name });
             gutil.log()
-            gutil.log("Tested " + idx + " platforms.");
-            gutil.log("" + failed_platforms.length + " platforms failed:" +
-                      "\n - " + failed_platform_names.join("\n - "));
+            gutil.log("Webdriver tested " + idx + " platforms.\n" +
+                      "" + failed_platforms.length + " platforms failed." +
+                      "\n - " + failed_platform_names.sort().join("\n - "));
             done();
             process.exit(failed_platforms);
         })
@@ -117,7 +117,7 @@ gulp.task("test:webdriver", function (done) {
 })
 
 
-gulp.task('test', ['build', 'runner', 'test:npm', 'test:webdriver']);
+gulp.task('test', ['test:npm', 'test:webdriver']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];
