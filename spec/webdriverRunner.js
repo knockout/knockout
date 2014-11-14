@@ -57,8 +57,8 @@ function start_tests(platform, config) {
   process.on("SIGINT", on_sigint);
 
   gutil.log();
-  gutil.log(platform.name.yellow)
-  gutil.log("Connecting to Webdriver at " + wd_host.blue + ":" + (""+wd_port).blue)
+  gutil.log(platform.name.yellow + ": Starting.")
+  // gutil.log("Connecting to Webdriver at " + wd_host.blue + ":" + (""+wd_port).blue)
 
   function on_results(fails) {
     if (fails.length > 0) {

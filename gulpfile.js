@@ -117,7 +117,7 @@ gulp.task("test:webdriver", function (done) {
 })
 
 
-gulp.task('test', ['build', 'runner', 'test:npm']);
+gulp.task('test', ['build', 'runner', 'test:npm', 'test:webdriver']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];
