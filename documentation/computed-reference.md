@@ -20,7 +20,7 @@ A computed observable can be constructed using one of the following forms:
   * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
   * `pure` --- Optional. If this option is `true`, the computed observable will be set up as a [*pure* computed observable](computed-pure.html). This option is an alternative to the `ko.pureComputed` constructor.
   * `deferEvaluation` --- Optional. If this option is `true`, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
-  * `disposeWhen` --- Optional. If given, this function is executed on each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
+  * `disposeWhen` --- Optional. If given, this function is executed after each re-evaluation to determine if the computed observable should be disposed. A `true`-ish result will trigger disposal of the computed observable.
   * `disposeWhenNodeIsRemoved` --- Optional. If given, disposal of the computed observable will be triggered when the specified DOM node is removed by KO. This feature is used to dispose computed observables used in bindings when nodes are removed by the `template` and control-flow bindings.
   
 1. `ko.pureComputed( evaluator [, targetObject] )` --- Constructs a [*pure* computed observable](computed-pure.html) using the given evaluator function and optional object to use for `this`. Unlike `ko.computed`, this method doesn't accept an `options` parameter.
