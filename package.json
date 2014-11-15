@@ -47,7 +47,7 @@
     "js-yaml": "^3.2.2",
     "jshint-stylish": "^1.0.0",
     "lodash": "^2.4.1",
-    "q": "^1.1.1",
+    "promise": "^6.0.1",
     "through": "^2.3.6",
     "vinyl-map": "^1.0.1",
     "wd": "^0.3.11"

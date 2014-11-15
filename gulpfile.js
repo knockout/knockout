@@ -13,7 +13,7 @@ var
     vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
     yaml = require("js-yaml"),
-    Q = require('q'),
+    Promise = require('promise'),
     http = require('http'),
 
     // Our settings
@@ -70,7 +70,7 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
         failed_platforms = [],
         platforms = config.test_platforms,
         streams = [],
-        runner = require('./spec/webdriverRunner.js');
+        runner = require('./spec/helpers/webdriverRunner.js');
 
     platforms.forEach(function(p) {
         p.name = "" + (p.os||p.platform)+ "/" +
@@ -79,40 +79,45 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
                  (p.browser_version ? ":" + p.browser_version : '');
     });
 
-    function test_platform_promise() {
+    function test_platform_promise(stream_id) {
         if (idx >= platforms.length) {
             return
         }
+
         var platform = platforms[idx++];
+        // We add an indent to make it easier to visualize which results
+        // correspond to the progress in the given stream.
+        platform.name = Array(stream_id + 1).join("        ") + platform.name;
+
+        function on_success() {
+            gutil.log("  ✓  ".green + platform.name)
+            return test_platform_promise(stream_id);
+        }
+
+        function on_fail(msg) {
+            failed_platforms.push(platform);
+            gutil.log(platform.name.red + " " + "< X >".bgRed.white.bold +
+                      ":\n" + msg + "\n");
+            return test_platform_promise(stream_id);           
+        }
+
         return runner
             .start_tests(platform, config)
-            .then(function () {
-                gutil.log("  ✓  ".green + platform.name)
-            })
-            .fail(function (msg) {
-                failed_platforms.push(platform);
-                gutil.log("FAIL".bgRed.white.bold + " " + platform.name + ":\n" + msg);
-            })
-            .then(function () {
-                // On to the next platform; chain the promises.
-                return test_platform_promise();
-            })
+            .then(on_success, on_fail)
     }
 
-    while (config.test_streams--) {
-        streams.push(test_platform_promise())
+    for (var i = 0; i < config.test_streams; ++i) {
+        streams.push(test_platform_promise(i))
     }
 
-    Q.all(streams)
+    Promise.all(streams)
         .then(function () {
             var failed_platform_names = failed_platforms.map(function (fp) { return fp.name });
             gutil.log()
-            gutil.log("Webdriver tested " + idx + " platforms. " +
-                      "" + failed_platforms.length + " platforms failed.\n - " +
-                      failed_platform_names.sort().join("\n - "));
+            gutil.log("Webdriver tested " + idx + " platforms.".white);
             if (failed_platforms.length > 0)
                 // Force a non-zero return code from our process.
-                throw new Error("Some webdriver tests failed.")
+                throw new Error((failed_platforms.length + " browsers failed tests.").red)
             done();
         })
         .done()

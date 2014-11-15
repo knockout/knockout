@@ -14,27 +14,37 @@ var wd = require('wd'),
     gutil = require('gulp-util'),
     extend = require('extend'),
     path = require('path'),
+    Promise = require('promise'),
     env = process.env,
-    token = env.WD_TOKEN;
+    token = env.WD_TOKEN,
+    browsers = [],
+    cancelled = false;
 
 if (!token) {
   throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
 }
 
-var on_sigint = function () {
-  gutil.log("\n\tCtrl-C received; shutting down browser\n".red)
-  if (browser) {
-    browser.quit(function () { process.exit(1) })
-  } else {
-    process.exit(1)
+process.on("SIGINT", function () {
+  if (cancelled === true) {
+    gutil.log("Ctrl-C received twice. Force-quitting. (Browser instances may persist)".red);
+    process.exit(1);
   }
-}
+  gutil.log("Ctrl-C received; shutting down browser. Please wait. (Press again to force quit)".red)
+  cancelled = true;
+  Promise.all(browsers.map(function (b) { return b.quit () }))
+    .then(function () {
+      process.exit(1);
+    });
+});
+
 
 exports.start_tests =
 function start_tests(platform, config) {
+  if (cancelled) return Promise.reject("Tests cancelled")
   var username = env.WD_USER || config.webdriver.user;
       capabilities = extend({
         'browserstack.local': true,
+        'browserstack.debug' : 'true',
         'tunner-identifier': env.TRAVIS_JOB_NUMBER || "",
         build: env.CI_AUTOMATE_BUILD || 'Manual',
         javascriptEnabled: true,
@@ -49,11 +59,7 @@ function start_tests(platform, config) {
         wd_host, wd_port, username, token
       );
 
-  process.on("SIGINT", on_sigint);
-
-  gutil.log(platform.name.blue +  " <-o-> Initiating browser")
-
-  // gutil.log("Connecting to Webdriver at " + wd_host.blue + ":" + (""+wd_port).blue)
+  gutil.log(platform.name.blue + " <-o-> Initiating browser")
 
   function on_results(fails) {
     if (fails.length > 0) {
@@ -62,13 +68,11 @@ function start_tests(platform, config) {
   }
 
   function on_fin() {
-    gutil.log(platform.name.yellow +  " <-/-> Closing browser connection")
-    return browser
-      .quit()
-      .fin(function () {
-        process.removeListener('SIGINT', on_sigint);
-      })
+    gutil.log(platform.name.yellow +  " <-/-> Closing browser connection");
+    return browser.quit();
   }
+
+  browsers.push(browser);
 
   return browser
     .init(capabilities)

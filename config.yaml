@@ -223,7 +223,7 @@ spec_files:
 #       TESTING
 #
 # How many concurrent browser streams?
-test_streams: 1
+test_streams: 2
 
 # The listening port for our static file server.
 server_port: 8081
