@@ -10,3 +10,6 @@ before_script:
   - "unzip BrowserStackLocal*"
   - "./BrowserStackLocal $WD_TOKEN -f $PWD &"
   - sleep 6
+script:
+  - gulp test:npm
+  - gulp test:webdriver
