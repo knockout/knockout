@@ -42,16 +42,6 @@ exports.phantom = function (config) {
         browserName: 'phantomjs'
       };
 
-  // browser.on('status', function(info) {
-  //   console.log(info.cyan);
-  // });
-  // browser.on('command', function(eventType, command, response) {
-  //   console.log(' > ' + eventType.cyan, command, (response || '').grey);
-  // });
-  // browser.on('http', function(meth, path, data) {
-  //   console.log(' > ' + meth.magenta, path, (data || '').grey);
-  // });
-
   return browser.init(capabilities)
     .then(function () {
       return {
@@ -80,17 +70,28 @@ exports.browserStack = function (platform, config) {
       }, platform),
       wd_host = env.WD_HOST || config.webdriver.host || 'localhost',
       wd_port = env.WD_PORT || config.webdriver.port || 4445,
-      uri = 'http://' + username + '.browserstack.com/runner.html',
       browser = wd.promiseChainRemote(wd_host, wd_port, username, token);
 
   if (!token) {
     throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
   }
 
+  browser.on('status', function(info) {
+    console.log(info.cyan);
+  });
+  browser.on('command', function(eventType, command, response) {
+    console.log(' > ' + eventType.cyan, command, (response || '').grey);
+  });
+  browser.on('http', function(meth, path, data) {
+    console.log(' > ' + meth.magenta, path, (data || '').grey);
+  });
+
   return browser.init(capabilities)
     .then(function () {
       return   {
-        uri: uri,
+        uris: [
+          'http://' + username + '.browserstack.com/runner.html',
+        ],
         browser: browser,
         name: platform.name,
       };

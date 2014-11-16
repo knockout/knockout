@@ -12,6 +12,6 @@ before_script:
   - "phantomjs --webdriver=4445 &"
   - sleep 3
 script:
-  - gulp test:npm
+  - gulp test:node
   - gulp test:phantom
   # - gulp test:webdriver
