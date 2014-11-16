@@ -229,6 +229,7 @@ test_streams: 3
 server_port: 8081
 
 # Check platforms available on SauceLabs:
+# https://saucelabs.com/platforms
 test_platforms:
   # Chrome
   - {platform: 'Windows 8', browserName: chrome, version: 35}
@@ -236,42 +237,17 @@ test_platforms:
   - {platform: 'Windows 8', browserName: chrome, version: 37}
   - {platform: 'Windows 8', browserName: chrome, version: 38}
   
-  # -- Browserstack format:
-  # - {os: windows, os_version: 8, browser: chrome, browser_version: 38}
-  # - {os: windows, os_version: 8, browser: chrome, browser_version: 39}
-  
-  # # Internet Explorer
-  # - {browser: IE, browser_version: 6.0, os : Windows, os_version : XP}
-  # - {browser: IE, browser_version: 7.0, os : Windows, os_version : XP}
-  # - {browser: IE, browser_version: 8.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 9.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 10.0, os: Windows, os_version: 7}
-  # - {browser: IE, browser_version: 11.0, os: Windows, os_version: 7}
+  # Firefox
+  - {platform: 'Windows 8', browserName: firefox, version: 33}
+  - {platform: Linux, browserName: firefox, version: 10}
 
-  # # Firefox
-  # - {browser: Firefox, browser_version: 4.0, os: Windows, os_version: XP}
+  # Internet Explorer
+  - {platform: 'Windows 8.1', browserName: 'internet explorer', version: 11}
+  - {platform: 'Windows 8', browserName: 'internet explorer', version: 10}
+  - {platform: 'Windows 7', browserName: 'internet explorer', version: 10}
+  - {platform: 'Windows 7', browserName: 'internet explorer', version: 9}
+  - {platform: 'Windows 7', browserName: 'internet explorer', version: 8}
 
-  # # Safari
-  # - {browser: Safari, browser_version: 5.1, os: Windows, os_version: XP}
-  # - {browser: Safari, browser_version: 6.1, os: OS X, os_version: Mountain Lion}
-  # - {browser: Safari, browser_version: 7.0, os: OS X, os_version: Mavericks}
-
-  # # Opera
-  # - {browser: Opera, browser_version: 12.15, os: Windows, os_version: 7}
-
-  # # iOS 6.1
-  # - {browserName: iPhone, platform: MAC, device: iPhone 5}
-  # # iOS 7
-  # - {browserName: iPhone, platform: MAC, device: iPhone 5C}
-  # - {browserName: iPad, platform: MAC, device: iPad Air}
-
-  # # Android 4:
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy Note 10.1}
-  # # Android 4.1:
-  # - {browserName: android, platform: ANDROID, device: Google Nexus 7}
-  # # Android 4.2:
-  # - {browserName: android, platform: ANDROID, device: Google Nexus 4}
-  # # Android 4.3
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy S4}
-  # # Android 4.4:
-  # - {browserName: android, platform: ANDROID, device: Samsung Galaxy S5}
+  # Safari
+  - {platform: 'OS X 10.9', browserName: safari, version: 7}
+  - {platform: 'OS X 10.10', browserName: safari, version: 8}

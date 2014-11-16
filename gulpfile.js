@@ -102,10 +102,10 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
         var platform = platforms[idx++];
         // We add an indent to make it easier to visualize which results
         // correspond to the progress in the given stream.
-        platform.name = Array(stream_id + 1).join("        ") + platform.name;
+        platform.name = Array(stream_id + 1).join("               ") + platform.name;
 
         function on_success() {
-            gutil.log("  ✓  ".green + platform.name)
+            gutil.log(platform.name.green + "  ✓  ".green)
             return test_platform_promise(stream_id);
         }
 

@@ -121,14 +121,13 @@ exports.tests = function tests(spec) {
   }
 
   function test_uri(uri) {
-    gutil.log(spec.name.yellow + " <---> " + uri.underline)
+    gutil.log(spec.name.white + " <url> " + uri.underline)
     return spec.browser
       .get(uri)
       .then(wait_for_results(spec.browser))
       .then(function() {
-        gutil.log(spec.name.green + " < ok >".green);
         if (spec.uris.length) return test_uri(spec.uris.pop());
-      } )
+      });
   }
 
   return test_uri(spec.uris.pop())
