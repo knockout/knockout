@@ -6,11 +6,8 @@ env:
   - CI_AUTOMATE_PROJECT="$TRAVIS_REPO_SLUG"
   - CI_AUTOMATE_BUILD="Travis build No. $TRAVIS_BUILD_NUMBER for $TRAVIS_REPO_SLUG"
 before_script:
-  - wget https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
-  - "unzip BrowserStackLocal*"
-  - "./BrowserStackLocal $WD_TOKEN -f $PWD &"
-  - "phantomjs --webdriver=4445 &"
-  - sleep 3
+  - "phantomjs --webdriver=4446 &"
+  - sleep 1
 script:
   - gulp test:node
   - gulp test:phantom

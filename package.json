@@ -23,6 +23,7 @@
   "devDependencies": {
     "closure-compiler": "^0.2.6",
     "colors": "^1.0.3",
+    "connect": "^3.3.3",
     "extend": "^2.0.0",
     "gulp": "^3.8.10",
     "gulp-bump": "^0.1.11",
@@ -48,6 +49,8 @@
     "jshint-stylish": "^1.0.0",
     "lodash": "^2.4.1",
     "promise": "^6.0.1",
+    "sauce-tunnel": "^2.1.0",
+    "serve-static": "^1.7.1",
     "through": "^2.3.6",
     "vinyl-map": "^1.0.1",
     "wd": "^0.3.11"

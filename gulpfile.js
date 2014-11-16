@@ -15,6 +15,7 @@ var
     yaml = require("js-yaml"),
     Promise = require('promise'),
     http = require('http'),
+    env = process.env,
 
     // Our settings
     pkg = require('./package.json'),
@@ -78,12 +79,16 @@ gulp.task("test:phantom", ['build', 'runner'], function (done) {
 })
 
 
-gulp.task("test:webdriver", ['build', 'runner'], function (done) {
+gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     var idx = 0,
         failed_platforms = [],
         platforms = config.test_platforms,
         streams = [],
-        wdr = require('./spec/helpers/webdriverRunner');
+        wdr = require('./spec/helpers/webdriverRunner'),
+        SauceTunnel = require('sauce-tunnel'),
+        connect = require('connect'),
+        serveStatic = require('serve-static'),
+        tunnel = new SauceTunnel(env.SAUCE_USERNAME, env.SAUCE_ACCESS_KEY, false, true, ['-v', '-P', '4447']);
 
     platforms.forEach(function(p) {
         p.name = "" + (p.os||p.platform)+ "/" +
@@ -114,30 +119,70 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
             return test_platform_promise(stream_id);           
         }
 
-        return wdr.browserStack(platform, config)
+        return wdr.sauceLabs(platform, config)
             .then(wdr.tests)
             .then(on_success, on_fail)
     }
 
-    for (var i = 0; i < config.test_streams; ++i) {
-        streams.push(test_platform_promise(i))
+    function on_tunnel_start(status) {
+        if (!status) {
+            throw new Error("Unable to start SauceLabs tunnel.")
+        }
+
+        for (var i = 0; i < config.test_streams; ++i) {
+            streams.push(test_platform_promise(i))
+        }
+
+        deplex_streams(streams)
     }
 
-    Promise.all(streams)
-        .then(function () {
-            var failed_platform_names = failed_platforms.map(function (fp) { return fp.name });
-            gutil.log()
-            gutil.log("Webdriver tested " + idx + " platforms.".white);
-            if (failed_platforms.length > 0)
-                // Force a non-zero return code from our process.
-                throw new Error((failed_platforms.length + " browsers failed tests.").red)
-            done();
-        })
-        .done()
+    function deplex_streams(test_streams) {
+        Promise.all(test_streams)
+            .catch(function (msg) {
+                gutil.log("Error processing test streams: " + msg.red)
+            })
+            .then(function () {
+                var failed_platform_names = failed_platforms.map(function (fp) { return fp.name.trim().red });
+                gutil.log()
+                gutil.log("Webdriver tested " + idx + " platforms.".white);
+                gutil.log("Failed platforms: " + failed_platform_names.join(", "))
+                tunnel.stop(on_tunnel_stop);
+                done();
+            })
+            .done()
+    }
+
+    function on_tunnel_stop(err) {
+        if (err)
+            gutil.log("Error stopping tunnel: " + err.red)
+        if (failed_platforms.length > 0)
+            process.exit(failed_platforms.length);
+        // Otherwise cleanly return.
+        done();
+    }
+
+    if (!env.SAUCE_USERNAME)
+        throw new Error("SAUCE_USERNAME is not in the environment.");
+
+    if (!env.SAUCE_ACCESS_KEY)
+        throw new Error("SAUCE_ACCESS_KEY is not in the environment.");
+
+    // Optional extra debugging. Also, check out:
+    // https://github.com/axemclion/grunt-saucelabs/blob/master/tasks/saucelabs.js
+    tunnel.on('verbose:ok', gutil.log)
+    tunnel.on('verbose:debug', gutil.log)
+    tunnel.on('log:error', gutil.log)
+
+    // Serve our local files.
+    connect().use(serveStatic(__dirname)).listen(7070);
+
+    // If the tunnel fails, make sure nothing is listening on the
+    // port, with e.g. lsof -wni tcp:4445
+    tunnel.start(on_tunnel_start)
 })
 
 
-gulp.task('test', ['test:node', 'test:webdriver']);
+gulp.task('test', ['test:node', 'test:phantom', 'test:saucelabs']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];

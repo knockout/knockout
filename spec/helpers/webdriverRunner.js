@@ -16,12 +16,11 @@ var wd = require('wd'),
     path = require('path'),
     Promise = require('promise'),
     env = process.env,
-    token = env.WD_TOKEN,
+    token = env.SAUCE_ACCESS_KEY,
     browsers = [],
     cancelled = false;
 
 process.on("SIGINT", function () {
-  console.log("Browsers", browsers)
   if (cancelled === true) {
     gutil.log("Ctrl-C received twice. Force-quitting. (Browser instances may persist)".red);
     process.exit(1);
@@ -36,7 +35,7 @@ process.on("SIGINT", function () {
 
 exports.phantom = function (config) {
   var phantom_host = env.PHANTOM_HOST || 'localhost',
-      phantom_port = env.PHANTOM_PORT || 4445,
+      phantom_port = env.PHANTOM_PORT || 4446,
       browser = wd.promiseChainRemote(phantom_host, phantom_port),
       capabilities = {
         browserName: 'phantomjs'
@@ -56,11 +55,10 @@ exports.phantom = function (config) {
     });
 };
 
-exports.browserStack = function (platform, config) {
-  var username = env.WD_USER || config.webdriver.user,
+
+exports.sauceLabs = function (platform, config) {
+  var username = env.SAUCE_USERNAME,
       capabilities = extend({
-        'browserstack.local': true,
-        'browserstack.debug' : 'true',
         'tunner-identifier': env.TRAVIS_JOB_NUMBER || "",
         build: env.CI_AUTOMATE_BUILD || 'Manual',
         javascriptEnabled: true,
@@ -68,13 +66,7 @@ exports.browserStack = function (platform, config) {
         project: env.CI_AUTOMATE_PROJECT || 'local - Knockout',
         tags: ['CI'],
       }, platform),
-      wd_host = env.WD_HOST || config.webdriver.host || 'localhost',
-      wd_port = env.WD_PORT || config.webdriver.port || 4445,
-      browser = wd.promiseChainRemote(wd_host, wd_port, username, token);
-
-  if (!token) {
-    throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
-  }
+      browser = wd.promiseChainRemote('localhost', 4447, username, token);
 
   browser.on('status', function(info) {
     console.log(info.cyan);
@@ -83,20 +75,20 @@ exports.browserStack = function (platform, config) {
     console.log(' > ' + eventType.cyan, command, (response || '').grey);
   });
   browser.on('http', function(meth, path, data) {
-    console.log(' > ' + meth.magenta, path, (data || '').grey);
+    console.log(' < ' + meth.magenta, path, (data || '').grey);
   });
 
   return browser.init(capabilities)
     .then(function () {
-      return   {
+      return {
         uris: [
-          'http://' + username + '.browserstack.com/runner.html',
+          'http://localhost:7070/runner.html',
         ],
         browser: browser,
         name: platform.name,
       };
-    })
-};
+    });
+}
 
 function on_results(fails) {
   if (fails.length > 0) {
@@ -107,7 +99,7 @@ function on_results(fails) {
 function wait_for_results(browser) {
   return function () {
     return browser
-          .waitFor(wd.asserters.jsCondition("window && window.tests_complete"), 5000, 500)
+          .waitFor(wd.asserters.jsCondition("window && window.tests_complete"), 10000, 500)
           .safeExecute("window.fails")
           .then(on_results);
   }
@@ -115,7 +107,7 @@ function wait_for_results(browser) {
 
 exports.tests = function tests(spec) {
   if (cancelled) return Promise.reject("Tests cancelled");
-  gutil.log(spec.name.blue + " <-o-> Initiating browser");
+  gutil.log(spec.name.blue + " <-o-> Initiated browser");
 
   browsers.push(spec.browser);
 
