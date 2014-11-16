@@ -11,4 +11,4 @@ before_script:
 script:
   - gulp test:node
   - gulp test:phantom
-  # - gulp test:webdriver
+  - gulp test:saucelabs
