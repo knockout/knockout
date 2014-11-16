@@ -233,8 +233,8 @@ test_platforms:
   # Chrome
   - {platform: 'Windows 8', browserName: chrome, version: 35}
   - {platform: 'Windows 8', browserName: chrome, version: 36}
-  # - {platform: 'Windows 8', browserName: chrome, version: 37}
-  # - {platform: 'Windows 8', browserName: chrome, version: 38}
+  - {platform: 'Windows 8', browserName: chrome, version: 37}
+  - {platform: 'Windows 8', browserName: chrome, version: 38}
   
   # -- Browserstack format:
   # - {os: windows, os_version: 8, browser: chrome, browser_version: 38}

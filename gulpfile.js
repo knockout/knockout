@@ -83,18 +83,15 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     var idx = 0,
         failed_platforms = [],
         platforms = config.test_platforms,
-        streams = [],
         wdr = require('./spec/helpers/webdriverRunner'),
         SauceTunnel = require('sauce-tunnel'),
         connect = require('connect'),
         serveStatic = require('serve-static'),
-        tunnel = new SauceTunnel(env.SAUCE_USERNAME, env.SAUCE_ACCESS_KEY, false, true, ['-v', '-P', '4447']);
+        tunnel = new SauceTunnel(env.SAUCE_USERNAME, env.SAUCE_ACCESS_KEY, false, true,
+            ['-v', '-P', '4447', '-i', env.TRAVIS_JOB_NUMBER || 'LOCAL']);
 
     platforms.forEach(function(p) {
-        p.name = "" + (p.os||p.platform)+ "/" +
-                 (p.os_version||p.device) + " " +
-                 (p.browser||p.browserName) +
-                 (p.browser_version ? ":" + p.browser_version : '');
+        p.name = "" + p.platform + "/" + p.browserName + ':' + p.version;
     });
 
     function test_platform_promise(stream_id) {
@@ -125,6 +122,8 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     }
 
     function on_tunnel_start(status) {
+        var streams = [];
+
         if (!status) {
             throw new Error("Unable to start SauceLabs tunnel.")
         }
@@ -144,10 +143,10 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
             .then(function () {
                 var failed_platform_names = failed_platforms.map(function (fp) { return fp.name.trim().red });
                 gutil.log()
-                gutil.log("Webdriver tested " + idx + " platforms.".white);
-                gutil.log("Failed platforms: " + failed_platform_names.join(", "))
+                gutil.log(("Webdriver tested " + idx + " platforms.").cyan);
+                if (failed_platforms.length)
+                    gutil.log("Failed platforms: " + failed_platform_names.join(", "))
                 tunnel.stop(on_tunnel_stop);
-                done();
             })
             .done()
     }
@@ -159,6 +158,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
             process.exit(failed_platforms.length);
         // Otherwise cleanly return.
         done();
+        process.exit(0);
     }
 
     if (!env.SAUCE_USERNAME)
@@ -169,9 +169,9 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
 
     // Optional extra debugging. Also, check out:
     // https://github.com/axemclion/grunt-saucelabs/blob/master/tasks/saucelabs.js
-    tunnel.on('verbose:ok', gutil.log)
-    tunnel.on('verbose:debug', gutil.log)
-    tunnel.on('log:error', gutil.log)
+    // tunnel.on('verbose:ok', gutil.log)
+    // tunnel.on('verbose:debug', gutil.log)
+    // tunnel.on('log:error', gutil.log)
 
     // Serve our local files.
     connect().use(serveStatic(__dirname)).listen(7070);

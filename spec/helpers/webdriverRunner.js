@@ -59,7 +59,7 @@ exports.phantom = function (config) {
 exports.sauceLabs = function (platform, config) {
   var username = env.SAUCE_USERNAME,
       capabilities = extend({
-        'tunner-identifier': env.TRAVIS_JOB_NUMBER || "",
+        'tunnel-identifier': env.TRAVIS_JOB_NUMBER || "LOCAL",
         build: env.CI_AUTOMATE_BUILD || 'Manual',
         javascriptEnabled: true,
         name: 'Knockout',
@@ -68,21 +68,25 @@ exports.sauceLabs = function (platform, config) {
       }, platform),
       browser = wd.promiseChainRemote('localhost', 4447, username, token);
 
-  browser.on('status', function(info) {
-    console.log(info.cyan);
-  });
-  browser.on('command', function(eventType, command, response) {
-    console.log(' > ' + eventType.cyan, command, (response || '').grey);
-  });
-  browser.on('http', function(meth, path, data) {
-    console.log(' < ' + meth.magenta, path, (data || '').grey);
-  });
+  // Additional webdriver logging.
+  // browser.on('status', function(info) {
+  //   console.log(info.cyan);
+  // });
+  // browser.on('command', function(eventType, command, response) {
+  //   console.log(' > ' + eventType.cyan, command, (response || '').grey);
+  // });
+  // browser.on('http', function(meth, path, data) {
+  //   console.log(' < ' + meth.magenta, path, (data || '').grey);
+  // });
+  // browser.on('command', function () { process.stdout.write('•') })
 
   return browser.init(capabilities)
     .then(function () {
       return {
         uris: [
           'http://localhost:7070/runner.html',
+          'http://localhost:7070/runner.jquery.html',
+          'http://localhost:7070/runner.modernizr.html',
         ],
         browser: browser,
         name: platform.name,
@@ -99,7 +103,7 @@ function on_results(fails) {
 function wait_for_results(browser) {
   return function () {
     return browser
-          .waitFor(wd.asserters.jsCondition("window && window.tests_complete"), 10000, 500)
+          .waitFor(wd.asserters.jsCondition("window && window.tests_complete"), 10000, 1000)
           .safeExecute("window.fails")
           .then(on_results);
   }
