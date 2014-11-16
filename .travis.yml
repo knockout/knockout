@@ -9,7 +9,9 @@ before_script:
   - wget https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
   - "unzip BrowserStackLocal*"
   - "./BrowserStackLocal $WD_TOKEN -f $PWD &"
-  - sleep 6
+  - "phantomjs --webdriver=4445 &"
+  - sleep 3
 script:
   - gulp test:npm
-  - gulp test:webdriver
+  - gulp test:phantom
+  # - gulp test:webdriver

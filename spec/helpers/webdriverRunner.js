@@ -8,7 +8,7 @@
 //    WD_USER=brianhunt1 WD_TOKEN=<<key>>
 //    gulp test
 // 
-require('colors')
+require('colors');
 
 var wd = require('wd'),
     gutil = require('gulp-util'),
@@ -20,28 +20,54 @@ var wd = require('wd'),
     browsers = [],
     cancelled = false;
 
-if (!token) {
-  throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
-}
-
 process.on("SIGINT", function () {
+  console.log("Browsers", browsers)
   if (cancelled === true) {
     gutil.log("Ctrl-C received twice. Force-quitting. (Browser instances may persist)".red);
     process.exit(1);
   }
-  gutil.log("Ctrl-C received; shutting down browser. Please wait. (Press again to force quit)".red)
+  gutil.log("Ctrl-C received; shutting down browser. Please wait. (Press again to force quit)".red);
   cancelled = true;
-  Promise.all(browsers.map(function (b) { return b.quit () }))
+  Promise.all(browsers.map(function (b) { return b.quit(); }))
     .then(function () {
       process.exit(1);
     });
 });
 
+exports.phantom = function (config) {
+  var phantom_host = env.PHANTOM_HOST || 'localhost',
+      phantom_port = env.PHANTOM_PORT || 4445,
+      browser = wd.promiseChainRemote(phantom_host, phantom_port),
+      capabilities = {
+        browserName: 'phantomjs'
+      };
 
-exports.start_tests =
-function start_tests(platform, config) {
-  if (cancelled) return Promise.reject("Tests cancelled")
-  var username = env.WD_USER || config.webdriver.user;
+  // browser.on('status', function(info) {
+  //   console.log(info.cyan);
+  // });
+  // browser.on('command', function(eventType, command, response) {
+  //   console.log(' > ' + eventType.cyan, command, (response || '').grey);
+  // });
+  // browser.on('http', function(meth, path, data) {
+  //   console.log(' > ' + meth.magenta, path, (data || '').grey);
+  // });
+
+  return browser.init(capabilities)
+    .then(function () {
+      return {
+        browser: browser,
+        name: "PhantomJS",
+        uris: [
+          'file://' + process.cwd() + '/runner.html',
+          'file://' + process.cwd() + '/runner.jquery.html',
+          'file://' + process.cwd() + '/runner.modernizr.html',
+        ]
+      }
+    });
+};
+
+exports.browserStack = function (platform, config) {
+  var username = env.WD_USER || config.webdriver.user,
       capabilities = extend({
         'browserstack.local': true,
         'browserstack.debug' : 'true',
@@ -55,31 +81,59 @@ function start_tests(platform, config) {
       wd_host = env.WD_HOST || config.webdriver.host || 'localhost',
       wd_port = env.WD_PORT || config.webdriver.port || 4445,
       uri = 'http://' + username + '.browserstack.com/runner.html',
-      browser =  wd.promiseChainRemote(
-        wd_host, wd_port, username, token
-      );
+      browser = wd.promiseChainRemote(wd_host, wd_port, username, token);
 
-  gutil.log(platform.name.blue + " <-o-> Initiating browser")
-
-  function on_results(fails) {
-    if (fails.length > 0) {
-      throw new Error(fails.join("\n").replace(/not ok \d+/g, function (s) { return s.red }));
-    }
+  if (!token) {
+    throw new Error("Set WD_TOKEN in your environment to that of your BrowserStack account.");
   }
+
+  return browser.init(capabilities)
+    .then(function () {
+      return   {
+        uri: uri,
+        browser: browser,
+        name: platform.name,
+      };
+    })
+};
+
+function on_results(fails) {
+  if (fails.length > 0) {
+    throw new Error(fails.join("\n").replace(/not ok \d+/g, function (s) { return s.red; }));
+  }
+}
+
+function wait_for_results(browser) {
+  return function () {
+    return browser
+          .waitFor(wd.asserters.jsCondition("window && window.tests_complete"), 5000, 500)
+          .safeExecute("window.fails")
+          .then(on_results);
+  }
+}
+
+exports.tests = function tests(spec) {
+  if (cancelled) return Promise.reject("Tests cancelled");
+  gutil.log(spec.name.blue + " <-o-> Initiating browser");
+
+  browsers.push(spec.browser);
 
   function on_fin() {
-    gutil.log(platform.name.yellow +  " <-/-> Closing browser connection");
-    return browser.quit();
+    gutil.log(spec.name.yellow +  " <-/-> Closing browser connection");
+    return spec.browser.quit();
   }
 
-  browsers.push(browser);
+  function test_uri(uri) {
+    gutil.log(spec.name.yellow + " <---> " + uri.underline)
+    return spec.browser
+      .get(uri)
+      .then(wait_for_results(spec.browser))
+      .then(function() {
+        gutil.log(spec.name.green + " < ok >".green);
+        if (spec.uris.length) return test_uri(spec.uris.pop());
+      } )
+  }
 
-  return browser
-    .init(capabilities)
-    .setAsyncScriptTimeout(config.webdriver.timeout)
-    .get(uri)
-    .waitForConditionInBrowser("window && window.tests_complete")
-    .safeExecute("window.fails")
-    .then(on_results)
-    .fin(on_fin)
-}
+  return test_uri(spec.uris.pop())
+     .fin(on_fin);
+};

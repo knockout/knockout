@@ -56,7 +56,7 @@ gulp.task("lint", ['checkTrailingSpaces'], function () {
         .pipe(plugins.jshint.reporter('jshint-stylish'))
 })
 
-gulp.task("test:npm", ['build', 'runner'], function () {
+gulp.task("test:node", ['build', 'runner'], function () {
     global.ko = require("./" + config.buildDir + config.build.main)
     global.DEBUG = true
     return gulp.src(config.node_spec_files)
@@ -64,13 +64,26 @@ gulp.task("test:npm", ['build', 'runner'], function () {
 })
 
 // Webdriver testing
-// This is a simpler version of what's in knockout-secure-binding.
+// 
+// Start a phantom webdriver listener elsewhere with:
+//   $ phantomjs --webdriver=4445
+gulp.task("test:phantom", ['build', 'runner'], function (done) {
+    var wdr = require('./spec/helpers/webdriverRunner');
+    wdr.phantom(config)
+        .then(wdr.tests)
+        .catch(function (msg) {
+            gutil.log("Phantom tests failed: ".red + msg);
+            process.exit(1);
+        })
+})
+
+
 gulp.task("test:webdriver", ['build', 'runner'], function (done) {
     var idx = 0,
         failed_platforms = [],
         platforms = config.test_platforms,
         streams = [],
-        runner = require('./spec/helpers/webdriverRunner.js');
+        wdr = require('./spec/helpers/webdriverRunner');
 
     platforms.forEach(function(p) {
         p.name = "" + (p.os||p.platform)+ "/" +
@@ -101,8 +114,8 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
             return test_platform_promise(stream_id);           
         }
 
-        return runner
-            .start_tests(platform, config)
+        return wdr.browserStack(platform, config)
+            .then(wdr.tests)
             .then(on_success, on_fail)
     }
 
@@ -124,7 +137,7 @@ gulp.task("test:webdriver", ['build', 'runner'], function (done) {
 })
 
 
-gulp.task('test', ['test:npm', 'test:webdriver']);
+gulp.task('test', ['test:node', 'test:webdriver']);
 
 gulp.task("checkTrailingSpaces", function () {
     var matches = [];
@@ -391,7 +404,7 @@ gulp.tasks.build.doc = 'Create build/output/knockout-latest.js'
 gulp.tasks.checkTrailingSpaces.doc = 'Check for trailing whitespace.'
 gulp.tasks.lint.doc = 'Check for fuzzies.'
 gulp.tasks.release.doc = 'Create new release of Knockout; see release.js'
-gulp.tasks.test.doc = 'run node tests (spec/spec.node.js)'
+gulp.tasks.test.doc = 'run node tests [test:node, test:phantomjs, test:browserstack]'
 gulp.tasks.watch.doc = 'Watch scripts; livereload runner.*.html on changes.'
 gulp.tasks['build-debug'].doc = 'Create build/output/knockout-latest.debug.js'
 gulp.tasks['bump-major'].doc = 'Bump version from N.x.x to N+1.x.x'
