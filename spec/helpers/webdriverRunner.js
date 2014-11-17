@@ -121,7 +121,7 @@ exports.tests = function tests(spec) {
   }
 
   function test_uri(uri) {
-    gutil.log(spec.name.white + " <url> " + uri.underline)
+    gutil.log(spec.name.white + " <url> " + uri)
     return spec.browser
       .get(uri)
       .then(wait_for_results(spec.browser))
