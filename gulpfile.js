@@ -93,6 +93,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     });
 
     function test_platform_promise(stream_id) {
+        var session_id;
         if (idx >= platforms.length) {
             return
         }
@@ -104,17 +105,29 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
 
         function on_success() {
             gutil.log(platform._title.green + "  ✓  ".green)
-            return test_platform_promise(stream_id);
+            return Promise.all([
+                wdr.report_to_saucelabs(session_id, true),
+                test_platform_promise(stream_id)
+            ]);
         }
 
         function on_fail(msg) {
             failed_platforms.push(platform);
             gutil.log(platform._title.red + " " + "FAIL".bgRed.white.bold +
                       ":\n" + msg + "\n");
-            return test_platform_promise(stream_id);           
+            return Promise.all([
+                wdr.report_to_saucelabs(session_id, false),
+                test_platform_promise(stream_id)
+            ]);
+        }
+
+        function extract_session_id(spec) {
+            session_id = spec.browser.sessionID;
+            return spec;
         }
 
         return wdr.sauceLabs(platform, config)
+            .then(extract_session_id)
             .then(wdr.tests)
             .then(on_success, on_fail)
     }

@@ -14,6 +14,7 @@ var wd = require('wd'),
     gutil = require('gulp-util'),
     extend = require('extend'),
     path = require('path'),
+    request = require('request'),
     Promise = require('promise'),
     env = process.env,
     token = env.SAUCE_ACCESS_KEY,
@@ -21,10 +22,10 @@ var wd = require('wd'),
     cancelled = false,
     TEST_VARIANTS = [
       "runner.html",
-      "runner.html?jquery=1",
-      "runner.html?jquery=1&modernizr=1",
+      // "runner.html?jquery=1",
+      // "runner.html?jquery=1&modernizr=1",
       "runner.html?innershiv=0",
-      "runner.html?innershiv=0&jquery=1",
+      // "runner.html?innershiv=0&jquery=1",
       "runner.html?json2=0",
     ];
 
@@ -98,6 +99,24 @@ exports.sauceLabs = function (platform, config) {
         _title: platform._title,
       };
     });
+}
+
+module.exports.report_to_saucelabs =
+function report_to_saucelabs(session_id, passed) {
+  var user = process.env.SAUCE_USERNAME,
+      pass = process.env.SAUCE_ACCESS_KEY,
+      params = {
+        method: 'PUT',
+        uri: ['https://saucelabs.com/rest/v1', user, 'jobs', session_id].join('/'),
+        auth: {user: user, pass:pass},
+        json: {passed: passed}
+      };
+
+  return new Promise(function (resolve, reject) {
+    request(params)
+      .on('error', reject)
+      .on('response', resolve);
+  })
 }
 
 function on_results(fails) {
