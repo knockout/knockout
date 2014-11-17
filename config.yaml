@@ -244,6 +244,9 @@ test_platforms:
   - {platform: 'Windows 8', browserName: firefox, version: 33}
   - {platform: 'Windows 8', browserName: firefox, version: 30}
   - {platform: 'Windows 8', browserName: firefox, version: 26}
+  - {platform: Linux, browserName: firefox, version: 25}
+  - {platform: Linux, browserName: firefox, version: 24}
+  - {platform: Linux, browserName: firefox, version: 23}
   - {platform: Linux, browserName: firefox, version: 22}
   - {platform: Linux, browserName: firefox, version: 10}
 
