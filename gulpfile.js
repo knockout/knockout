@@ -141,7 +141,9 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
                 gutil.log("Error processing test streams: " + msg.red)
             })
             .then(function () {
-                var failed_platform_names = failed_platforms.map(function (fp) { return fp.name.trim().red });
+                var failed_platform_names = failed_platforms.map(function (fp) {
+                    return fp.name.trim().replace(/[-—|]/g, '').red
+                });
                 gutil.log()
                 gutil.log(("Webdriver tested " + idx + " platforms.").cyan);
                 if (failed_platforms.length)
