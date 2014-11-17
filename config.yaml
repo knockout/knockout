@@ -251,3 +251,17 @@ test_platforms:
   # Safari
   - {platform: 'OS X 10.9', browserName: safari, version: 7}
   - {platform: 'OS X 10.10', browserName: safari, version: 8}
+
+  # Android
+  - {platform: Linux, browserName: android, version: '4.4'}
+  - {platform: Linux, browserName: android, version: '4.3'}
+  - {platform: Linux, browserName: android, version: '4.2'}
+  - {platform: Linux, browserName: android, version: '4.0'}
+  - {platform: Linux, browserName: android, version: '4.0'}
+
+  # iOS
+  - {platform: 'OS X 10.9', browserName: iPhone, version: '8.1'}
+  - {platform: 'OS X 10.9', browserName: iPhone, version: '7.1'}
+  - {platform: 'OS X 10.8', browserName: iPhone, version: '6.1'}
+  - {platform: 'OS X 10.8', browserName: iPhone, version: '5.1'}
+  - {platform: 'OS X 10.6', browserName: iPhone, version: '4.3'}
