@@ -235,6 +235,11 @@ server_port: 8081
 # https://saucelabs.com/platforms
 test_platforms:
   # Chrome
+  - {platform: 'Windows 8', browserName: chrome, version: 30}
+  - {platform: 'Windows 8', browserName: chrome, version: 31}
+  - {platform: 'Windows 8', browserName: chrome, version: 32}
+  - {platform: 'Windows 8', browserName: chrome, version: 33}
+  - {platform: 'Windows 8', browserName: chrome, version: 34}
   - {platform: 'Windows 8', browserName: chrome, version: 35}
   - {platform: 'Windows 8', browserName: chrome, version: 36}
   - {platform: 'Windows 8', browserName: chrome, version: 37}
@@ -242,9 +247,14 @@ test_platforms:
   
   # Firefox
   - {platform: 'Windows 8', browserName: firefox, version: 33}
-  - {platform: 'Windows 8', browserName: firefox, version: 30}
+  - {platform: 'Windows 8', browserName: firefox, version: 32}
+  - {platform: 'Windows 8', browserName: firefox, version: 31}
+  - {platform: 'Linux', browserName: firefox, version: 30}
+  - {platform: 'Windows 8', browserName: firefox, version: 29}
+  - {platform: 'Windows 8.1', browserName: firefox, version: 28}
+  - {platform: 'Windows 7', browserName: firefox, version: 27}
   - {platform: 'Windows 8', browserName: firefox, version: 26}
-  - {platform: Linux, browserName: firefox, version: 25}
+  - {platform: 'Windows 8', browserName: firefox, version: 25}
   - {platform: Linux, browserName: firefox, version: 24}
   - {platform: Linux, browserName: firefox, version: 23}
   - {platform: Linux, browserName: firefox, version: 22}
@@ -268,9 +278,13 @@ test_platforms:
   - {platform: Linux, browserName: android, version: '4.1'}
   - {platform: Linux, browserName: android, version: '4.0'}
 
-  # iOS
+  # iPhone
   - {platform: 'OS X 10.9', browserName: iPhone, version: '8.1'}
   - {platform: 'OS X 10.9', browserName: iPhone, version: '7.1'}
   - {platform: 'OS X 10.8', browserName: iPhone, version: '6.1'}
   - {platform: 'OS X 10.8', browserName: iPhone, version: '5.1'}
   - {platform: 'OS X 10.6', browserName: iPhone, version: '4.3'}
+
+  # iPad
+  - {platform: 'OS X 10.9', browserName: iPad, version: '8.1'}
+  - {platform: 'OS X 10.9', browserName: iPad, version: '7.1'}

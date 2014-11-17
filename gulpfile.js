@@ -236,7 +236,7 @@ gulp.task('build-debug', function () {
         .pipe(gulp.dest(config.buildDir))
 })
 
-if (config.minifier === 'closure')
+if (config.minifier === 'closure' || process.env.MINIFIER === 'closure')
     gulp.task("build", ['build-debug'], function () {
         var closure = require('closure-compiler'),
             through = require('through'),

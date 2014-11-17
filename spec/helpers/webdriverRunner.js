@@ -56,7 +56,7 @@ exports.phantom = function (config) {
     .then(function () {
       return {
         browser: browser,
-        name: "PhantomJS",
+        _title: "PhantomJS",
         uris: TEST_VARIANTS.map(function (endpoint) { 
           return "file://" + process.cwd() + "/" + endpoint;
         })
