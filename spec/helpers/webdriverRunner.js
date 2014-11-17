@@ -18,7 +18,15 @@ var wd = require('wd'),
     env = process.env,
     token = env.SAUCE_ACCESS_KEY,
     browsers = [],
-    cancelled = false;
+    cancelled = false,
+    TEST_VARIANTS = [
+      "runner.html",
+      "runner.html?jquery=1",
+      "runner.html?jquery=1&modernizr=1",
+      "runner.html?innershiv=0",
+      "runner.html?innershiv=0&jquery=1",
+      "runner.html?json2=0",
+    ];
 
 process.on("SIGINT", function () {
   if (cancelled === true) {
@@ -41,16 +49,16 @@ exports.phantom = function (config) {
         browserName: 'phantomjs'
       };
 
+  gutil.log("Opening phantom at " + phantom_host + ":" + phantom_port);
+
   return browser.init(capabilities)
     .then(function () {
       return {
         browser: browser,
         name: "PhantomJS",
-        uris: [
-          'file://' + process.cwd() + '/runner.html',
-          'file://' + process.cwd() + '/runner.jquery.html',
-          'file://' + process.cwd() + '/runner.modernizr.html',
-        ]
+        uris: TEST_VARIANTS.map(function (endpoint) { 
+          return "file://" + process.cwd() + "/" + endpoint;
+        })
       }
     });
 };
@@ -83,13 +91,11 @@ exports.sauceLabs = function (platform, config) {
   return browser.init(capabilities)
     .then(function () {
       return {
-        uris: [
-          'http://localhost:7070/runner.html',
-          'http://localhost:7070/runner.jquery.html',
-          'http://localhost:7070/runner.modernizr.html',
-        ],
+        uris: TEST_VARIANTS.map(function (endpoint) { 
+          return "http://localhost:7070/" + endpoint;
+        }),
         browser: browser,
-        name: platform.name,
+        _title: platform._title,
       };
     });
 }
@@ -111,17 +117,17 @@ function wait_for_results(browser) {
 
 exports.tests = function tests(spec) {
   if (cancelled) return Promise.reject("Tests cancelled");
-  gutil.log(spec.name.blue + " <-o-> Initiated browser");
+  gutil.log(spec._title.blue + " <-o-> Initiated browser");
 
   browsers.push(spec.browser);
 
   function on_fin() {
-    gutil.log(spec.name.yellow +  " <-/-> Closing browser connection");
+    gutil.log(spec._title.yellow +  " <-/-> Closing browser connection");
     return spec.browser.quit();
   }
 
   function test_uri(uri) {
-    gutil.log(spec.name.white + " <url> " + uri)
+    gutil.log(spec._title.white + " <url> " + uri)
     return spec.browser
       .get(uri)
       .then(wait_for_results(spec.browser))

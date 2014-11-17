@@ -31,9 +31,7 @@ var
             "node_modules/jasmine-tapreporter/src/tapreporter.js",
             "spec/helpers/beforeEach.js",
             "spec/helpers/jasmine.browser.js",
-            // Knockout polyfills
-            "spec/helpers/innershiv.js",
-            "spec/helpers/json2.js",
+            "spec/helpers/loadDependencies.js",
     ],
 
     // Linting and trailing whitespace detection
@@ -101,17 +99,17 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
 
         var platform = platforms[idx++];
         // We add an indent to make it easier to visualize which results
-        // correspond to the progress in the given stream.
-        platform.name = Array(stream_id + 1).join("————————————————|  ") + platform.name;
+        // correspond to the progress in the given parallel stream.
+        platform._title = Array(stream_id + 1).join("————————————————|  ") + platform.name;
 
         function on_success() {
-            gutil.log(platform.name.green + "  ✓  ".green)
+            gutil.log(platform._title.green + "  ✓  ".green)
             return test_platform_promise(stream_id);
         }
 
         function on_fail(msg) {
             failed_platforms.push(platform);
-            gutil.log(platform.name.red + " " + "< X >".bgRed.white.bold +
+            gutil.log(platform._title.red + " " + "FAIL".bgRed.white.bold +
                       ":\n" + msg + "\n");
             return test_platform_promise(stream_id);           
         }
@@ -142,7 +140,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
             })
             .then(function () {
                 var failed_platform_names = failed_platforms.map(function (fp) {
-                    return fp.name.trim().replace(/[-—|]/g, '').red
+                    return fp.name.red
                 });
                 gutil.log()
                 gutil.log(("Webdriver tested " + idx + " platforms.").cyan);
@@ -398,14 +396,6 @@ gulp.task("runner", function () {
         .pipe(replace("SETUP", setup_scripts))
         .pipe(replace("SOURCE", config.sources))
         .pipe(replace("SPECS", config.spec_files))
-        .pipe(gulp.dest("./"))
-        // create runner with jquery
-        .pipe(replace("JQUERY_JS", [config.JQUERY_JS]))
-        .pipe(plugins.rename("runner.jquery.html"))
-        .pipe(gulp.dest("./"))
-        // create runner with modernizr
-        .pipe(replace("MODERNIZR_JS", [config.MODERNIZR_JS]))
-        .pipe(plugins.rename("runner.modernizr.html"))
         .pipe(gulp.dest("./"))
 })
 
