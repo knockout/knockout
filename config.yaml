@@ -160,6 +160,7 @@ sources:
 # Test files -- Node
 node_spec_files:
   - ./spec/helpers/beforeEach.js
+
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
   - ./spec/dependentObservableBehaviors.js
@@ -198,6 +199,7 @@ spec_files:
   - ./spec/jsonPostingBehaviors.js
   - ./spec/nativeTemplateEngineBehaviors.js
   - ./spec/utilsBehaviors.js
+
   - ./spec/defaultBindings/attrBehaviors.js
   - ./spec/defaultBindings/checkedBehaviors.js
   - ./spec/defaultBindings/clickBehaviors.js
@@ -214,6 +216,7 @@ spec_files:
   - ./spec/defaultBindings/styleBehaviors.js
   - ./spec/defaultBindings/submitBehaviors.js
   - ./spec/defaultBindings/textBehaviors.js
+  - ./spec/defaultBindings/textInputBehaviors.js
   - ./spec/defaultBindings/uniqueNameBehaviors.js
   - ./spec/defaultBindings/valueBehaviors.js
   - ./spec/defaultBindings/visibleBehaviors.js
@@ -239,6 +242,9 @@ test_platforms:
   
   # Firefox
   - {platform: 'Windows 8', browserName: firefox, version: 33}
+  - {platform: 'Windows 8', browserName: firefox, version: 30}
+  - {platform: 'Windows 8', browserName: firefox, version: 26}
+  - {platform: Linux, browserName: firefox, version: 22}
   - {platform: Linux, browserName: firefox, version: 10}
 
   # Internet Explorer
@@ -256,7 +262,7 @@ test_platforms:
   - {platform: Linux, browserName: android, version: '4.4'}
   - {platform: Linux, browserName: android, version: '4.3'}
   - {platform: Linux, browserName: android, version: '4.2'}
-  - {platform: Linux, browserName: android, version: '4.0'}
+  - {platform: Linux, browserName: android, version: '4.1'}
   - {platform: Linux, browserName: android, version: '4.0'}
 
   # iOS
