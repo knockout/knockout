@@ -1,6 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
         <!-- jasmine -->
         <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
         <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
@@ -11,24 +13,8 @@
         <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
         <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
 
-        <!-- All specs should pass with or without jQuery+Modernizr being referenced -->
-        <!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.js"></script>-->
-        <!--<script type="text/javascript" src="http://modernizr.com/downloads/modernizr-latest.js"></script>-->
-
-        <!-- knockout polyfills -->
-        <script type="text/javascript" src="lib/innershiv.js"></script>
-        <script type="text/javascript" src="lib/json2.js"></script>
-
-        <!-- knockout -->
-        <script type="text/javascript">
-            // By default, we run the tests against knockout-raw.js, but you can specify an alternative test
-            // subject as a querystring parameter, e.g., runner.html?src=build/output/knockout-latest.js.
-            // This is used by our automated test runners (PhantomJS and Testling CI).
-            (function() {
-                var koFilenameParam = location.href.match(/[?&]src=([^&]+)/);
-                jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "build/knockout-raw.js"));
-            })();
-        </script>
+        <!-- knockout and other dependencies -->
+        <script type="text/javascript" src="lib/loadDependencies.js"></script>
 
         <!-- specs -->
         <script type="text/javascript" src="arrayEditDetectionBehaviors.js"></script>
@@ -81,6 +67,8 @@
         <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>
         <script type="text/javascript" src="defaultBindings/visibleBehaviors.js"></script>
         <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
+
+        <script type="text/javascript" src="crossWindowBehaviors.js"></script>
     </head>
     <body>
         <script type="text/javascript">
