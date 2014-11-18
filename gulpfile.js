@@ -154,11 +154,11 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
             .then(function () {
                 var failed_platform_names = failed_platforms.map(function (fp) {
                     return fp.name.red
-                });
+                }).sort();
                 gutil.log()
                 gutil.log(("Webdriver tested " + idx + " platforms.").cyan);
                 if (failed_platforms.length)
-                    gutil.log("Failed platforms: " + failed_platform_names.join(", "))
+                    gutil.log("Failed platforms:\n\t" + failed_platform_names.join("\n\t"))
                 tunnel.stop(on_tunnel_stop);
             })
             .done()
