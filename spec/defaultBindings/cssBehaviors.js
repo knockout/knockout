@@ -94,7 +94,6 @@ describe('Binding: CSS classes', function() {
             }
             expect(bind).toThrowContaining("does not support classList property for <svg> tags.");
         }
-
     })
 
     it('Should change dynamic CSS class(es) if null is specified', function() {
