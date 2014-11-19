@@ -79,8 +79,13 @@ ko.utils = (function () {
     }
 
     function toggleDomNodeClassWithClassList(node, classNames, shouldHaveClass) {
+        var addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'],
+            matches;
         if (classNames) {
-            node.classList[shouldHaveClass ? 'add' : 'remove'].apply(node.classList, classNames.match(cssClassNameRegex))
+            matches = classNames.match(cssClassNameRegex);
+            for (var i = 0, j = matches.length; i < j; ++i) {
+                addOrRemoveFn.call(node.classList, matches[i]);
+            }
         }
     }
 
