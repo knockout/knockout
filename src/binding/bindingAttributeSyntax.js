@@ -379,8 +379,7 @@
                         );
                     }
                 } catch (ex) {
-                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
-                    throw ex;
+                    throw new Error("Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message);
                 }
             });
         }
