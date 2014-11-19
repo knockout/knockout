@@ -73,7 +73,7 @@ describe('Binding: CSS classes', function() {
     // - http://voormedia.com/blog/2012/10/displaying-and-detecting-support-for-svg-images
     // - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/svg.js
     it("should change the class of an SVG tag if classList is supported", function () {
-        if ('classList' in document.createElement('div')) {
+        if ('classList' in document.createElement('svg')) {
             var observable = ko.observable();
             testNode.innerHTML = "<svg class='Y' data-bind='css: {x: someModelProperty}'></svg>";
             ko.applyBindings({someModelProperty: observable}, testNode);
