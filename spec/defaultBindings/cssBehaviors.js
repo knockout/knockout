@@ -63,8 +63,8 @@ describe('Binding: CSS classes', function() {
     });
 
     // When there is SVG support in the browser, we want to ensure the CSS binding works with Knockout.
-    // 
-    // According to http://caniuse.com/ 
+    //
+    // According to http://caniuse.com/
     //  - IE9+ supports SVG (http://caniuse.com/#search=svg)
     //  - IE10+ supports classList (http://caniuse.com/#search=classList)
     // So we run the following test for SVG from
