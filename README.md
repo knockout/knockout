@@ -90,6 +90,11 @@ To run the tests with Sauce Labs you will need an Sauce Labs account. Once you h
     $ export SAUCE_ACCESS_KEY=<<access key>>
     $ gulp test:saucelabs
 
+You can also limit the tests to matching browser/platform name, for example:
+ 
+    $ gulp test:saucelabs --only firefox
+    $ gulp test:saucelabs --only explorer:10
+    $ gulp test:saucelabs --only linux
 
 ## License
 

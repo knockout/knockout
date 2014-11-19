@@ -9,21 +9,22 @@ var
     /* Imports */
     fs = require('fs'),
     gulp = require('gulp'),
-    plugins = require("gulp-load-plugins")(),
-    vmap = require('vinyl-map'),
     gutil = require('gulp-util'),
-    yaml = require("js-yaml"),
-    Promise = require('promise'),
     http = require('http'),
-    env = process.env,
+    plugins = require("gulp-load-plugins")(),
+    Promise = require('promise'),
+    vmap = require('vinyl-map'),
+    yaml = require("js-yaml"),
+    yargs = require('yargs'),
 
     // Our settings
+    env = process.env,
     pkg = require('./package.json'),
     config = yaml.safeLoad(fs.readFileSync('./config.yaml', 'utf8')),
 
-    // scripts that are loaded by the browser during testing;
-    // in runner.template.html the respective comments are replace by
-    // the respective <script> tags
+    // The following are loaded by the browser during testing;
+    // in runner.template.html the respective comments are replaced by
+    // corresponding <script> tags.
     setup_scripts = [
             "http://localhost:" + config.livereload_port + "/livereload.js",
             config.JASMINE_JS,
@@ -80,16 +81,22 @@ gulp.task("test:phantom", ['build', 'runner'], function (done) {
 gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     var idx = 0,
         failed_platforms = [],
-        platforms = config.test_platforms,
+        platforms = [],
         wdr = require('./spec/helpers/webdriverRunner'),
         SauceTunnel = require('sauce-tunnel'),
         connect = require('connect'),
         serveStatic = require('serve-static'),
         tunnel = new SauceTunnel(env.SAUCE_USERNAME, env.SAUCE_ACCESS_KEY, false, true,
-            ['-v', '-P', '4447', '-i', env.TRAVIS_JOB_NUMBER || 'LOCAL']);
+            ['-v', '-P', '4447', '-i', env.TRAVIS_JOB_NUMBER || 'LOCAL']),
+        grep_only = yargs.argv.only;
 
-    platforms.forEach(function(p) {
+    config.test_platforms.forEach(function(p) {
         p.name = "" + p.platform + "/" + p.browserName + ':' + p.version;
+        if (grep_only && !p.name.match(new RegExp(grep_only, 'i'))) {
+            gutil.log("Skipping " + p.browserName + ":" + p.version);
+            return
+        }
+        platforms.push(p);
     });
 
     function test_platform_promise(stream_id) {
@@ -133,6 +140,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
     }
 
     function on_tunnel_start(status) {
+        gutil.log("SauceLabs tunnel open.")
         var streams = [];
 
         if (!status) {
@@ -182,15 +190,18 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
 
     // Optional extra debugging. Also, check out:
     // https://github.com/axemclion/grunt-saucelabs/blob/master/tasks/saucelabs.js
-    // tunnel.on('verbose:ok', gutil.log)
-    // tunnel.on('verbose:debug', gutil.log)
-    // tunnel.on('log:error', gutil.log)
+    if (yargs.argv.verbose) {
+        tunnel.on('verbose:ok', gutil.log)
+        tunnel.on('verbose:debug', gutil.log)
+        tunnel.on('log:error', gutil.log)
+    }
 
     // Serve our local files.
     connect().use(serveStatic(__dirname)).listen(7070);
 
     // If the tunnel fails, make sure nothing is listening on the
     // port, with e.g. lsof -wni tcp:4445
+    gutil.log("Opening SauceLabs tunnel (with " + config.test_streams + " concurrent streams)")
     tunnel.start(on_tunnel_start)
 })
 
