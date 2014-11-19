@@ -379,7 +379,8 @@
                         );
                     }
                 } catch (ex) {
-                    throw new Error("Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message);
+                    // stack trace is appended to the message to avoid it being lost
+                    throw new Error("Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message + "\n" + ex.stack);
                 }
             });
         }
