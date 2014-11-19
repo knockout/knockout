@@ -72,8 +72,11 @@ describe('Binding: CSS classes', function() {
     // See also:
     // - http://voormedia.com/blog/2012/10/displaying-and-detecting-support-for-svg-images
     // - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/svg.js
+    // - https://github.com/eligrey/classList.js/pull/18
+    var svgTag = document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
     it("should change the class of an SVG tag if classList is supported", function () {
-        if ('classList' in document.createElement('svg')) {
+        if (svgTag && typeof svgTag.classList === 'object') {
             var observable = ko.observable();
             testNode.innerHTML = "<svg class='Y' data-bind='css: {x: someModelProperty}'></svg>";
             ko.applyBindings({someModelProperty: observable}, testNode);
@@ -82,6 +85,17 @@ describe('Binding: CSS classes', function() {
             expect(testNode.childNodes[0].getAttribute('class')).toEqual("Y x");
         }
     });
+
+    it("should throw an error when the SVG tag does not support classList", function () {
+        if (svgTag && typeof svgTag.classList === 'undefined') {
+            testNode.innerHTML = "<svg class='Y' data-bind='css: x'></svg>";
+            function bind() {
+                ko.applyBindings({x: '1'}, testNode);
+            }
+            expect(bind).toThrowContaining("does not support classList property for <svg> tags.");
+        }
+
+    })
 
     it('Should change dynamic CSS class(es) if null is specified', function() {
         // See https://github.com/knockout/knockout/issues/1468

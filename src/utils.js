@@ -66,7 +66,7 @@ ko.utils = (function () {
     // See https://github.com/knockout/knockout/issues/337
     // and https://github.com/knockout/knockout/issues/1594
     var cssClassNameRegex = /\S+/g,
-        nodesSupportClassList = document && 'classList' in document.createElement('div');
+        nodesSupportClassList = document && 'classList' in document.createElement('_');
 
     function toggleDomNodeClassWithClassName(node, classNames, shouldHaveClass) {
         if (classNames) {
@@ -79,6 +79,11 @@ ko.utils = (function () {
     }
 
     function toggleDomNodeClassWithClassList(node, classNames, shouldHaveClass) {
+        if (!node.classList) {
+            // We are dealing with a browser that has svg and classList support, but
+            // not support for classList on the svg element.
+            throw new Error("Browser does not support classList property for <svg> tags.")
+        }
         var addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'],
             matches;
         if (classNames) {
