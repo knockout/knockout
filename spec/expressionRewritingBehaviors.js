@@ -55,16 +55,24 @@ describe('Expression Rewriting', function() {
         expect(result[1].value).toEqual("function(){var regex=/{/g;return/123/;}");
     });
 
+    it('Should parse a value that begins with a colon', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("a: :-)");
+        expect(result.length).toEqual(1);
+        expect(result[0].key).toEqual("a");
+        expect(result[0].value).toEqual(":-)");
+    });
+
     it('Should be able to cope with malformed syntax (things that aren\'t key-value pairs)', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, { malformed: 4 }, good5:5");
-        expect(result.length).toEqual(4);
+        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, {malformed:4}, good5:5, keyonly:");
+        expect(result.length).toEqual(6);
         expect(result[0].unknown).toEqual("malformed1");
         expect(result[1].unknown).toEqual("mal:formed2");
         expect(result[2].key).toEqual("good");
         expect(result[2].value).toEqual("3");
-        // "{ malformed: 4 }" gets skipped because there's no valid key value
-        expect(result[3].key).toEqual("good5");
-        expect(result[3].value).toEqual("5");
+        expect(result[3].unknown).toEqual("{malformed:4}");
+        expect(result[4].key).toEqual("good5");
+        expect(result[4].value).toEqual("5");
+        expect(result[5].unknown).toEqual("keyonly");
     });
 
     it('Should ensure all keys are wrapped in quotes', function() {
