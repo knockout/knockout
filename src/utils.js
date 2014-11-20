@@ -61,10 +61,9 @@ ko.utils = (function () {
         var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
-
-    // Prefer node.classList, as it works with SVG.
-    // See https://github.com/knockout/knockout/issues/337
-    // and https://github.com/knockout/knockout/issues/1594
+    
+    // For details on the pattern for changing node classes
+    // see: https://github.com/knockout/knockout/issues/1597
     var cssClassNameRegex = /\S+/g;
 
     function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
