@@ -61,7 +61,7 @@ ko.utils = (function () {
         var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
-    
+
     // For details on the pattern for changing node classes
     // see: https://github.com/knockout/knockout/issues/1597
     var cssClassNameRegex = /\S+/g;
