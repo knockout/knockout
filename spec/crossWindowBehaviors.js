@@ -1,12 +1,11 @@
 describe('Cross-window support', function() {
-
     it('Should work in another window', function () {
+        var win2 = window.open("spec/blank.html", "_blank", "height=150,location=no,menubar=no,toolbar=no,width=250"),
+            body2;
+
         this.after(function() {
             win2.close();
         });
-
-        var win2 = window.open("blank.html", "_blank", "height=150,location=no,menubar=no,toolbar=no,width=250"),
-            body2;
 
         waitsFor(function () {
             return (win2.document && win2.document.readyState == 'complete' && (body2 = win2.document.body));

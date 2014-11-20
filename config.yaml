@@ -159,7 +159,7 @@ sources:
 
 # Test files -- Node
 node_spec_files:
-  - ./spec/helpers/beforeEach.js
+  - ./spec/helpers/jasmine.setup.js
 
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
@@ -174,7 +174,8 @@ node_spec_files:
   - ./spec/subscribableBehaviors.js
   - ./spec/utilsBehaviors.js
 
-# Test files -- Phantom/etc
+# Test files -- compiled with spec/helpers/runner.template.html
+#               to form runner.html
 spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/arrayToDomEditDetectionBehaviors.js
@@ -199,6 +200,7 @@ spec_files:
   - ./spec/jsonPostingBehaviors.js
   - ./spec/nativeTemplateEngineBehaviors.js
   - ./spec/utilsBehaviors.js
+  - ./spec/crossWindowBehaviors.js
 
   - ./spec/defaultBindings/attrBehaviors.js
   - ./spec/defaultBindings/checkedBehaviors.js
