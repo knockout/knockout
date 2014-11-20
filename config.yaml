@@ -222,6 +222,12 @@ spec_files:
   - ./spec/defaultBindings/visibleBehaviors.js
   - ./spec/defaultBindings/withBehaviors.js
 
+  - ./spec/components/componentBindingBehaviors.js
+  - ./spec/components/customElementBehaviors.js
+  - ./spec/components/defaultLoaderBehaviors.js
+  - ./spec/components/loaderRegistryBehaviors.js
+
+
 
 #       TESTING
 #
@@ -244,7 +250,7 @@ test_platforms:
   - {platform: 'Windows 8', browserName: chrome, version: 36}
   # - {platform: 'Windows 8', browserName: chrome, version: 37}
   - {platform: 'Windows 8', browserName: chrome, version: 38}
-  
+
   # Firefox
   - {platform: 'Windows 8', browserName: firefox, version: 33}
   - {platform: 'Windows 8', browserName: firefox, version: 32}
