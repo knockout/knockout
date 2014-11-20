@@ -67,15 +67,13 @@ ko.utils = (function () {
     var cssClassNameRegex = /\S+/g;
 
     function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
-        var matches,
-            addOrRemoveFn;
+        var addOrRemoveFn;
         if (classNames) {
             if (typeof node.classList === 'object') {
                 addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'];
-                matches = classNames.match(cssClassNameRegex);
-                for (var i = 0, j = matches.length; i < j; ++i) {
-                    addOrRemoveFn.call(node.classList, matches[i]);
-                }
+                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                    addOrRemoveFn.call(node.classList, className);
+                });
             } else if (typeof node.className['baseVal'] === 'string') {
                 // SVG tag .classNames is an SVGAnimatedString instance
                 toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
