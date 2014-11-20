@@ -28,8 +28,9 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
-    this.renderTemplateSource = function (templateSource, bindingContext, options) {
+    this.renderTemplateSource = function (templateSource, bindingContext, options, templateDocument) {
         var data = bindingContext['$data'];
+        templateDocument = templateDocument || document;
         options = options || {};
         var templateText = templateSource.text();
         if (typeof templateText == "function")
@@ -68,24 +69,24 @@ var dummyTemplateEngine = function (templates) {
 
         // Use same HTML parsing code as real template engine so as to trigger same combination of IE weirdnesses
         // Also ensure resulting nodelist is an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result));
+        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result, templateDocument));
     };
 
-    this.rewriteTemplate = function (template, rewriterCallback) {
+    this.rewriteTemplate = function (template, rewriterCallback, templateDocument) {
         // Only rewrite if the template isn't a function (can't rewrite those)
-        var templateSource = this.makeTemplateSource(template);
+        var templateSource = this.makeTemplateSource(template, templateDocument);
         if (typeof templateSource.text() != "function")
-            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
+            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback, templateDocument);
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };
 dummyTemplateEngine.prototype = new ko.templateEngine();
 
 describe('Templating', function() {
-    beforeEach(function() {
+    beforeEach(jasmine.prepareTestNode);
+    afterEach(function() {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
     });
-    beforeEach(jasmine.prepareTestNode);
 
     it('Template engines can return an array of DOM nodes', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ x: [document.createElement("div"), document.createElement("span")] }));
@@ -483,7 +484,7 @@ describe('Templating', function() {
         var model = {
             testNodes: [
                 document.createTextNode("begin"),
-                document.createElement("div"),
+                document.createElement("span"),
                 document.createTextNode("end")
             ],
             testData: { name: ko.observable("alpha") }
@@ -491,11 +492,11 @@ describe('Templating', function() {
         model.testNodes[1].setAttribute("data-bind", "template: 'innerTemplate'"); // See that bindings are applied to the injected nodes
 
         ko.applyBindings(model, testNode);
-        expect(testNode.childNodes[0]).toContainHtml("begin<div>the name is alpha</div>end");
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is alpha</span>end");
 
         // The injected bindings update to match model changes as usual
         model.testData.name("beta");
-        expect(testNode.childNodes[0]).toContainHtml("begin<div>the name is beta</div>end");
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
     });
 
     it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {
@@ -504,7 +505,7 @@ describe('Templating', function() {
         // This time we'll check that the nodes array doesn't have to be a real array - it can be the .childNodes
         // property of a DOM element, which is subtly different.
         var templateContainer = document.createElement("div");
-        templateContainer.innerHTML = "[<div data-bind='text: name'></div>]";
+        templateContainer.innerHTML = "[<span data-bind='text: name'></span>]";
         var model = {
             testNodes: templateContainer.childNodes,
             testData: ko.observableArray([{ name: ko.observable("alpha") }, { name: "beta" }, { name: "gamma" }])
@@ -1103,4 +1104,4 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes[0].tagName).toEqual("P");
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
     });
-})
+});

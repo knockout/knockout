@@ -1,7 +1,5 @@
 describe('Native template engine', function() {
     beforeEach(function() {
-        ko.setTemplateEngine(new ko.nativeTemplateEngine());
-
         function ensureNodeExistsAndIsEmpty(id, tagName, type) {
             var existingNode = document.getElementById(id);
             if (existingNode != null)
