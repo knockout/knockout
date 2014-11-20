@@ -7,7 +7,7 @@
 //  knockout $ WD_HOST=hub.browserstack.com WD_PORT=80
 //    WD_USER=brianhunt1 WD_TOKEN=<<key>>
 //    gulp test
-// 
+//
 require('colors');
 
 var wd = require('wd'),
@@ -57,7 +57,7 @@ exports.phantom = function (config) {
       return {
         browser: browser,
         _title: "PhantomJS",
-        uris: TEST_VARIANTS.map(function (endpoint) { 
+        uris: TEST_VARIANTS.map(function (endpoint) {
           return "file://" + process.cwd() + "/" + endpoint;
         })
       }
@@ -92,7 +92,7 @@ exports.sauceLabs = function (platform, config) {
   return browser.init(capabilities)
     .then(function () {
       return {
-        uris: TEST_VARIANTS.map(function (endpoint) { 
+        uris: TEST_VARIANTS.map(function (endpoint) {
           return "http://localhost:7070/" + endpoint;
         }),
         browser: browser,
@@ -136,17 +136,17 @@ function wait_for_results(browser) {
 
 exports.tests = function tests(spec) {
   if (cancelled) return Promise.reject("Tests cancelled");
-  gutil.log(spec._title.blue + " <-o-> Initiated browser");
+  gutil.log(spec._title + " <-o-> Initiated browser".blue);
 
   browsers.push(spec.browser);
 
   function on_fin() {
-    gutil.log(spec._title.yellow +  " <-/-> Closing browser connection");
+    gutil.log(spec._title +  " <-/-> Closing browser connection");
     return spec.browser.quit();
   }
 
   function test_uri(uri) {
-    gutil.log(spec._title.white + " <url> " + uri)
+    gutil.log(spec._title + " <url> " + uri)
     return spec.browser
       .get(uri)
       .then(wait_for_results(spec.browser))

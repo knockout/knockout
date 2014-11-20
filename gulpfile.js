@@ -30,9 +30,9 @@ var
             config.JASMINE_JS,
             config.JASMINE_HTML_JS,
             "node_modules/jasmine-tapreporter/src/tapreporter.js",
-            "spec/helpers/beforeEach.js",
-            "spec/helpers/jasmine.browser.js",
+            "spec/helpers/jasmine.setup.js",
             "spec/helpers/loadDependencies.js",
+            "spec/helpers/jasmine.browser.js",
     ],
 
     // Linting and trailing whitespace detection
@@ -64,7 +64,7 @@ gulp.task("test:node", ['build', 'runner'], function () {
 })
 
 // Webdriver testing
-// 
+//
 // Start a phantom webdriver listener elsewhere with:
 //   $ phantomjs --webdriver=4445
 gulp.task("test:phantom", ['build', 'runner'], function (done) {
@@ -111,7 +111,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
         platform._title = Array(stream_id + 1).join("————————————————|  ") + platform.name;
 
         function on_success() {
-            gutil.log(platform._title.green + "  ✓  ".green)
+            gutil.log(platform._title + "  ✓  ".green)
             return Promise.all([
                 wdr.report_to_saucelabs(session_id, true),
                 test_platform_promise(stream_id)
@@ -120,7 +120,7 @@ gulp.task("test:saucelabs", ['build', 'runner'], function (done) {
 
         function on_fail(msg) {
             failed_platforms.push(platform);
-            gutil.log(platform._title.red + " " + "FAIL".bgRed.white.bold +
+            gutil.log(platform._title + " " + "FAIL".bgRed.white.bold +
                       ":\n" + msg + "\n");
             return Promise.all([
                 wdr.report_to_saucelabs(session_id, false),
