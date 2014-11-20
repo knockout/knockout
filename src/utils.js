@@ -65,33 +65,35 @@ ko.utils = (function () {
     // Prefer node.classList, as it works with SVG.
     // See https://github.com/knockout/knockout/issues/337
     // and https://github.com/knockout/knockout/issues/1594
-    var cssClassNameRegex = /\S+/g,
-        nodesSupportClassList = document && 'classList' in document.createElement('_');
+    var cssClassNameRegex = /\S+/g;
 
-    function toggleDomNodeClassWithClassName(node, classNames, shouldHaveClass) {
+    function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
+        var matches,
+            addOrRemoveFn;
         if (classNames) {
-            var currentClassNames = node.className.match(cssClassNameRegex) || [];
-            ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
-            });
-            node.className = currentClassNames.join(" ");
+            if (typeof node.classList === 'object') {
+                addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'];
+                matches = classNames.match(cssClassNameRegex);
+                for (var i = 0, j = matches.length; i < j; ++i) {
+                    addOrRemoveFn.call(node.classList, matches[i]);
+                }
+            } else if (typeof node.className.baseVal === 'string') {
+                // SVG tag .classNames is an SVGAnimatedString instance
+                toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
+            } else {
+                // node.className ought to be a string.
+                toggleObjectClassPropertyString(node, 'className', classNames, shouldHaveClass);
+            }
         }
     }
 
-    function toggleDomNodeClassWithClassList(node, classNames, shouldHaveClass) {
-        if (!node.classList) {
-            // We are dealing with a browser that has svg and classList support, but
-            // not support for classList on the svg element.
-            throw new Error("Browser does not support classList property for <svg> tags.")
-        }
-        var addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'],
-            matches;
-        if (classNames) {
-            matches = classNames.match(cssClassNameRegex);
-            for (var i = 0, j = matches.length; i < j; ++i) {
-                addOrRemoveFn.call(node.classList, matches[i]);
-            }
-        }
+    function toggleObjectClassPropertyString(obj, prop, classNames, shouldHaveClass) {
+        // obj/prop is either a node/'className' or a SVGAnimatedString/'baseVal'.
+        var currentClassNames = obj[prop].match(cssClassNameRegex) || [];
+        ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+            ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
+        });
+        obj[prop] = currentClassNames.join(" ");
     }
 
     return {
@@ -393,7 +395,7 @@ ko.utils = (function () {
             return ko.isObservable(value) ? value.peek() : value;
         },
 
-        toggleDomNodeCssClass: nodesSupportClassList ? toggleDomNodeClassWithClassList : toggleDomNodeClassWithClassName,
+        toggleDomNodeCssClass: toggleDomNodeCssClass,
 
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);

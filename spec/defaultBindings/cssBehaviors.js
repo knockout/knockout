@@ -86,13 +86,14 @@ describe('Binding: CSS classes', function() {
         }
     });
 
-    it("should throw an error when the SVG tag does not support classList", function () {
-        if (svgTag && typeof svgTag.classList === 'undefined') {
-            testNode.innerHTML = "<svg class='Y' data-bind='css: x'></svg>";
-            function bind() {
-                ko.applyBindings({x: '1'}, testNode);
-            }
-            expect(bind).toThrowContaining("does not support classList property for <svg> tags.");
+    it("should change the class of an SVG tag if className is an SVGAnimatedString", function () {
+        if (svgTag && typeof svgTag.className === 'object') {
+            var obs = ko.observable()
+            testNode.innerHTML = "<svg class='V' data-bind='css: {Xr: someModProp}'></svg>";
+            ko.applyBindings({someModProp: obs}, testNode);
+            expect(testNode.childNodes[0].getAttribute('class')).toEqual("V");
+            obs(true);
+            expect(testNode.childNodes[0].getAttribute('class')).toEqual("V Xr");
         }
     })
 
