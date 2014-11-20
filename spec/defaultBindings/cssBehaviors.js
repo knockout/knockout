@@ -62,21 +62,22 @@ describe('Binding: CSS classes', function() {
         expect(testNode.childNodes[0].className).toEqual("complex/className complex.className");
     });
 
-    // When there is SVG support in the browser, we want to ensure the CSS binding works with Knockout.
+    // Ensure CSS binding supports SVG, where applicable.
+    // The problem is that svg nodes do not have a className string property;  it will be a
+    // SVGAnimatedString. On more modern browsers, we can use the classList property, as it
+    // works as expected. Alternatively, when given a svg node we can use className.baseVal
+    // just as we would otherwise update a className string.
     //
-    // According to http://caniuse.com/
-    //  - IE9+ supports SVG (http://caniuse.com/#search=svg)
-    //  - IE10+ supports classList (http://caniuse.com/#search=classList)
-    // So we run the following test for SVG from
+    // Some reading:
+    // - https://github.com/knockout/knockout/pull/1597
     // - http://stackoverflow.com/questions/4118254
-    // See also:
     // - http://voormedia.com/blog/2012/10/displaying-and-detecting-support-for-svg-images
     // - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/svg.js
     // - https://github.com/eligrey/classList.js/pull/18
     var svgTag = document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-    it("should change the class of an SVG tag if classList is supported", function () {
-        if (svgTag && typeof svgTag.classList === 'object') {
+    it("should update the class of an SVG tag", function () {
+        if (svgTag) {
             var observable = ko.observable();
             testNode.innerHTML = "<svg class='Y' data-bind='css: {x: someModelProperty}'></svg>";
             ko.applyBindings({someModelProperty: observable}, testNode);
@@ -85,17 +86,6 @@ describe('Binding: CSS classes', function() {
             expect(testNode.childNodes[0].getAttribute('class')).toEqual("Y x");
         }
     });
-
-    it("should change the class of an SVG tag if className is an SVGAnimatedString", function () {
-        if (svgTag && typeof svgTag.className === 'object') {
-            var obs = ko.observable()
-            testNode.innerHTML = "<svg class='V' data-bind='css: {Xr: someModProp}'></svg>";
-            ko.applyBindings({someModProp: obs}, testNode);
-            expect(testNode.childNodes[0].getAttribute('class')).toEqual("V");
-            obs(true);
-            expect(testNode.childNodes[0].getAttribute('class')).toEqual("V Xr");
-        }
-    })
 
     it('Should change dynamic CSS class(es) if null is specified', function() {
         // See https://github.com/knockout/knockout/issues/1468
