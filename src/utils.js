@@ -77,7 +77,7 @@ ko.utils = (function () {
                 for (var i = 0, j = matches.length; i < j; ++i) {
                     addOrRemoveFn.call(node.classList, matches[i]);
                 }
-            } else if (typeof node.className.baseVal === 'string') {
+            } else if (typeof node.className['baseVal'] === 'string') {
                 // SVG tag .classNames is an SVGAnimatedString instance
                 toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
             } else {
