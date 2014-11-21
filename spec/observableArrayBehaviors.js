@@ -154,11 +154,11 @@ describe('Observable Array', function() {
     });
 
     it('Should notify subscribers on removeAll with object argument', function () {
-        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        testObservableArray(["Alpha", "Beta", "Gamma", null]);
         notifiedValues = [];
         var removed = testObservableArray.removeAll({length: 5});
         expect(removed).toEqual(["Alpha", "Gamma"]);
-        expect(notifiedValues).toEqual([["Beta"]]);
+        expect(notifiedValues).toEqual([["Beta", null]]);
     });
 
     it('Should notify "beforeChange" subscribers before remove', function () {

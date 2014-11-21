@@ -51,6 +51,7 @@ ko.observableArray['fn'] = {
         // Otherwise remove all objects with values matching properties of the passed object
         var props = Object.keys(arrayOfValuesOrObject);
         return this['remove'](function (value) {
+            if(!value) return false;
             //Return true if value matches all properties specified on arrayOfValuesOrObject
             for (var i = 0; i < props.length ; i++) {
                 var prop = props[i];
@@ -89,6 +90,7 @@ ko.observableArray['fn'] = {
         // Otherwise destroy all objects with values matching properties of the passed object
         var props = Object.keys(arrayOfValuesOrObject);
         return this['destroy'](function (value) {
+            if(!value) return false;
             //Return true if value matches all properties specified on arrayOfValuesOrObject
             for (var i = 0; i < props.length ; i++) {
                 var prop = props[i];
