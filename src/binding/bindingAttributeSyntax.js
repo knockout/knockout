@@ -367,7 +367,20 @@
                             }
                         });
                     }
+                } catch (ex) {
+                    ko.onBindingError({
+                        during: 'init',
+                        errorCaptured: ex,
+                        element: node,
+                        bindingKey: bindingKey,
+                        bindings: bindings,
+                        valueAccessor: getValueAccessor(bindingKey),
+                        allBindings: allBindings,
+                        bindingContext: bindingContext
+                    });
+                }
 
+                try {
                     // Run update in its own computed wrapper
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
@@ -379,8 +392,16 @@
                         );
                     }
                 } catch (ex) {
-                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
-                    throw ex;
+                    ko.onBindingError({
+                        during: 'update',
+                        errorCaptured: ex,
+                        element: node,
+                        bindingKey: bindingKey,
+                        bindings: bindings,
+                        valueAccessor: getValueAccessor(bindingKey),
+                        allBindings: allBindings,
+                        bindingContext: bindingContext
+                    });
                 }
             });
         }
@@ -454,6 +475,14 @@
         return context ? context['$data'] : undefined;
     };
 
+    // Error handler hook when a binding fails.
+    // Note: github.com/knockout/knockout/issues/1626
+    ko.onBindingError = function(spec) {
+        var error = spec.errorCaptured;
+        error.message = "Unable to process binding \"" + spec.bindingKey + ": " + spec.bindings[spec.bindingKey] + "\"\nMessage: " + error.message;
+        throw error;
+    };
+
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
@@ -461,4 +490,5 @@
     ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('contextFor', ko.contextFor);
     ko.exportSymbol('dataFor', ko.dataFor);
+    ko.exportSymbol('onBindingError', ko.onBindingError);
 })();

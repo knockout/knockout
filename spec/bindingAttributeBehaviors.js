@@ -96,6 +96,54 @@ describe('Binding attribute syntax', function() {
         }).toThrowContaining("Unable to process binding \"test: function");
     });
 
+    it("Should call ko.onBindingError with relevant details of a bindingHandler init error", function () {
+        var saved_obe = ko.onBindingError,
+            obe_calls = 0;
+        this.after(function () {
+            ko.onBindingError = saved_obe;
+        })
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('init');
+            expect(spec.errorCaptured.message).toEqual('A moth!');
+            expect(spec.bindingKey).toEqual('test')
+            expect(spec.valueAccessor()).toEqual(64728)
+            expect(spec.element).toEqual(testNode.children[0])
+            expect(spec.bindings.test()).toEqual(64728)
+            expect(spec.bindingContext.$data).toEqual('0xe')
+        }
+        ko.bindingHandlers.test = {
+            init: function () { throw new Error("A moth!") }
+        }
+        testNode.innerHTML = "<div data-bind='test: 64728'></div>";
+        ko.applyBindings('0xe', testNode);
+        expect(obe_calls).toEqual(1);
+    });
+
+    it("Should call ko.onBindingError with relevant details of a bindingHandler update error", function () {
+        var saved_obe = ko.onBindingError,
+            obe_calls = 0;
+        this.after(function () {
+            ko.onBindingError = saved_obe;
+        })
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('update');
+            expect(spec.errorCaptured.message).toEqual('A beetle!');
+            expect(spec.bindingKey).toEqual('test')
+            expect(spec.valueAccessor()).toEqual(64729)
+            expect(spec.element).toEqual(testNode.children[0])
+            expect(spec.bindings.test()).toEqual(64729)
+            expect(spec.bindingContext.$data).toEqual('0xf')
+        }
+        ko.bindingHandlers.test = {
+            update: function () { throw new Error("A beetle!") }
+        }
+        testNode.innerHTML = "<div data-bind='test: 64729'></div>";
+        ko.applyBindings('0xf', testNode);
+        expect(obe_calls).toEqual(1);
+    });
+
     it('Should invoke registered handlers\'s init() then update() methods passing binding data', function () {
         var methodsInvoked = [];
         ko.bindingHandlers.test = {
