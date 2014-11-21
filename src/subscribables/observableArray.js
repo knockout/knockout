@@ -74,16 +74,29 @@ ko.observableArray['fn'] = {
         this.valueHasMutated();
     },
 
-    'destroyAll': function (arrayOfValues) {
+    'destroyAll': function (arrayOfValuesOrObject) {
         // If you passed zero args, we destroy everything
-        if (arrayOfValues === undefined)
+        if (arrayOfValuesOrObject === undefined)
             return this['destroy'](function() { return true });
 
-        // If you passed an arg, we interpret it as an array of entries to destroy
-        if (!arrayOfValues)
-            return [];
+        arrayOfValuesOrObject = arrayOfValuesOrObject || [];
+        // If you passed an array, we interpret it as an array of entries to destroy
+        if (arrayOfValuesOrObject instanceof Array) {
+            return this['destroy'](function (value) {
+                return ko.utils.arrayIndexOf(arrayOfValuesOrObject, value) >= 0;
+            });
+        }
+        // Otherwise destroy all objects with values matching properties of the passed object
+        var props = Object.keys(arrayOfValuesOrObject);
         return this['destroy'](function (value) {
-            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0;
+            //Return true if value matches all properties specified on arrayOfValuesOrObject
+            for (var i = 0; i < props.length ; i++) {
+                var prop = props[i];
+                if (value[prop] !== arrayOfValuesOrObject[prop] ) {
+                    return false;
+                }
+            }
+            return true;
         });
     },
 

@@ -58,6 +58,16 @@ describe('Observable Array', function() {
         expect(z._destroy).toEqual(true);
     });
 
+    it('Should be able to mark multiple items as destroyed with an object argument', function () {
+        var x = {id: "x", val: 1}, y = {id: "y", val: 2}, z = {id: "z", val: 1};
+        testObservableArray([x, y, z]);
+        testObservableArray.destroyAll({val: 1});
+        expect(testObservableArray().length).toEqual(3);
+        expect(x._destroy).toEqual(true);
+        expect(y._destroy).toEqual(undefined);
+        expect(z._destroy).toEqual(true);
+    });
+
     it('Should be able to mark observable items as destroyed', function() {
         var x = ko.observable(), y = ko.observable();
         testObservableArray([x, y]);
