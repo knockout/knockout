@@ -120,9 +120,17 @@ ko.bindingHandlers['options'] = {
         ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, arrayToDomNodeChildrenOptions, callback);
 
         ko.dependencyDetection.ignore(function () {
-            if (allBindings.get('valueAllowUnset') && allBindings['has']('value')) {
+            if (allBindings.get('valueAllowUnset')) {
                 // The model value is authoritative, so make sure its value is the one selected
-                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+                if (allBindings['has']('value')){
+                    ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+                } else if (allBindings['has']('selectedOptions')) {
+                    var value = ko.utils.unwrapObservable(allBindings.get('selectedOptions'))
+                    ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
+                        var isSelected = ko.utils.arrayIndexOf(value, ko.selectExtensions.readValue(node)) >= 0;
+                        ko.utils.setOptionNodeSelectionState(node, isSelected);
+                    });
+                }
             } else {
                 // Determine if the selection has changed as a result of updating the options list
                 var selectionChanged;
