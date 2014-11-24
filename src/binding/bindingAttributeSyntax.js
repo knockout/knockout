@@ -379,7 +379,11 @@
                         );
                     }
                 } catch (ex) {
-                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
+                    var bindingValue = bindings[bindingKey]+"";
+                    if(bindingValue && bindingValue.substr(0, 42) == 'function __ko__value__accessor__(){return '){
+                        bindingValue = bindingValue.substring(42, bindingValue.length - 2);
+                    }
+                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindingValue + "\"\nMessage: " + ex.message;
                     throw ex;
                 }
             });
