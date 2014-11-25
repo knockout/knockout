@@ -153,6 +153,7 @@ If you want to map the `children` array yourself, you can specify that like this
 	var viewModel = ko.mapping.fromJS(data, mapping);
 
 The `options` argument supplied to your `create` callback is a JavaScript object containing:
+
  * `data`: The JavaScript object containing the data for this child
  * `parent`: The parent object or array to which this child belongs
  
