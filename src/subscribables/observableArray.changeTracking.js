@@ -6,15 +6,26 @@ ko.extenders['trackArrayChanges'] = function(target) {
     }
     var trackingChanges = false,
         cachedDiff = null,
+        arrayChangeSubscription,
         pendingNotifications = 0,
         underlyingSubscribeFunction = target.subscribe;
 
     // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
     target.subscribe = target['subscribe'] = function(callback, callbackTarget, event) {
+        var subscription =  underlyingSubscribeFunction.apply(this, arguments),
+            underlyingDisposeFunction = subscription.dispose;
         if (event === arrayChangeEventName) {
             trackChanges();
+            subscription.dispose = function () {
+                var disposeReturn = underlyingDisposeFunction.apply(this, arguments);
+                if (target.hasSubscriptionsForEvent(arrayChangeEventName) === 0) {
+                    arrayChangeSubscription.dispose();
+                    trackingChanges = false;
+                }
+                return disposeReturn;
+            };
         }
-        return underlyingSubscribeFunction.apply(this, arguments);
+        return subscription;
     };
 
     function trackChanges() {
@@ -38,7 +49,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
         // change it's possible to produce a diff
         var previousContents = [].concat(target.peek() || []);
         cachedDiff = null;
-        target.subscribe(function(currentContents) {
+        arrayChangeSubscription = target.subscribe(function(currentContents) {
             // Make a copy of the current contents and ensure it's an array
             currentContents = [].concat(currentContents || []);
 

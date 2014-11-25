@@ -88,6 +88,9 @@ describe('Observable Array change tracking', function() {
         captureCompareArraysCalls(function(callLog) {
             var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
                 browserSupportsSpliceWithoutDeletionCount = [1, 2].splice(1).length === 1;
+            
+            // Make sure there is one subscription, or we short-circuit cacheDiffForKnownOperation.
+            myArray.subscribe(function () {}, null, 'arrayChange');
 
             // Push
             testKnownOperation(myArray, 'push', {
@@ -308,6 +311,24 @@ describe('Observable Array change tracking', function() {
         list.push(toAdd);
         // See that descendent nodes are also added
         expect(list()).toEqual([ toAdd, toAdd.nodes[0], toAdd.nodes[1], toAdd.nodes[2], toAdd.nodes[0].nodes[0] ]);
+    });
+
+    // Per: https://github.com/knockout/knockout/issues/1503
+    it("Should cleanup a single arrayChange dependency", function() {
+        var source = ko.observableArray();
+        var arrayChange = source.subscribe(function() {}, null, "arrayChange");
+        expect(source.hasSubscriptionsForEvent("arrayChange")).toBe(1);
+        arrayChange.dispose();
+        expect(source.getSubscriptionsCount()).toBe(0);
+    });
+
+    it('Should have the same arrayChange subscriptions for computed observables', function () {
+        var source = ko.computed(function () {}).extend({trackArrayChanges: true});
+        var arrayChange = source.subscribe(function() {}, null, "arrayChange");
+        expect(source.hasSubscriptionsForEvent("arrayChange")).toBe(1);
+        arrayChange.dispose();
+        // Note: It would make sense if source.dispose() called arrayChange.dispose.
+        expect(source.getSubscriptionsCount()).toBe(0);
     });
 
     function testKnownOperation(array, operationName, options) {
