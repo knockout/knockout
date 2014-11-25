@@ -88,7 +88,7 @@ describe('Observable Array change tracking', function() {
         captureCompareArraysCalls(function(callLog) {
             var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
                 browserSupportsSpliceWithoutDeletionCount = [1, 2].splice(1).length === 1;
-            
+
             // Make sure there is one subscription, or we short-circuit cacheDiffForKnownOperation.
             myArray.subscribe(function () {}, null, 'arrayChange');
 
