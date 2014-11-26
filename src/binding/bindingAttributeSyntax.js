@@ -353,6 +353,19 @@
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
                 }
 
+                function reportBindingError(during, ex) {
+                    ko.onBindingError({
+                        during: during,
+                        errorCaptured: ex,
+                        element: node,
+                        bindingKey: bindingKey,
+                        bindings: bindings,
+                        allBindings: allBindings,
+                        valueAccessor: getValueAccessor(bindingKey),
+                        bindingContext: bindingContext
+                    });
+                }
+
                 try {
                     // Run init, ignoring any dependencies
                     if (typeof handlerInitFn == "function") {
@@ -368,16 +381,7 @@
                         });
                     }
                 } catch (ex) {
-                    ko.onBindingError({
-                        during: 'init',
-                        errorCaptured: ex,
-                        element: node,
-                        bindingKey: bindingKey,
-                        bindings: bindings,
-                        valueAccessor: getValueAccessor(bindingKey),
-                        allBindings: allBindings,
-                        bindingContext: bindingContext
-                    });
+                    reportBindingError('init', ex);
                 }
 
                 try {
@@ -392,16 +396,7 @@
                         );
                     }
                 } catch (ex) {
-                    ko.onBindingError({
-                        during: 'update',
-                        errorCaptured: ex,
-                        element: node,
-                        bindingKey: bindingKey,
-                        bindings: bindings,
-                        valueAccessor: getValueAccessor(bindingKey),
-                        allBindings: allBindings,
-                        bindingContext: bindingContext
-                    });
+                    reportBindingError('update', ex);
                 }
             });
         }
@@ -478,8 +473,9 @@
     // Error handler hook when a binding fails.
     // Note: github.com/knockout/knockout/issues/1626
     ko.onBindingError = function(spec) {
-        var error = spec.errorCaptured;
-        error.message = "Unable to process binding \"" + spec.bindingKey + ": " + spec.bindings[spec.bindingKey] + "\"\nMessage: " + error.message;
+        var error = spec.errorCaptured,
+            bindingText = ko.bindingProvider['instance']['getBindingsString'](spec.element);
+        error.message = "Unable to process binding \"" + spec.bindingKey + "\" in binding \"" + bindingText + "\"\nMessage: " + error.message;
         throw error;
     };
 

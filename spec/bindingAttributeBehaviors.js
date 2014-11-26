@@ -93,7 +93,7 @@ describe('Binding attribute syntax', function() {
         testNode.innerHTML = "<div data-bind='test: nonexistentValue'></div>";
         expect(function () {
             ko.applyBindings(null, testNode);
-        }).toThrowContaining("Unable to process binding \"test: function");
+        }).toThrowContaining("Unable to process binding \"test\" in binding \"test: nonexistentValue");
     });
 
     it("Should call ko.onBindingError with relevant details of a bindingHandler init error", function () {
@@ -111,6 +111,7 @@ describe('Binding attribute syntax', function() {
             expect(spec.element).toEqual(testNode.children[0])
             expect(spec.bindings.test()).toEqual(64728)
             expect(spec.bindingContext.$data).toEqual('0xe')
+            expect(spec.allBindings().test).toEqual(64728)
         }
         ko.bindingHandlers.test = {
             init: function () { throw new Error("A moth!") }
@@ -135,6 +136,7 @@ describe('Binding attribute syntax', function() {
             expect(spec.element).toEqual(testNode.children[0])
             expect(spec.bindings.test()).toEqual(64729)
             expect(spec.bindingContext.$data).toEqual('0xf')
+            expect(spec.allBindings().test).toEqual(64729)
         }
         ko.bindingHandlers.test = {
             update: function () { throw new Error("A beetle!") }
