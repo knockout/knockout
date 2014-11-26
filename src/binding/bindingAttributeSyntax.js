@@ -389,7 +389,11 @@
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                try {
+                                    handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                } catch (ex) {
+                                    reportBindingError('update', ex);
+                                }
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
