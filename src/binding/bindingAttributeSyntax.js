@@ -276,7 +276,13 @@
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
             if (alreadyBound) {
-                throw Error("You cannot apply bindings multiple times to the same element.");
+                ko.onBindingError({
+                    during: 'apply',
+                    errorCaptured: Error("You cannot apply bindings multiple times to the same element."),
+                    element: node,
+                    bindingContext: bindingContext
+                });
+                return false;
             }
             ko.utils.domData.set(node, boundElementDomDataKey, true);
         }
@@ -477,9 +483,16 @@
     // Error handler hook when a binding fails.
     // Note: github.com/knockout/knockout/issues/1626
     ko.onBindingError = function(spec) {
-        var error = spec.errorCaptured,
+        var error, bindingText;
+        if (spec.bindingKey) {
+            // During: 'init' or initial 'update'
+            error = spec.errorCaptured;
             bindingText = ko.bindingProvider['instance']['getBindingsString'](spec.element);
-        error.message = "Unable to process binding \"" + spec.bindingKey + "\" in binding \"" + bindingText + "\"\nMessage: " + error.message;
+            error.message = "Unable to process binding \"" + spec.bindingKey + "\" in binding \"" + bindingText + "\"\nMessage: " + error.message;
+        } else {
+            // During: 'apply'
+            error = spec.errorCaptured;
+        }
         throw error;
     };
 

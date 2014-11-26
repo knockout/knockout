@@ -472,6 +472,19 @@ describe('Binding attribute syntax', function() {
         }).toThrow("You cannot apply bindings multiple times to the same element.");
     });
 
+    it("Should call ko.onBindingError when applyBindings is called multiple times for the same element", function () {
+        var obe_calls = 0;
+        this.restoreAfter(ko, 'onBindingError');
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+        ko.applyBindings({}, testNode);
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('apply');
+        };
+        ko.applyBindings({}, testNode);
+        expect(obe_calls).toEqual(1);
+    });
+
     it('Should allow multiple applyBindings calls for the same element if cleanNode is used', function() {
         testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
 
