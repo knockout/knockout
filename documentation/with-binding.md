@@ -33,7 +33,7 @@ Here is a very basic example of switching the binding context to a child object.
 This interactive example demonstrates that:
 
  * The `with` binding will dynamically add or remove descendant elements depending on whether the associated value is `null`/`undefined` or not
- * If you want to access data/functions from parent binding contexts, you can use [special context properties such as `$parent` and `root`](binding-context.html).
+ * If you want to access data/functions from parent binding contexts, you can use [special context properties such as `$parent` and `$root`](binding-context.html).
 
 Try it out:
 
