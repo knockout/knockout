@@ -45,7 +45,7 @@ To get started, you can register a component using `ko.components.register` (tec
 
 **Normally, you'd load the view model and template from external files** instead of declaring them inline like this. We'll get to that later.
 
-Now, to use this component, you can reference it from any other view in your application, either using the [`component` binding](component-binding.html) or using a [custom element](component-custom-element.html). Here's a live example that uses it as a custom element:
+Now, to use this component, you can reference it from any other view in your application, either using the [`component` binding](component-binding.html) or using a [custom element](component-custom-elements.html). Here's a live example that uses it as a custom element:
 
 <style type="text/css">
     .liveExample ul { margin: 0; }
