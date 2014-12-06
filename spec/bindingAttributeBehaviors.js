@@ -424,47 +424,59 @@ describe('Binding attribute syntax', function() {
         // Should not throw any errors
     });
 
-    it('Should not bind against text content inside <script> tags', function() {
-        this.restoreAfter(ko.bindingProvider, 'instance');
+    describe('Should not bind against text content inside restricted elements', function() {
+        this.beforeEach(function() {
+            this.restoreAfter(ko.bindingProvider, 'instance');
 
-        // Developers won't expect or want binding to mutate the contents of <script> tags.
-        // Historically this wasn't a problem because the default binding provider only acts
-        // on elements, but now custom providers can act on text contents of elements, it's
-        // important to ensure we don't break <script> elements by mutating their contents.
+            // Developers won't expect or want binding to mutate the contents of <script> or <textarea>
+            // elements. Historically this wasn't a problem because the default binding provider only
+            // acts on elements, but now custom providers can act on text contents of elements, it's
+            // important to ensure we don't break these elements by mutating their contents.
 
-        // First replace the binding provider with one that's hardcoded to replace all text
-        // content with a special message, via a binding handler that operates on text nodes
+            // First replace the binding provider with one that's hardcoded to replace all text
+            // content with a special message, via a binding handler that operates on text nodes
 
-        var originalBindingProvider = ko.bindingProvider.instance;
-        ko.bindingProvider.instance = {
-            nodeHasBindings: function(node) {
-                // IE < 9 can't bind text nodes, as expando properties are not allowed on them
-                // this will still prove that the binding provider was not executed on the children of a script tag
-                if (node.nodeType === 3 && jasmine.ieVersion < 9) {
-                    node.data = "replaced";
-                    return false;
+            var originalBindingProvider = ko.bindingProvider.instance;
+            ko.bindingProvider.instance = {
+                nodeHasBindings: function(node) {
+                    // IE < 9 can't bind text nodes, as expando properties are not allowed on them.
+                    // This will still prove that the binding provider was not executed on the children of a restricted element.
+                    if (node.nodeType === 3 && jasmine.ieVersion < 9) {
+                        node.data = "replaced";
+                        return false;
+                    }
+
+                    return true;
+                },
+                getBindingAccessors: function(node, bindingContext) {
+                    if (node.nodeType === 3) {
+                        return {
+                            replaceTextNodeContent: function() { return "replaced"; }
+                        };
+                    } else {
+                        return originalBindingProvider.getBindingAccessors(node, bindingContext);
+                    }
                 }
+            };
+            ko.bindingHandlers.replaceTextNodeContent = {
+                update: function(textNode, valueAccessor) { textNode.data = valueAccessor(); }
+            };
+        });
 
-                return true;
-            },
-            getBindingAccessors: function(node, bindingContext) {
-                if (node.nodeType === 3) {
-                    return {
-                        replaceTextNodeContent: function() { return "replaced"; }
-                    };
-                } else {
-                    return originalBindingProvider.getBindingAccessors(node, bindingContext);
-                }
-            }
-        };
-        ko.bindingHandlers.replaceTextNodeContent = {
-            update: function(textNode, valueAccessor) { textNode.data = valueAccessor(); }
-        };
 
-        // Now check that the only text nodes whose contents are mutated are the ones
-        // *not* inside <script> tags.
-        testNode.innerHTML = "<p>Hello</p><script>alert(123);</script><p>Goodbye</p>";
-        ko.applyBindings({ sometext: 'hello' }, testNode);
-        expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
+        it('<script>', function() {
+            // Check that the only text nodes whose contents are mutated are the ones *not* inside <script> elements.
+            testNode.innerHTML = "<p>Hello</p><script>alert(123);</script><p>Goodbye</p>";
+            ko.applyBindings({ sometext: 'hello' }, testNode);
+            expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
+        });
+
+
+        it('<textarea>', function() {
+            // Check that the only text nodes whose contents are mutated are the ones *not* inside <textarea> elements.
+            testNode.innerHTML = "<p>Hello</p><textarea>test</textarea><p>Goodbye</p>";
+            ko.applyBindings({ sometext: 'hello' }, testNode);
+            expect(testNode).toContainHtml('<p>replaced</p><textarea>test</textarea><p>replaced</p>');
+        });
     });
 });
