@@ -272,7 +272,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         dependentObservable.beforeSubscriptionAdd = function (event) {
             if (event == 'change' || event == 'beforeChange') {
                 peek();
-                delete dependentObservable.beforeSubscriptionAdd;
             }
         }
     }

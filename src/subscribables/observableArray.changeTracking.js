@@ -8,24 +8,25 @@ ko.extenders['trackArrayChanges'] = function(target) {
         cachedDiff = null,
         arrayChangeSubscription,
         pendingNotifications = 0,
-        underlyingSubscribeFunction = target.subscribe;
+        underlyingBeforeSubscriptionAddFunction = target.beforeSubscriptionAdd,
+        underlyingAfterSubscriptionRemoveFunction = target.afterSubscriptionRemove;
 
-    // Intercept "subscribe" calls, and for array change events, ensure change tracking is enabled
-    target.subscribe = target['subscribe'] = function(callback, callbackTarget, event) {
-        var subscription =  underlyingSubscribeFunction.apply(this, arguments),
-            underlyingDisposeFunction = subscription.dispose;
+    // Watch "subscribe" calls, and for array change events, ensure change tracking is enabled
+    target.beforeSubscriptionAdd = function (event) {
+        if (underlyingBeforeSubscriptionAddFunction)
+            underlyingBeforeSubscriptionAddFunction.call(target, event);
         if (event === arrayChangeEventName) {
             trackChanges();
-            subscription.dispose = function () {
-                var disposeReturn = underlyingDisposeFunction.apply(this, arguments);
-                if (target.hasSubscriptionsForEvent(arrayChangeEventName) === 0) {
-                    arrayChangeSubscription.dispose();
-                    trackingChanges = false;
-                }
-                return disposeReturn;
-            };
         }
-        return subscription;
+    };
+    // Watch "dispose" calls, and for array change events, ensure change tracking is disabled when all are disposed
+    target.afterSubscriptionRemove = function (event) {
+        if (underlyingAfterSubscriptionRemoveFunction)
+            underlyingAfterSubscriptionRemoveFunction.call(target, event);
+        if (event === arrayChangeEventName && !target.hasSubscriptionsForEvent(arrayChangeEventName)) {
+            arrayChangeSubscription.dispose();
+            trackingChanges = false;
+        }
     };
 
     function trackChanges() {
