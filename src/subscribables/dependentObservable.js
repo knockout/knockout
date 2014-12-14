@@ -267,8 +267,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 notify(undefined, "asleep");
             }
         }
-    } else if (options['deferEvaluation']) {
+    } else if (options['deferEvaluation'] && !options['deferSubscribeEvaluation']) {
         // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
+        // unless deferSubscribeEvaluation is specified.
         dependentObservable.beforeSubscriptionAdd = function (event) {
             if (event == 'change' || event == 'beforeChange') {
                 peek();
