@@ -27,19 +27,8 @@
    * @param componentNode {HTMLElement} - The
    */
   ko.transclusion.replaceContentNodeWithTranscludedNodes = function(select, contentNode, componentNode){
-    var toMove,
+    var toMove = ko.transclusion.findBySelect(select, componentNode),
       parent = contentNode.parentNode;
-
-    if(select === "*"){
-      // transclude everything
-      toMove = componentNode.childNodes;
-    } else if (select[0] == '.') {
-      // get by class
-      toMove = ko.transclusion.getElementsByClassName(select.substring(1), componentNode);
-    } else {
-      // get by tag name
-      toMove = ko.transclusion.getElementsByTagName(select, componentNode);
-    }
 
     var idx = toMove.length;
     var beforeThisNode = contentNode;
