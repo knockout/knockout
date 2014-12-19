@@ -48,7 +48,7 @@
                     if (!componentDefinition) {
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
-                    cloneTemplateIntoElement(componentName, componentDefinition, element);
+                    ko.components.cloneTemplateIntoElement(componentName, componentDefinition, element);
                     var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
                         childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
@@ -65,7 +65,7 @@
 
     ko.virtualElements.allowedBindings['component'] = true;
 
-    function cloneTemplateIntoElement(componentName, componentDefinition, element) {
+    ko.components.cloneTemplateIntoElement = function(componentName, componentDefinition, element) {
         var template = componentDefinition['template'];
         if (!template) {
             throw new Error('Component \'' + componentName + '\' has no template');
