@@ -136,8 +136,8 @@
             // By design, this does *not* supply componentInfo to the constructor, as the intent is that
             // componentInfo contains non-viewmodel data (e.g., the component's element) that should only
             // be used in factory functions, not viewmodel constructors.
-            callback(function (params /*, componentInfo */) {
-                return new viewModelConfig(params);
+            callback(function (params, componentInfo, bindingContext) {
+                return new viewModelConfig(params, bindingContext);
             });
         } else if (typeof viewModelConfig[createViewModelKey] === 'function') {
             // Already a factory function - use it as-is
