@@ -82,5 +82,21 @@ describe('Transclusion', function() {
         jasmine.Clock.tick(1);
         expect(testNode).toContainHtml('<test-component><span><span data-bind="text: foo">footext</span><h1 data-bind="text: foo">footext</h1></span></test-component>');
     });
+    it('Component definition can override the content of a component', function() {
+        ko.components.register('test-component', {
+            template: '<span><content select=".fromDefinition"></content><content></content></span>',
+            findContent: function(select, componentNode) {
+                switch(select) {
+                    case '.fromDefinition': return '<div>from definition</div>';
+                }
+            }
+        });
+        testNode.innerHTML = '<test-component><h1>injected</h1><div class="fromDefinition">removed</div></test-component>';
+
+        ko.applyBindings(null, testNode);
+
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainHtml('<test-component><span><div>from definition</div><h1>injected</h1></span></test-component>');
+    });
 
 });

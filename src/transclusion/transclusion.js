@@ -26,8 +26,11 @@
    * @param contentNode {HTMLElement} - The content node which will be replaced/removed
    * @param componentNode {HTMLElement} - The
    */
-  ko.transclusion.replaceContentNodeWithTranscludedNodes = function(select, contentNode, componentNode){
-    var toMove = ko.transclusion.findBySelect(select, componentNode),
+  ko.transclusion.replaceContentNodeWithTranscludedNodes = function(select, contentNode, componentNode, componentDefinition){
+    var contentFromDefinition = componentDefinition.findContent && componentDefinition.findContent(select, componentNode)
+    if(typeof contentFromDefinition == 'string') contentFromDefinition = ko.utils.parseHtmlFragment(contentFromDefinition)
+
+    var toMove = contentFromDefinition || ko.transclusion.findBySelect(select, componentNode),
       parent = contentNode.parentNode;
 
     var idx = toMove.length;
@@ -36,6 +39,13 @@
       var move = toMove[idx];
       parent.insertBefore(move, beforeThisNode);
       beforeThisNode = move;
+    }
+    if(contentFromDefinition) {
+      var toRemove = ko.transclusion.findBySelect(select, componentNode);
+      var ridx = toRemove.length;
+      while(--ridx>=0){
+        componentNode.removeChild(toRemove[ridx]);
+      }
     }
 
     // remove the content node from the DOM entirely
@@ -64,11 +74,11 @@
         // this can only happen once, and we need to do it last... so we cache until after loop
         transcludeAll = contentNode;
       } else {
-        ko.transclusion.replaceContentNodeWithTranscludedNodes(select, contentNode, componentNode);
+        ko.transclusion.replaceContentNodeWithTranscludedNodes(select, contentNode, componentNode, component);
       }
     }
     if (transcludeAll){
-      ko.transclusion.replaceContentNodeWithTranscludedNodes("*", transcludeAll, componentNode);
+      ko.transclusion.replaceContentNodeWithTranscludedNodes("*", transcludeAll, componentNode, component);
     }
   };
 
