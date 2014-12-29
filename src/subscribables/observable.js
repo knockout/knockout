@@ -20,8 +20,14 @@ ko.observable = function (initialValue) {
             return _latestValue;
         }
     }
+    
     ko.subscribable.call(observable);
     ko.utils.setPrototypeOfOrExtend(observable, ko.observable['fn']);
+    
+    observable.toString = function(){
+   		ko.dependencyDetection.registerDependency(observable);
+   		return _latestValue;
+   	}
 
     if (DEBUG) observable._latestValue = _latestValue;
     observable.peek = function() { return _latestValue };
