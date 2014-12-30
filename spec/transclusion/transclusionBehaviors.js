@@ -98,5 +98,16 @@ describe('Transclusion', function() {
         jasmine.Clock.tick(1);
         expect(testNode).toContainHtml('<test-component><span><div>from definition</div><h1>injected</h1></span></test-component>');
     });
+    it('Complex selector can be used', function() {
+        ko.components.register('test-component', {
+            template: '<span><content select="#one .two"></content><span><content></content></span></span>'
+        });
+        testNode.innerHTML = '<test-component><div id="one">foo<div class="two">injected by select</div></div><h1 id="three">injected</h1></test-component>';
+
+        ko.applyBindings(null, testNode);
+
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainHtml('<test-component><span><div class="two">injected by select</div><span><div id="one">foo</div><h1 id="three">injected</h1></span></span></test-component>');
+    });
 
 });

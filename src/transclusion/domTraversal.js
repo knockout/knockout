@@ -29,14 +29,15 @@ ko.transclusion.getElementsByTagName = function(tagName, context){
 };
 
 ko.transclusion.findBySelect = function(select, componentNode) {
-  if(select === "*"){
-    // transclude everything
+  if(select === "*") {
     return componentNode.childNodes;
+  } else if (jQueryInstance){
+      return jQueryInstance(select, componentNode);
+  } else if (componentNode.querySelectorAll) {
+      return componentNode.querySelectorAll(select);
   } else if (select[0] == '.') {
-    // get by class
     return ko.transclusion.getElementsByClassName(select.substring(1), componentNode);
   } else {
-    // get by tag name
     return ko.transclusion.getElementsByTagName(select, componentNode);
   }
 };
