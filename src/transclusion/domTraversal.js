@@ -1,6 +1,6 @@
 
 ko.transclusion.getElementsByClassName = (function(document){
-  if(document.getElementsByClassName){
+  if(document && document.getElementsByClassName){
     return function(className, context){
       return context.getElementsByClassName(className);
     }
