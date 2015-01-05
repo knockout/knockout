@@ -89,6 +89,9 @@ describe('Observable Array change tracking', function() {
             var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
                 browserSupportsSpliceWithoutDeletionCount = [1, 2].splice(1).length === 1;
 
+            // Make sure there is one subscription, or we short-circuit cacheDiffForKnownOperation.
+            myArray.subscribe(function () {}, null, 'arrayChange');
+
             // Push
             testKnownOperation(myArray, 'push', {
                 args: ['Delta', 'Epsilon'],
@@ -258,6 +261,15 @@ describe('Observable Array change tracking', function() {
         expect(changelist2).toBe(changelist);
     });
 
+    // Per: https://github.com/knockout/knockout/issues/1503
+    it('Should cleanup a single arrayChange dependency', function() {
+        var source = ko.observableArray();
+        var arrayChange = source.subscribe(function() {}, null, "arrayChange");
+        expect(source.getSubscriptionsCount("arrayChange")).toBe(1);
+        arrayChange.dispose();
+        expect(source.getSubscriptionsCount()).toBe(0);
+    });
+
     it('Should support tracking of a computed observable using extender', function() {
         var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
             myComputed = ko.computed(function() {
@@ -267,7 +279,7 @@ describe('Observable Array change tracking', function() {
 
         expect(myComputed()).toEqual(['Beta', 'Gamma']);
 
-        myComputed.subscribe(function(changes) {
+        var arrayChange = myComputed.subscribe(function(changes) {
             changelist = changes;
         }, null, 'arrayChange');
 
@@ -277,6 +289,38 @@ describe('Observable Array change tracking', function() {
             { status : 'deleted', value : 'Beta', index : 0 },
             { status : 'added', value : 'Delta', index : 1 }
         ]);
+
+        // Should clean up all subscriptions when arrayChange subscription is disposed
+        arrayChange.dispose();
+        expect(myComputed.getSubscriptionsCount()).toBe(0);
+    });
+
+    it('Should support tracking of a pure computed observable using extender', function() {
+        var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
+            myComputed = ko.pureComputed(function() {
+                return myArray().slice(-2);
+            }).extend({trackArrayChanges:true}),
+            changelist;
+
+        expect(myComputed()).toEqual(['Beta', 'Gamma']);
+        // The pure computed doesn't yet subscribe to the observable (it's still sleeping)
+        expect(myArray.getSubscriptionsCount()).toBe(0);
+
+        var arrayChange = myComputed.subscribe(function(changes) {
+            changelist = changes;
+        }, null, 'arrayChange');
+        expect(myArray.getSubscriptionsCount()).toBe(1);
+
+        myArray(['Alpha', 'Beta', 'Gamma', 'Delta']);
+        expect(myComputed()).toEqual(['Gamma', 'Delta']);
+        expect(changelist).toEqual([
+            { status : 'deleted', value : 'Beta', index : 0 },
+            { status : 'added', value : 'Delta', index : 1 }
+        ]);
+
+        // It releases subscriptions when the arrayChange subscription is disposed
+        arrayChange.dispose();
+        expect(myArray.getSubscriptionsCount()).toBe(0);
     });
 
     it('Should support recursive updates (modify array within arrayChange callback)', function() {
