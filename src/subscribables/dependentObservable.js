@@ -40,6 +40,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _dependenciesCount = 0;
         _isDisposed = true;
         _needsEvaluation = false;
+        readFunction = null;
     }
 
     function evaluatePossiblyAsync() {
