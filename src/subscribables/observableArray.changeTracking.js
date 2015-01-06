@@ -35,6 +35,17 @@ ko.extenders['trackArrayChanges'] = function(target) {
             return;
         }
 
+        if (ko.isComputed(target)) {
+            //dont setup change tracking yet if subsribe evaluation is defered.
+            if(target.deferSubscribeEvaluation() && !target.hasEvaluated()){
+                //setup change tracking once target is accessed for the first time.
+                target.onEvaluateImmediate(function() {
+                    trackChanges();
+                });
+                return;
+            }
+        }
+
         trackingChanges = true;
 
         // Intercept "notifySubscribers" to track how many times it was called.

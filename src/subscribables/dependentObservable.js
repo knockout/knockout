@@ -1,12 +1,14 @@
 ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     var _latestValue,
         _needsEvaluation = true,
+        _hasEvaluated = false,
         _isBeingEvaluated = false,
         _suppressDisposalUntilDisposeWhenReturnsFalse = false,
         _isDisposed = false,
         readFunction = evaluatorFunctionOrOptions,
         pure = false,
-        isSleeping = false;
+        isSleeping = false,
+        _onEvaluateImmediates = [];
 
     if (readFunction && typeof readFunction == "object") {
         // Single-parameter syntax - everything is on this "options" param
@@ -54,6 +56,16 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
     }
 
+    function fireOnEvaluateImmediat() {
+        ko.utils.arrayForEach(_onEvaluateImmediates, function(callback) {
+            callback();
+        });
+    }
+
+    dependentObservable.onEvaluateImmediate = function (callback) {
+        _onEvaluateImmediates.push(callback);
+    }
+
     function evaluateImmediate(suppressChangeNotification) {
         if (_isBeingEvaluated) {
             if (pure) {
@@ -83,6 +95,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
 
         _isBeingEvaluated = true;
+        _hasEvaluated = true;
+        fireOnEvaluateImmediat();
 
         // When sleeping, recalculate the value and return.
         if (isSleeping) {
@@ -227,6 +241,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
     dependentObservable.peek = peek;
     dependentObservable.getDependenciesCount = function () { return _dependenciesCount; };
+    dependentObservable.hasEvaluated = function () { return _hasEvaluated; };
+    dependentObservable.deferSubscribeEvaluation = function () { return options['deferSubscribeEvaluation']; };
     dependentObservable.hasWriteFunction = typeof writeFunction === "function";
     dependentObservable.dispose = function () { dispose(); };
     dependentObservable.isActive = isActive;
@@ -267,8 +283,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 notify(undefined, "asleep");
             }
         }
-    } else if (options['deferEvaluation']) {
+    } else if (options['deferEvaluation'] && !options['deferSubscribeEvaluation']) {
         // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
+        // unless deferSubscribeEvaluation is specified.
         dependentObservable.beforeSubscriptionAdd = function (event) {
             if (event == 'change' || event == 'beforeChange') {
                 peek();
@@ -280,6 +297,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
     ko.exportProperty(dependentObservable, 'isActive', dependentObservable.isActive);
     ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
+    ko.exportProperty(dependentObservable, 'deferSubscribeEvaluation', dependentObservable.deferSubscribeEvaluation);
+    ko.exportProperty(dependentObservable, 'hasEvaluated', dependentObservable.hasEvaluated);
+    ko.exportProperty(dependentObservable, 'onEvaluateImmediate', dependentObservable.onEvaluateImmediate);
 
     // Add a "disposeWhen" callback that, on each evaluation, disposes if the node was removed without using ko.removeNode.
     if (disposeWhenNodeIsRemoved) {
@@ -337,6 +357,8 @@ if (ko.utils.canSetPrototype) {
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
+ko.exportSymbol('isComputed', ko.isComputed);
+
 ko.exportSymbol('isComputed', ko.isComputed);
 
 ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget) {
