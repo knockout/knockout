@@ -34,9 +34,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     function haveDependenciesChanged() {
         var id, dependency;
         for (id in dependencyTracking) {
-            dependency = dependencyTracking[id];
-            if (dependency._target && dependency._target.hasChanged(dependency._version)) {
-                return true;
+            if (dependencyTracking.hasOwnProperty(id)) {
+                dependency = dependencyTracking[id];
+                if (dependency._target.hasChanged(dependency._version)) {
+                    return true;
+                }
             }
         }
     }
