@@ -150,9 +150,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
                 _latestValue = newValue;
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
-                dependentObservable.updateVersion();
 
-                if (notifyChange && !isSleeping) {
+                if (isSleeping) {
+                    dependentObservable.updateVersion();
+                } else if (notifyChange) {
                     notify(_latestValue);
                 }
             }

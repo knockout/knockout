@@ -321,6 +321,48 @@ describe('Rate-limited', function() {
             jasmine.Clock.tick(500);
             expect(notifySpy).not.toHaveBeenCalled();
         });
+
+        it('Should delay update of dependent computed observable', function() {
+            var observable = ko.observable().extend({rateLimit:500});
+            var computed = ko.computed(observable);
+
+            // Check initial value
+            expect(computed()).toBeUndefined();
+
+            // Observable is changed, but computed is not
+            observable('a');
+            expect(observable()).toEqual('a');
+            expect(computed()).toBeUndefined();
+
+            // Second change also
+            observable('b');
+            expect(computed()).toBeUndefined();
+
+            // Advance clock; Change notification happens now using the latest value notified
+            jasmine.Clock.tick(500);
+            expect(computed()).toEqual('b');
+        });
+
+        it('Should delay update of dependent pure computed observable', function() {
+            var observable = ko.observable().extend({rateLimit:500});
+            var computed = ko.pureComputed(observable);
+
+            // Check initial value
+            expect(computed()).toBeUndefined();
+
+            // Observable is changed, but computed is not
+            observable('a');
+            expect(observable()).toEqual('a');
+            expect(computed()).toBeUndefined();
+
+            // Second change also
+            observable('b');
+            expect(computed()).toBeUndefined();
+
+            // Advance clock; Change notification happens now using the latest value notified
+            jasmine.Clock.tick(500);
+            expect(computed()).toEqual('b');
+        });
     });
 
     describe('Observable Array change tracking', function() {
@@ -357,7 +399,7 @@ describe('Rate-limited', function() {
         });
     });
 
-    describe('Dependent Observable', function() {
+    describe('Computed Observable', function() {
         it('Should delay running evaluator where there are no subscribers', function() {
             var observable = ko.observable();
             var evalSpy = jasmine.createSpy('evalSpy');
@@ -524,5 +566,49 @@ describe('Rate-limited', function() {
             observableSwitch(1);
             expect(computed()).toEqual(2);
         });
+
+        it('Should delay update of dependent computed observable', function() {
+            var observable = ko.observable();
+            var rateLimitComputed = ko.computed(observable).extend({rateLimit:500});
+            var dependentComputed = ko.computed(rateLimitComputed);
+
+            // Check initial value
+            expect(dependentComputed()).toBeUndefined();
+
+            // Rate-limited computed is changed, but dependent computed is not
+            observable('a');
+            expect(rateLimitComputed()).toEqual('a');
+            expect(dependentComputed()).toBeUndefined();
+
+            // Second change also
+            observable('b');
+            expect(dependentComputed()).toBeUndefined();
+
+            // Advance clock; Change notification happens now using the latest value notified
+            jasmine.Clock.tick(500);
+            expect(dependentComputed()).toEqual('b');
+        });
+
+        it('Should delay update of dependent pure computed observable', function() {
+            var observable = ko.observable();
+            var rateLimitComputed = ko.computed(observable).extend({rateLimit:500});
+            var dependentComputed = ko.pureComputed(rateLimitComputed);
+
+            // Check initial value
+            expect(dependentComputed()).toBeUndefined();
+
+            // Rate-limited computed is changed, but dependent computed is not
+            observable('a');
+            expect(rateLimitComputed()).toEqual('a');
+            expect(dependentComputed()).toBeUndefined();
+
+            // Second change also
+            observable('b');
+            expect(dependentComputed()).toBeUndefined();
+
+            // Advance clock; Change notification happens now using the latest value notified
+            jasmine.Clock.tick(500);
+            expect(dependentComputed()).toEqual('b');
+       });
     });
 });

@@ -44,6 +44,9 @@ var ko_subscribable_fn = {
 
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
+        if (event === defaultEvent) {
+            this.updateVersion();
+        }
         if (this.hasSubscriptionsForEvent(event)) {
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
