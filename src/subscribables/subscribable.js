@@ -14,7 +14,7 @@ ko.subscription.prototype.dispose = function () {
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
     this._subscriptions = {};
-}
+};
 
 var defaultEvent = "change";
 

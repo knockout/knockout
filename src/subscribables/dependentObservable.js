@@ -136,8 +136,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 _subscriptionsToDependencies = {};
                 _dependenciesCount = 0;
 
+                var newValue;
                 try {
-                    var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
+                    newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
 
                 } finally {
                     ko.dependencyDetection.end();
@@ -243,7 +244,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             // Pass the observable to the rate-limit code, which will access it when
             // it's time to do the notification.
             dependentObservable._rateLimitedChange(dependentObservable);
-        }
+        };
     };
 
     if (options['pure']) {
@@ -259,21 +260,21 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     notify(_latestValue, "awake");
                 }
             }
-        }
+        };
         dependentObservable.afterSubscriptionRemove = function (event) {
             if (event == 'change' && !dependentObservable.hasSubscriptionsForEvent('change')) {
                 disposeAllSubscriptionsToDependencies();
                 isSleeping = true;
                 notify(undefined, "asleep");
             }
-        }
+        };
     } else if (options['deferEvaluation']) {
         // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
         dependentObservable.beforeSubscriptionAdd = function (event) {
             if (event == 'change' || event == 'beforeChange') {
                 peek();
             }
-        }
+        };
     }
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
@@ -347,5 +348,5 @@ ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget)
         evaluatorFunctionOrOptions['pure'] = true;
         return ko.computed(evaluatorFunctionOrOptions, evaluatorFunctionTarget);
     }
-}
+};
 ko.exportSymbol('pureComputed', ko.pureComputed);
