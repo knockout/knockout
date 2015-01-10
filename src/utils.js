@@ -139,7 +139,9 @@ ko.utils = (function () {
 
         arrayMap: function (array, mapping) {
             array = array || [];
-            var result = [];
+            if(typeof Array.prototype.map === 'function') {
+                return array.map(mapping);
+            }
             for (var i = 0, j = array.length; i < j; i++)
                 result.push(mapping(array[i], i));
             return result;
