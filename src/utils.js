@@ -137,27 +137,20 @@ ko.utils = (function () {
             return result;
         },
 
-        arrayMap: typeof Array.prototype.map === 'function' ?
-            function(array, mapping) {
-                return array.map(mapping);
-            } :
-            function (array, mapping) {
-                array = array || [];
-                var result = [];
-
-                for (var i = 0, j = array.length; i < j; i++)
-                    result.push(mapping(array[i], i));
-                return result;
-            },
+        arrayMap: function (array, mapping) {
+            array = array || [];
+            var result = [];
+            for (var i = 0, j = array.length; i < j; i++)
+                result.push(mapping(array[i], i));
+            return result;
+        },
 
         arrayFilter: function (array, predicate) {
             array = array || [];
             var result = [];
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (predicate(array[i], i)) {
+            for (var i = 0, j = array.length; i < j; i++)
+                if (predicate(array[i], i))
                     result.push(array[i]);
-                }
-            }
             return result;
         },
 
