@@ -55,9 +55,9 @@ ko.extenders['trackArrayChanges'] = function(target) {
             currentContents = [].concat(currentContents || []);
 
             // Compute the diff and issue notifications, but only if someone is listening
-            if (target.hasSubscriptionsForEvent(arrayChangeEventName)) {
-                var changes = getChanges(previousContents, currentContents);
-            }
+            var changes = target.hasSubscriptionsForEvent(arrayChangeEventName) ?
+                          getChanges(previousContents, currentContents) :
+                          undefined;
 
             // Eliminate references to the old, removed items, so they can be GCed
             previousContents = currentContents;
@@ -121,7 +121,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
                     endAddIndex = startIndex + argsLength - 2,
                     endIndex = Math.max(endDeleteIndex, endAddIndex),
                     additions = [], deletions = [];
-                for (var index = startIndex, argsIndex = 2; index < endIndex; ++index, ++argsIndex) {
+                for (index = startIndex, argsIndex = 2; index < endIndex; ++index, ++argsIndex) {
                     if (index < endDeleteIndex)
                         deletions.push(pushDiff('deleted', rawArray[index], index));
                     if (index < endAddIndex)
