@@ -99,7 +99,6 @@ ko.extenders['trackArrayChanges'] = function(target) {
         switch (operationName) {
             case 'push':
                 offset = arrayLength;
-            break;
             case 'unshift':
                 for (var index = 0; index < argsLength; index++) {
                     pushDiff('added', args[index], offset + index);
@@ -108,7 +107,6 @@ ko.extenders['trackArrayChanges'] = function(target) {
 
             case 'pop':
                 offset = arrayLength - 1;
-            break;
             case 'shift':
                 if (arrayLength) {
                     pushDiff('deleted', rawArray[offset], offset);
