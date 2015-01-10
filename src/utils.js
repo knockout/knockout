@@ -56,8 +56,8 @@ ko.utils = (function () {
         isIe7 = ieVersion === 7;
 
     function isClickOnCheckableElement(element, eventType) {
-        if ((ko.utils.tagNameLower(element) !== "input") || !element.type) return false;
-        if (eventType.toLowerCase() != "click") return false;
+        if ((ko.utils.tagNameLower(element)) !== "input" || !element.type || eventType.toLowerCase() != "click")
+            return false;
         var inputType = element.type;
         return (inputType == "checkbox") || (inputType == "radio");
     }
@@ -67,20 +67,20 @@ ko.utils = (function () {
     var cssClassNameRegex = /\S+/g;
 
     function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
+        if (!classNames)
+            return;
         var addOrRemoveFn;
-        if (classNames) {
-            if (typeof node.classList === 'object') {
-                addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'];
-                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                    addOrRemoveFn.call(node.classList, className);
-                });
-            } else if (typeof node.className['baseVal'] === 'string') {
-                // SVG tag .classNames is an SVGAnimatedString instance
-                toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
-            } else {
-                // node.className ought to be a string.
-                toggleObjectClassPropertyString(node, 'className', classNames, shouldHaveClass);
-            }
+        if (typeof node.classList === 'object') {
+            addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'];
+            ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                addOrRemoveFn.call(node.classList, className);
+            });
+        } else if (typeof node.className['baseVal'] === 'string') {
+            // SVG tag .classNames is an SVGAnimatedString instance
+            toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
+        } else {
+            // node.className ought to be a string.
+            toggleObjectClassPropertyString(node, 'className', classNames, shouldHaveClass);
         }
     }
 
@@ -233,16 +233,16 @@ ko.utils = (function () {
 
         replaceDomNodes: function (nodeToReplaceOrNodeArray, newNodesArray) {
             var nodesToReplaceArray = nodeToReplaceOrNodeArray.nodeType ? [nodeToReplaceOrNodeArray] : nodeToReplaceOrNodeArray;
-            if (nodesToReplaceArray.length > 0) {
-                var insertionPoint = nodesToReplaceArray[0];
-                var parent = insertionPoint.parentNode;
+            if (nodesToReplaceArray.length < 1)
+                return;
+            var insertionPoint = nodesToReplaceArray[0];
+            var parent = insertionPoint.parentNode;
 
-                for (var i = 0, j = newNodesArray.length; i < j; i++) {
-                    parent.insertBefore(newNodesArray[i], insertionPoint);
-                }
-                for (i = 0, j = nodesToReplaceArray.length; i < j; i++) {
-                    ko.removeNode(nodesToReplaceArray[i]);
-                }
+            for (var i = 0, j = newNodesArray.length; i < j; i++) {
+                parent.insertBefore(newNodesArray[i], insertionPoint);
+            }
+            for (i = 0, j = nodesToReplaceArray.length; i < j; i++) {
+                ko.removeNode(nodesToReplaceArray[i]);
             }
         },
 
