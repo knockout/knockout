@@ -101,12 +101,14 @@ ko.utils = (function () {
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
-        arrayForEach: function (array, action) {
+        arrayForEach: function (array, action, actionOwner) {
             if (array && typeof array.forEach == 'function') {
-                return array.forEach(action);
+                array.forEach(action, actionOwner);
+            } else {
+                for (var i = 0, j = array.length; i < j; i++) {
+                    action.call(actionOwner, array[i], i);
+                }
             }
-            for (var i = 0, j = array.length; i < j; i++)
-                action(array[i], i, array);
         },
 
         arrayIndexOf: function (array, item) {
@@ -150,25 +152,25 @@ ko.utils = (function () {
             return result;
         },
 
-        arrayMap: function (array, mapping) {
+        arrayMap: function (array, mapping, mappingOwner) {
             if (array && typeof array.map == 'function') {
-                return array.map(mapping);
+                return array.map(mapping, mappingOwner);
             }
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping(array[i], i));
+                result.push(mapping.call(mappingOwner, array[i], i));
             return result;
         },
 
-        arrayFilter: function (array, predicate) {
+        arrayFilter: function (array, predicate, predicateOwner) {
             if (array && typeof array.filter == 'function') {
-                return array.filter(predicate);
+                return array.filter(predicate, predicateOwner);
             }
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate(array[i], i))
+                if (predicate.call(predicateOwner, array[i], i))
                     result.push(array[i]);
             return result;
         },
@@ -203,13 +205,13 @@ ko.utils = (function () {
 
         objectForEach: objectForEach,
 
-        objectMap: function(source, mapping) {
+        objectMap: function(source, mapping, mappingOwner) {
             if (!source)
                 return source;
             var target = {};
             for (var prop in source) {
                 if (hasOwnProperty.call(source, prop)) {
-                    target[prop] = mapping(source[prop], prop, source);
+                    target[prop] = mapping.call(mappingOwner, source[prop], prop, source);
                 }
             }
             return target;
