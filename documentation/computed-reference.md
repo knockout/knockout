@@ -34,7 +34,7 @@ A computed observable provides the following functions:
 * `dispose()` --- Manually disposes the computed observable, clearing all subscriptions to dependencies. This function is useful if you want to stop a computed observable from being updated or want to clean up memory for a computed observable that has dependencies on observables that won't be cleaned.
 * `extend(extenders)` --- Applies the given [extenders](extenders.html) to the computed observable.
 * `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
-* `getSubscriptionsCount()` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable.
+* `getSubscriptionsCount(event)` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable. Optionally, pass an event name (like "beforeChange") to return just the count of subscriptions for that event.
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
 * `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section above on [`peek`](computed-dependency-tracking.html#controlling-dependencies-using-peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly-subscribing-to-observables) to be notified of changes to the computed observable.
@@ -63,3 +63,27 @@ Example:
     });
 
 These facilities are typically useful only in advanced scenarios, for example when your computed observable's primary purpose is to trigger some side-effect during its evaluator, and you want to perform some setup logic only during the first run, or only if it has at least one dependency (and hence might re-evaluate in the future). Most computed properties do not need to care whether they have been evaluated before, or how many dependencies they have.
+
+## Ignoring dependencies within a computed
+
+The `ko.ignoreDependencies` function is available for scenarios where you want to execute code within a computed that should not contribute to that computed's dependencies. This is often useful in a custom binding when you want to call code that may access observables, but you do not want to re-trigger the binding based on changes to those observables.
+
+    ko.ignoreDependencies( callback, callbackTarget, callbackArgs );
+
+Example:
+
+    ko.bindingHandlers.myBinding = {
+        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var options = ko.unwrap(valueAccessor());
+            var value = ko.unwrap(options.value);
+            var afterUpdateHandler = options.afterUpdate;
+
+            // the developer supplied a function to call when this binding updates, but
+            // we don't really want to track any dependencies that would re-trigger this binding
+            if (typeof afterUpdateHandler === "function") {
+                ko.ignoreDependencies(afterUpdateHandler, viewModel, [value, color]);
+            }
+
+            $(element).somePlugin("value", value);
+        }
+    }
