@@ -17,7 +17,7 @@ The other neat trick is that declarative bindings are simply implemented as comp
 
 *Pure* computed observables work slightly differently. For more details, see the documentation for [*pure* computed observables](computed-pure.html).
 
-### Controlling dependencies using peek
+## Controlling dependencies using peek
 
 Knockout's automatic dependency tracking normally does exactly what you want. But you might sometimes need to control which observables will update your computed observable, especially if the computed observable performs some sort of action, such as making an Ajax request. The `peek` function lets you access an observable or computed observable without creating a dependency.
 
@@ -33,7 +33,31 @@ In the example below, a computed observable is used to reload an observable name
 
 Note: If you just want to prevent a computed observable from updating too often, see the [`rateLimit` extender](rateLimit-observable.html).
 
-### Note: Why circular dependencies aren't meaningful
+## Ignoring dependencies within a computed
+
+The `ko.ignoreDependencies` function is available for scenarios where you want to execute code within a computed that should not contribute to that computed's dependencies. This is often useful in a custom binding when you want to call code that may access observables, but you do not want to re-trigger the binding based on changes to those observables.
+
+    ko.ignoreDependencies( callback, callbackTarget, callbackArgs );
+
+Example:
+
+    ko.bindingHandlers.myBinding = {
+        update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var options = ko.unwrap(valueAccessor());
+            var value = ko.unwrap(options.value);
+            var afterUpdateHandler = options.afterUpdate;
+
+            // the developer supplied a function to call when this binding updates, but
+            // we don't really want to track any dependencies that would re-trigger this binding
+            if (typeof afterUpdateHandler === "function") {
+                ko.ignoreDependencies(afterUpdateHandler, viewModel, [value, color]);
+            }
+
+            $(element).somePlugin("value", value);
+        }
+    }
+
+## Note: Why circular dependencies aren't meaningful
 
 Computed observables are supposed to map a set of observable inputs into a single observable output. As such, it doesn't make sense to include cycles in your dependency chains. Cycles would *not* be analogous to recursion; they would be analogous to having two spreadsheet cells that are computed as functions of each other. It would lead to an infinite evaluation loop.
 
