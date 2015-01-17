@@ -29,6 +29,7 @@ There are two main ways of using templates:
           * `foreach` --- instructs KO to render the template in "foreach" mode - see [Note 2](#note-2-using-the-foreach-option-with-a-named-template) for details.
           * `as` --- when used in conjunction with `foreach`, defines an alias for each item being rendered - see [Note 3](#note-3-using-as-to-give-an-alias-to-foreach-items) for details.
           * `afterRender`, `afterAdd`, or `beforeRemove` --- callback functions to be invoked against the rendered DOM elements - see [Note 4](#note-4-using-afterrender-afteradd-and-beforeremove)
+          * `nodes` --- directly pass an array of DOM nodes to use as a template. This should be a non-observable array and note that the elements will be removed from their current parent.
 
 ### Note 1: Rendering a named template
 
