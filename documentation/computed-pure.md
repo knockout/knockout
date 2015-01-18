@@ -8,11 +8,11 @@ title: Pure computed observables
  * **Prevents memory leaks** from computed observables that are no longer referenced in an application but whose dependencies still exist.
  * **Reduces computation overhead** by not re-calculating computed observables whose value isn't being observed.
 
-A *pure* computed observable automatically switches between two states based on whether it has subscribers.
+A *pure* computed observable automatically switches between two states based on whether it has `change` subscribers.
 
-1. Whenever it has *no* subscribers, it is ***sleeping***. When entering the *sleeping* state, it disposes all subscriptions to its dependencies. During this state, it will not subscribe to any observables accessed in the evaluator function (although it does *count* them so that `getDependenciesCount()` is always accurate). If the computed observable's value is read while it is *sleeping*, it is always re-evaluated to ensure that the value is current.
+1. Whenever it has *no* `change` subscribers, it is ***sleeping***. When entering the *sleeping* state, it disposes all subscriptions to its dependencies. During this state, it will not subscribe to any observables accessed in the evaluator function (although it does keep track of them). If the computed observable's value is read while it is *sleeping*, it is automatically re-evaluated if any of its dependencies have changed.
 
-2. Whenever it has *any* subscribers, it is ***listening***. When entering the *listening* state, it immediately invokes the evaluator function and subscribes to any observables that are accessed. In this state, it operates just like a regular computed observable, as described in [how dependency tracking works](computed-dependency-tracking.md).
+2. Whenever it has *any* `change` subscribers, it is awake and ***listening***. When entering the *listening* state, it immediately subscribes to any dependencies. In this state, it operates just like a regular computed observable, as described in [how dependency tracking works](computed-dependency-tracking.md).
 
 #### Why "pure"? {#pure-computed-function-defined}
 
@@ -39,9 +39,9 @@ For complete syntax, see the [computed observable reference](computed-reference.
 
 ### When to use a *pure* computed observable
 
-You can use the *pure* feature for any computed observable that follows the [*pure function* guidelines](#pure-computed-function-defined). You'll see the most benefit, though, when it is applied to application designs that involve persistent view models that are used and shared by temporary views and view models. Using *pure* computed observables in a persistent view model provides computation performance benefits ([but not always](#using-pure-computed-can-hurt-performance)). Using them in temporary view models provides memory management benefits.
+You can use the *pure* feature for any computed observable that follows the [*pure function* guidelines](#pure-computed-function-defined). You'll see the most benefit, though, when it is applied to application designs that involve persistent view models that are used and shared by temporary views and view models. Using *pure* computed observables in a persistent view model provides computation performance benefits. Using them in temporary view models provides memory management benefits.
 
-In the following example of a simple wizard interface, the `fullName` *pure* computed is only bound to the view during the final step and is thus only updated when that step is active.
+In the following example of a simple wizard interface, the `fullName` *pure* computed is only bound to the view during the final step and so is only updated when that step is active.
 
 <style>
 #wizard-example {
@@ -127,7 +127,20 @@ You should not use the *pure* feature for a computed observable that is meant to
 
 The reason you shouldn't use a *pure* computed if the evaluator has important side effects is simply that the evaluator will not run whenever the computed has no active subscribers (and so is sleeping). If it's important for the evaluator to always run when dependencies change, use a [regular computed](computedObservables.html) instead.
 
-#### Performance {#using-pure-computed-can-hurt-performance}
+### State-change notifications
 
-There may be cases when using the *pure* feature for a computed observable results in higher computation overhead. A regular computed observable is re-evaluated only when one of its dependencies changes. But a *pure* computed observable is also re-evaluated each time it is accessed while *sleeping* and whenever it enters the *listening* state. Thus it is possible for a computed observable to be re-evaluated more often when using the *pure* feature than it would be otherwise.
+A pure computed observable notifies an `awake` event (using its current value) whenever it enters the *listening* state and notifies an `asleep` event (using an `undefined` value) whevener it enter the *sleeping* state. You won't normally need to know about the internal state of your computed observables. But since the internal state can correspond to whether the computed observable is bound to the view or not, you might use that information to do some view-model initialization or cleanup.
 
+    this.someComputedThatWillBeBound = ko.pureComputed(function () {
+        ...
+    }, this);
+
+    this.someComputedThatWillBeBound.subscribe(function () {
+        // do something when this is bound
+    }, this, "awake");
+
+    this.someComputedThatWillBeBound.subscribe(function () {
+        // do something when this is un-bound
+    }, this, "asleep");
+
+(The `awake` event also applies to normal computed observables created with the `deferEvaluation` option.)
