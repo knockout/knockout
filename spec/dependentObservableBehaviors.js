@@ -138,6 +138,17 @@ describe('Dependent Observable', function() {
         expect(computed()).toEqual(2);    // value wasn't changed
     });
 
+    it('Should be able to use \'ko.ignoreDependencies\' within a computed to avoid dependencies', function() {
+        var observable = ko.observable(1),
+            computed = ko.dependentObservable(function () {
+                return ko.ignoreDependencies(function() { return observable() + 1 } );
+            });
+        expect(computed()).toEqual(2);
+
+        observable(50);
+        expect(computed()).toEqual(2);    // value wasn't changed
+    });
+
     it('Should unsubscribe from previous dependencies each time a dependency changes', function () {
         var observableA = new ko.observable("A");
         var observableB = new ko.observable("B");
