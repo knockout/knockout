@@ -30,7 +30,13 @@ ko.extenders = {
             method = options['method'];
         }
 
-        limitFunction = method == 'notifyWhenChangesStop' ?  debounce : throttle;
+        switch (method)
+        {
+        	case 'notifyWhenChangesStop':     limitFunction = debounce;                  break;
+        	case 'throttleSubsequentChanges': limitFunction = throttleSubsequentChanges; break;
+        	default:                          limitFunction = throttle;                  break;
+        }
+
         target.limit(function(callback) {
             return limitFunction(callback, timeout);
         });
@@ -59,6 +65,30 @@ function throttle(callback, timeout) {
             }, timeout);
         }
     };
+}
+
+function throttleSubsequentChanges(callback, timeout) {
+    var timeoutInstance;
+    // Execute the first callback immediately. Then we behave like 'throttle'
+    // until the timeout expires without a new callback arriving.
+    return function () {
+        if (!timeoutInstance) {
+            // Nothing is waiting - execute the callback immediately.
+            callback();
+            timeoutInstance = setTimeout(function () {
+                // Nothing else has arrived while we waited for the timeout - clear
+                // the timeout.
+                timeoutInstance = undefined;
+            }, timeout);
+        } else {
+            // We're already waiting for a previous update to timeout - restart
+            // the timeout with a callback.
+            timeoutInstance = setTimeout(function() {
+                callback();
+                timeoutInstance = undefined;
+            }, timeout);
+        }
+    }
 }
 
 function debounce(callback, timeout) {
