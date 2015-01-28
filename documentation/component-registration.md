@@ -224,6 +224,30 @@ The returned AMD module object can be in any of the forms allowed for viewmodels
 
 ... or any of the other forms described here, though it would be unusual for the others to be useful when fetching templates via AMD.
 
+### Specifying additional component options
+
+As well as (or instead of) `template` and `viewModel`, your component configuration object can have arbitrary other properties. This configuration object is made available to any [custom component loader](component-loaders.html) you may be using.
+
+#### Controlling synchronous/asynchronous loading
+
+If your component configuration has a boolean `sync` property, Knockout uses this to determine whether the component is allowed to be loaded and injected synchronously. The default is `false` (i.e., forced to be asynchronous). For example,
+
+    ko.components.register('my-component', {
+        viewModel: { ... anything ... },
+        template: { ... anything ... },
+        sync: true // Injects synchronously if already loaded, otherwise still async
+    });
+
+**Why is component loading normally forced to be asynchronous?**
+
+Normally, Knockout ensures that component loading, and hence component injection, always completes asynchronously, because *sometimes it has no choice but to be asynchronous* (e.g., because it involves a request to the server). It does this even if a particular component instance could be injected synchronously (e.g., because the component definition was already loaded). This always-asynchronous policy is a matter of consistency, and is a well-established convention inherited from other modern asynchronous JavaScript technologies, such as AMD. The convention is a safe default --- it mitigates potential bugs where a developer might not account for the possibility of a typically-asynchronous process sometimes completing synchronously or vice-versa.
+
+**Why would you ever enable synchronous loading?**
+
+If you want to change the policy for a particular component, you can specify `sync: true` on that component's configuration. Then it might load asynchronously on first use, followed by synchronously on all subsequent uses. If you do this, then you need to account for this changeable behavior in any code that waits for components to load.
+
+The benefit of `sync: true` is primarily that, if you're injecting a long list of copies of a certain component (e.g., inside a `foreach` binding), and if the component definition is already in memory due to previous usage, then all the new copies may be injected synchronously and cause only a single DOM reflow, which is preferable for performance especially on mobiles.
+
 ## How Knockout loads components via AMD
 
 When you load a viewmodel or template via `require` declarations, e.g.,

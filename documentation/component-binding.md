@@ -76,10 +76,10 @@ When a `component` binding injects a component,
 
  1. **Your component loaders are asked to supply the viewmodel factory and template**
 
-    This is an *asynchronous* process (it may involve requests to the server), and hence components are always injected asynchronously.
-
       * Multiple component loaders may be consulted, until the first one recognises the component name and supplies a viewmodel/template. This process only takes place **once per component type**, since Knockout caches the resulting definitions in memory.
       * The default component loader supplies viewmodels/templates based on [what you have registered](component-registration.html). If applicable, this is the phase where it requests any specified AMD modules from your AMD loader.
+
+    Normally, this is an *asynchronous* process. It may involve requests to the server. For API consistency, Knockout by default ensures that the loading process completes as an asynchronous callback even if the component is already loaded and cached in memory. For more about this, and how to allow synchronous loading, see [Controlling synchronous/asynchronous loading](component-registration.html#controlling-synchronousasynchronous-loading).
 
  2. **The component template is cloned and injected into the container element**
 
