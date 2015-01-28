@@ -35,6 +35,12 @@ Bindings contexts offer the following special properties that you can reference 
 
      This is the main view model object in the root context, i.e., the topmost parent context. It's usually the object that was passed to `ko.applyBindings`. It is equivalent to `$parents[$parents.length - 1]`. 
 
+  * `$component`
+
+     If you're within the context of a particular [component](component-overview.html) template, then `$component` refers to the viewmodel for that component. It's the component-specific equivalent to `$root`. In the case of nested components, `$component` refers to the viewmodel for the closest component.
+
+     This is useful, for example, if a component's template includes one or more `foreach` blocks in which you wish to refer to some property or function on the component viewmodel rather than on the current data item.
+
   * `$data`
 
      This is the view model object in the current context. In the root context, `$data` and `$root` are equivalent. Inside a nested binding context, this parameter will be set to the current data item (e.g., inside a `with: person` binding, `$data` will be set to `person`). `$data` is useful when you want to reference the viewmodel itself, rather than a property on the viewmodel. Example:
