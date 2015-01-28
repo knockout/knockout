@@ -61,6 +61,10 @@ Bindings contexts offer the following special properties that you can reference 
 
      This is the raw view model value in the current context. Usually this will be the same as `$data`, but if the view model provided to Knockout is wrapped in an observable, `$data` will be the unwrapped view model, and `$rawData` will be the observable itself.
 
+  * `$componentTemplateNodes`
+
+    If you're within the context of a particular [component](component-overview.html) template, then `$componentTemplateNodes` is an array containing any DOM nodes that were passed to that component. This makes it easy to build components that receive templates, for example a grid component that accepts a template to define its output rows. For a complete example, see [passing markup into components](component-custom-elements.html#passing-markup-into-components).
+
 The following special variables are also available in bindings, but are not part of the binding context object:
 
   * `$context`

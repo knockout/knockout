@@ -147,6 +147,21 @@ Sometimes you may want to inject a component into a view without using an extra 
 
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
 
+### Note: Passing markup to components
+
+The element you attach a `component` binding to may contain further markup. For example,
+
+    <div data-bind="component: { name: 'my-special-list', params: { items: someArrayOfPeople } }">
+        <!-- Look, here's some arbitrary markup. By default it gets stripped out
+             and is replaced by the component output. -->
+        The person <em data-bind="text: name"></em>
+        is <em data-bind="text: age"></em> years old.
+    </div>
+
+Although the DOM nodes in this element will be stripped out and not bound by default, they are not lost. Instead, they are supplied to the component (in this case, `my-special-list`), which can include them in its output however it wishes.
+
+This is useful if you want to build components that represent "container" UI elements, such as grids, lists, dialogs, or tab sets, which need to inject and bind arbitrary markup into a common structure. See [a complete example for custom elements](component-custom-elements.html#passing-markup-into-components), which also works without custom elements using the syntax shown above.
+
 ### Disposal and memory management
 
 Optionally, your viewmodel class may have a `dispose` function. If implemented, Knockout will call this whenever the component is being torn down and removed from the DOM (e.g., because the corresponding item was removed from a `foreach`, or an `if` binding has become `false`).

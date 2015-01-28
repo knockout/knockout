@@ -107,6 +107,68 @@ In summary, the general rule is:
   1. If a parameter's evaluation **does not** involve evaluating an observable/computed, it is passed literally.
   2. If a parameter's evaluation **does** involve evaluating one or more observables/computeds, it is passed as a computed property so that you can react to changes in the parameter value.
 
+### Passing markup into components
+
+Sometimes you may want to create a component that receives markup and uses it as part of its output. For example, you may want to build a "container" UI element such as a grid, list, dialog, or tab set that can receive and bind arbitrary markup inside itself.
+
+Consider a special list component that can be invoked as follows:
+
+    <my-special-list params="items: someArrayOfPeople">
+        <!-- Look, I'm putting markup inside a custom element -->
+        The person <em data-bind="text: name"></em>
+        is <em data-bind="text: age"></em> years old.
+    </my-special-list>
+
+By default, the DOM nodes inside `<my-special-list>` will be stripped out (without being bound to any viewmodel) and replaced by the component's output. However, those DOM nodes aren't lost: they are remembered, and are supplied to the component in two ways:
+
+ * As an array, `$componentTemplateNodes`, available to any binding expression in the component's template (i.e., as a [binding context](binding-context.html) property). Usually this is the most convenient way to use the supplied markup. See the example below.
+ * As an array, `componentInfo.templateNodes`, passed to its [`createViewModel` function](component-registration.html#a-createviewmodel-factory-function)
+
+The component can then choose to use the supplied DOM nodes as part of its output however it wishes, such as by using `template: { nodes: $componentTemplateNodes }` on any element in the component's template.
+
+For example, the `my-special-list` component's template can reference `$componentTemplateNodes` so that its output includes the supplied markup. Here's the complete working example:
+
+{% capture live_example_id %}component-pass-markup{% endcapture %}
+{% capture live_example_viewmodel %}
+    ko.components.register('my-special-list', {
+        template: { element: 'my-special-list-template' },
+        viewModel: function(params) {
+            this.myItems = params.items;
+        }
+    });
+
+    ko.applyBindings({
+        someArrayOfPeople: ko.observableArray([
+            { name: 'Lewis', age: 56 },
+            { name: 'Hathaway', age: 34 }
+        ])
+    });
+{% endcapture %}
+{% capture live_example_view %}
+    <!-- This could be in a separate file -->
+    <template id="my-special-list-template">
+        <h3>Here is a special list</h3>
+
+        <ul data-bind="foreach: { data: myItems, as: 'myItem' }">
+            <li>
+                <h4>Here is another one of my special items</h4>
+                <!-- ko template: { nodes: $componentTemplateNodes, data: myItem } --><!-- /ko -->
+            </li>
+        </ul>
+    </template>
+
+    <my-special-list params="items: someArrayOfPeople">
+        <!-- Look, I'm putting markup inside a custom element -->
+        The person <em data-bind="text: name"></em>
+        is <em data-bind="text: age"></em> years old.
+    </my-special-list>
+{% endcapture %}
+{% include live-example-minimal.html %}
+
+This "special list" example does nothing more than insert a heading above each list item. But the same technique can be used to create sophisticated grids, dialogs, tab sets, and so on, since all that is needed for such UI elements is common UI markup (e.g., to define the grid or dialog's heading and borders) wrapped around arbitrary supplied markup.
+
+This technique is also possible when using components *without* custom elements, i.e., [passing markup when using the `component` binding directly](component-binding.html#note-passing-markup-to-components).
+
 ### Controlling custom element tag names
 
 By default, Knockout assumes that your custom element tag names correspond exactly to the names of components registered using `ko.components.register`. This convention-over-configuration strategy is ideal for most applications.

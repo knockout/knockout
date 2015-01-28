@@ -71,6 +71,8 @@ If you want to run any setup logic on the associated element before it is bound 
                 // - 'componentInfo.element' is the element the component is being
                 //   injected into. When createViewModel is called, the template has
                 //   already been injected into this element, but isn't yet bound.
+                // - 'componentInfo.templateNodes' is an array containing any DOM
+                //   nodes that have been supplied to the component. See below.
 
                 // Return the desired view model instance, e.g.:
                 return new MyViewModel(params);
@@ -80,6 +82,8 @@ If you want to run any setup logic on the associated element before it is bound 
     });
 
 Note that, typically, it's best to perform direct DOM manipulation only through [custom bindings](custom-bindings.html) rather than acting on `componentInfo.element` from inside `createViewModel`. This leads to more modular, reusable code.
+
+The `componentInfo.templateNodes` array is useful if you want to build a component that accepts arbitrary markup to influence its output (for example, a grid, list, dialog, or tab set that injects supplied markup into itself). For a complete example, see [passing markup into components](component-custom-elements.html#passing-markup-into-components).
 
 #### An AMD module whose value describes a viewmodel
 
