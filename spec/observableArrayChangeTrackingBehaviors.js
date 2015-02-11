@@ -166,7 +166,11 @@ describe('Observable Array change tracking', function() {
             } else {
                 // Browser doesn't support that underlying operation, so just set the state
                 // to what it needs to be to run the remaining tests
+                var prevCallLogLength = callLog.length;
                 myArray(['First', 'Second']);
+
+                // Also restore previous call log length
+                callLog.splice(prevCallLogLength, callLog.length);
             }
 
             // Splice - deletion end index out of bounds
