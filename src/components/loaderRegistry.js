@@ -2,7 +2,13 @@
     var loadingSubscribablesCache = {}, // Tracks component loads that are currently in flight
         loadedDefinitionsCache = {},    // Tracks component loads that have already completed
         callbacks = [],                 // Store each component 'get' callback for batch processing
-        batchTimerID = null;            // The current batch timeout ID
+        batching = false,               // Whether or not the loader is currently batching requests
+        // determine the animationRequest method to use (fall back to a simple timeout)
+        animationRequest = window.requestAnimationFrame
+            || window.webkitRequestAnimationFrame
+            || window.mozRequestAnimationFrame
+            || window.msRequestAnimationFrame
+            || function(cb) { return window.setTimeout(cb, 1000 / 60); };
 
     ko.components = {
         get: function(componentName, callback) {
@@ -19,21 +25,22 @@
                     // Create a function that performs the callback and add it to the callbacks array
                     callbacks.push(function () { callback(cachedDefinition.definition); });
 
-                    // If no batch timeout ID exists then we create a new timeout
-                    if(batchTimerID === null) {
+                    // If not batching then we create a new animationRequest callback
+                    if(!batching) {
+                        batching = true;
                         // Create the timeout to execute the callback asynchronously
-                        batchTimerID = setTimeout(function () {
+                        animationRequest(function () {
                             // Store the callbacks as the current batch to process
                             var batch = callbacks;
+                            // Set batching false to allow the creation of a animationRequest callback
+                            batching = false;
                             // Create a new array to store any following callbacks
                             callbacks = [];
-                            // Nullify the timeout ID to allow the creation of a new timeout
-                            batchTimerID = null;
                             // Execute each callback in the batch (array should get GC'd after)
                             ko.utils.arrayForEach(batch, function(callback) {
                                 callback();
                             });
-                        }, 0);
+                        });
                     }
                 }
             } else {
