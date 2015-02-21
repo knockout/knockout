@@ -43,9 +43,9 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
   * [Knockout version 3.1.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js)
 
-* **CDNJS** ([about](http://cdnjs.com/))
+* **CDNJS** ([about](https://cdnjs.com/))
 
-  * [Knockout version 3.2.0](http://cdnjs.cloudflare.com/ajax/libs/knockout/3.2.0/knockout-min.js)
+  * [Knockout version 3.3.0](https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js)
 
 ### Archive of all versions
 
