@@ -335,30 +335,23 @@ ko.utils = (function () {
             return element && element.tagName && element.tagName.toLowerCase();
         },
 
-        logError: function (e) {
-            ko.onError && ko.onError(e);
+        catchFunctionErrors: function (delegate) {
+            return ko.onError ? function () {
+                try {
+                    return delegate.apply(this, arguments);
+                } catch (e) {
+                    ko.onError && ko.onError(e);
+                    throw e;
+                }
+            } : delegate;
         },
 
         setTimeout: function (handler, timeout) {
-            return setTimeout(function () {
-                try {
-                    return handler.apply(this, arguments);
-                } catch (e) {
-                    ko.utils.logError(e);
-                    throw e;
-                }
-            }, timeout);
+            return setTimeout(ko.utils.catchFunctionErrors(handler), timeout);
         },
 
         registerEventHandler: function (element, eventType, handler) {
-            var wrappedHandler = function () {
-                try {
-                    handler.apply(this, arguments);
-                } catch (e) {
-                    ko.utils.logError(e);
-                    throw e;
-                }
-            };
+            var wrappedHandler = ko.utils.catchFunctionErrors(handler);
 
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!mustUseAttachEvent && jQueryInstance) {
