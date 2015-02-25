@@ -234,7 +234,7 @@ As well as (or instead of) `template` and `viewModel`, your component configurat
 
 #### Controlling synchronous/asynchronous loading
 
-If your component configuration has a boolean `sync` property, Knockout uses this to determine whether the component is allowed to be loaded and injected synchronously. The default is `false` (i.e., forced to be asynchronous). For example,
+If your component configuration has a boolean `synchronous` property, Knockout uses this to determine whether the component is allowed to be loaded and injected synchronously. The default is `false` (i.e., forced to be asynchronous). For example,
 
     ko.components.register('my-component', {
         viewModel: { ... anything ... },
