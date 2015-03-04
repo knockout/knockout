@@ -29,9 +29,17 @@ jasmine.nodeText = function(node) {
     return node.nodeType == 3 ? node.data : 'textContent' in node ? node.textContent : node.innerText;
 }
 
-jasmine.Matchers.prototype.toContainText = function (expectedText) {
+jasmine.Matchers.prototype.toContainText = function (expectedText, ignoreSpaces) {
+    if (ignoreSpaces) {
+        expectedText = expectedText.replace(/\s/g, "");
+    }
+
     var actualText = jasmine.nodeText(this.actual);
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
+    if (ignoreSpaces) {
+        cleanedActualText = cleanedActualText.replace(/\s/g, "");
+    }
+
     this.actual = cleanedActualText;    // Fix explanatory message
     return cleanedActualText === expectedText;
 };

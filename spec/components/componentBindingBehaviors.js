@@ -158,7 +158,7 @@ describe('Components: Component binding', function() {
         // Second (cached) injection is synchronous, because the component config says so.
         // Notice the absence of any 'jasmine.Clock.tick' call here. This is synchronous.
         testList.push('second');
-        expect(testNode.childNodes[0]).toContainText('firstsecond');
+        expect(testNode.childNodes[0]).toContainText('firstsecond', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
     it('Creates a binding context with the correct parent', function() {
@@ -205,7 +205,7 @@ describe('Components: Component binding', function() {
         ko.applyBindings(outerViewModel, testNode);
         jasmine.Clock.tick(1);
 
-        expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.');
+        expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
     it('Passes nonobservable params to the component', function() {
