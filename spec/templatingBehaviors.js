@@ -28,8 +28,9 @@ var dummyTemplateEngine = function (templates) {
             return new ko.templateSources.anonymousTemplate(template); // Anonymous template
     };
 
-    this.renderTemplateSource = function (templateSource, bindingContext, options) {
+    this.renderTemplateSource = function (templateSource, bindingContext, options, templateDocument) {
         var data = bindingContext['$data'];
+        templateDocument = templateDocument || document;
         options = options || {};
         var templateText = templateSource.text();
         if (typeof templateText == "function")
@@ -68,24 +69,24 @@ var dummyTemplateEngine = function (templates) {
 
         // Use same HTML parsing code as real template engine so as to trigger same combination of IE weirdnesses
         // Also ensure resulting nodelist is an array to mimic what the default templating engine does, so we see the effects of not being able to remove dead memo comment nodes.
-        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result));
+        return ko.utils.arrayPushAll([], ko.utils.parseHtmlFragment(result, templateDocument));
     };
 
-    this.rewriteTemplate = function (template, rewriterCallback) {
+    this.rewriteTemplate = function (template, rewriterCallback, templateDocument) {
         // Only rewrite if the template isn't a function (can't rewrite those)
-        var templateSource = this.makeTemplateSource(template);
+        var templateSource = this.makeTemplateSource(template, templateDocument);
         if (typeof templateSource.text() != "function")
-            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback);
+            return ko.templateEngine.prototype.rewriteTemplate.call(this, template, rewriterCallback, templateDocument);
     };
     this.createJavaScriptEvaluatorBlock = function (script) { return "[js:" + script + "]"; };
 };
 dummyTemplateEngine.prototype = new ko.templateEngine();
 
 describe('Templating', function() {
-    beforeEach(function() {
+    beforeEach(jasmine.prepareTestNode);
+    afterEach(function() {
         ko.setTemplateEngine(new ko.nativeTemplateEngine());
     });
-    beforeEach(jasmine.prepareTestNode);
 
     it('Template engines can return an array of DOM nodes', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ x: [document.createElement("div"), document.createElement("span")] }));
@@ -278,6 +279,21 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("Second template output");
     });
 
+    it('Should be able to pick template via an observable model property when specified as "name" in conjunction with "foreach"', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            firstTemplate: "First",
+            secondTemplate: "Second"
+        }));
+
+        var chosenTemplate = ko.observable("firstTemplate");
+        testNode.innerHTML = "<div data-bind='template: { name: chosenTemplate, foreach: [1,2,3] }'></div>";
+        ko.applyBindings({ chosenTemplate: chosenTemplate }, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("FirstFirstFirst");
+
+        chosenTemplate("secondTemplate");
+        expect(testNode.childNodes[0].innerHTML).toEqual("SecondSecondSecond");
+    });
+
     it('Should be able to pick template as a function of the data item using data-bind syntax, with the binding context available as a second parameter', function () {
         var templatePicker = function(dataItem, bindingContext) {
             // Having the entire binding context available means you can read sibling or parent level properties
@@ -456,6 +472,78 @@ describe('Templating', function() {
         expect(model.numRewrittenBindings).toEqual(1);
         expect(model.numExternalBindings).toEqual(2);
         expect(testNode.childNodes[0]).toContainHtml("outer <div>inner via inline binding: <span>1</span>inner via external binding: <em>2</em></div>");
+    });
+
+    it('Should accept a "nodes" option that gives the template nodes', function() {
+        // This is an alternative to specifying a named template, and is useful in conjunction with components
+        ko.setTemplateEngine(new dummyTemplateEngine({
+            innerTemplate: "the name is [js: name()]" // See that custom template engines are applied to the injected nodes
+        }));
+
+        testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, data: testData, bypassDomNodeWrap: true }'></div>";
+        var model = {
+            testNodes: [
+                document.createTextNode("begin"),
+                document.createElement("span"),
+                document.createTextNode("end")
+            ],
+            testData: { name: ko.observable("alpha") }
+        };
+        model.testNodes[1].setAttribute("data-bind", "template: 'innerTemplate'"); // See that bindings are applied to the injected nodes
+
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is alpha</span>end");
+
+        // The injected bindings update to match model changes as usual
+        model.testData.name("beta");
+        expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
+    });
+
+    it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {
+        testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, foreach: testData, bypassDomNodeWrap: true }'></div>";
+
+        // This time we'll check that the nodes array doesn't have to be a real array - it can be the .childNodes
+        // property of a DOM element, which is subtly different.
+        var templateContainer = document.createElement("div");
+        templateContainer.innerHTML = "[<span data-bind='text: name'></span>]";
+        var model = {
+            testNodes: templateContainer.childNodes,
+            testData: ko.observableArray([{ name: ko.observable("alpha") }, { name: "beta" }, { name: "gamma" }])
+        };
+        model.testNodes[1].setAttribute("data-bind", "text: name");
+
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0]).toContainText("[alpha][beta][gamma]");
+
+        // The injected bindings update to match model changes as usual
+        model.testData.splice(1, 1);
+        expect(testNode.childNodes[0]).toContainText("[alpha][gamma]");
+
+        // Changing the nodes array does *not* affect subsequent output from the template.
+        // This behavior may be subject to change. I'm adding this assertion just to record what
+        // the current behavior is, even if we might want to alter it in the future. We don't need
+        // to document or make any guarantees about what happens if you do this - it's just not
+        // a supported thing to do.
+        templateContainer.innerHTML = "[Modified, but will not appear in template output because the nodes were already cloned]";
+        model.testData.splice(1, 0, { name: "delta" });
+        expect(testNode.childNodes[0]).toContainText("[alpha][delta][gamma]");
+    });
+
+    it('Should interpret "nodes: anyFalseyValue" as being equivalent to supplying an empty node array', function() {
+        // This behavior helps to avoid inconsistency if you're programmatically supplying a node array
+        // but sometimes you might not have any nodes - you don't want the template binding to dynamically
+        // switch over to "inline template" mode just because your 'nodes' value is null, for example.
+        testNode.innerHTML = "<div data-bind='template: { nodes: null, bypassDomNodeWrap: true }'>Should not use this inline template</div>";
+        ko.applyBindings(null, testNode);
+        expect(testNode.childNodes[0]).toContainHtml('');
+    });
+
+    it('Should not allow "nodes: someObservableArray"', function() {
+        // See comment in implementation for reasoning
+        testNode.innerHTML = "<div data-bind='template: { nodes: myNodes, bypassDomNodeWrap: true }'>Should not use this inline template</div>";
+        expect(function() {
+            ko.applyBindings({ myNodes: ko.observableArray() }, testNode);
+        }).toThrowContaining("The \"nodes\" option must be a plain, non-observable array");
     });
 
     describe('Data binding \'foreach\' option', function() {
@@ -1016,4 +1104,4 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes[0].tagName).toEqual("P");
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
     });
-})
+});

@@ -207,6 +207,56 @@ describe('Binding: Value', function() {
         expect(myobservable()).toEqual("some user-entered value");
     });
 
+    it('Should delay reading value and updating observable when prefixing an event with "after"', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+        expect(myobservable()).toEqual("123");  // observable is not changed yet
+
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some user-entered value");  // it's changed after a delay
+    });
+
+    it('Should ignore "unchanged" notifications from observable during delayed event processing', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+
+        // Notification of previous value (unchanged) is ignored
+        myobservable.valueHasMutated();
+        expect(testNode.childNodes[0].value).toEqual("some user-entered value");
+
+        // Observable is updated to new element value
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some user-entered value");
+    });
+
+    it('Should not ignore actual change notifications from observable during delayed event processing', function () {
+        jasmine.Clock.useMock();
+
+        var myobservable = new ko.observable("123");
+        testNode.innerHTML = "<input data-bind='value:someProp, valueUpdate: \"afterkeyup\"' />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        ko.utils.triggerEvent(testNode.childNodes[0], "keyup");
+        testNode.childNodes[0].value = "some user-entered value";
+
+        // New value is written to input element
+        myobservable("some value from the server");
+        expect(testNode.childNodes[0].value).toEqual("some value from the server");
+
+        // New value remains when event is processed
+        jasmine.Clock.tick(20);
+        expect(myobservable()).toEqual("some value from the server");
+    });
+
     it('On IE < 10, should handle autofill selection by treating "propertychange" followed by "blur" as a change event', function() {
         // This spec describes the awkward choreography of events needed to detect changes to text boxes on IE < 10,
         // because it doesn't fire regular "change" events when the user selects an autofill entry. It isn't applicable
@@ -543,6 +593,74 @@ describe('Binding: Value', function() {
                 expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
                 expect(observable()).toEqual("D");
             });
+
+            it('Should maintain model value and update selection when changing observable option text or value', function() {
+                var selected = ko.observable('B');
+                var people = [
+                    { name: ko.observable('Annie'), id: ko.observable('A') },
+                    { name: ko.observable('Bert'), id: ko.observable('B') }
+                ];
+                testNode.innerHTML = "<select data-bind=\"options:people, optionsText:'name', optionsValue:'id', value:selected, valueAllowUnset:true\"></select>";
+
+                ko.applyBindings({people: people, selected: selected}, testNode);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+                expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Bert"]);
+                expect(selected()).toEqual("B");
+
+                // Changing an option name shouldn't change selection
+                people[1].name("Charles");
+                expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+                expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Charles"]);
+                expect(selected()).toEqual("B");
+
+                // Changing the selected option value should clear selection
+                people[1].id("C");
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(selected()).toEqual("B");
+
+                // Changing an option name while nothing is selected won't select anything
+                people[0].name("Amelia");
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(selected()).toEqual("B");
+            });
+        });
+    });
+
+    describe('Acts like \'checkedValue\' on a checkbox or radio', function() {
+        it('Should update value, but not respond to events when on a checkbox', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<input type='checkbox' data-bind='value: myObservable' />";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            var checkbox = testNode.childNodes[0];
+            expect(checkbox.value).toEqual('B');
+
+            observable('C');
+            expect(checkbox.value).toEqual('C');
+
+            checkbox.value = 'D';
+            ko.utils.triggerEvent(checkbox, "change");
+
+            // observable does not update, as we are not handling events when on a checkbox/radio
+            expect(observable()).toEqual('C');
+        });
+
+        it('Should update value, but not respond to events when on a radio', function() {
+            var observable = new ko.observable('B');
+            testNode.innerHTML = "<input type='radio' data-bind='value: myObservable' />";
+            ko.applyBindings({ myObservable: observable }, testNode);
+
+            var radio = testNode.childNodes[0];
+            expect(radio.value).toEqual('B');
+
+            observable('C');
+            expect(radio.value).toEqual('C');
+
+            radio.value = 'D';
+            ko.utils.triggerEvent(radio, "change");
+
+            // observable does not update, as we are not handling events when on a checkbox/radio
+            expect(observable()).toEqual('C');
         });
     });
 });
