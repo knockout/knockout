@@ -17,9 +17,13 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         options = options || {};
         if (!readFunction)
             readFunction = options["read"];
+        else // write the read function back to the options
+            options.read = readFunction;
     }
     if (typeof readFunction != "function")
         throw new Error("Pass a function that returns the value of the ko.computed");
+
+    if (DEBUG) dependentObservable._options = options;
 
     function addDependencyTracking(id, target, trackingObj) {
         if (pure && target === dependentObservable) {
