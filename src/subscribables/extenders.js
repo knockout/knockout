@@ -13,7 +13,7 @@ ko.extenders = {
             'read': target,
             'write': function(value) {
                 clearTimeout(writeTimeoutInstance);
-                writeTimeoutInstance = setTimeout(function() {
+                writeTimeoutInstance = ko.utils.setTimeout(function() {
                     target(value);
                 }, timeout);
             }
@@ -53,7 +53,7 @@ function throttle(callback, timeout) {
     var timeoutInstance;
     return function () {
         if (!timeoutInstance) {
-            timeoutInstance = setTimeout(function() {
+            timeoutInstance = ko.utils.setTimeout(function () {
                 timeoutInstance = undefined;
                 callback();
             }, timeout);
@@ -65,7 +65,7 @@ function debounce(callback, timeout) {
     var timeoutInstance;
     return function () {
         clearTimeout(timeoutInstance);
-        timeoutInstance = setTimeout(callback, timeout);
+        timeoutInstance = ko.utils.setTimeout(callback, timeout);
     };
 }
 

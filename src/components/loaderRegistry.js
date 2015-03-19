@@ -14,7 +14,7 @@
                         callback(cachedDefinition.definition);
                     });
                 } else {
-                    setTimeout(function() { callback(cachedDefinition.definition); }, 0);
+                    ko.utils.setTimeout(function () { callback(cachedDefinition.definition); }, 0);
                 }
             } else {
                 // Join the loading process that is already underway, or start a new one.
@@ -57,7 +57,7 @@
                     // See comment in loaderRegistryBehaviors.js for reasoning
                     subscribable['notifySubscribers'](definition);
                 } else {
-                    setTimeout(function() {
+                    ko.utils.setTimeout(function () {
                         subscribable['notifySubscribers'](definition);
                     }, 0);
                 }
