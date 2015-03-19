@@ -1,6 +1,14 @@
 (function(undefined) {
     var loadingSubscribablesCache = {}, // Tracks component loads that are currently in flight
-        loadedDefinitionsCache = {};    // Tracks component loads that have already completed
+        loadedDefinitionsCache = {},    // Tracks component loads that have already completed
+        callbacks = [],                 // Store each component 'get' callback for batch processing
+        batching = false,               // Whether or not the loader is currently batching requests
+        // determine the animationRequest method to use (fall back to a simple timeout)
+        animationRequest = window.requestAnimationFrame
+            || window.webkitRequestAnimationFrame
+            || window.mozRequestAnimationFrame
+            || window.msRequestAnimationFrame
+            || function(cb) { return window.setTimeout(cb, 1000 / 60); };
 
     ko.components = {
         get: function(componentName, callback) {
@@ -14,7 +22,26 @@
                         callback(cachedDefinition.definition);
                     });
                 } else {
-                    setTimeout(function() { callback(cachedDefinition.definition); }, 0);
+                    // Create a function that performs the callback and add it to the callbacks array
+                    callbacks.push(function () { callback(cachedDefinition.definition); });
+
+                    // If not batching then we create a new animationRequest callback
+                    if(!batching) {
+                        batching = true;
+                        // Create the timeout to execute the callback asynchronously
+                        animationRequest(function () {
+                            // Store the callbacks as the current batch to process
+                            var batch = callbacks;
+                            // Set batching false to allow the creation of a animationRequest callback
+                            batching = false;
+                            // Create a new array to store any following callbacks
+                            callbacks = [];
+                            // Execute each callback in the batch (array should get GC'd after)
+                            ko.utils.arrayForEach(batch, function(callback) {
+                                callback();
+                            });
+                        });
+                    }
                 }
             } else {
                 // Join the loading process that is already underway, or start a new one.
