@@ -612,3 +612,181 @@ describe('Rate-limited', function() {
        });
     });
 });
+
+describe('Deferred', function() {
+    beforeEach(function() {
+        jasmine.Clock.useMock();
+    });
+
+    describe('Observable', function() {
+        it('Should delay notifications', function() {
+            var observable = ko.observable().extend({deferred:true});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            observable('A');
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
+        });
+
+        it('Should notify subscribers about only latest value', function() {
+            var observable = ko.observable().extend({notify:'always', deferred:true});  // include notify:'always' to ensure notifications weren't suppressed by some other means
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            observable('A');
+            observable('B');
+
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+
+        it('Set to false initially, should maintain synchronous notification', function() {
+            var observable = ko.observable().extend({deferred:false});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            observable('A');
+            expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
+        });
+
+        it('Should suppress notification when value is changed/reverted', function() {
+            var observable = ko.observable('original').extend({deferred:true});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            observable('new');
+            expect(observable()).toEqual('new');
+            observable('original');
+
+            jasmine.Clock.tick(1);
+            expect(notifySpy).not.toHaveBeenCalled();
+            expect(observable()).toEqual('original');
+        });
+
+        it('Set to false, should turn off deferred notification if already turned on', function() {
+            var observable = ko.observable().extend({deferred:true});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            // First, notifications are deferred
+            observable('A');
+            expect(notifySpy).not.toHaveBeenCalled();
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
+
+            notifySpy.reset();
+            observable.extend({deferred:false});
+
+            // Now, they are synchronous
+            observable('B');
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+    });
+
+    describe('Observable Array change tracking', function() {
+        it('Should provide correct changelist when multiple updates are merged into one notification', function() {
+            var myArray = ko.observableArray(['Alpha', 'Beta']).extend({deferred:true}),
+                changelist;
+
+            myArray.subscribe(function(changes) {
+                changelist = changes;
+            }, null, 'arrayChange');
+
+            myArray.push('Gamma');
+            myArray.push('Delta');
+            jasmine.Clock.tick(1);
+            expect(changelist).toEqual([
+                { status : 'added', value : 'Gamma', index : 2 },
+                { status : 'added', value : 'Delta', index : 3 }
+            ]);
+
+            changelist = undefined;
+            myArray.shift();
+            myArray.shift();
+            jasmine.Clock.tick(1);
+            expect(changelist).toEqual([
+                { status : 'deleted', value : 'Alpha', index : 0 },
+                { status : 'deleted', value : 'Beta', index : 1 }
+            ]);
+
+            changelist = undefined;
+            myArray.push('Epsilon');
+            myArray.pop();
+            jasmine.Clock.tick(1);
+            expect(changelist).toEqualOneOf([[], undefined]);
+        });
+    });
+
+    describe('Computed Observable', function() {
+        it('Should defer notification of changes and minimize evaluation', function () {
+            var timesEvaluated = 0,
+                data = ko.observable('A'),
+                computed = ko.computed(function () { ++timesEvaluated; return data(); }).extend({deferred:true}),
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = computed.subscribe(notifySpy);
+
+            expect(computed()).toEqual('A');
+            expect(timesEvaluated).toEqual(1);
+            jasmine.Clock.tick(1);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            data('B');
+            expect(timesEvaluated).toEqual(1);  // not immediately evaluated
+            expect(computed()).toEqual('B');
+            expect(timesEvaluated).toEqual(2);
+            expect(notifySpy).not.toHaveBeenCalled();
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(1);
+            expect(notifySpy.calls.length).toEqual(1);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+
+        it('Should notify first change of computed with deferEvaluation if value is changed to undefined', function () {
+            var data = ko.observable('A'),
+                computed = ko.computed(data, null, {deferEvaluation: true}).extend({deferred:true}),
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = computed.subscribe(notifySpy);
+
+            expect(computed()).toEqual('A');
+
+            data(undefined);
+            expect(computed()).toEqual(undefined);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(1);
+            expect(notifySpy.calls.length).toEqual(1);
+            expect(notifySpy.argsForCall).toEqual([ [undefined] ]);
+        });
+
+        it('Should notify first change to pure computed after awakening if value changed to last notified value', function() {
+            var data = ko.observable('A'),
+                computed = ko.pureComputed(data).extend({deferred:true}),
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = computed.subscribe(notifySpy);
+
+            data('B');
+            expect(computed()).toEqual('B');
+            expect(notifySpy).not.toHaveBeenCalled();
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+
+            subscription.dispose();
+            notifySpy.reset();
+            data('C');
+            expect(computed()).toEqual('C');
+            jasmine.Clock.tick(1);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            subscription = computed.subscribe(notifySpy);
+            data('B');
+            expect(computed()).toEqual('B');
+            expect(notifySpy).not.toHaveBeenCalled();
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+    });
+});
