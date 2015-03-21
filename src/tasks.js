@@ -1,14 +1,21 @@
 ko.tasks = (function () {
     var scheduler,
-        schedulerHandle,
         taskQueue = [],
         taskQueueLength = 0,
         handleOrigin = 0,
         processingTask;
 
-    scheduler = function (callback) {
-        return setTimeout(callback, 0);
-    };
+    if (typeof MutationObserver !== "undefined") {
+        scheduler = (function (callback) {
+            var div = document.createElement("div");
+            new MutationObserver(callback).observe(div, {attributes: true});
+            return function () { div.classList.toggle("foo"); };
+        })(scheduledProcess);
+    } else {
+        scheduler = function (callback) {
+            setTimeout(callback, 0);
+        };
+    }
 
     function processTasks() {
         var countProcessed = 0;
@@ -51,23 +58,22 @@ ko.tasks = (function () {
     }
 
     function scheduledProcess() {
-        schedulerHandle = undefined;
         if (taskQueueLength) {
             processTasks();
         }
     }
 
     function scheduleTaskProcessing() {
-        if (!schedulerHandle) {
-            schedulerHandle = ko.tasks['scheduler'](scheduledProcess);
-        }
+        ko.tasks['scheduler'](scheduledProcess);
     }
 
     var tasks = {
         'scheduler': scheduler,     // Allow overriding the scheduler
 
         schedule: function (func) {
-            scheduleTaskProcessing();
+            if (!taskQueueLength) {
+                scheduleTaskProcessing();
+            }
 
             taskQueue[taskQueueLength++] = func;
             return taskQueueLength + handleOrigin;

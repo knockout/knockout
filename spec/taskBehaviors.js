@@ -1,6 +1,6 @@
 describe('Tasks', function() {
     beforeEach(function() {
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
     });
 
     afterEach(function() {
@@ -218,5 +218,54 @@ describe('Tasks', function() {
             jasmine.Clock.tick(1);
             expect(runValues).toEqual([1,3]);
         });
+    });
+});
+
+describe('Tasks scheduler', function() {
+    beforeEach(function() { waits(1); }); // Workaround for timing-related issues in IE8
+
+    it('Should process tasks asynchronously', function() {
+        var runCount = 0;
+        ko.tasks.schedule(function() {
+            runCount++;
+        });
+        expect(runCount).toEqual(0);
+
+        waits(1);
+        runs(function() {
+            expect(runCount).toEqual(1);
+        });
+    });
+
+    it('Should run only once for a set of tasks', function() {
+        var taskRunCount = 0, schedulerRunCount = 0;
+
+        jasmine.Clock.useMock();
+        this.restoreAfter(ko.tasks, 'scheduler');
+        ko.tasks.scheduler = function (callback) {
+            schedulerRunCount++;
+            setTimeout(callback, 0);
+        };
+        function func() {
+            taskRunCount++;
+        };
+
+        // First batch = one scheduler call
+        ko.tasks.schedule(func);
+        ko.tasks.schedule(func);
+        expect(taskRunCount).toEqual(0);
+        expect(schedulerRunCount).toEqual(1);
+
+        jasmine.Clock.tick(1);
+        expect(taskRunCount).toEqual(2);
+        expect(schedulerRunCount).toEqual(1);
+
+        // Second batch = one more call
+        ko.tasks.schedule(func);
+        ko.tasks.schedule(func);
+        expect(schedulerRunCount).toEqual(2);
+
+        jasmine.Clock.tick(1);
+        expect(taskRunCount).toEqual(4);
     });
 });

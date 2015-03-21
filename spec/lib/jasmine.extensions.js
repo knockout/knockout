@@ -1,16 +1,15 @@
-(function () {
-    function mockScheduler(callback) {
-        return setTimeout(callback, 0);
-    };
-    var origInstallMockClock = jasmine.Clock.installMock;
-    jasmine.Clock.installMock = function() {
-        origInstallMockClock();
+jasmine.Clock.mockScheduler = function (callback) {
+    setTimeout(callback, 0);
+};
+jasmine.Clock.useMockForTasks = function() {
+    jasmine.Clock.useMock();
 
-        // Make sure ko.tasks is using setTimeout so that we can mock it
+    // Make sure ko.tasks is using setTimeout so that it uses the mock clock
+    if (ko.tasks.scheduler != jasmine.Clock.mockScheduler) {
         jasmine.getEnv().currentSpec.restoreAfter(ko.tasks, 'scheduler');
-        ko.tasks.scheduler = mockScheduler;
+        ko.tasks.scheduler = jasmine.Clock.mockScheduler;
     }
-})();
+};
 
 jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
     var originalValue = object[propertyName];

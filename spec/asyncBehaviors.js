@@ -615,7 +615,7 @@ describe('Rate-limited', function() {
 
 describe('Deferred', function() {
     beforeEach(function() {
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
     });
 
     describe('Observable', function() {
@@ -737,7 +737,6 @@ describe('Deferred', function() {
             expect(timesEvaluated).toEqual(1);  // not immediately evaluated
             expect(computed()).toEqual('B');
             expect(timesEvaluated).toEqual(2);
-            expect(notifySpy).not.toHaveBeenCalled();
             expect(notifySpy).not.toHaveBeenCalled();
 
             jasmine.Clock.tick(1);
