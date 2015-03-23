@@ -3,14 +3,28 @@ ko.tasks = (function () {
         taskQueue = [],
         taskQueueLength = 0,
         handleOrigin = 0,
-        processingTask;
+        processingTask,
+        observer;
 
-    if (typeof MutationObserver !== "undefined") {
+    if (observer = window['MutationObserver'] || window['WebKitMutationObserver']) {
+        // Chrome 18+, Firefox 14+, IE 11+, Opera 15+, Safari 6+; borrowed from https://github.com/petkaantonov/bluebird
         scheduler = (function (callback) {
             var div = document.createElement("div");
-            new MutationObserver(callback).observe(div, {attributes: true});
+            new observer(callback).observe(div, {attributes: true});
             return function () { div.classList.toggle("foo"); };
         })(scheduledProcess);
+    } else if (document && "onreadystatechange" in document.createElement("script")) {
+        // IE 6–10; borrowed from https://github.com/YuzuJS/setImmediate
+        scheduler = function (callback) {
+            var script = document.createElement("script");
+            script.onreadystatechange = function () {
+                script.onreadystatechange = null;
+                document.documentElement.removeChild(script);
+                script = null;
+                callback();
+            };
+            document.documentElement.appendChild(script);
+        };
     } else {
         scheduler = function (callback) {
             setTimeout(callback, 0);
@@ -99,5 +113,5 @@ ko.tasks = (function () {
 
 ko.exportSymbol('tasks', ko.tasks);
 ko.exportSymbol('tasks.schedule', ko.tasks.schedule);
-ko.exportSymbol('tasks.cancel', ko.tasks.cancel);
+//ko.exportSymbol('tasks.cancel', ko.tasks.cancel);  "cancel" isn't minified
 ko.exportSymbol('tasks.runTasks', ko.tasks.runTasks);

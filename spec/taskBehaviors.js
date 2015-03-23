@@ -226,14 +226,24 @@ describe('Tasks scheduler', function() {
 
     it('Should process tasks asynchronously', function() {
         var runCount = 0;
-        ko.tasks.schedule(function() {
+        function func() {
             runCount++;
-        });
+        }
+        ko.tasks.schedule(func);
         expect(runCount).toEqual(0);
 
         waits(1);
         runs(function() {
             expect(runCount).toEqual(1);
+
+            // Run a second time
+            ko.tasks.schedule(func);
+            expect(runCount).toEqual(1);
+        });
+
+        waits(1);
+        runs(function() {
+            expect(runCount).toEqual(2);
         });
     });
 
