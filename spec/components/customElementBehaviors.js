@@ -1,10 +1,11 @@
 describe('Components: Custom elements', function() {
     beforeEach(function() {
         jasmine.prepareTestNode();
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
     });
 
     afterEach(function() {
+        try { ko.tasks.runTasks(); } catch(e) {}
         jasmine.Clock.reset();
         ko.components.unregister('test-component');
     });

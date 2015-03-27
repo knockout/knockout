@@ -6,7 +6,7 @@ describe('Components: Component binding', function() {
         outerViewModel;
 
     beforeEach(function() {
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
         jasmine.prepareTestNode();
         testComponentParams = {};
         testComponentBindingValue = { name: testComponentName, params: testComponentParams };
@@ -15,6 +15,7 @@ describe('Components: Component binding', function() {
     });
 
     afterEach(function() {
+        try { ko.tasks.runTasks(); } catch(e) {}
         jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
     });
