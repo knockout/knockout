@@ -15,15 +15,9 @@ describe('Components: Component binding', function() {
     });
 
     afterEach(function() {
-        try { ko.tasks.runTasks(); } catch(e) {}
+        expect(ko.tasks.length()).toEqual(0);
         jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
-    });
-
-    it('Controls descendant bindings', function() {
-        testNode.innerHTML = '<div data-bind="if: true, component: \'dummy\'"></div>';
-        expect(function() { ko.applyBindings(null, testNode); })
-            .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
     });
 
     it('Throws if no name is specified (name provided directly)', function() {
@@ -51,6 +45,16 @@ describe('Components: Component binding', function() {
             ko.applyBindings(outerViewModel, testNode);
             jasmine.Clock.tick(1);
         }).toThrow("Component 'test-component' has no template");
+    });
+
+    it('Controls descendant bindings', function() {
+        ko.components.register(testComponentName, { template: 'x' });
+        testNode.innerHTML = '<div data-bind="if: true, component: $data"></div>';
+        expect(function() { ko.applyBindings(testComponentName, testNode); })
+            .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
+
+        // Even though ko.applyBindings threw an exception, the component still gets bound (asynchronously)
+        jasmine.Clock.tick(1);
     });
 
     it('Replaces the element\'s contents with a clone of the template', function() {

@@ -5,7 +5,7 @@ describe('Tasks', function() {
 
     afterEach(function() {
         // Check that task schedule is clear after each test
-        expect(ko.tasks.runTasks()).toEqual(0);
+        expect(ko.tasks.length()).toEqual(0);
     });
 
     it('Should run in next execution cycle', function() {
@@ -32,45 +32,31 @@ describe('Tasks', function() {
         expect(runCount).toEqual(2);
     });
 
-    it('Should run all scheduled tasks if processed early by runTasks', function() {
+    it('Should run scheduled tasks in the order they were scheduled', function() {
         var runValues = [];
         var func = function(value) {
             runValues.push(value);
         };
 
         ko.tasks.schedule(func.bind(null, 1));
-        ko.tasks.schedule(func.bind(null, 2));
-
-        ko.tasks.runTasks();
-        expect(runValues).toEqual([1,2]);
-    });
-
-    it('Should run tasks again if scheduled after runTasks', function() {
-        var runValues = [];
-        var func = function(value) {
-            runValues.push(value);
-        };
-        ko.tasks.schedule(func.bind(null, 1));
-        expect(runValues).toEqual([]);
-
-        ko.tasks.runTasks();
-        expect(runValues).toEqual([1]);
-
         ko.tasks.schedule(func.bind(null, 2));
 
         jasmine.Clock.tick(1);
         expect(runValues).toEqual([1,2]);
     });
 
-    it('Should not run tasks again if runTasks is called during task processing', function() {
+    it('Should run tasks again if scheduled after a previous run', function() {
         var runValues = [];
         var func = function(value) {
             runValues.push(value);
-            ko.tasks.runTasks();
         };
         ko.tasks.schedule(func.bind(null, 1));
-        ko.tasks.schedule(func.bind(null, 2));
         expect(runValues).toEqual([]);
+
+        jasmine.Clock.tick(1);
+        expect(runValues).toEqual([1]);
+
+        ko.tasks.schedule(func.bind(null, 2));
 
         jasmine.Clock.tick(1);
         expect(runValues).toEqual([1,2]);
@@ -181,7 +167,7 @@ describe('Tasks', function() {
             var handle1 = ko.tasks.schedule(func.bind(null, 1));
             expect(runValues).toEqual([]);
 
-            ko.tasks.runTasks();
+            jasmine.Clock.tick(1);
             expect(runValues).toEqual([1]);
 
             var handle2 = ko.tasks.schedule(func.bind(null, 2));
