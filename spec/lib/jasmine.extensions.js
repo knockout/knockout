@@ -1,3 +1,16 @@
+jasmine.Clock.mockScheduler = function (callback) {
+    setTimeout(callback, 0);
+};
+jasmine.Clock.useMockForTasks = function() {
+    jasmine.Clock.useMock();
+
+    // Make sure ko.tasks is using setTimeout so that it uses the mock clock
+    if (ko.tasks.scheduler != jasmine.Clock.mockScheduler) {
+        jasmine.getEnv().currentSpec.restoreAfter(ko.tasks, 'scheduler');
+        ko.tasks.scheduler = jasmine.Clock.mockScheduler;
+    }
+};
+
 jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
     var originalValue = object[propertyName];
     this.after(function() {
