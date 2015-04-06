@@ -336,7 +336,7 @@ ko.utils = (function () {
         },
 
         registerEventHandler: function (element, eventType, handler) {
-            var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
+            var mustUseAttachEvent = eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!mustUseAttachEvent && jQueryInstance) {
                 jQueryInstance(element)['bind'](eventType, handler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
