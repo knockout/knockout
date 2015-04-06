@@ -68,7 +68,7 @@ ko.bindingHandlers['textInput'] = {
                 // such as rateLimit. Such updates, if not ignored, can cause keystrokes to be lost.
                 elementValueBeforeEvent = element.value;
                 var handler = DEBUG ? updateModel.bind(element, {type: event.type}) : updateModel;
-                timeoutHandle = setTimeout(handler, 4);
+                timeoutHandle = ko.utils.setTimeout(handler, 4);
             }
         };
 
@@ -80,7 +80,7 @@ ko.bindingHandlers['textInput'] = {
             }
 
             if (elementValueBeforeEvent !== undefined && modelValue === elementValueBeforeEvent) {
-                setTimeout(updateView, 4);
+                ko.utils.setTimeout(updateView, 4);
                 return;
             }
 
