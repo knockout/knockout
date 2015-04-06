@@ -27,7 +27,7 @@ Now you could bind UI elements to it, e.g.:
     The name is <span data-bind="text: fullName"></span>
 
 ... and they will be updated whenever `firstName` or `lastName` changes (your evaluator function will be called once each time any of its dependencies change, and whatever value you return will be passed on to the observers such as UI elements or other computed observables).
-    
+
 ### Dependency chains just work
 
 Of course, you can create whole chains of computed observables if you wish. For example, you might have:
@@ -101,3 +101,20 @@ Additionally, Knockout provides similar functions that can operate on observable
 * `ko.isObservable` - returns true for observables, observable arrays, and all computed observables.
 * `ko.isWritableObservable` - returns true for observables, observable arrays, and writable computed observables (also aliased as `ko.isWriteableObservable`).
 
+### When the computed observable is only used in your UI 
+
+If you only need to use the compound full name in the UI you could declare it as:
+
+    function AppViewModel() {
+        // ... leave firstName and lastName unchanged ...
+
+        this.fullName = function() {
+            return this.firstName() + " " + this.lastName();
+        };
+    }
+
+Now your binding in UI elements becomes a method call, e.g.:
+
+    The name is <span data-bind="text: fullName()"></span>
+
+Knockout will create a computed obserable internally in order to detect what obserables the expression depends on. Since you do not need to handle the lifecycle of the computed observable (knockout will handle it for you) it simplifies memory management if you have a large single page application.
