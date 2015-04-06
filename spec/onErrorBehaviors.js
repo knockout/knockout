@@ -32,7 +32,12 @@ describe('onError handler', function () {
 
         window.onerror = function () {
             windowOnErrorCount++;
-            return true; // Don't spam the console, since these were triggered deliberately
+
+            // Don't spam the console, since these were triggered deliberately
+            // Annoyingly, Phantom interprets this return value backwardly, treating 'false'
+            // to mean 'suppress', when browsers all use 'true' to mean 'suppress'.
+            var isPhantom = !!window._phantom;
+            return isPhantom ? false : true;
         };
     });
 
