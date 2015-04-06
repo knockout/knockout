@@ -78,7 +78,7 @@ ko.tasks = (function () {
                 scheduleTaskProcessing();
             }
 
-            taskQueue[taskQueueLength++] = func;
+            taskQueue[taskQueueLength++] = ko.utils.catchFunctionErrors(func);
             return nextHandle++;
         },
 

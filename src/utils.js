@@ -336,11 +336,11 @@ ko.utils = (function () {
         },
 
         catchFunctionErrors: function (delegate) {
-            return ko.onError ? function () {
+            return ko['onError'] ? function () {
                 try {
                     return delegate.apply(this, arguments);
                 } catch (e) {
-                    ko.onError && ko.onError(e);
+                    ko['onError'] && ko['onError'](e);
                     throw e;
                 }
             } : delegate;
