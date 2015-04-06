@@ -34,11 +34,11 @@ As soon as your UI gets nontrivial and has a few overlapping behaviors, things c
 ### How is Knockout different?
 It's much easier with KO. It lets you scale up in complexity without fear of introducing inconsistencies. Just represent your items as a JavaScript array, and then use a `foreach` binding to transform this array into a TABLE or set of DIVs. Whenever the array changes, the UI changes to match (you don't have to figure out how to inject new TRs or where to inject them). The rest of the UI stays in sync. For example, you can declaratively bind a SPAN to display the number of items as follows:
 
-    There are <span data-bind="text: myItems().count"></span> items
+    There are <span data-bind="text: myItems().length"></span> items
 
 That's it! You don't have to write code to update it; it updates on its own when the `myItems` array changes. Similarly, to make the 'Add' button enable or disable depending on the number of items, just write:
 
-    <button data-bind="enable: myItems().count < 5">Add</button>
+    <button data-bind="enable: myItems().length < 5">Add</button>
 
 Later, when you're asked to implement the 'Delete' functionality, you don't have to figure out what bits of the UI it has to interact with; you just make it alter the underlying data model.
 
