@@ -348,6 +348,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         ko.utils.domNodeDisposal.addDisposeCallback(disposeWhenNodeIsRemoved, dispose);
     }
 
+    if (DEBUG) {
+        // #1731 - Aid debugging by exposing the computed's options
+        dependentObservable["_options"] = options;
+        if (!options["read"]) {
+            options["read"] = readFunction;
+        }
+    }
+
     return dependentObservable;
 };
 
