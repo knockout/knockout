@@ -2,9 +2,11 @@ describe('onError handler', function () {
     var koOnErrorCount = 0;
     var windowOnErrorCount = 0;
     var windowOnErrorOrginal;
+    var lastSeenError = null;
 
     beforeEach(function () {
         ko.onError = function (error) {
+            lastSeenError = error;
             koOnErrorCount++;
         };
 
@@ -30,12 +32,14 @@ describe('onError handler', function () {
 
         window.onerror = function () {
             windowOnErrorCount++;
+            return true; // Don't spam the console, since these were triggered deliberately
         };
     });
 
     afterEach(function () {
         window.onerror = windowOnErrorOrginal;
         ko.onError = null;
+        lastSeenError = null;
     });
 
     it('does not fire on sync errors', function () {
@@ -89,5 +93,23 @@ describe('onError handler', function () {
             expect(koOnErrorCount).toBe(1);
             expect(windowOnErrorCount).toBe(1);
         });
+    });
+
+    it('passes through the error instance', function() {
+        var expectedInstance;
+        ko.tasks.schedule(function() {
+            expectedInstance = new Error('Some error');
+            throw expectedInstance;
+        });
+
+        waitsFor(function () {
+            return koOnErrorCount > 0;
+        });
+
+        runs(function () {
+            expect(koOnErrorCount).toBe(1);
+            expect(windowOnErrorCount).toBe(1);
+            expect(lastSeenError).toBe(expectedInstance);
+        })
     });
 });
