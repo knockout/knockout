@@ -48,6 +48,15 @@ describe('arrayForEach', function () {
 
         expect(callback).not.toHaveBeenCalled();
     });
+
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        ko.utils.arrayForEach(["a"], function() {
+            actualContext = this;
+        }, expectedContext);
+        expect(actualContext).toBe(expectedContext);
+    });
 });
 
 describe('arrayIndexOf', function () {
@@ -203,13 +212,26 @@ describe('arrayMap', function () {
     it('Should copy the array before returning it', function () {
         var identityFunction = function(x) {
             return x;
-        }
+        };
 
         var input = ["a", "b", "c"];
         var result = ko.utils.arrayMap(input, identityFunction);
 
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
+    });
+
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(x) {
+            actualContext = this;
+            return x;
+        };
+
+        ko.utils.arrayMap(["a"], identityFunction, expectedContext);
+
+        expect(actualContext).toBe(expectedContext);
     });
 });
 
@@ -236,13 +258,26 @@ describe('arrayFilter', function () {
     it('Should copy the array before returning it', function () {
         var alwaysTrue = function(x) {
             return true;
-        }
+        };
 
         var input = ["a", "b", "c"];
         var result = ko.utils.arrayFilter(input, alwaysTrue);
 
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
+    });
+
+    it('Should alter "this" context when defined as an argument', function () {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(x) {
+            actualContext = this;
+            return x;
+        };
+
+        var result = ko.utils.arrayFilter(["a"], identityFunction, expectedContext);
+
+        expect(expectedContext).toEqual(actualContext);
     });
 });
 
@@ -340,5 +375,20 @@ describe('Function.bind', function() {
         expect(bound1()).toEqual([object1]);
         expect(bound2()).toEqual([object1, 'a']);
         expect(bound3()).toEqual([object1, 'b']);
+    });
+});
+
+describe('objectMap', function () {
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(obj) {
+            actualContext = this;
+            return {x : obj.x};
+        };
+
+        var result = ko.utils.objectMap({x:1}, identityFunction, expectedContext);
+
+        expect(expectedContext).toEqual(actualContext);
     });
 });
