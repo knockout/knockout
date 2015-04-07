@@ -40,6 +40,7 @@ require('./observableArrayBehaviors');
 require('./observableArrayChangeTrackingBehaviors');
 require('./observableBehaviors');
 require('./subscribableBehaviors');
+require('./taskBehaviors');
 require('./utilsBehaviors');
 
 // get reference to jasmine runtime

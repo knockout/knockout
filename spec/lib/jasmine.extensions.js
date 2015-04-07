@@ -1,3 +1,16 @@
+jasmine.Clock.mockScheduler = function (callback) {
+    setTimeout(callback, 0);
+};
+jasmine.Clock.useMockForTasks = function() {
+    jasmine.Clock.useMock();
+
+    // Make sure ko.tasks is using setTimeout so that it uses the mock clock
+    if (ko.tasks.scheduler != jasmine.Clock.mockScheduler) {
+        jasmine.getEnv().currentSpec.restoreAfter(ko.tasks, 'scheduler');
+        ko.tasks.scheduler = jasmine.Clock.mockScheduler;
+    }
+};
+
 jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
     var originalValue = object[propertyName];
     this.after(function() {
@@ -29,9 +42,17 @@ jasmine.nodeText = function(node) {
     return node.nodeType == 3 ? node.data : 'textContent' in node ? node.textContent : node.innerText;
 }
 
-jasmine.Matchers.prototype.toContainText = function (expectedText) {
+jasmine.Matchers.prototype.toContainText = function (expectedText, ignoreSpaces) {
+    if (ignoreSpaces) {
+        expectedText = expectedText.replace(/\s/g, "");
+    }
+
     var actualText = jasmine.nodeText(this.actual);
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
+    if (ignoreSpaces) {
+        cleanedActualText = cleanedActualText.replace(/\s/g, "");
+    }
+
     this.actual = cleanedActualText;    // Fix explanatory message
     return cleanedActualText === expectedText;
 };

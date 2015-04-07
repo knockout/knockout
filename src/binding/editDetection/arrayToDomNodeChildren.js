@@ -88,7 +88,7 @@
                             mapData.dependentObservable.dispose();
 
                         // Queue these nodes for later removal
-                        nodesToDelete.push.apply(nodesToDelete, ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode));
+                        nodesToDelete.push.apply(nodesToDelete, ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode) || []);
                         if (options['beforeRemove']) {
                             itemsForBeforeRemoveCallbacks[i] = mapData;
                             itemsToProcess.push(mapData);
