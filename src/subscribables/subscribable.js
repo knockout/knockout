@@ -1,6 +1,6 @@
 
 ko.subscription = function (target, callback, disposeCallback) {
-    this.target = target;
+    this._target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
     this.isDisposed = false;
@@ -14,7 +14,12 @@ ko.subscription.prototype.dispose = function () {
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
     this._subscriptions = {};
+<<<<<<< HEAD
 };
+=======
+    this._versionNumber = 1;
+}
+>>>>>>> 4208880eba378dc3acce008b327961091d8b7f1b
 
 var defaultEvent = "change";
 
@@ -43,6 +48,9 @@ var ko_subscribable_fn = {
 
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
+        if (event === defaultEvent) {
+            this.updateVersion();
+        }
         if (this.hasSubscriptionsForEvent(event)) {
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
@@ -56,6 +64,18 @@ var ko_subscribable_fn = {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
             }
         }
+    },
+
+    getVersion: function () {
+        return this._versionNumber;
+    },
+
+    hasChanged: function (versionToCheck) {
+        return this.getVersion() !== versionToCheck;
+    },
+
+    updateVersion: function () {
+        ++this._versionNumber;
     },
 
     limit: function(limitFunction) {

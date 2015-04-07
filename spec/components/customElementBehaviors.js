@@ -1,10 +1,11 @@
 describe('Components: Custom elements', function() {
     beforeEach(function() {
         jasmine.prepareTestNode();
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
     });
 
     afterEach(function() {
+        expect(ko.tasks.length()).toEqual(0);
         jasmine.Clock.reset();
         ko.components.unregister('test-component');
     });
@@ -64,6 +65,9 @@ describe('Components: Custom elements', function() {
 
         expect(function() { ko.applyBindings(null, testNode); })
             .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
+
+        // Even though ko.applyBindings threw an exception, the component still gets bound (asynchronously)
+        jasmine.Clock.tick(1);
     });
 
     it('Is possible to call applyBindings directly on a custom element', function() {
