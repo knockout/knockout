@@ -15,7 +15,7 @@ describe('Components: Component binding', function() {
     });
 
     afterEach(function() {
-        expect(ko.tasks.length()).toEqual(0);
+        expect(ko.tasks.reset()).toEqual(0);
         jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
     });

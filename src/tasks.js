@@ -2,7 +2,8 @@ ko.tasks = (function () {
     var scheduler,
         taskQueue = [],
         taskQueueLength = 0,
-        nextHandle = 1;
+        nextHandle = 1,
+        nextIndexToProcess = 0;
 
     if (window['MutationObserver']) {
         // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+; borrowed from https://github.com/petkaantonov/bluebird
@@ -30,39 +31,36 @@ ko.tasks = (function () {
     }
 
     function processTasks() {
-        try {
+        if (taskQueueLength) {
             // Each mark represents the end of a logical group of tasks and the number of these groups is
             // limited to prevent unchecked recursion.
             var mark = taskQueueLength, countMarks = 0;
 
-            for (var index = 0, task; index < taskQueueLength; ++index) {
-                if (taskQueue[index]) {
-                    if (index >= mark) {
+            // nextIndexToProcess keeps track of where we are in the queue; processTasks can be called recursively without issue
+            for (var task; nextIndexToProcess < taskQueueLength; ) {
+                if (task = taskQueue[nextIndexToProcess++]) {
+                    if (nextIndexToProcess > mark) {
                         if (++countMarks >= 5000)
                             throw Error("'Too much recursion' after processing " + countMarks + " task groups.");
                         mark = taskQueueLength;
                     }
-                    task = taskQueue[index];
                     task();
                 }
-            }
-        } finally {
-            // Remove the tasks we've just processed from the queue and reset the timer
-            if (++index < taskQueueLength) {
-                // There are still tasks to process because a task threw an exception
-                taskQueueLength -= index;
-                taskQueue = taskQueue.slice(index);
-                scheduleTaskProcessing();
-            } else {
-                // All tasks have been processed
-                taskQueueLength = taskQueue.length = 0;
             }
         }
     }
 
     function scheduledProcess() {
-        if (taskQueueLength) {
+        try {
             processTasks();
+        } finally {
+            if (nextIndexToProcess < taskQueueLength) {
+                // There are still tasks remaining because of an exception, so make sure they run.
+                scheduleTaskProcessing();
+            } else {
+                // No more tasks; reset the queue
+                nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
+            }
         }
     }
 
@@ -89,10 +87,14 @@ ko.tasks = (function () {
             }
         },
 
-        // For testing only: return the queue length
-        length: function () {
-            return taskQueueLength;
-        }
+        // For testing only: reset the queue and return the previous queue length
+        reset: function () {
+            var length = taskQueueLength - nextIndexToProcess;
+            nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
+            return length;
+        },
+
+        runEarly: processTasks
     };
 
     return tasks;
@@ -101,3 +103,4 @@ ko.tasks = (function () {
 ko.exportSymbol('tasks', ko.tasks);
 ko.exportSymbol('tasks.schedule', ko.tasks.schedule);
 //ko.exportSymbol('tasks.cancel', ko.tasks.cancel);  "cancel" isn't minified
+ko.exportSymbol('tasks.runEarly', ko.tasks.runEarly);

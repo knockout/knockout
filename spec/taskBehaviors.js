@@ -5,7 +5,8 @@ describe('Tasks', function() {
 
     afterEach(function() {
         // Check that task schedule is clear after each test
-        expect(ko.tasks.length()).toEqual(0);
+        expect(ko.tasks.reset()).toEqual(0);
+        jasmine.Clock.reset();
     });
 
     it('Should run in next execution cycle', function() {
@@ -205,6 +206,74 @@ describe('Tasks', function() {
             expect(runValues).toEqual([1,3]);
         });
     });
+
+    describe('runEarly', function() {
+        it('Should run tasks early', function() {
+            var runValues = [];
+            var func = function(value) {
+                runValues.push(value);
+            };
+            ko.tasks.schedule(func.bind(null, 1));
+            expect(runValues).toEqual([]);
+
+            // Immediately runs any scheduled tasks
+            ko.tasks.runEarly();
+            expect(runValues).toEqual([1]);
+
+            // Skip calling jasmine.Clock.tick to show that the queue is clear
+        });
+
+        it('Should run tasks early during task processing', function() {
+            var runValues = [];
+            var func = function(value) {
+                runValues.push(value);
+            };
+
+            // Schedule two tasks; the first one schedules other tasks and calls runEarly
+            ko.tasks.schedule(function() {
+                ko.tasks.schedule(func.bind(null, 2));
+                expect(runValues).toEqual([]);
+
+                ko.tasks.runEarly();
+                expect(runValues).toEqual([1,2]);
+
+                // Schedule another task; it will be run after this one completes
+                ko.tasks.schedule(func.bind(null, 3));
+            });
+            ko.tasks.schedule(func.bind(null, 1));
+
+            jasmine.Clock.tick(1);
+            expect(runValues).toEqual([1,2,3]);
+        });
+
+        it('Should keep correct state if a task throws an exception', function() {
+            var runValues = [];
+            var func = function(value) {
+                runValues.push(value);
+            };
+            ko.tasks.schedule(func.bind(null, 1));
+            ko.tasks.schedule(function() {
+                expect(runValues).toEqual([1]);
+                ko.tasks.runEarly();
+                ko.tasks.schedule(func.bind(null, 3));      // This never gets called
+            });
+            ko.tasks.schedule(function() {
+                throw Error("test");
+            });
+            ko.tasks.schedule(func.bind(null, 2));
+            expect(runValues).toEqual([]);
+
+            // When running tasks, it will throw an exception and not complete the remaining tasks
+            expect(function() {
+                jasmine.Clock.tick(1);
+            }).toThrow();
+            expect(runValues).toEqual([1]);
+
+            // The remaining tasks will run later
+            jasmine.Clock.tick(1);
+            expect(runValues).toEqual([1,2]);
+        });
+    });
 });
 
 describe('Tasks scheduler', function() {
@@ -234,34 +303,45 @@ describe('Tasks scheduler', function() {
     });
 
     it('Should run only once for a set of tasks', function() {
-        var taskRunCount = 0, schedulerRunCount = 0;
+        var counts = [0, 0];    // scheduler, tasks
 
         jasmine.Clock.useMock();
         this.restoreAfter(ko.tasks, 'scheduler');
         ko.tasks.scheduler = function (callback) {
-            schedulerRunCount++;
+            ++counts[0];
             setTimeout(callback, 0);
         };
         function func() {
-            taskRunCount++;
+            ++counts[1];
         };
 
         // First batch = one scheduler call
         ko.tasks.schedule(func);
+        expect(counts).toEqual([1, 0]);
         ko.tasks.schedule(func);
-        expect(taskRunCount).toEqual(0);
-        expect(schedulerRunCount).toEqual(1);
+        expect(counts).toEqual([1, 0]);
+        jasmine.Clock.tick(1);
+        expect(counts).toEqual([1, 2]);
+
+        // Second batch = one scheduler call
+        counts = [0, 0];
+        ko.tasks.schedule(func);
+        ko.tasks.schedule(func);
+        jasmine.Clock.tick(1);
+        expect(counts).toEqual([1, 2]);
+
+        // runEarly doesn't cause any extra scheduler call
+        counts = [0, 0];
+        ko.tasks.schedule(func);
+        expect(counts).toEqual([1, 0]);
+
+        ko.tasks.runEarly();
+        expect(counts).toEqual([1, 1]);
+
+        ko.tasks.schedule(func);
+        expect(counts).toEqual([1, 1]);
 
         jasmine.Clock.tick(1);
-        expect(taskRunCount).toEqual(2);
-        expect(schedulerRunCount).toEqual(1);
-
-        // Second batch = one more call
-        ko.tasks.schedule(func);
-        ko.tasks.schedule(func);
-        expect(schedulerRunCount).toEqual(2);
-
-        jasmine.Clock.tick(1);
-        expect(taskRunCount).toEqual(4);
+        expect(counts).toEqual([1, 2]);
     });
 });
