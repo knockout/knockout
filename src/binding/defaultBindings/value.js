@@ -57,7 +57,7 @@ ko.bindingHandlers['value'] = {
                     // techniques like rateLimit can trigger model changes at critical moments that will
                     // override the user's inputs, causing keystrokes to be lost.
                     elementValueBeforeEvent = ko.selectExtensions.readValue(element);
-                    setTimeout(valueUpdateHandler, 0);
+                    ko.utils.setTimeout(valueUpdateHandler, 0);
                 };
                 eventName = eventName.substring("after".length);
             }
@@ -69,7 +69,7 @@ ko.bindingHandlers['value'] = {
             var elementValue = ko.selectExtensions.readValue(element);
 
             if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
-                setTimeout(updateFromModel, 0);
+                ko.utils.setTimeout(updateFromModel, 0);
                 return;
             }
 
@@ -91,7 +91,7 @@ ko.bindingHandlers['value'] = {
                         // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
                         // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
                         // to apply the value as well.
-                        setTimeout(applyValueAction, 0);
+                        ko.utils.setTimeout(applyValueAction, 0);
                     }
                 } else {
                     ko.selectExtensions.writeValue(element, newValue);
