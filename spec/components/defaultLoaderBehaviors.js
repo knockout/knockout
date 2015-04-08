@@ -24,6 +24,9 @@ describe('Components: Default loader', function() {
         expect(ko.components.isRegistered(prototypeProperty)).toBe(false);
         ko.components.register(prototypeProperty, {});
         expect(ko.components.isRegistered(prototypeProperty)).toBe(true);
+
+        ko.components.unregister(prototypeProperty);
+        expect(ko.components.isRegistered(prototypeProperty)).toBe(false);
     });
 
     it('Throws if you try to register a component that is already registered', function() {
