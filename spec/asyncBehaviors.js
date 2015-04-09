@@ -789,3 +789,29 @@ describe('Deferred', function() {
         });
     });
 });
+
+asyncTest("Should be able to use ko.computedAsync as a shortcut to create a minimally-throttled computed", function() {
+	var evaluationCount = 0,
+		someDependency = ko.observable("Initial value"),
+		computedAsync = ko.computedAsync(function() {
+			evaluationCount++;
+			return someDependency();
+		});
+
+	// Mutate a few times synchronously
+	start();
+	equal(evaluationCount, 1); // Evaluates synchronously when first created, like all computeds
+	someDependency("A");
+	someDependency("B");
+	someDependency("C");
+	equal(evaluationCount, 1, "Should not re-evaluate synchronously when dependencies update");
+
+	// Check it does re-evaluate after a pause
+	equal(computedAsync(), "Initial value");
+	stop();
+	setTimeout(function() {
+		start();
+		equal(evaluationCount, 2); // Finally, it's evaluated
+		equal(computedAsync(), "C");
+	}, 1);
+});

@@ -58,8 +58,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     }
 
     function evaluatePossiblyAsync() {
-        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
-        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+        var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'],
+            shouldThrottle = typeof throttleEvaluationTimeout == 'number';
+        if (shouldThrottle) {
             clearTimeout(evaluationTimeoutInstance);
             evaluationTimeoutInstance = ko.utils.setTimeout(function () {
                 evaluateImmediate(true /*notifyChange*/);
