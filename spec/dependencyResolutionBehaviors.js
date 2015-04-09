@@ -64,4 +64,30 @@ describe('Dependency Resolution', function() {
 
     });
 
+    it('Should prioritise subscriptions deeper in the graph', function() {
+
+        /* Arrange */
+        var a = ko.observable('a'),
+            b = ko.computed(function() {
+                return a() + 'b';
+            }),
+            spy = jasmine.createSpy('callback'),
+            subscription;
+
+        b.subscribe(function(b) {
+            if (b === 'aab') {
+                subscription.dispose();
+            }
+        });
+
+        subscription = a.subscribe(spy);
+
+        /* Act */
+        a('aa');
+
+        /* Assert */
+        expect(spy.calls.length).toEqual(0);
+
+    });
+
 });

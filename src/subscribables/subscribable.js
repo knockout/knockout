@@ -48,10 +48,11 @@ var ko_subscribable_fn = {
         }
         if (this.hasSubscriptionsForEvent(event)) {
 
-            for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
+            // Add the callbacks for the most recent notify to the front of the queue
+            for (var a = this._subscriptions[event].slice(0), i = a.length; i > 0; i--) {
                 // In case a subscription was disposed during the arrayForEach cycle, check
                 // for isDisposed on each subscription before invoking its callback
-                notifyQueue.push(function(subscription) {
+                notifyQueue.unshift(function(subscription) {
 
                     if (!subscription.isDisposed) {
 
@@ -66,7 +67,7 @@ var ko_subscribable_fn = {
                         }
                     }
 
-                }.bind(null, subscription));
+                }.bind(null, a[i - 1]));
 
             }
 
