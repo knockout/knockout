@@ -736,7 +736,7 @@ describe('Deferred', function() {
             myArray.push('Epsilon');
             myArray.pop();
             jasmine.Clock.tick(1);
-            expect(changelist).toEqualOneOf([[], undefined]);
+            expect(changelist).toEqual(undefined);
         });
     });
 

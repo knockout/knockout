@@ -6,14 +6,16 @@ ko.tasks = (function () {
         nextIndexToProcess = 0;
 
     if (window['MutationObserver']) {
-        // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+; borrowed from https://github.com/petkaantonov/bluebird
+        // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+
+        // From https://github.com/petkaantonov/bluebird * Copyright (c) 2014 Petka Antonov * License: MIT
         scheduler = (function (callback) {
             var div = document.createElement("div");
             new MutationObserver(callback).observe(div, {attributes: true});
             return function () { div.classList.toggle("foo"); };
         })(scheduledProcess);
     } else if (document && "onreadystatechange" in document.createElement("script")) {
-        // IE 6-10; borrowed from https://github.com/YuzuJS/setImmediate
+        // IE 6-10
+        // From https://github.com/YuzuJS/setImmediate * Copyright (c) 2012 Barnesandnoble.com, llc, Donavon West, and Domenic Denicola * License: MIT
         scheduler = function (callback) {
             var script = document.createElement("script");
             script.onreadystatechange = function () {

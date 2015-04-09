@@ -47,20 +47,21 @@ describe('Tasks', function() {
     });
 
     it('Should run tasks again if scheduled after a previous run', function() {
-        var runValues = [];
-        var func = function(value) {
-            runValues.push(value);
+        var runCount = 0;
+        var func = function() {
+            runCount++;
         };
-        ko.tasks.schedule(func.bind(null, 1));
-        expect(runValues).toEqual([]);
+        ko.tasks.schedule(func);
+        expect(runCount).toEqual(0);
 
         jasmine.Clock.tick(1);
-        expect(runValues).toEqual([1]);
+        expect(runCount).toEqual(1);
 
-        ko.tasks.schedule(func.bind(null, 2));
+        ko.tasks.schedule(func);
+        expect(runCount).toEqual(1);
 
         jasmine.Clock.tick(1);
-        expect(runValues).toEqual([1,2]);
+        expect(runCount).toEqual(2);
     });
 
     it('Should process newly scheduled tasks during task processing', function() {
