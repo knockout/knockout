@@ -1,4 +1,5 @@
 ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+
     var _latestValue,
         _needsEvaluation = true,
         _isBeingEvaluated = false,
@@ -6,7 +7,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _isDisposed = false,
         readFunction = evaluatorFunctionOrOptions,
         pure = false,
-        isSleeping = false;
+        isSleeping = false,
+        _latestGlobalVersionNumber = null;
 
     if (readFunction && typeof readFunction == "object") {
         // Single-parameter syntax - everything is on this "options" param
@@ -149,7 +151,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 }
 
                 _latestValue = newValue;
+
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
+
+                _latestGlobalVersionNumber = globalVersionNumber;
 
                 if (isSleeping) {
                     dependentObservable.updateVersion();
@@ -179,6 +184,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             }
             return this; // Permits chained assignments
         } else {
+
+            if (_latestGlobalVersionNumber !== globalVersionNumber) {
+                processQueue();
+            }
+
             // Reading the value
             ko.dependencyDetection.registerDependency(dependentObservable);
             if (_needsEvaluation || (isSleeping && haveDependenciesChanged())) {

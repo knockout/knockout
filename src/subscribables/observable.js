@@ -10,6 +10,7 @@ ko.observable = function (initialValue) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
+                globalVersionNumber++;
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments

@@ -1,4 +1,3 @@
-
 ko.subscription = function (target, callback, disposeCallback) {
     this._target = target;
     this.callback = callback;
@@ -48,17 +47,31 @@ var ko_subscribable_fn = {
             this.updateVersion();
         }
         if (this.hasSubscriptionsForEvent(event)) {
-            try {
-                ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
-                for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
-                    // In case a subscription was disposed during the arrayForEach cycle, check
-                    // for isDisposed on each subscription before invoking its callback
-                    if (!subscription.isDisposed)
-                        subscription.callback(valueToNotify);
-                }
-            } finally {
-                ko.dependencyDetection.end(); // End suppressing dependency detection
+
+            for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
+                // In case a subscription was disposed during the arrayForEach cycle, check
+                // for isDisposed on each subscription before invoking its callback
+                notifyQueue.push(function(subscription) {
+
+                    if (!subscription.isDisposed) {
+
+                        try {
+                            // Begin suppressing dependency detection (by setting the top frame to undefined)
+                            ko.dependencyDetection.begin();
+                            subscription.callback(valueToNotify);
+
+                        } finally {
+                            // End suppressing dependency detection
+                            ko.dependencyDetection.end();
+                        }
+                    }
+
+                }.bind(null, subscription));
+
             }
+
+            processQueue();
+
         }
     },
 
