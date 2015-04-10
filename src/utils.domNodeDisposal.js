@@ -90,7 +90,7 @@ ko.utils.domNodeDisposal = new (function () {
                 node.parentNode.removeChild(node);
         },
 
-        cleanExternalData : function (node) {
+        "cleanExternalData" : function (node) {
             // Special support for jQuery here because it's so commonly used.
             // Many jQuery plugins (including jquery.tmpl) store data using jQuery's equivalent of domData
             // so notify it to tear down any resources associated with the node & descendants here.
