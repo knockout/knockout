@@ -5,7 +5,7 @@ describe('Tasks', function() {
 
     afterEach(function() {
         // Check that task schedule is clear after each test
-        expect(ko.tasks.reset()).toEqual(0);
+        expect(ko.tasks.resetForTesting()).toEqual(0);
         jasmine.Clock.reset();
     });
 
@@ -92,14 +92,10 @@ describe('Tasks', function() {
         ko.tasks.schedule(func.bind(null, 2));
         expect(runValues).toEqual([]);
 
-        // When running tasks, it will throw an exception and not complete the tasks
+        // When running tasks, it will throw an exception after completing all tasks
         expect(function() {
             jasmine.Clock.tick(1);
         }).toThrow();
-        expect(runValues).toEqual([1]);
-
-        // The remaining tasks will run later
-        jasmine.Clock.tick(1);
         expect(runValues).toEqual([1,2]);
     });
 
@@ -107,6 +103,7 @@ describe('Tasks', function() {
         var runValues = [];
         var func = function() {
             runValues.push('x');
+            ko.tasks.schedule(function() {});
             ko.tasks.schedule(func);
         };
 
@@ -183,28 +180,27 @@ describe('Tasks', function() {
         });
 
         it('Should work correctly after a task throws an exception', function() {
-            var runValues = [];
+            var runValues = [], handle;
             var func = function(value) {
                 runValues.push(value);
             };
+
             ko.tasks.schedule(func.bind(null, 1));
             ko.tasks.schedule(function() {
                 throw Error("test");
             });
-            var handle = ko.tasks.schedule(func.bind(null, 2));
+            ko.tasks.schedule(function() {
+                ko.tasks.cancel(handle);
+            });
+            handle = ko.tasks.schedule(func.bind(null, 2));
             ko.tasks.schedule(func.bind(null, 3));
             expect(runValues).toEqual([]);
 
-            // When running tasks, it will throw an exception and not complete the tasks
+            // When running tasks, it will throw an exception after completing the tasks
             expect(function() {
                 jasmine.Clock.tick(1);
             }).toThrow();
-            expect(runValues).toEqual([1]);
-
-            // The canceled task will be skipped
-            ko.tasks.cancel(handle);
-            jasmine.Clock.tick(1);
-            expect(runValues).toEqual([1,3]);
+            expect(runValues).toEqual([1, 3]);  // The canceled task will be skipped
         });
     });
 
@@ -247,6 +243,30 @@ describe('Tasks', function() {
             expect(runValues).toEqual([1,2,3]);
         });
 
+        it('Should stop recursive task processing after a fixed number of iterations', function() {
+            var runValues = [];
+            var func = function() {
+                runValues.push('x');
+                ko.tasks.schedule(function() {});
+                ko.tasks.schedule(func);
+            };
+
+            ko.tasks.schedule(func);
+            expect(runValues).toEqual([]);
+
+            ko.tasks.runEarly();    // No exception thrown yet, but the recursion was ended
+            // 5000 is the current limit in the code, but it could change if needed.
+            expect(runValues.length).toEqual(5000);
+
+            expect(function() {
+                jasmine.Clock.tick(1);
+            }).toThrowContaining('Too much recursion');
+
+            // No additional iterations should happen
+            expect(runValues.length).toEqual(5000);
+        });
+
+
         it('Should keep correct state if a task throws an exception', function() {
             var runValues = [];
             var func = function(value) {
@@ -255,8 +275,9 @@ describe('Tasks', function() {
             ko.tasks.schedule(func.bind(null, 1));
             ko.tasks.schedule(function() {
                 expect(runValues).toEqual([1]);
-                ko.tasks.runEarly();
-                ko.tasks.schedule(func.bind(null, 3));      // This never gets called
+                ko.tasks.runEarly();        // The error will be thrown asynchronously after all tasks are complete
+                expect(runValues).toEqual([1, 2]);
+                ko.tasks.schedule(func.bind(null, 3));
             });
             ko.tasks.schedule(function() {
                 throw Error("test");
@@ -264,15 +285,11 @@ describe('Tasks', function() {
             ko.tasks.schedule(func.bind(null, 2));
             expect(runValues).toEqual([]);
 
-            // When running tasks, it will throw an exception and not complete the remaining tasks
+            // It will throw an exception after completing all tasks
             expect(function() {
                 jasmine.Clock.tick(1);
             }).toThrow();
-            expect(runValues).toEqual([1]);
-
-            // The remaining tasks will run later
-            jasmine.Clock.tick(1);
-            expect(runValues).toEqual([1,2]);
+            expect(runValues).toEqual([1, 2, 3]);
         });
     });
 });

@@ -42,28 +42,28 @@ ko.tasks = (function () {
             for (var task; nextIndexToProcess < taskQueueLength; ) {
                 if (task = taskQueue[nextIndexToProcess++]) {
                     if (nextIndexToProcess > mark) {
-                        if (++countMarks >= 5000)
-                            throw Error("'Too much recursion' after processing " + countMarks + " task groups.");
+                        if (++countMarks >= 5000) {
+                            nextIndexToProcess = taskQueueLength;   // skip all tasks remaining in the queue since any of them could be causing the recursion
+                            ko.utils.deferError(Error("'Too much recursion' after processing " + countMarks + " task groups."));
+                            break;
+                        }
                         mark = taskQueueLength;
                     }
-                    task();
+                    try {
+                        task();
+                    } catch (ex) {
+                        ko.utils.deferError(ex);
+                    }
                 }
             }
         }
     }
 
     function scheduledProcess() {
-        try {
-            processTasks();
-        } finally {
-            if (nextIndexToProcess < taskQueueLength) {
-                // There are still tasks remaining because of an exception, so make sure they run.
-                scheduleTaskProcessing();
-            } else {
-                // No more tasks; reset the queue
-                nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
-            }
-        }
+        processTasks();
+
+        // Reset the queue
+        nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
     }
 
     function scheduleTaskProcessing() {
@@ -78,19 +78,19 @@ ko.tasks = (function () {
                 scheduleTaskProcessing();
             }
 
-            taskQueue[taskQueueLength++] = ko.utils.catchFunctionErrors(func);
+            taskQueue[taskQueueLength++] = func;
             return nextHandle++;
         },
 
         cancel: function (handle) {
             var index = handle - (nextHandle - taskQueueLength);
-            if (index >= 0 && index < taskQueueLength) {
+            if (index >= nextIndexToProcess && index < taskQueueLength) {
                 taskQueue[index] = null;
             }
         },
 
         // For testing only: reset the queue and return the previous queue length
-        reset: function () {
+        'resetForTesting': function () {
             var length = taskQueueLength - nextIndexToProcess;
             nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
             return length;

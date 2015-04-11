@@ -14,7 +14,7 @@ describe("Deferred bindings", function() {
         };
     });
     afterEach(function() {
-        expect(ko.tasks.reset()).toEqual(0);
+        expect(ko.tasks.resetForTesting()).toEqual(0);
         jasmine.Clock.reset();
         ko.options.deferUpdates = false;
         bindingSpy = ko.bindingHandlers.test = null;

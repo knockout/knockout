@@ -619,7 +619,7 @@ describe('Deferred', function() {
     });
 
     afterEach(function() {
-        expect(ko.tasks.reset()).toEqual(0);
+        expect(ko.tasks.resetForTesting()).toEqual(0);
         jasmine.Clock.reset();
     });
 
