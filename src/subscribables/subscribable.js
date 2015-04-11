@@ -1,4 +1,7 @@
+var nextSubscriptionPriority = 0;
+
 ko.subscription = function (target, callback, disposeCallback) {
+    this._priority = nextSubscriptionPriority++;
     this._target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
@@ -49,7 +52,7 @@ var ko_subscribable_fn = {
         if (this.hasSubscriptionsForEvent(event)) {
 
             // Add the callbacks for the most recent notify to the front of the queue
-            for (var a = this._subscriptions[event].slice(0), i = a.length; i > 0; i--) {
+            for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
                 // In case a subscription was disposed during the arrayForEach cycle, check
                 // for isDisposed on each subscription before invoking its callback
                 notifyQueue.unshift(function(subscription) {
@@ -67,10 +70,13 @@ var ko_subscribable_fn = {
                         }
                     }
 
-                }.bind(null, a[i - 1]));
+                }.bind(null, subscription));
+
+                notifyQueue[0].priority = subscription._priority;
 
             }
 
+            sortQueue();
             processQueue();
 
         }

@@ -10,3 +10,7 @@ function processQueue() {
     }
 
 }
+
+function sortQueue() {
+    notifyQueue.sort(function(a, b) { return a.priority - b.priority; });
+}
