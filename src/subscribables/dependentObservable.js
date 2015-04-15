@@ -126,9 +126,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             dependencyTracking = {};
             _dependenciesCount = 0;
 
+            var newValue;
             try {
-                var newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
-
+                newValue = evaluatorFunctionTarget ? readFunction.call(evaluatorFunctionTarget) : readFunction();
             } finally {
                 ko.dependencyDetection.end();
 
@@ -238,7 +238,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             // Pass the observable to the rate-limit code, which will access it when
             // it's time to do the notification.
             dependentObservable._rateLimitedChange(dependentObservable);
-        }
+        };
     };
 
     if (options['pure']) {
@@ -307,7 +307,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             if (event == 'change' || event == 'beforeChange') {
                 peek();
             }
-        }
+        };
     }
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
@@ -393,5 +393,5 @@ ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget)
         evaluatorFunctionOrOptions['pure'] = true;
         return ko.computed(evaluatorFunctionOrOptions, evaluatorFunctionTarget);
     }
-}
+};
 ko.exportSymbol('pureComputed', ko.pureComputed);

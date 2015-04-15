@@ -24,7 +24,7 @@ ko.observable = function (initialValue) {
     ko.utils.setPrototypeOfOrExtend(observable, ko.observable['fn']);
 
     if (DEBUG) observable._latestValue = _latestValue;
-    observable.peek = function() { return _latestValue };
+    observable.peek = function() { return _latestValue; };
     observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
 
@@ -37,7 +37,7 @@ ko.observable = function (initialValue) {
     }
 
     return observable;
-}
+};
 
 ko.observable['fn'] = {
     "equalityComparer": valuesArePrimitiveAndEqual
@@ -60,7 +60,7 @@ ko.hasPrototype = function(instance, prototype) {
 
 ko.isObservable = function (instance) {
     return ko.hasPrototype(instance, ko.observable);
-}
+};
 ko.isWriteableObservable = function (instance) {
     // Observable
     if ((typeof instance == "function") && instance[protoProperty] === ko.observable)
@@ -70,7 +70,7 @@ ko.isWriteableObservable = function (instance) {
         return true;
     // Anything else
     return false;
-}
+};
 
 
 ko.exportSymbol('observable', ko.observable);
