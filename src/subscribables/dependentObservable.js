@@ -334,6 +334,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
     }
 
+    if (ko.options['deferUpdates']) {
+        ko.extenders['deferred'](dependentObservable, true);
+    }
+
     // Evaluate, unless sleeping or deferEvaluation is true
     if (!isSleeping && !options['deferEvaluation'])
         evaluateImmediate();

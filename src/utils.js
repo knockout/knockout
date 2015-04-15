@@ -350,6 +350,13 @@ ko.utils = (function () {
             return setTimeout(ko.utils.catchFunctionErrors(handler), timeout);
         },
 
+        deferError: function (error) {
+            setTimeout(function () {
+                ko['onError'] && ko['onError'](error);
+                throw error;
+            }, 0);
+        },
+
         registerEventHandler: function (element, eventType, handler) {
             var wrappedHandler = ko.utils.catchFunctionErrors(handler);
 
