@@ -2,7 +2,7 @@
     var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
 
     function getWrap(tags) {
-        var m = tags.match(/^<(thead|tbody|tfoot|tr|td|th)( |>)/);
+        var m = tags.match(/^<(thead|tbody|tfoot|tr|td|th)(?: |>)/);
         var tagName = m && m[1];
 
         switch (tagName) {
