@@ -6,9 +6,6 @@ banner: |
   // (c) Steven Sanderson - <%= pkg.homepage %>
   // License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)
 
-# Build scripts reside here
-scriptsDir: build/fragments/
-
 # knockout-latest[.debug].js goes here when compiled
 buildDir: build/output/
 build:
@@ -91,10 +88,16 @@ closure_options:
   output_wrapper: "(function() {%output%})();"
 
 # Files that have their trailing spaces checked on lint
-trailingSpaceSources:
-  - 'spec/*.{js,html,css,bat,ps1,sh}'
-  - 'src/*.{js,html,css,bat,ps1,sh}'
-  - 'build/fragments/*'
+lint:
+  sources:
+    - 'spec/*.{js,html,css,bat,ps1,sh}'
+    - 'src/*.{js,html,css,bat,ps1,sh}'
+    - 'build/fragments/*'
+  space_options:
+    newline: false
+    trailingspaces: true
+    ignores:
+      - js-comments
 
 # Listening for changes
 livereload_port: 30397
@@ -110,14 +113,14 @@ sources:
   - src/utils.domNodeDisposal.js
   - src/utils.domManipulation.js
   - src/memoization.js
-  - src/subscribables/dependencyDetection.js
-  - src/subscribables/dependentObservable.js
   - src/subscribables/extenders.js
+  - src/subscribables/subscribable.js
+  - src/subscribables/dependencyDetection.js
   - src/subscribables/mappingHelpers.js
   - src/subscribables/observable.js
-  - src/subscribables/observableArray.changeTracking.js
   - src/subscribables/observableArray.js
-  - src/subscribables/subscribable.js
+  - src/subscribables/observableArray.changeTracking.js
+  - src/subscribables/dependentObservable.js
   - src/binding/selectExtensions.js
   - src/binding/expressionRewriting.js
   - src/virtualElements.js

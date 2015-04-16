@@ -16,6 +16,7 @@ jasmine.prepareTestNode = function() {
     testNode = document.createElement("div");
     testNode.id = "testNode";
     document.body.appendChild(testNode);
+};
 
 jasmine.Clock.mockScheduler = function (callback) {
     setTimeout(callback, 0);
@@ -66,10 +67,14 @@ jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
 var matchers = {};
 
 matchers.toContainText = function (expectedText, ignoreSpaces) {
+    if (ignoreSpaces) {
+        expectedText = expectedText.replace(/\s/g, "");
+    }
+
     var actualText = jasmine.nodeText(this.actual);
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
     if (ignoreSpaces) {
-      expectedText = expectedText.replace(/\s/g, "");
+        cleanedActualText = cleanedActualText.replace(/\s/g, "");
     }
 
     this.actual = cleanedActualText;    // Fix explanatory message

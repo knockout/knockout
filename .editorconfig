@@ -1,0 +1,20 @@
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = false
+indent_style = space
+indent_size = 4
+
+
+[*.js]
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.html]
+indent_size = 4
+indent_style = space
+tab_width = 4
