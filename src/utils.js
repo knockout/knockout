@@ -361,7 +361,7 @@ ko.utils = (function () {
             var wrappedHandler = ko.utils.catchFunctionErrors(handler);
 
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
-            if (!mustUseAttachEvent && jQueryInstance) {
+            if (!ko.options['noJQueryEvents'] && !mustUseAttachEvent && jQueryInstance) {
                 jQueryInstance(element)['bind'](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, wrappedHandler, false);
