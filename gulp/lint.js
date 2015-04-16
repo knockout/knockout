@@ -1,11 +1,6 @@
 //
 // Tasks related to lint
 //
-var vmap = require('vinyl-map')
-var trailingSpaceRegex = /[ ]$/;
-var gutil = require('gulp-util')
-
-
 
 module.exports = function(gulp, plugins, config) {
   gulp.task("lint:js", "Run Javascript linting", function () {
