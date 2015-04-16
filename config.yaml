@@ -168,13 +168,13 @@ node_spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
   - ./spec/dependentObservableBehaviors.js
+  - ./spec/pureComputedBehaviors.js
   - ./spec/expressionRewritingBehaviors.js
   - ./spec/extenderBehaviors.js
   - ./spec/mappingHelperBehaviors.js
   - ./spec/observableArrayBehaviors.js
   - ./spec/observableArrayChangeTrackingBehaviors.js
   - ./spec/observableBehaviors.js
-  - ./spec/pureComputedBehaviors.js
   - ./spec/subscribableBehaviors.js
   - ./spec/taskBehaviors.js
   - ./spec/utilsBehaviors.js
@@ -182,34 +182,36 @@ node_spec_files:
 # Test files -- compiled with spec/helpers/runner.template.html
 #               to form runner.html
 spec_files:
+  # Note: There are some side-effects in the specs, so the order of these
+  # tests is important, until those side-effects are fixed.
+  # FIXME: Ideally these should be in alphabetical order.
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/arrayToDomEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
   - ./spec/asyncBindingBehaviors.js
-  - ./spec/bindingAttributeBehaviors.js
-  - ./spec/bindingDependencyBehaviors.js
-  - ./spec/bindingPreprocessingBehaviors.js
-  - ./spec/crossWindowBehaviors.js
-  - ./spec/dependentObservableBehaviors.js
-  - ./spec/dependentObservableDomBehaviors.js
-  - ./spec/domNodeDisposalBehaviors.js
-  - ./spec/expressionRewritingBehaviors.js
-  - ./spec/extenderBehaviors.js
-  - ./spec/jsonPostingBehaviors.js
-  - ./spec/mappingHelperBehaviors.js
   - ./spec/memoizationBehaviors.js
-  - ./spec/nativeTemplateEngineBehaviors.js
-  - ./spec/nodePreprocessingBehaviors.js
+  - ./spec/subscribableBehaviors.js
+  - ./spec/observableBehaviors.js
   - ./spec/observableArrayBehaviors.js
   - ./spec/observableArrayChangeTrackingBehaviors.js
-  - ./spec/observableBehaviors.js
-  - ./spec/onErrorBehaviors.js
+  - ./spec/dependentObservableBehaviors.js
+  - ./spec/dependentObservableDomBehaviors.js
   - ./spec/pureComputedBehaviors.js
-  - ./spec/subscribableBehaviors.js
-  - ./spec/taskBehaviors.js
+  - ./spec/extenderBehaviors.js
+  - ./spec/domNodeDisposalBehaviors.js
+  - ./spec/mappingHelperBehaviors.js
+  - ./spec/expressionRewritingBehaviors.js
+  - ./spec/bindingPreprocessingBehaviors.js
+  - ./spec/nodePreprocessingBehaviors.js
+  - ./spec/bindingAttributeBehaviors.js
+  - ./spec/bindingDependencyBehaviors.js
   - ./spec/templatingBehaviors.js
+  - ./spec/jsonPostingBehaviors.js
+  - ./spec/nativeTemplateEngineBehaviors.js
+  - ./spec/taskBehaviors.js
   - ./spec/utilsBehaviors.js
   - ./spec/utilsDomBehaviors.js
+  - ./spec/onErrorBehaviors.js
 
   - ./spec/defaultBindings/attrBehaviors.js
   - ./spec/defaultBindings/checkedBehaviors.js
@@ -238,6 +240,7 @@ spec_files:
   - ./spec/components/defaultLoaderBehaviors.js
   - ./spec/components/loaderRegistryBehaviors.js
 
+  - ./spec/crossWindowBehaviors.js
 
 
 #       TESTING
