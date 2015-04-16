@@ -1,6 +1,6 @@
 
 ko.subscription = function (target, callback, disposeCallback) {
-    this.target = target;
+    this._target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
     this.isDisposed = false;
@@ -14,9 +14,21 @@ ko.subscription.prototype.dispose = function () {
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
     this._subscriptions = {};
+    this._versionNumber = 1;
 }
 
 var defaultEvent = "change";
+
+// Moved out of "limit" to avoid the extra closure
+function rateLimitedNotifySubscribers(value, event) {
+    if (!event || event === defaultEvent) {
+        this._rateLimitedChange(value);
+    } else if (event === 'beforeChange') {
+        this._rateLimitedBeforeChange(value);
+    } else {
+        this._origNotifySubscribers(value, event);
+    }
+}
 
 var ko_subscribable_fn = {
     subscribe: function (callback, callbackTarget, event) {
@@ -43,6 +55,9 @@ var ko_subscribable_fn = {
 
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
+        if (event === defaultEvent) {
+            this.updateVersion();
+        }
         if (this.hasSubscriptionsForEvent(event)) {
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
@@ -58,21 +73,25 @@ var ko_subscribable_fn = {
         }
     },
 
+    getVersion: function () {
+        return this._versionNumber;
+    },
+
+    hasChanged: function (versionToCheck) {
+        return this.getVersion() !== versionToCheck;
+    },
+
+    updateVersion: function () {
+        ++this._versionNumber;
+    },
+
     limit: function(limitFunction) {
         var self = this, selfIsObservable = ko.isObservable(self),
             isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
-            self["notifySubscribers"] = function(value, event) {
-                if (!event || event === defaultEvent) {
-                    self._rateLimitedChange(value);
-                } else if (event === beforeChange) {
-                    self._rateLimitedBeforeChange(value);
-                } else {
-                    self._origNotifySubscribers(value, event);
-                }
-            };
+            self["notifySubscribers"] = rateLimitedNotifySubscribers;
         }
 
         var finish = limitFunction(function() {

@@ -62,6 +62,37 @@ ko.utils = (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
 
+    // For details on the pattern for changing node classes
+    // see: https://github.com/knockout/knockout/issues/1597
+    var cssClassNameRegex = /\S+/g;
+
+    function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
+        var addOrRemoveFn;
+        if (classNames) {
+            if (typeof node.classList === 'object') {
+                addOrRemoveFn = node.classList[shouldHaveClass ? 'add' : 'remove'];
+                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+                    addOrRemoveFn.call(node.classList, className);
+                });
+            } else if (typeof node.className['baseVal'] === 'string') {
+                // SVG tag .classNames is an SVGAnimatedString instance
+                toggleObjectClassPropertyString(node.className, 'baseVal', classNames, shouldHaveClass);
+            } else {
+                // node.className ought to be a string.
+                toggleObjectClassPropertyString(node, 'className', classNames, shouldHaveClass);
+            }
+        }
+    }
+
+    function toggleObjectClassPropertyString(obj, prop, classNames, shouldHaveClass) {
+        // obj/prop is either a node/'className' or a SVGAnimatedString/'baseVal'.
+        var currentClassNames = obj[prop].match(cssClassNameRegex) || [];
+        ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
+            ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
+        });
+        obj[prop] = currentClassNames.join(" ");
+    }
+
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
@@ -304,14 +335,38 @@ ko.utils = (function () {
             return element && element.tagName && element.tagName.toLowerCase();
         },
 
+        catchFunctionErrors: function (delegate) {
+            return ko['onError'] ? function () {
+                try {
+                    return delegate.apply(this, arguments);
+                } catch (e) {
+                    ko['onError'] && ko['onError'](e);
+                    throw e;
+                }
+            } : delegate;
+        },
+
+        setTimeout: function (handler, timeout) {
+            return setTimeout(ko.utils.catchFunctionErrors(handler), timeout);
+        },
+
+        deferError: function (error) {
+            setTimeout(function () {
+                ko['onError'] && ko['onError'](error);
+                throw error;
+            }, 0);
+        },
+
         registerEventHandler: function (element, eventType, handler) {
+            var wrappedHandler = ko.utils.catchFunctionErrors(handler);
+
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!mustUseAttachEvent && jQueryInstance) {
-                jQueryInstance(element)['bind'](eventType, handler);
+                jQueryInstance(element)['bind'](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
-                element.addEventListener(eventType, handler, false);
+                element.addEventListener(eventType, wrappedHandler, false);
             else if (typeof element.attachEvent != "undefined") {
-                var attachEventHandler = function (event) { handler.call(element, event); },
+                var attachEventHandler = function (event) { wrappedHandler.call(element, event); },
                     attachEventName = "on" + eventType;
                 element.attachEvent(attachEventName, attachEventHandler);
 
@@ -362,16 +417,7 @@ ko.utils = (function () {
             return ko.isObservable(value) ? value.peek() : value;
         },
 
-        toggleDomNodeCssClass: function (node, classNames, shouldHaveClass) {
-            if (classNames) {
-                var cssClassNameRegex = /\S+/g,
-                    currentClassNames = node.className.match(cssClassNameRegex) || [];
-                ko.utils.arrayForEach(classNames.match(cssClassNameRegex), function(className) {
-                    ko.utils.addOrRemoveItem(currentClassNames, className, shouldHaveClass);
-                });
-                node.className = currentClassNames.join(" ");
-            }
-        },
+        toggleDomNodeCssClass: toggleDomNodeCssClass,
 
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
@@ -545,6 +591,7 @@ ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
+ko.exportSymbol('utils.setTextContent', ko.utils.setTextContent);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {

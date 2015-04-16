@@ -92,7 +92,7 @@ ko.utils.domNodeDisposal = new (function () {
             if (jQueryInstance && (typeof jQueryInstance['cleanData'] == "function"))
                 jQueryInstance['cleanData']([node]);
         }
-    }
+    };
 })();
 ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
 ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience

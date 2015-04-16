@@ -13,7 +13,7 @@ ko.extenders = {
             'read': target,
             'write': function(value) {
                 clearTimeout(writeTimeoutInstance);
-                writeTimeoutInstance = setTimeout(function() {
+                writeTimeoutInstance = ko.utils.setTimeout(function() {
                     target(value);
                 }, timeout);
             }
@@ -36,6 +36,26 @@ ko.extenders = {
         });
     },
 
+    'deferred': function(target, value) {
+        // Calling with a true value sets up and enables deferred updates.
+        // A false value turns off deferred updates if it was previously enabled, but won't unnecessarily set a limit function.
+        target._deferUpdates = value;
+        if (value) {
+            target.limit(function (callback) {
+                var handle;
+                return function () {
+                    ko.tasks.cancel(handle);
+                    if (target._deferUpdates) {
+                        handle = ko.tasks.schedule(callback);
+                    } else {
+                        handle = 0;
+                        callback();
+                    }
+                };
+            });
+        }
+    },
+
     'notify': function(target, notifyWhen) {
         target["equalityComparer"] = notifyWhen == "always" ?
             null :  // null equalityComparer means to always notify
@@ -53,7 +73,7 @@ function throttle(callback, timeout) {
     var timeoutInstance;
     return function () {
         if (!timeoutInstance) {
-            timeoutInstance = setTimeout(function() {
+            timeoutInstance = ko.utils.setTimeout(function () {
                 timeoutInstance = undefined;
                 callback();
             }, timeout);
@@ -65,7 +85,7 @@ function debounce(callback, timeout) {
     var timeoutInstance;
     return function () {
         clearTimeout(timeoutInstance);
-        timeoutInstance = setTimeout(callback, timeout);
+        timeoutInstance = ko.utils.setTimeout(callback, timeout);
     };
 }
 

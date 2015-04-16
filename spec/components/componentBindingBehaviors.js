@@ -6,7 +6,7 @@ describe('Components: Component binding', function() {
         outerViewModel;
 
     beforeEach(function() {
-        jasmine.Clock.useMock();
+        jasmine.Clock.useMockForTasks();
         jasmine.prepareTestNode();
         testComponentParams = {};
         testComponentBindingValue = { name: testComponentName, params: testComponentParams };
@@ -15,14 +15,9 @@ describe('Components: Component binding', function() {
     });
 
     afterEach(function() {
+        expect(ko.tasks.resetForTesting()).toEqual(0);
         jasmine.Clock.reset();
         ko.components.unregister(testComponentName);
-    });
-
-    it('Controls descendant bindings', function() {
-        testNode.innerHTML = '<div data-bind="if: true, component: \'dummy\'"></div>';
-        expect(function() { ko.applyBindings(null, testNode); })
-            .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
     });
 
     it('Throws if no name is specified (name provided directly)', function() {
@@ -50,6 +45,16 @@ describe('Components: Component binding', function() {
             ko.applyBindings(outerViewModel, testNode);
             jasmine.Clock.tick(1);
         }).toThrow("Component 'test-component' has no template");
+    });
+
+    it('Controls descendant bindings', function() {
+        ko.components.register(testComponentName, { template: 'x' });
+        testNode.innerHTML = '<div data-bind="if: true, component: $data"></div>';
+        expect(function() { ko.applyBindings(testComponentName, testNode); })
+            .toThrowContaining('Multiple bindings (if and component) are trying to control descendant bindings of the same element.');
+
+        // Even though ko.applyBindings threw an exception, the component still gets bound (asynchronously)
+        jasmine.Clock.tick(1);
     });
 
     it('Replaces the element\'s contents with a clone of the template', function() {
@@ -158,7 +163,7 @@ describe('Components: Component binding', function() {
         // Second (cached) injection is synchronous, because the component config says so.
         // Notice the absence of any 'jasmine.Clock.tick' call here. This is synchronous.
         testList.push('second');
-        expect(testNode.childNodes[0]).toContainText('firstsecond');
+        expect(testNode.childNodes[0]).toContainText('firstsecond', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
     it('Creates a binding context with the correct parent', function() {
@@ -205,7 +210,7 @@ describe('Components: Component binding', function() {
         ko.applyBindings(outerViewModel, testNode);
         jasmine.Clock.tick(1);
 
-        expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.');
+        expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
     it('Passes nonobservable params to the component', function() {

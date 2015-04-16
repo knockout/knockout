@@ -31,18 +31,17 @@ build:
   - |
     (function(factory) {
         // Support three module loading scenarios
-        if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
-            // [1] CommonJS/Node.js
-            var target = module['exports'] || exports; // module.exports is for Node.js
-            factory(target, require);
-        } else if (typeof define === 'function' && define['amd']) {
-            // [2] AMD anonymous module
+        if (typeof define === 'function' && define['amd']) {
+            // [1] AMD anonymous module
             define(['exports', 'require'], factory);
+        } else if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+            // [2] CommonJS/Node.js
+            factory(module['exports'] || exports);  // module.exports is for Node.js
         } else {
             // [3] No module loader (plain <script> tag) - put directly in global namespace
             factory(window['ko'] = {});
         }
-    }(function(koExports, require){
+    }(function(koExports, amdRequire){
 
   footers:
   # This is from what was build/fragments/amd-post.js:
@@ -103,6 +102,7 @@ livereload_port: 30397
 # Source files
 sources:
   - src/namespace.js
+  - src/options.js
   - src/google-closure-compiler-utils.js
   - src/version.js
   - src/utils.js
@@ -110,14 +110,14 @@ sources:
   - src/utils.domNodeDisposal.js
   - src/utils.domManipulation.js
   - src/memoization.js
-  - src/subscribables/extenders.js
-  - src/subscribables/subscribable.js
   - src/subscribables/dependencyDetection.js
-  - src/subscribables/observable.js
-  - src/subscribables/observableArray.js
-  - src/subscribables/observableArray.changeTracking.js
   - src/subscribables/dependentObservable.js
+  - src/subscribables/extenders.js
   - src/subscribables/mappingHelpers.js
+  - src/subscribables/observable.js
+  - src/subscribables/observableArray.changeTracking.js
+  - src/subscribables/observableArray.js
+  - src/subscribables/subscribable.js
   - src/binding/selectExtensions.js
   - src/binding/expressionRewriting.js
   - src/virtualElements.js
@@ -155,6 +155,7 @@ sources:
   - src/binding/editDetection/arrayToDomNodeChildren.js
   - src/templating/native/nativeTemplateEngine.js
   - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
+  - src/tasks.js
 
 
 # Test files -- Node
@@ -164,14 +165,15 @@ node_spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
   - ./spec/dependentObservableBehaviors.js
-  - ./spec/pureComputedBehaviors.js
   - ./spec/expressionRewritingBehaviors.js
   - ./spec/extenderBehaviors.js
   - ./spec/mappingHelperBehaviors.js
   - ./spec/observableArrayBehaviors.js
   - ./spec/observableArrayChangeTrackingBehaviors.js
   - ./spec/observableBehaviors.js
+  - ./spec/pureComputedBehaviors.js
   - ./spec/subscribableBehaviors.js
+  - ./spec/taskBehaviors.js
   - ./spec/utilsBehaviors.js
 
 # Test files -- compiled with spec/helpers/runner.template.html
@@ -180,27 +182,31 @@ spec_files:
   - ./spec/arrayEditDetectionBehaviors.js
   - ./spec/arrayToDomEditDetectionBehaviors.js
   - ./spec/asyncBehaviors.js
-  - ./spec/memoizationBehaviors.js
-  - ./spec/subscribableBehaviors.js
-  - ./spec/observableBehaviors.js
-  - ./spec/observableArrayBehaviors.js
-  - ./spec/observableArrayChangeTrackingBehaviors.js
-  - ./spec/dependentObservableBehaviors.js
-  - ./spec/pureComputedBehaviors.js
-  - ./spec/dependentObservableDomBehaviors.js
-  - ./spec/extenderBehaviors.js
-  - ./spec/domNodeDisposalBehaviors.js
-  - ./spec/mappingHelperBehaviors.js
-  - ./spec/expressionRewritingBehaviors.js
-  - ./spec/bindingPreprocessingBehaviors.js
-  - ./spec/nodePreprocessingBehaviors.js
+  - ./spec/asyncBindingBehaviors.js
   - ./spec/bindingAttributeBehaviors.js
   - ./spec/bindingDependencyBehaviors.js
-  - ./spec/templatingBehaviors.js
-  - ./spec/jsonPostingBehaviors.js
-  - ./spec/nativeTemplateEngineBehaviors.js
-  - ./spec/utilsBehaviors.js
+  - ./spec/bindingPreprocessingBehaviors.js
   - ./spec/crossWindowBehaviors.js
+  - ./spec/dependentObservableBehaviors.js
+  - ./spec/dependentObservableDomBehaviors.js
+  - ./spec/domNodeDisposalBehaviors.js
+  - ./spec/expressionRewritingBehaviors.js
+  - ./spec/extenderBehaviors.js
+  - ./spec/jsonPostingBehaviors.js
+  - ./spec/mappingHelperBehaviors.js
+  - ./spec/memoizationBehaviors.js
+  - ./spec/nativeTemplateEngineBehaviors.js
+  - ./spec/nodePreprocessingBehaviors.js
+  - ./spec/observableArrayBehaviors.js
+  - ./spec/observableArrayChangeTrackingBehaviors.js
+  - ./spec/observableBehaviors.js
+  - ./spec/onErrorBehaviors.js
+  - ./spec/pureComputedBehaviors.js
+  - ./spec/subscribableBehaviors.js
+  - ./spec/taskBehaviors.js
+  - ./spec/templatingBehaviors.js
+  - ./spec/utilsBehaviors.js
+  - ./spec/utilsDomBehaviors.js
 
   - ./spec/defaultBindings/attrBehaviors.js
   - ./spec/defaultBindings/checkedBehaviors.js

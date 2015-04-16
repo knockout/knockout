@@ -5,7 +5,8 @@ var DEBUG = true,
 
     // Use a different variable name (not 'jQuery') to avoid overwriting
     // window.jQuery with 'undefined' on IE < 9
-    jQueryInstance = window.jQuery;
+    jQueryInstance = window.jQuery,
+    amdRequire = window.require;
 
 /*
     Misc. settings

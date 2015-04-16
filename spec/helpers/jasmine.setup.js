@@ -3,7 +3,7 @@
         Jasmine test
         ---------------
  */
- 
+
 /*
     Some helper functions for jasmine on the browser
  */
@@ -16,6 +16,19 @@ jasmine.prepareTestNode = function() {
     testNode = document.createElement("div");
     testNode.id = "testNode";
     document.body.appendChild(testNode);
+
+jasmine.Clock.mockScheduler = function (callback) {
+    setTimeout(callback, 0);
+};
+
+jasmine.Clock.useMockForTasks = function() {
+    jasmine.Clock.useMock();
+
+    // Make sure ko.tasks is using setTimeout so that it uses the mock clock
+    if (ko.tasks.scheduler != jasmine.Clock.mockScheduler) {
+        jasmine.getEnv().currentSpec.restoreAfter(ko.tasks, 'scheduler');
+        ko.tasks.scheduler = jasmine.Clock.mockScheduler;
+    }
 };
 
 jasmine.Spec.prototype.restoreAfter = function(object, propertyName) {
@@ -52,9 +65,13 @@ jasmine.ieVersion = typeof(document) == 'undefined' ? undefined : (function() {
  */
 var matchers = {};
 
-matchers.toContainText = function (expectedText) {
+matchers.toContainText = function (expectedText, ignoreSpaces) {
     var actualText = jasmine.nodeText(this.actual);
     var cleanedActualText = actualText.replace(/\r\n/g, "\n");
+    if (ignoreSpaces) {
+      expectedText = expectedText.replace(/\s/g, "");
+    }
+
     this.actual = cleanedActualText;    // Fix explanatory message
     return cleanedActualText === expectedText;
 };

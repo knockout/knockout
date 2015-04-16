@@ -9,8 +9,10 @@
 
 ## Getting started
 
-**Totally new to Knockout?** The most fun place to start is the
-[online interactive tutorials](http://learn.knockoutjs.com/).
+
+[![Join the chat at https://gitter.im/knockout/knockout](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/knockout/knockout?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+**Totally new to Knockout?** The most fun place to start is the [online interactive tutorials](http://learn.knockoutjs.com/).
 
 For more details, see
 
@@ -91,7 +93,7 @@ To run the tests with Sauce Labs you will need an Sauce Labs account. Once you h
     $ gulp test:saucelabs
 
 You can also limit the tests to matching browser/platform name, for example:
- 
+
     $ gulp test:saucelabs --only firefox
     $ gulp test:saucelabs --only explorer:10
     $ gulp test:saucelabs --only linux

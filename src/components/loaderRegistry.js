@@ -14,7 +14,7 @@
                         callback(cachedDefinition.definition);
                     });
                 } else {
-                    setTimeout(function() { callback(cachedDefinition.definition); }, 0);
+                    ko.tasks.schedule(function() { callback(cachedDefinition.definition); });
                 }
             } else {
                 // Join the loading process that is already underway, or start a new one.
@@ -47,19 +47,19 @@
                 delete loadingSubscribablesCache[componentName];
 
                 // For API consistency, all loads complete asynchronously. However we want to avoid
-                // adding an extra setTimeout if it's unnecessary (i.e., the completion is already
-                // async) since setTimeout(..., 0) still takes about 16ms or more on most browsers.
+                // adding an extra task schedule if it's unnecessary (i.e., the completion is already
+                // async).
                 //
-                // You can bypass the 'always synchronous' feature by putting the synchronous:true
+                // You can bypass the 'always asynchronous' feature by putting the synchronous:true
                 // flag on your component configuration when you register it.
                 if (completedAsync || isSynchronousComponent) {
                     // Note that notifySubscribers ignores any dependencies read within the callback.
                     // See comment in loaderRegistryBehaviors.js for reasoning
                     subscribable['notifySubscribers'](definition);
                 } else {
-                    setTimeout(function() {
+                    ko.tasks.schedule(function() {
                         subscribable['notifySubscribers'](definition);
-                    }, 0);
+                    });
                 }
             });
             completedAsync = true;
