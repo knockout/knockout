@@ -51,40 +51,29 @@ If you prefer to build the library yourself:
     setting the environment variable `MINIFIER=closure` or changing the `minifier` option
     in `config.yaml`.
 
-## Running the tests
+## Tests
 
-### Manual testing
+Knockout has an extensive set of unit tests in [Jasmine (1.3)](http://jasmine.github.io/1.3).
 
-You can generate the test runner HTML with:
+Testing is run through [Karma.js](http://karma-runner.github.io/).
 
-    $ gulp runner
+You can run tests as follows:
 
-You can run the tests locally by opening `runner.html` in a webbrowser. You can enable live-reloading of the tests
-by running in the background:
+    $ gulp test
 
-    $ gulp watch
+    $ gulp test:chrome --once
 
-### Automated tests
+    $ gulp test:phantomjs
 
-There are three automated tests: Node, PhantomJS and Sauce Labs.
+By default the test runner will monitor files for changes and re-run tests when they are detected. To run tests once, use the `--once` flag.
 
-#### Node
+Other flags include `--jquery`, `--modernizr`, `--json2` and `--innershiv`, to respective load those libraries before the Knockout source is loaded. They may be combined at will.
 
-You can run the node tests with
-
-    gulp test:node
-
-#### PhantomJS
-
-To run the PhantomJS tests, you must install and start [PhantomJS](http://phantomjs.org). Run PhantomJS with
-
-    phantomjs --webdriver=4446
-
-You can then run the PhantomJS tests with:
-
-    gulp test:phantom
+The configuration for karma is in the section `karma:` in `config.yaml`.
 
 #### SauceLabs
+
+**FIXME**
 
 To run the tests with Sauce Labs you will need an Sauce Labs account. Once you have an account, you can run the tests with:
 
