@@ -18,7 +18,7 @@ module.exports = function(gulp, plugins, config) {
         config.karma.files = config.karma.files.concat(config.sources, config.spec_files)
 
         Object.keys(libs).forEach(function (lib) {
-            if (argv.indexOf("--" + lib >= 0)) {
+            if (argv.indexOf("--" + lib) >= 0) {
                 config.karma.files.unshift(libs[lib])
             }
         })
