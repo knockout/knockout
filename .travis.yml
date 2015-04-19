@@ -9,6 +9,4 @@ before_script:
   - "phantomjs --webdriver=4446 &"
   - sleep 1
 script:
-  - gulp test:node
-  - gulp test:phantom
-  - gulp test:saucelabs
+  - gulp test:phantomjs
