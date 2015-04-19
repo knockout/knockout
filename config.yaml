@@ -90,22 +90,23 @@ lint:
 # Source files
 sources:
   - src/namespace.js
-  - src/options.js
   - src/google-closure-compiler-utils.js
   - src/version.js
+  - src/options.js
   - src/utils.js
   - src/utils.domData.js
   - src/utils.domNodeDisposal.js
   - src/utils.domManipulation.js
   - src/memoization.js
+  - src/tasks.js
   - src/subscribables/extenders.js
   - src/subscribables/subscribable.js
   - src/subscribables/dependencyDetection.js
-  - src/subscribables/mappingHelpers.js
   - src/subscribables/observable.js
   - src/subscribables/observableArray.js
   - src/subscribables/observableArray.changeTracking.js
   - src/subscribables/dependentObservable.js
+  - src/subscribables/mappingHelpers.js
   - src/binding/selectExtensions.js
   - src/binding/expressionRewriting.js
   - src/virtualElements.js
@@ -143,7 +144,6 @@ sources:
   - src/binding/editDetection/arrayToDomNodeChildren.js
   - src/templating/native/nativeTemplateEngine.js
   - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
-  - src/tasks.js
 
 spec_files:
   # Note: There are some side-effects in the specs, so the order of these
@@ -177,6 +177,11 @@ spec_files:
   - ./spec/utilsDomBehaviors.js
   - ./spec/onErrorBehaviors.js
 
+  - ./spec/components/loaderRegistryBehaviors.js
+  - ./spec/components/defaultLoaderBehaviors.js
+  - ./spec/components/componentBindingBehaviors.js
+  - ./spec/components/customElementBehaviors.js
+
   - ./spec/defaultBindings/attrBehaviors.js
   - ./spec/defaultBindings/checkedBehaviors.js
   - ./spec/defaultBindings/clickBehaviors.js
@@ -199,11 +204,6 @@ spec_files:
   - ./spec/defaultBindings/visibleBehaviors.js
   - ./spec/defaultBindings/withBehaviors.js
 
-  - ./spec/components/componentBindingBehaviors.js
-  - ./spec/components/customElementBehaviors.js
-  - ./spec/components/defaultLoaderBehaviors.js
-  - ./spec/components/loaderRegistryBehaviors.js
-
   - ./spec/crossWindowBehaviors.js
 
 
@@ -222,6 +222,7 @@ karma:
   files:
     - ./spec/helpers/jasmine.setup.js
     - ./spec/helpers/jasmine.browser.js
+    - {pattern: "spec/blank.html", included: false}
     # Extended by gulpfile
   exclude: []
   client:
