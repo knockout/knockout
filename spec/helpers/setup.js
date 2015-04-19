@@ -1,8 +1,16 @@
 /*
-        Run before each
-        Jasmine test
-        ---------------
+ * Configure the Jasmine testing framework.
  */
+
+ window.DEBUG = true;
+ window.amdRequire = window.require;
+
+ // Use a different variable name (not 'jQuery') to avoid overwriting
+ // window.jQuery with 'undefined' on IE < 9
+ window.jQueryInstance = window.jQuery;
+
+ jasmine.updateInterval = 500;
+
 
 /*
     Some helper functions for jasmine on the browser
@@ -150,6 +158,43 @@ matchers.toContainHtml = function (expectedHtml) {
     return cleanedHtml === expectedHtml;
 };
 
+//
+// bmh: Monkeypatch so we can catch errors in asynchronous functions.
+//
+jasmine.FakeTimer.prototype.runFunctionsWithinRange = function(oldMillis, nowMillis) {
+  var scheduledFunc;
+  var funcsToRun = [];
+  for (var timeoutKey in this.scheduledFunctions) {
+    scheduledFunc = this.scheduledFunctions[timeoutKey];
+    if (scheduledFunc != jasmine.undefined &&
+        scheduledFunc.runAtMillis >= oldMillis &&
+        scheduledFunc.runAtMillis <= nowMillis) {
+      funcsToRun.push(scheduledFunc);
+      this.scheduledFunctions[timeoutKey] = jasmine.undefined;
+    }
+  }
+
+  if (funcsToRun.length > 0) {
+    funcsToRun.sort(function(a, b) {
+      return a.runAtMillis - b.runAtMillis;
+    });
+    for (var i = 0; i < funcsToRun.length; ++i) {
+      //try {       // mbest: Removed so we can catch errors in asynchronous functions
+        var funcToRun = funcsToRun[i];
+        this.nowMillis = funcToRun.runAtMillis;
+        funcToRun.funcToCall();
+        if (funcToRun.recurring) {
+          this.scheduleFunction(funcToRun.timeoutKey,
+              funcToRun.funcToCall,
+              funcToRun.millis,
+              true);
+        }
+      //} catch(e) {
+      //}
+    }
+    this.runFunctionsWithinRange(oldMillis, nowMillis);
+  }
+};
 
 beforeEach(function() {
     this.addMatchers(matchers);

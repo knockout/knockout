@@ -220,8 +220,7 @@ karma:
   frameworks:
     - jasmine
   files:
-    - ./spec/helpers/jasmine.setup.js
-    - ./spec/helpers/jasmine.browser.js
+    - ./spec/helpers/setup.js
     - {pattern: "spec/blank.html", included: false}
     # Extended by gulpfile
   exclude: []
