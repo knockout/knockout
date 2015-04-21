@@ -91,4 +91,4 @@ You can also limit the tests to matching browser/platform name, for example:
 
 ## License
 
-MIT license - [http://www.opensource.org/licenses/mit-license.php](http://www.opensource.org/licenses/mit-license.php)
+MIT license - [http://www.opensource.org/licenses/mit-license.php.](http://www.opensource.org/licenses/mit-license.php)
