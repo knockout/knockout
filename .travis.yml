@@ -11,3 +11,4 @@ before_script:
 script:
   - gulp test:phantomjs --once
   - gulp test:phantomjs --once --jquery
+  - gulp test:sauce --innershiv --json2

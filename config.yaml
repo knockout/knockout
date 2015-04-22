@@ -209,6 +209,9 @@ spec_files:
 
 #       Karma!
 #       ~~~~~~
+#
+# Note issues with concurrency:
+# https://github.com/karma-runner/karma-sauce-launcher/issues/40
 karma:
   basePath: ''
   port: 9876
@@ -232,7 +235,8 @@ karma:
     #    https://github.com/karma-runner/karma/issues/1106
     captureConsole: true
   reporters:
-    - progress
+    # - progress
+    - dots
 
 # These are libraries that can be loaded to test variants.
 # Run with e.g. --jquery, --modernizr, ...
@@ -241,3 +245,78 @@ test_alt_libs:
   modernizr: ./spec/helpers/modernizr.js
   innershiv: ./spec/helpers/innershiv.js
   json2: ./spec/helpers/json2.js
+
+# These are the browsers that'll get tested by SauceLabs.
+sauceLaunchers:
+  # Chrome
+  sl_chrome_35:
+    browserName: chrome
+    platform: Windows 7
+    version: '35'
+
+  # sl_chrome_24:
+  #   browserName: chrome
+  #   platform: Windows 7
+  #   version: '35'
+
+  # Firefox
+  sl_firefox_30:
+    browserName: firefox
+    version: '30'
+
+  # sl_firefox_24:
+  #   browserName: firefox
+  #   version: '24'
+  #
+  # sl_firefox_17:
+  #   browserName: firefox
+  #   version: '17'
+  #
+  # sl_firefox_4:
+  #   browserName: firefox
+  #   version: '4'
+
+  # iOS
+  # sl_ios_safari:
+  #   browserName: iphone
+  #   platform: OS X 10.10
+  #   version: '8.2'
+
+  # Android
+  # sl_android_5_1:
+  #   browserName: android
+  #   platform: Linux
+  #   version: "5.1"
+  #   deviceName: "Android Emulator"
+  #
+  # sl_android_4_0:
+  #   browserName: android
+  #   platform: Linux
+  #   version: "4.0"
+  #   deviceName: "Android Emulator"
+
+  # Internet Explorer
+  # sl_ie_11:
+    # browserName: internet explorer
+    # platform: Windows 8.1
+    # version: '11'
+
+  sl_ie_10:
+    browserName: internet explorer
+    platform: Windows 8
+    version: "10.0"
+  #
+  # sl_ie_9:
+  #   browserName: internet explorer
+  #   platform: Windows 7
+  #   version: "9.0"
+  #
+  # sl_ie_8:
+  #   browserName: internet explorer
+  #   platform: Windows 7
+  #   version: "8.0"
+  #
+  # sl_ie_7:
+  #   browserName: internet explorer
+  #   platform: Windows XP
+  #   version: '7.0'
