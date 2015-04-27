@@ -344,14 +344,14 @@ describe('Function.bind', function() {
 });
 
 describe('registerEventHandler', function() {
-    it ('should not use jQuery eventing with noJQueryEvents options', function() {
+    it ('should not use jQuery eventing with useJQueryEventing option set to false', function() {
         var jQueryLoaded = (typeof jQuery !== 'undefined');
         var element = document.createElement('DIV');
         var eventFired = false;
         var jQueryUsed = false;
 
         // Set the option to true.
-        ko.options.noJQueryEvents = true;
+        ko.options.useJQueryEventing = false;
 
         // If jQuery is present, verify jQuery is not used in event binding.
         if (jQueryLoaded) {
@@ -365,7 +365,7 @@ describe('registerEventHandler', function() {
         ko.utils.triggerEvent(element, 'click');
 
         // Reset the option.
-        ko.options.noJQueryEvents = false;
+        ko.options.useJQueryEventing = true;
 
         expect(!jQueryLoaded || (eventFired && !jQueryUsed)).toBe(true);
     });
