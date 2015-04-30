@@ -8,7 +8,7 @@ ko.bindingHandlers['css'] = {
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
             });
         } else {
-            value = String(value || ''); // Make sure we don't try to store or set a non-string value
+            value = String(value || '').trim(); // Make sure we don't try to store or set a non-string value
             ko.utils.toggleDomNodeCssClass(element, element[classesWrittenByBindingKey], false);
             element[classesWrittenByBindingKey] = value;
             ko.utils.toggleDomNodeCssClass(element, value, true);
