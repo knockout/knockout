@@ -48,7 +48,7 @@
                     for (var i = 0, n = element.options.length, optionValue; i < n; ++i) {
                         optionValue = ko.selectExtensions.readValue(element.options[i]);
                         // Include special check to handle selecting a caption with a blank string value
-                        if (optionValue == value || (optionValue == "" && value === undefined)) {
+                        if (optionValue == value || (optionValue == "" && value === undefined) ||  (optionValue instanceof Date && value instanceof Date && optionValue - value == 0)) {
                             selection = i;
                             break;
                         }
