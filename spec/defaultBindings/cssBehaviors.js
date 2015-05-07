@@ -49,6 +49,8 @@ describe('Binding: CSS classes', function() {
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 another_Rule my-Rule");
         observable1(undefined);
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
+        observable1(" ");
+        expect(testNode.childNodes[0].className).toEqual("unrelatedClass1");
     });
 
     it('Should work with any arbitrary class names', function() {
