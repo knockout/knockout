@@ -156,6 +156,34 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].checked).toEqual(false);
     });
 
+    it('When a checkbox is bound to a computed array, the checkbox and the computed observable should update each other', function() {
+        var observable = ko.observable([]),
+            computed = ko.computed({
+                read: function() {
+                    return observable().slice(0);   // return a copy of the array so that we know that writes to the computed are really working
+                },
+                write: observable   // just pass writes on to the observable
+            });
+
+        testNode.innerHTML = "<input type='checkbox' value='A' data-bind='checked: computed' /><input type='checkbox' value='B' data-bind='checked: computed' />";
+        ko.applyBindings({ computed: computed }, testNode);
+
+        // Binding adds an item to the observable
+        ko.utils.triggerEvent(testNode.childNodes[1], "click");
+        expect(testNode.childNodes[1].checked).toEqual(true);
+        expect(observable()).toEqual(["B"]);
+
+        // Updating the observable updates the view
+        observable(["A"]);
+        expect(testNode.childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[1].checked).toEqual(false);
+
+        // Binding removes an item from the observable
+        ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        expect(testNode.childNodes[0].checked).toEqual(false);
+        expect(observable()).toEqual([]);
+    });
+
     it('When the radio button \'value\' attribute is set via attr binding, should set initial checked state correctly (attr before checked)', function() {
         var myobservable = new ko.observable("this radio button value");
         testNode.innerHTML = "<input type='radio' data-bind='attr:{value:\"this radio button value\"}, checked:someProp' />";
