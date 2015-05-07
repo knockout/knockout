@@ -88,4 +88,18 @@ describe('Compare Arrays', function() {
             { status: "deleted", value: "E", index: 4, moved: 2 }
         ]);
     });
+
+    it('Should honor "dontLimitMoves" option', function() {
+        // In order to test this, we must have a scenario in which a move is not recognized as such without the option.
+        // This scenario doesn't represent the definition of the spec itself and may need to be modified if the move
+        // detection algorithm in Knockout is changed.
+        var oldArray = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
+        var newArray = [1, 2, 3, 4, "T", 6, 7, 8, 9, 10];
+
+        var compareResult = ko.utils.compareArrays(oldArray, newArray);
+        expect(compareResult[compareResult.length-1]).toEqual({ status: 'deleted', value: 'T', index: 19 });
+
+        compareResult = ko.utils.compareArrays(oldArray, newArray, { dontLimitMoves: true });
+        expect(compareResult[compareResult.length-1]).toEqual({ status: 'deleted', value: 'T', index: 19, moved: 4 });
+    });
 });
