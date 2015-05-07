@@ -128,8 +128,9 @@ describe('Binding: Selected Options', function() {
         expect(selectElem).toHaveSelectedValues(['0000100']);
 
         selectElem.scrollTop = 80;
+        var previousScrollTop = selectElem.scrollTop;   // some browsers modify the scrollTop right away
         selection.push('000050');
-        expect(selectElem.scrollTop).toBe(80);
+        expect(selectElem.scrollTop).toBe(previousScrollTop);
         expect(selectElem).toHaveSelectedValues(['000050', '0000100']);
     });
 });
