@@ -101,7 +101,8 @@ ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "uns
         this.cacheDiffForKnownOperation(underlyingArray, methodName, arguments);
         var methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments);
         this.valueHasMutated();
-        return methodCallResult;
+        // The native sort and reverse methods return a reference to the array, but it makes more sense to return the observable array instead.
+        return methodCallResult === underlyingArray ? this : methodCallResult;
     };
 });
 
