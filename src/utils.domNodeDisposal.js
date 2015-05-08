@@ -46,6 +46,16 @@ ko.utils.domNodeDisposal = new (function () {
         }
     }
 
+    function cleanDescendants(node) {
+        if (cleanableNodeTypesWithDescendants[node.nodeType]) {
+            // Clone the descendants list in case it changes during iteration
+            var descendants = [];
+            ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
+            for (var i = 0, j = descendants.length; i < j; i++)
+                cleanSingleNode(descendants[i]);
+        }
+    }
+
     return {
         addDisposeCallback : function(node, callback) {
             if (typeof callback != "function")
@@ -68,21 +78,12 @@ ko.utils.domNodeDisposal = new (function () {
                 cleanSingleNode(node);
 
                 // ... then its descendants, where applicable
-                ko.cleanDescendants(node);
+                cleanDescendants(node);
             }
             return node;
         },
 
-        cleanDescendants : function(node) {
-            if (cleanableNodeTypesWithDescendants[node.nodeType]) {
-                // Clone the descendants list in case it changes during iteration
-                var descendants = [];
-                ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
-                for (var i = 0, j = descendants.length; i < j; i++)
-                    cleanSingleNode(descendants[i]);
-            }
-            return node;
-        },
+        cleanDescendants : cleanDescendants,
 
         removeNode : function(node) {
             ko.cleanNode(node);
@@ -101,9 +102,10 @@ ko.utils.domNodeDisposal = new (function () {
 })();
 ko.cleanNode = ko.utils.domNodeDisposal.cleanNode; // Shorthand name for convenience
 ko.removeNode = ko.utils.domNodeDisposal.removeNode; // Shorthand name for convenience
+ko.cleanDescendants = ko.utils.domNodeDisposal.cleanDescendants;
 ko.exportSymbol('cleanNode', ko.cleanNode);
-ko.exportSymbol('cleanDescendants', ko.cleanDescendants);
 ko.exportSymbol('removeNode', ko.removeNode);
+ko.exportSymbol('cleanDescendants', ko.cleanDescendants);
 ko.exportSymbol('utils.domNodeDisposal', ko.utils.domNodeDisposal);
 ko.exportSymbol('utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
 ko.exportSymbol('utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);
