@@ -197,9 +197,8 @@ ko.utils = (function () {
         },
 
         emptyDomNode: function (domNode) {
-            ko.cleanDescendants(domNode);
             while (domNode.firstChild) {
-                domNode.removeChild(domNode.firstChild);
+                ko.removeNode(domNode.firstChild);
             }
         },
 

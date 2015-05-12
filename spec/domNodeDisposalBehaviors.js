@@ -37,19 +37,6 @@ describe('DOM node disposal', function() {
         expect(testNode.childNodes.length).toEqual(0);
     });
 
-    it('Should run registered disposal callbacks on descendants when using ko.cleanDescendants', function () {
-        var didRun = false;
-        var childNode = document.createElement("DIV");
-        var grandChildNode = document.createElement("DIV");
-        testNode.appendChild(childNode);
-        childNode.appendChild(grandChildNode);
-        ko.utils.domNodeDisposal.addDisposeCallback(grandChildNode, function() { didRun = true });
-
-        expect(didRun).toEqual(false);
-        ko.cleanDescendants(testNode);
-        expect(didRun).toEqual(true);
-    });
-
     it('Should be able to remove previously-registered disposal callbacks', function() {
         var didRun = false;
         var callback = function() { didRun = true };
