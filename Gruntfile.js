@@ -152,13 +152,8 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask('dist', function() {
-        // Update the version in bower.json
-        var bowerConfig = grunt.file.readJSON('bower.json'),
-            version = grunt.config('pkg.version');
-        bowerConfig.version = version;
-        grunt.file.write('bower.json', JSON.stringify(bowerConfig, true, 2));
-
-        var buildConfig = grunt.config('build'),
+        var version = grunt.config('pkg.version'),
+            buildConfig = grunt.config('build'),
             distConfig = grunt.config('dist');
         grunt.file.copy(buildConfig.debug, distConfig.debug);
         grunt.file.copy(buildConfig.min, distConfig.min);
