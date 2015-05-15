@@ -47,6 +47,7 @@ ko.extenders = {
                     ko.tasks.cancel(handle);
                     if (target._deferUpdates) {
                         handle = ko.tasks.schedule(callback);
+                        target['notifySubscribers'](undefined, 'dirty');
                     } else {
                         handle = 0;
                         callback();

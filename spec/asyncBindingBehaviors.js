@@ -125,4 +125,13 @@ describe("Deferred bindings", function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">moving child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
         expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
     });
+
+    it('Should throw an exception for value binding on multiple select boxes', function() {
+        testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
+        var observable = ko.observable();
+        ko.applyBindings({ x: observable }, testNode);
+        expect(function() {
+            jasmine.Clock.tick(1);
+        }).toThrowContaining('Too much recursion');
+    });
 });

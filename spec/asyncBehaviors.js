@@ -808,6 +808,46 @@ describe('Deferred', function() {
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
         });
 
+        it('Should delay update of dependent computed observable', function() {
+            var data = ko.observable('A'),
+                deferredComputed = ko.computed(data).extend({deferred:true}),
+                dependentComputed = ko.computed(deferredComputed);
+
+            expect(dependentComputed()).toEqual('A');
+
+            data('B');
+            expect(deferredComputed()).toEqual('B');
+            expect(dependentComputed()).toEqual('A');
+
+            data('C');
+            expect(dependentComputed()).toEqual('A');
+
+            jasmine.Clock.tick(1);
+            expect(dependentComputed()).toEqual('C');
+        });
+
+        it('Should *not* delay update of dependent deferred computed observable', function () {
+            var data = ko.observable('A'),
+                timesEvaluated = 0,
+                computed1 = ko.computed(function () { return data() + 'X'; }).extend({deferred:true}),
+                computed2 = ko.computed(function () { timesEvaluated++; return computed1() + 'Y'; }).extend({deferred:true}),
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = computed2.subscribe(notifySpy);
+
+            expect(computed2()).toEqual('AXY');
+            expect(timesEvaluated).toEqual(1);
+
+            data('B');
+            expect(computed2()).toEqual('BXY');
+            expect(timesEvaluated).toEqual(2);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(1);
+            expect(computed2()).toEqual('BXY');
+            expect(timesEvaluated).toEqual(2);      // Verify that the computed wasn't evaluated again unnecessarily
+            expect(notifySpy.argsForCall).toEqual([ ['BXY'] ]);
+        });
+
         it('Is default behavior when "ko.options.deferUpdates" is "true"', function() {
             this.restoreAfter(ko.options, 'deferUpdates');
             ko.options.deferUpdates = true;
@@ -823,6 +863,43 @@ describe('Deferred', function() {
 
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+
+        it('Should minimize evaluation at the end of a complex graph', function() {
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+
+            var a = ko.observable('a'),
+                b = ko.pureComputed(function b() {
+                    return 'b' + a();
+                }),
+                c = ko.pureComputed(function c() {
+                    return 'c' + a();
+                }),
+                d = ko.pureComputed(function d() {
+                    return 'd(' + b() + ',' + c() + ')';
+                }),
+                e = ko.pureComputed(function e() {
+                    return 'e' + a();
+                }),
+                f = ko.pureComputed(function f() {
+                    return 'f' + a();
+                }),
+                g = ko.pureComputed(function g() {
+                    return 'g(' + e() + ',' + f() + ')';
+                }),
+                h = ko.pureComputed(function h() {
+                    return 'h(' + c() + ',' + g() + ',' + d() + ')';
+                }),
+                i = ko.pureComputed(function i() {
+                    return 'i(' + a() + ',' + h() + ',' + b() + ',' + f() + ')';
+                }).extend({notify:"always"}),   // ensure we get a notification for each evaluation
+                notifySpy = jasmine.createSpy('callback'),
+                subscription = i.subscribe(notifySpy);
+
+            a('x');
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([['i(x,h(cx,g(ex,fx),d(bx,cx)),bx,fx)']]);    // only one evaluation and notification
         });
     });
 });

@@ -57,6 +57,35 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         isSleeping = false;
     }
 
+    function subscribeToDependency(target) {
+        if (target._deferUpdates) {
+            var dirtySub = target.subscribe(markDirty, null, 'dirty'),
+                changeSub = target.subscribe(respondToChange);
+            return {
+                _target: target,
+                dispose: function () {
+                    dirtySub.dispose();
+                    changeSub.dispose();
+                }
+            };
+        } else {
+            return target.subscribe(evaluatePossiblyAsync);
+        }
+    }
+
+    function markDirty() {
+        if (dependentObservable._deferUpdates) {
+            dependentObservable._evalRateLimited();
+        }
+    }
+
+    function respondToChange() {
+        // If we've already scheduled a deferred update, don't do anything
+        if (!dependentObservable._rateLimitIsPending) {
+            evaluatePossiblyAsync();
+        }
+    }
+
     function evaluatePossiblyAsync() {
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
@@ -115,7 +144,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                             --disposalCount;
                         } else if (!dependencyTracking[id]) {
                             // Brand new subscription - add it
-                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.subscribe(evaluatePossiblyAsync));
+                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribeToDependency(subscribable));
                         }
                     }
                 },
@@ -262,7 +291,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     // Next, subscribe to each one
                     ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
                         var dependency = dependencyTracking[id],
-                            subscription = dependency._target.subscribe(evaluatePossiblyAsync);
+                            subscription = subscribeToDependency(dependency._target);
                         subscription._order = order;
                         subscription._version = dependency._version;
                         dependencyTracking[id] = subscription;
