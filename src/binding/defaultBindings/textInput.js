@@ -72,6 +72,10 @@ ko.bindingHandlers['textInput'] = {
             }
         };
 
+        // IE9 will mess up the DOM if you handle events synchronously which results in DOM changes (such as other bindings);
+        // so we'll make sure all updates are asynchronous
+        var ieUpdateModel = ko.utils.ieVersion == 9 ? deferUpdateModel : updateModel;
+
         var updateView = function () {
             var modelValue = ko.utils.unwrapObservable(valueAccessor());
 
@@ -113,7 +117,7 @@ ko.bindingHandlers['textInput'] = {
                 // when using autocomplete, we'll use 'propertychange' for it also.
                 onEvent('propertychange', function(event) {
                     if (event.propertyName === 'value') {
-                        updateModel(event);
+                        ieUpdateModel(event);
                     }
                 });
 
@@ -130,7 +134,7 @@ ko.bindingHandlers['textInput'] = {
                     // out of the field, and cutting or deleting text using the context menu. 'selectionchange'
                     // can detect all of those except dragging text out of the field, for which we use 'dragend'.
                     // These are also needed in IE8 because of the bug described above.
-                    registerForSelectionChangeEvent(element, updateModel);  // 'selectionchange' covers cut, paste, drop, delete, etc.
+                    registerForSelectionChangeEvent(element, ieUpdateModel);  // 'selectionchange' covers cut, paste, drop, delete, etc.
                     onEvent('dragend', deferUpdateModel);
                 }
             } else {
