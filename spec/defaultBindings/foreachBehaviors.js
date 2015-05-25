@@ -243,7 +243,7 @@ describe('Binding: Foreach', function() {
         var someItems = ko.observableArray([ 'A', 'B', 'C' ]),
             callback = function(element, index, data) { if (data === 'D') throw "Exception"; };
 
-        ko.applyBindings({someItems: someItems, callback, callback });
+        ko.applyBindings({someItems: someItems, callback: callback });
         expect(testNode.childNodes[0]).toContainText('ABC');
 
         expect(function() { someItems.push('D'); }).toThrow("Exception");
