@@ -58,9 +58,9 @@ function waitFor(testFx, onReady, timeOutMillis) {
                     console.log("'waitFor()' timeout");
                     phantom.exit(1);
                 } else {
+                    clearInterval(interval); //< Stop this interval
                     // Condition fulfilled (timeout and/or condition is 'true')
                     typeof(onReady) === "string" ? eval(onReady) : onReady(); //< Do what it's supposed to do once the condition is fulfilled
-                    clearInterval(interval); //< Stop this interval
                 }
             }
         }, 100); //< repeat check every 100ms
