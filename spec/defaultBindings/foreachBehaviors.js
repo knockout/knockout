@@ -246,10 +246,10 @@ describe('Binding: Foreach', function() {
         ko.applyBindings({someItems: someItems, callback, callback });
         expect(testNode.childNodes[0]).toContainText('ABC');
 
-        try { someItems.push('D'); } catch(e) {}
+        expect(function() { someItems.push('D'); }).toThrow("Exception");
         expect(testNode.childNodes[0]).toContainText('ABCD');
 
-        try { someItems.push('E'); } catch(e) {}
+        expect(function() { someItems.push('E'); }).not.toThrow();
         expect(testNode.childNodes[0]).toContainText('ABCDE');
     });
 
