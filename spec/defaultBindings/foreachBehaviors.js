@@ -237,6 +237,22 @@ describe('Binding: Foreach', function() {
         ko.bindingProvider.instance = originalBindingProvider;
     });
 
+    it('Exception in afterAdd callback should not cause extra elements on next update', function () {
+        // See https://github.com/knockout/knockout/issues/1794
+        testNode.innerHTML = "<ul data-bind='foreach: { data: someItems, afterAdd: callback }'><li data-bind='text: $data'></li></ul>";
+        var someItems = ko.observableArray([ 'A', 'B', 'C' ]),
+            callback = function(element, index, data) { if (data === 'D') throw "Exception"; };
+
+        ko.applyBindings({someItems: someItems, callback, callback });
+        expect(testNode.childNodes[0]).toContainText('ABC');
+
+        try { someItems.push('D'); } catch(e) {}
+        expect(testNode.childNodes[0]).toContainText('ABCD');
+
+        try { someItems.push('E'); } catch(e) {}
+        expect(testNode.childNodes[0]).toContainText('ABCDE');
+    });
+
     it('Should call an afterAdd callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
