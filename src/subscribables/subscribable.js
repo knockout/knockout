@@ -87,7 +87,7 @@ var ko_subscribable_fn = {
 
     limit: function(limitFunction) {
         var self = this, selfIsObservable = ko.isObservable(self),
-            skipBeforeChange, previousValue, pendingValue, beforeChange = 'beforeChange';
+            isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
@@ -95,26 +95,24 @@ var ko_subscribable_fn = {
         }
 
         var finish = limitFunction(function() {
-            self._rateLimitIsPending = false;
-
             // If an observable provided a reference to itself, access it to get the latest value.
             // This allows computed observables to delay calculating their value until needed.
             if (selfIsObservable && pendingValue === self) {
                 pendingValue = self();
             }
-            skipBeforeChange = false;
+            isPending = false;
             if (self.isDifferent(previousValue, pendingValue)) {
                 self._origNotifySubscribers(previousValue = pendingValue);
             }
         });
 
         self._rateLimitedChange = function(value) {
-            self._rateLimitIsPending = skipBeforeChange = true;
+            isPending = true;
             pendingValue = value;
             finish();
         };
         self._rateLimitedBeforeChange = function(value) {
-            if (!skipBeforeChange) {
+            if (!isPending) {
                 previousValue = value;
                 self._origNotifySubscribers(value, beforeChange);
             }

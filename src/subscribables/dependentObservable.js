@@ -59,8 +59,20 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
     function subscribeToDependency(target) {
         if (target._deferUpdates) {
-            var dirtySub = target.subscribe(markDirty, null, 'dirty'),
-                changeSub = target.subscribe(respondToChange);
+            var dirtySub = target.subscribe(function () {
+                    // Process "dirty" events if both us and the target are using deferred updates
+                    if (dependentObservable._deferUpdates && !_isBeingEvaluated) {
+                        dependentObservable._evalRateLimited();
+                    }
+                }, null, 'dirty');
+
+            var changeSub = target.subscribe(function () {
+                    // Ignore "change" events if both us and the target are using deferred updates
+                    if (!dependentObservable._deferUpdates || !target._deferUpdates) {
+                        evaluatePossiblyAsync();
+                    }
+                });
+
             return {
                 _target: target,
                 dispose: function () {
@@ -70,19 +82,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             };
         } else {
             return target.subscribe(evaluatePossiblyAsync);
-        }
-    }
-
-    function markDirty() {
-        if (dependentObservable._deferUpdates) {
-            dependentObservable._evalRateLimited();
-        }
-    }
-
-    function respondToChange() {
-        // If we've already scheduled a deferred update, don't do anything
-        if (!dependentObservable._rateLimitIsPending) {
-            evaluatePossiblyAsync();
         }
     }
 
