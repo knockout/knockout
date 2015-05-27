@@ -826,6 +826,42 @@ describe('Deferred', function() {
             expect(dependentComputed()).toEqual('C');
         });
 
+        it('Should delay update of dependent pure computed observable', function() {
+            var data = ko.observable('A'),
+                deferredComputed = ko.computed(data).extend({deferred:true}),
+                dependentComputed = ko.pureComputed(deferredComputed);
+
+            expect(dependentComputed()).toEqual('A');
+
+            data('B');
+            expect(deferredComputed()).toEqual('B');
+            expect(dependentComputed()).toEqual('A');
+
+            data('C');
+            expect(dependentComputed()).toEqual('A');
+
+            jasmine.Clock.tick(1);
+            expect(dependentComputed()).toEqual('C');
+        });
+
+        it('Should delay update of dependent rate-limited computed observable', function() {
+            var data = ko.observable('A'),
+                deferredComputed = ko.computed(data).extend({deferred:true}),
+                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500});
+
+            expect(dependentComputed()).toEqual('A');
+
+            data('B');
+            expect(deferredComputed()).toEqual('B');
+            expect(dependentComputed()).toEqual('A');
+
+            data('C');
+            expect(dependentComputed()).toEqual('A');
+
+            jasmine.Clock.tick(1);      // Cause the "change" notification to propogate to the rate-limited computed
+            expect(dependentComputed()).toEqual('C');
+        });
+
         it('Should *not* delay update of dependent deferred computed observable', function () {
             var data = ko.observable('A'),
                 timesEvaluated = 0,
@@ -863,6 +899,30 @@ describe('Deferred', function() {
 
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
+        });
+
+        it('Is superseded by rate-limit', function() {
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+
+            var data = ko.observable('A'),
+                deferredComputed = ko.computed(data),
+                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500}),
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = dependentComputed.subscribe(notifySpy);
+
+            expect(dependentComputed()).toEqual('A');
+
+            data('B');
+            expect(deferredComputed()).toEqual('B');
+            expect(dependentComputed()).toEqual('A');       // rate-limited computed doesn't respond to "dirty" events
+
+            jasmine.Clock.tick(1);      // notifies "change" event to the rate-limited computed
+            expect(dependentComputed()).toEqual('B');       // updated on-demand
+            expect(notifySpy).not.toHaveBeenCalled();       // but no notification
+
+            jasmine.Clock.tick(500);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);       // rate-limited computed notifies after the specified delay
         });
 
         it('Should minimize evaluation at the end of a complex graph', function() {

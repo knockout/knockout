@@ -30,6 +30,9 @@ ko.extenders = {
             method = options['method'];
         }
 
+        // rateLimit supersedes deferred updates
+        target._deferUpdates = false;
+
         limitFunction = method == 'notifyWhenChangesStop' ?  debounce : throttle;
         target.limit(function(callback) {
             return limitFunction(callback, timeout);
