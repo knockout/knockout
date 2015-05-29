@@ -35,6 +35,15 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusin", handleElementFocusIn); // For IE
         ko.utils.registerEventHandler(element, "blur",  handleElementFocusOut);
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
+
+        if (/i(Pad|Phone|Pod)/.test(window.navigator.userAgent)) {
+            // Mobile Safari readonly inputs don't trigger the focus event:
+            ko.utils.registerEventHandler(element, "touchstart", function() {
+                if (element.readOnly) {
+                    element.focus();
+                }
+            });
+        }
     },
     'update': function(element, valueAccessor) {
         var value = !!ko.utils.unwrapObservable(valueAccessor()); //force boolean to compare with last value
