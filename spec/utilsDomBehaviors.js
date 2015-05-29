@@ -38,7 +38,7 @@ describe('registerEventHandler', function() {
 
         this.restoreAfter(ko.options, 'useOnlyNativeEvents');
 
-        var element = document.createElement('DIV');
+        var element = document.createElement('button');
         var eventFired = false;
         var jQueryModified = false;
 
@@ -64,7 +64,7 @@ describe('registerEventHandler', function() {
     it ('should not use jQuery eventing with useOnlyNativeEvents option set to true', function() {
         this.restoreAfter(ko.options, 'useOnlyNativeEvents');
 
-        var element = document.createElement('DIV');
+        var element = document.createElement('button');
         var eventFired = false;
         var jQueryModified = false;
 
