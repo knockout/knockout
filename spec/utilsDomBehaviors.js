@@ -31,29 +31,59 @@ describe('setTextContent', function () {
 });
 
 describe('registerEventHandler', function() {
-    it ('should not use jQuery eventing with preferJQueryEvents option set to false', function() {
-        var jQueryLoaded = (typeof jQuery !== 'undefined');
-        var element = document.createElement('DIV');
-        var eventFired = false;
-        var jQueryUsed = false;
-
-        // Set the option to true.
-        ko.options.preferJQueryEvents = false;
-
-        // If jQuery is present, verify jQuery is not used in event binding.
-        if (jQueryLoaded) {
-            ko.utils.registerEventHandler(element, 'click', function(eventArgs) {
-                eventFired = true;
-                jQueryUsed = !!eventArgs.originalEvent;
-            });
+    it ('if jQuery is referenced, should use jQuery eventing with useOnlyNativeEvents option set to false', function() {
+        if (typeof jQuery === 'undefined') {
+            return; // Nothing to test. Run the specs with jQuery referenced for this to do anything.
         }
 
-        // Trigger the event.
+        this.restoreAfter(ko.options, 'useOnlyNativeEvents');
+
+        var element = document.createElement('DIV');
+        var eventFired = false;
+        var jQueryModified = false;
+
+        // Set the option to true.
+        ko.options.useOnlyNativeEvents = false;
+
+        // Verify jQuery is used in event binding.
+        ko.utils.registerEventHandler(element, 'click', function(eventArgs) {
+            eventFired = true;
+            jQueryModified = !!eventArgs.originalEvent;
+        });
+
+        // Trigger the event natively (jQuery intercepts and creates new event object, which we can test)
+        element.click();
+        expect(eventFired && jQueryModified).toBe(true);
+
+        // Also trigger an event through ko.utils.triggerEvent to show that it creates a jQuery event directly
+        eventFired = jQueryModified = false;
         ko.utils.triggerEvent(element, 'click');
+        expect(eventFired && !jQueryModified).toBe(true);
+    });
 
-        // Reset the option.
-        ko.options.preferJQueryEvents = true;
+    it ('should not use jQuery eventing with useOnlyNativeEvents option set to true', function() {
+        this.restoreAfter(ko.options, 'useOnlyNativeEvents');
 
-        expect(!jQueryLoaded || (eventFired && !jQueryUsed)).toBe(true);
+        var element = document.createElement('DIV');
+        var eventFired = false;
+        var jQueryModified = false;
+
+        // Set the option to true.
+        ko.options.useOnlyNativeEvents = true;
+
+        // Verify jQuery is not used in event binding.
+        ko.utils.registerEventHandler(element, 'click', function(eventArgs) {
+            eventFired = true;
+            jQueryModified = !!eventArgs.originalEvent;
+        });
+
+        // Trigger the event natively
+        element.click();
+        expect(eventFired && !jQueryModified).toBe(true);
+
+        // Also trigger an event through ko.utils.triggerEvent to show that it triggers a native event
+        eventFired = jQueryModified = false;
+        ko.utils.triggerEvent(element, 'click');
+        expect(eventFired && !jQueryModified).toBe(true);
     });
 });
