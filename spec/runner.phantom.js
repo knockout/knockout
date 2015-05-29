@@ -44,7 +44,7 @@ var system = require('system');
  * as a callback function.
  * @param timeOutMillis the max amount of time to wait. If not specified, 3 sec is used.
  */
-function waitFor(testFx, onReady, timeOutMillis) {
+function waitFor(testFx, onReady, onTimeout, timeOutMillis) {
     var maxtimeOutMillis = timeOutMillis ? timeOutMillis : 3001, //< Default Max Timeout is 3s
         start = new Date().getTime(),
         condition = false,
@@ -56,7 +56,7 @@ function waitFor(testFx, onReady, timeOutMillis) {
                 if(!condition) {
                     // If condition still not fulfilled (timeout but condition is 'false')
                     console.log("'waitFor()' timeout");
-                    phantom.exit(1);
+                    onTimeout ? onTimeout() : phantom.exit(1);
                 } else {
                     clearInterval(interval); //< Stop this interval
                     // Condition fulfilled (timeout and/or condition is 'true')
@@ -107,6 +107,13 @@ page.open(system.args[1] || 'spec/runner.html?src=build/output/knockout-latest.j
                   console.log(document.body.querySelector('.alert > .passingAlert.bar').innerText);
                   return 0;
                 }
+            });
+            phantom.exit(exitCode);
+        }, function() {
+            var exitCode = page.evaluate(function(){
+                var specs = document.body.querySelectorAll('.results .specSummary');
+                console.log('Last test completed:');
+                console.log(specs[specs.length-1].innerText);
             });
             phantom.exit(exitCode);
         });
