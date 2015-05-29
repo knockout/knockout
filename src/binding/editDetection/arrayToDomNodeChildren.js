@@ -114,7 +114,11 @@
                     break;
             }
         }
-
+        
+        //Call beforeRenderAll function before any changes have been made to the DOM
+        if (options['beforeRenderAll'])
+            options['beforeRenderAll']();
+        
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
@@ -150,7 +154,11 @@
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
-
+        
+        //Finally call userdefined afterRenderAll function after all items have rendered
+         if (options['afterRenderAll'])
+            options['afterRenderAll']();
+        
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
     }
