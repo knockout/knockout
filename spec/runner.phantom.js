@@ -115,7 +115,7 @@ page.open(system.args[1] || 'spec/runner.html?src=build/output/knockout-latest.j
                 console.log('Last test completed:');
                 console.log(specs[specs.length-1].innerText);
             });
-            phantom.exit(exitCode);
+            phantom.exit(exitCode || 1);
         });
     }
 });
