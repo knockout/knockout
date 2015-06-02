@@ -26,6 +26,38 @@ describe('Components: Custom elements', function() {
         expect(testNode).toContainHtml('<div>hello <test-component>custom element <span data-bind="text: 123">123</span></test-component></div>');
     });
 
+    it('Inserts components into custom elements with matching non-dashed names', function() {
+        if (jasmine.ieVersion || window.HTMLUnknownElement) {   // Phantomjs 1.x doesn't include HTMLUnknownElement and will fail this test
+            this.after(function () { ko.components.unregister('somefaroutname'); });
+            ko.components.register('somefaroutname', {
+                template: 'custom element <span data-bind="text: 123"></span>'
+            });
+            var initialMarkup = '<div>hello <somefaroutname></somefaroutname></div>';
+            testNode.innerHTML = initialMarkup;
+
+            // Since components are loaded asynchronously, it doesn't show up synchronously
+            ko.applyBindings(null, testNode);
+            expect(testNode).toContainHtml(initialMarkup);
+
+            // ... but when the component is loaded, it does show up
+            jasmine.Clock.tick(1);
+            expect(testNode).toContainHtml('<div>hello <somefaroutname>custom element <span data-bind="text: 123">123</span></somefaroutname></div>');
+        }
+    });
+
+    it('Does not insert components into standard elements with matching names', function() {
+        this.after(function () { ko.components.unregister('em'); });
+        ko.components.register('em', {
+            template: 'custom element <span data-bind="text: 123"></span>'
+        });
+        var initialMarkup = '<div>hello <em></em></div>';
+        testNode.innerHTML = initialMarkup;
+
+        ko.applyBindings(null, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainHtml(initialMarkup);
+    });
+
     it('Is possible to override getComponentNameForNode to determine which component goes into which element', function() {
         ko.components.register('test-component', { template: 'custom element'});
         this.restoreAfter(ko.components, 'getComponentNameForNode');
