@@ -648,15 +648,6 @@ describe('Deferred', function() {
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
         });
 
-        it('Set to false initially, should maintain synchronous notification', function() {
-            var observable = ko.observable().extend({deferred:false});
-            var notifySpy = jasmine.createSpy('notifySpy');
-            observable.subscribe(notifySpy);
-
-            observable('A');
-            expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
-        });
-
         it('Should suppress notification when value is changed/reverted', function() {
             var observable = ko.observable('original').extend({deferred:true});
             var notifySpy = jasmine.createSpy('notifySpy');
@@ -669,25 +660,6 @@ describe('Deferred', function() {
             jasmine.Clock.tick(1);
             expect(notifySpy).not.toHaveBeenCalled();
             expect(observable()).toEqual('original');
-        });
-
-        it('Set to false, should turn off deferred notification if already turned on', function() {
-            var observable = ko.observable().extend({deferred:true});
-            var notifySpy = jasmine.createSpy('notifySpy');
-            observable.subscribe(notifySpy);
-
-            // First, notifications are deferred
-            observable('A');
-            expect(notifySpy).not.toHaveBeenCalled();
-            jasmine.Clock.tick(1);
-            expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
-
-            notifySpy.reset();
-            observable.extend({deferred:false});
-
-            // Now, they are synchronous
-            observable('B');
-            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
         });
 
         it('Is default behavior when "ko.options.deferUpdates" is "true"', function() {
@@ -844,24 +816,6 @@ describe('Deferred', function() {
             expect(dependentComputed()).toEqual('C');
         });
 
-        it('Should delay update of dependent rate-limited computed observable', function() {
-            var data = ko.observable('A'),
-                deferredComputed = ko.computed(data).extend({deferred:true}),
-                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500});
-
-            expect(dependentComputed()).toEqual('A');
-
-            data('B');
-            expect(deferredComputed()).toEqual('B');
-            expect(dependentComputed()).toEqual('A');
-
-            data('C');
-            expect(dependentComputed()).toEqual('A');
-
-            jasmine.Clock.tick(1);      // Cause the "change" notification to propogate to the rate-limited computed
-            expect(dependentComputed()).toEqual('C');
-        });
-
         it('Should *not* delay update of dependent deferred computed observable', function () {
             var data = ko.observable('A'),
                 timesEvaluated = 0,
@@ -882,6 +836,28 @@ describe('Deferred', function() {
             expect(computed2()).toEqual('BXY');
             expect(timesEvaluated).toEqual(2);      // Verify that the computed wasn't evaluated again unnecessarily
             expect(notifySpy.argsForCall).toEqual([ ['BXY'] ]);
+        });
+
+        it('Should *not* delay update of dependent rate-limited computed observable', function() {
+            var data = ko.observable('A'),
+                deferredComputed = ko.computed(data).extend({deferred:true}),
+                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500});
+                notifySpy = jasmine.createSpy('notifySpy'),
+                subscription = dependentComputed.subscribe(notifySpy);
+
+            expect(dependentComputed()).toEqual('A');
+
+            data('B');
+            expect(deferredComputed()).toEqual('B');
+            expect(dependentComputed()).toEqual('B');
+
+            data('C');
+            expect(dependentComputed()).toEqual('C');
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            jasmine.Clock.tick(500);
+            expect(dependentComputed()).toEqual('C');
+            expect(notifySpy.argsForCall).toEqual([ ['C'] ]);
         });
 
         it('Is default behavior when "ko.options.deferUpdates" is "true"', function() {
@@ -907,22 +883,23 @@ describe('Deferred', function() {
 
             var data = ko.observable('A'),
                 deferredComputed = ko.computed(data),
-                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500}),
+                dependentComputed = ko.computed(function() { return 'R' + deferredComputed(); }).extend({rateLimit: 500}),
                 notifySpy = jasmine.createSpy('notifySpy'),
-                subscription = dependentComputed.subscribe(notifySpy);
+                subscription1 = deferredComputed.subscribe(notifySpy),
+                subscription2 = dependentComputed.subscribe(notifySpy);
 
-            expect(dependentComputed()).toEqual('A');
+            expect(dependentComputed()).toEqual('RA');
 
             data('B');
             expect(deferredComputed()).toEqual('B');
-            expect(dependentComputed()).toEqual('A');       // rate-limited computed doesn't respond to "dirty" events
+            expect(dependentComputed()).toEqual('RB');
+            expect(notifySpy).not.toHaveBeenCalled();       // no notifications yet
 
-            jasmine.Clock.tick(1);      // notifies "change" event to the rate-limited computed
-            expect(dependentComputed()).toEqual('B');       // updated on-demand
-            expect(notifySpy).not.toHaveBeenCalled();       // but no notification
+            jasmine.Clock.tick(1);
+            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);   // only the deferred computed notifies initially
 
-            jasmine.Clock.tick(500);
-            expect(notifySpy.argsForCall).toEqual([ ['B'] ]);       // rate-limited computed notifies after the specified delay
+            jasmine.Clock.tick(499);
+            expect(notifySpy.argsForCall).toEqual([ ['B'], [ 'RB' ] ]); // the rate-limited computed notifies after the specified timeout
         });
 
         it('Should minimize evaluation at the end of a complex graph', function() {

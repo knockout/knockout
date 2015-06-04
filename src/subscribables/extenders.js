@@ -39,22 +39,15 @@ ko.extenders = {
         });
     },
 
-    'deferred': function(target, value) {
-        // Calling with a true value sets up and enables deferred updates.
-        // A false value turns off deferred updates if it was previously enabled, but won't unnecessarily set a limit function.
-        target._deferUpdates = value;
-        if (value) {
+    'deferred': function(target, options) {
+        if (!target._deferUpdates) {
+            target._deferUpdates = true;
             target.limit(function (callback) {
                 var handle;
                 return function () {
                     ko.tasks.cancel(handle);
-                    if (target._deferUpdates) {
-                        handle = ko.tasks.schedule(callback);
-                        target['notifySubscribers'](undefined, 'dirty');
-                    } else {
-                        handle = 0;
-                        callback();
-                    }
+                    handle = ko.tasks.schedule(callback);
+                    target['notifySubscribers'](undefined, 'dirty');
                 };
             });
         }

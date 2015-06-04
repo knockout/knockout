@@ -20,11 +20,11 @@ ko.subscribable = function () {
 var defaultEvent = "change";
 
 // Moved out of "limit" to avoid the extra closure
-function rateLimitedNotifySubscribers(value, event) {
+function limitNotifySubscribers(value, event) {
     if (!event || event === defaultEvent) {
-        this._rateLimitedChange(value);
+        this._limitChange(value);
     } else if (event === 'beforeChange') {
-        this._rateLimitedBeforeChange(value);
+        this._limitBeforeChange(value);
     } else {
         this._origNotifySubscribers(value, event);
     }
@@ -87,32 +87,34 @@ var ko_subscribable_fn = {
 
     limit: function(limitFunction) {
         var self = this, selfIsObservable = ko.isObservable(self),
-            isPending, previousValue, pendingValue, beforeChange = 'beforeChange';
+            ignoreBeforeChange, previousValue, pendingValue, beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
-            self["notifySubscribers"] = rateLimitedNotifySubscribers;
+            self["notifySubscribers"] = limitNotifySubscribers;
         }
 
         var finish = limitFunction(function() {
+            self._notificationIsPending = false;
+
             // If an observable provided a reference to itself, access it to get the latest value.
             // This allows computed observables to delay calculating their value until needed.
             if (selfIsObservable && pendingValue === self) {
                 pendingValue = self();
             }
-            isPending = false;
+            ignoreBeforeChange = false;
             if (self.isDifferent(previousValue, pendingValue)) {
                 self._origNotifySubscribers(previousValue = pendingValue);
             }
         });
 
-        self._rateLimitedChange = function(value) {
-            isPending = true;
+        self._limitChange = function(value) {
+            self._notificationIsPending = ignoreBeforeChange = true;
             pendingValue = value;
             finish();
         };
-        self._rateLimitedBeforeChange = function(value) {
-            if (!isPending) {
+        self._limitBeforeChange = function(value) {
+            if (!ignoreBeforeChange) {
                 previousValue = value;
                 self._origNotifySubscribers(value, beforeChange);
             }
@@ -129,7 +131,7 @@ var ko_subscribable_fn = {
         } else {
             var total = 0;
             ko.utils.objectForEach(this._subscriptions, function(eventName, subscriptions) {
-                if (eventName != 'dirty')
+                if (eventName !== 'dirty')
                     total += subscriptions.length;
             });
             return total;
