@@ -58,7 +58,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     }
 
     function subscribeToDependency(target) {
-        if (target._deferUpdates) {
+        if (target._deferUpdates && !disposeWhenNodeIsRemoved) {
             var dirtySub = target.subscribe(markDirty, null, 'dirty'),
                 changeSub = target.subscribe(respondToChange);
             return {

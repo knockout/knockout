@@ -126,12 +126,13 @@ describe("Deferred bindings", function() {
         expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
     });
 
-    it('Should throw an exception for value binding on multiple select boxes', function() {
+    it('Should not throw an exception for value binding on multiple select boxes', function() {
         testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
         var observable = ko.observable();
-        ko.applyBindings({ x: observable }, testNode);
         expect(function() {
+            ko.applyBindings({ x: observable }, testNode);
             jasmine.Clock.tick(1);
-        }).toThrowContaining('Too much recursion');
+        }).not.toThrow();
+        expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
     });
 });

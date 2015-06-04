@@ -510,6 +510,15 @@ describe('Binding: Value', function() {
             expect(dropdown.selectedIndex).toEqual(2);
         });
 
+        it('Should not throw an exception for value binding on multiple select boxes', function() {
+            testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
+            var observable = ko.observable();
+            expect(function() {
+                ko.applyBindings({ x: observable }, testNode);
+            }).not.toThrow();
+            expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
+        });
+
         describe('Using valueAllowUnset option', function () {
             it('Should display the caption when the model value changes to undefined, null, or \"\" when using \'options\' binding', function() {
                 var observable = ko.observable('B');
