@@ -126,21 +126,23 @@ Now `like-or-dislike` can be consumed in the same way as before, using either a 
     <button data-bind="click: addProduct">Add a product</button>
 {% endcapture %}
 {% capture live_example_viewmodel %}
-    function Product(name, rating) {
-        this.name = name;
-        this.userRating = ko.observable(rating || null);
-    }
+    define(['knockout'], function(ko) {
+        function Product(name, rating) {
+            this.name = name;
+            this.userRating = ko.observable(rating || null);
+        }
+    
+        function MyViewModel() {
+            this.products = ko.observableArray(); // Start empty
+        }
+    
+        MyViewModel.prototype.addProduct = function() {
+            var name = 'Product ' + (this.products().length + 1);
+            this.products.push(new Product(name));
+        };
 
-    function MyViewModel() {
-        this.products = ko.observableArray(); // Start empty
-    }
-
-    MyViewModel.prototype.addProduct = function() {
-        var name = 'Product ' + (this.products().length + 1);
-        this.products.push(new Product(name));
-    };
-
-    ko.applyBindings(new MyViewModel());
+        return MyViewModel;
+    });
 {% endcapture %}
 {% include live-example-minimal.html %}
 
