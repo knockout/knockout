@@ -21,6 +21,8 @@ ko.bindingHandlers['foreach'] = {
                 'afterAdd': unwrappedValue['afterAdd'],
                 'beforeRemove': unwrappedValue['beforeRemove'],
                 'afterRender': unwrappedValue['afterRender'],
+                'afterRenderAll': unwrappedValue['afterRenderAll'],
+                'beforeRenderAll': unwrappedValue['beforeRenderAll'],
                 'beforeMove': unwrappedValue['beforeMove'],
                 'afterMove': unwrappedValue['afterMove'],
                 'templateEngine': ko.nativeTemplateEngine.instance
