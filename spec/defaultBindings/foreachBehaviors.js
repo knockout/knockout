@@ -144,35 +144,53 @@ describe('Binding: Foreach', function() {
     });
 
     it('Should be able to supply afterAdd and beforeRemove callbacks', function() {
-        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: childprop'></span></div>";
-        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: $data'></span></div>";
+        var someItems = ko.observableArray(['first child']);
         var afterAddCallbackData = [], beforeRemoveCallbackData = [];
         ko.applyBindings({
             someItems: someItems,
-            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
-            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
         }, testNode);
 
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span>');
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span>');
 
         // Try adding
-        someItems.push({ childprop: 'added child'});
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        someItems.push('added child');
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[1]);
-        expect(afterAddCallbackData[0].index).toEqual(1);
-        expect(afterAddCallbackData[0].value.childprop).toEqual("added child");
-        expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        expect(afterAddCallbackData[0].value).toEqual("added child");
+        expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
 
         // Try removing
         someItems.shift();
         expect(beforeRemoveCallbackData.length).toEqual(1);
         expect(beforeRemoveCallbackData[0].elem).toContainText("first child");
-        expect(beforeRemoveCallbackData[0].index).toEqual(0);
-        expect(beforeRemoveCallbackData[0].value.childprop).toEqual("first child");
+        expect(beforeRemoveCallbackData[0].value).toEqual("first child");
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
-        expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
-        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">added child</span>');
+        expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
+
+        // Remove another item
+        beforeRemoveCallbackData = [];
+        someItems.shift();
+        expect(beforeRemoveCallbackData.length).toEqual(1);
+        expect(beforeRemoveCallbackData[0].elem).toContainText("added child");
+        expect(beforeRemoveCallbackData[0].value).toEqual("added child");
+        // Neither item has yet been removed and both are still in their original locations
+        expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
+
+        // Try adding the item back; it should be added and not confused with the removed item
+        testNode.childNodes[0].innerHTML = '';  // Actually remove *removed* nodes to check that they are not added back in
+        afterAddCallbackData = [];
+        someItems.push('added child');
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">added child</span>');
+        expect(afterAddCallbackData.length).toEqual(1);
+        expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[0]);
+        expect(afterAddCallbackData[0].value).toEqual("added child");
+        expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">added child</span>');
     });
 
     it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {

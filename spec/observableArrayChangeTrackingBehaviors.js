@@ -31,9 +31,9 @@ describe('Observable Array change tracking', function() {
             var subscription = myArray.subscribe(function(changes) { changelist = changes; }, null, 'arrayChange');
             myArray(['Changed']);
             expect(callLog.length).toBe(1);
-            expect(changelist).toEqual([
-                { status: 'deleted', value: 'Another', index: 0 },
-                { status: 'added', value: 'Changed', index: 0 }
+            expect(changelist.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Changed', index: 0 },
+                { status: 'deleted', value: 'Another', index: 0 }
             ]);
 
             // If all the subscriptions are disposed, it stops computing diffs
@@ -47,9 +47,9 @@ describe('Observable Array change tracking', function() {
             myArray(['Changed once more']);
             expect(callLog.length).toBe(2);
             // Verify that changes are from the previous array value (at subscription time) and not from the last notified value
-            expect(changelist).toEqual([
-                { status: 'deleted', value: 'Changed again', index: 0 },
-                { status: 'added', value: 'Changed once more', index: 0 }
+            expect(changelist.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Changed once more', index: 0 },
+                { status: 'deleted', value: 'Changed again', index: 0 }
             ]);
         });
     });
@@ -76,9 +76,9 @@ describe('Observable Array change tracking', function() {
             // Then when there's a further change, there's a further diff
             myArray(['Delta']);
             expect(callLog.length).toBe(2);
-            expect(changelist1).toEqual([
-                { status: 'deleted', value: 'Gamma', index: 0 },
-                { status: 'added', value: 'Delta', index: 0 }
+            expect(changelist1.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Delta', index: 0 },
+                { status: 'deleted', value: 'Gamma', index: 0 }
             ]);
             expect(changelist2).toBe(changelist1);
         });
