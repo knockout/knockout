@@ -30,7 +30,8 @@
         return { mappedNodes : mappedNodes, dependentObservable : (dependentObservable.isActive() ? dependentObservable : undefined) };
     }
 
-    var lastMappingResultDomDataKey = ko.utils.domData.nextKey();
+    var lastMappingResultDomDataKey = ko.utils.domData.nextKey(),
+        deletedItemDummyValue = ko.utils.domData.nextKey();
 
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
         // Compare the provided array against the previous one
@@ -84,14 +85,19 @@
                         mapData = lastMappingResult[lastMappingResultIndex];
 
                         // Stop tracking changes to the mapping for these nodes
-                        if (mapData.dependentObservable)
+                        if (mapData.dependentObservable) {
                             mapData.dependentObservable.dispose();
+                            mapData.dependentObservable = undefined;
+                        }
 
                         // Queue these nodes for later removal
                         nodesToDelete.push.apply(nodesToDelete, ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode) || []);
-                        if (options['beforeRemove']) {
-                            itemsForBeforeRemoveCallbacks[i] = mapData;
+                        if (options['beforeRemove'] && mapData.mappedNodes.length) {
+                            newMappingResult.push(mapData);
                             itemsToProcess.push(mapData);
+                            if (mapData.arrayEntry !== deletedItemDummyValue) {
+                                itemsForBeforeRemoveCallbacks[i] = mapData;
+                            }
                         }
                     }
                     lastMappingResultIndex++;
@@ -149,6 +155,15 @@
         // callback instead removes the nodes right away, it would be more efficient to skip reordering them.
         // Perhaps we'll make that change in the future if this scenario becomes more common.
         callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
+
+        // Replace the stored values of deleted items with a dummy value. This provides two benefits: it marks this item
+        // as already "removed" so we won't call beforeRemove for it again, and it ensures that the item won't match up
+        // with an actual item in the array and appear as "retained" or "moved".
+        for (i = 0; i < itemsForBeforeRemoveCallbacks.length; ++i) {
+            if (itemsForBeforeRemoveCallbacks[i]) {
+                itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
+            }
+        }
 
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
