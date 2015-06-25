@@ -36,6 +36,10 @@ ko.observable = function (initialValue) {
     ko.exportProperty(observable, "valueHasMutated", observable.valueHasMutated);
     ko.exportProperty(observable, "valueWillMutate", observable.valueWillMutate);
 
+    if (ko.options['deferUpdates']) {
+        ko.extenders['deferred'](observable, true);
+    }
+
     return observable;
 }
 
@@ -43,14 +47,14 @@ ko.observable['fn'] = {
     "equalityComparer": valuesArePrimitiveAndEqual
 };
 
-var protoProperty = ko.observable.protoProperty = "__ko_proto__";
-ko.observable['fn'][protoProperty] = ko.observable;
-
 // Note that for browsers that don't support proto assignment, the
 // inheritance chain is created manually in the ko.observable constructor
 if (ko.utils.canSetPrototype) {
     ko.utils.setPrototypeOf(ko.observable['fn'], ko.subscribable['fn']);
 }
+
+var protoProperty = ko.observable.protoProperty = "__ko_proto__";
+ko.observable['fn'][protoProperty] = ko.observable;
 
 ko.hasPrototype = function(instance, prototype) {
     if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;

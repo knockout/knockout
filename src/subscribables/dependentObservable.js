@@ -358,6 +358,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
     }
 
+    if (ko.options['deferUpdates']) {
+        ko.extenders['deferred'](dependentObservable, true);
+    }
+
     // Evaluate, unless sleeping or deferEvaluation is true
     if (!isSleeping && !options['deferEvaluation'])
         evaluateImmediate();
@@ -393,13 +397,13 @@ ko.dependentObservable[protoProp] = ko.observable;
 ko.dependentObservable['fn'] = {
     "equalityComparer": valuesArePrimitiveAndEqual
 };
-ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
-
 // Note that for browsers that don't support proto assignment, the
 // inheritance chain is created manually in the ko.dependentObservable constructor
 if (ko.utils.canSetPrototype) {
     ko.utils.setPrototypeOf(ko.dependentObservable['fn'], ko.subscribable['fn']);
 }
+
+ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"

@@ -22,6 +22,17 @@ ko.subscribable = function () {
 
 var defaultEvent = "change";
 
+// Moved out of "limit" to avoid the extra closure
+function rateLimitedNotifySubscribers(value, event) {
+    if (!event || event === defaultEvent) {
+        this._rateLimitedChange(value);
+    } else if (event === 'beforeChange') {
+        this._rateLimitedBeforeChange(value);
+    } else {
+        this._origNotifySubscribers(value, event);
+    }
+}
+
 var ko_subscribable_fn = {
     subscribe: function (callback, callbackTarget, event) {
         var self = this;
@@ -114,15 +125,7 @@ var ko_subscribable_fn = {
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
-            self["notifySubscribers"] = function(value, event) {
-                if (!event || event === defaultEvent) {
-                    self._rateLimitedChange(value);
-                } else if (event === beforeChange) {
-                    self._rateLimitedBeforeChange(value);
-                } else {
-                    self._origNotifySubscribers(value, event);
-                }
-            };
+            self["notifySubscribers"] = rateLimitedNotifySubscribers;
         }
 
         var finish = limitFunction(function() {

@@ -109,4 +109,28 @@ describe('Binding: Selected Options', function() {
         expect(testNode.childNodes[0].childNodes[0]).toHaveSelectedValues(['a', 'c']);
         expect(testNode.childNodes[0].childNodes[1]).toHaveSelectedValues(['d']);
     });
+
+    it('Should not change the scroll position when updating the view', function() {
+        var selection = ko.observableArray(), data = [];
+        for (var i = 1; i < 101; i++) {
+            data.push({ code: '0000' + i, name: 'Item ' + i });
+        }
+
+        testNode.innerHTML = "<select multiple=\"multiple\" data-bind=\"options: data, optionsText: 'name', optionsValue: 'code', selectedOptions: selectedItems\"></select>";
+        ko.applyBindings({ selectedItems: selection, data: data }, testNode);
+
+        var selectElem = testNode.childNodes[0];
+        expect(selectElem.scrollTop).toBe(0);
+        expect(selectElem).toHaveSelectedValues([]);
+
+        selection.push('0000100');
+        expect(selectElem.scrollTop).toBe(0);
+        expect(selectElem).toHaveSelectedValues(['0000100']);
+
+        selectElem.scrollTop = 80;
+        var previousScrollTop = selectElem.scrollTop;   // some browsers modify the scrollTop right away
+        selection.push('000050');
+        expect(selectElem.scrollTop).toBe(previousScrollTop);
+        expect(selectElem).toHaveSelectedValues(['000050', '0000100']);
+    });
 });

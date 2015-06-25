@@ -2,17 +2,20 @@ ko.tasks = (function () {
     var scheduler,
         taskQueue = [],
         taskQueueLength = 0,
-        nextHandle = 1;
+        nextHandle = 1,
+        nextIndexToProcess = 0;
 
     if (window['MutationObserver']) {
-        // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+; borrowed from https://github.com/petkaantonov/bluebird
+        // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+
+        // From https://github.com/petkaantonov/bluebird * Copyright (c) 2014 Petka Antonov * License: MIT
         scheduler = (function (callback) {
             var div = document.createElement("div");
             new MutationObserver(callback).observe(div, {attributes: true});
             return function () { div.classList.toggle("foo"); };
         })(scheduledProcess);
     } else if (document && "onreadystatechange" in document.createElement("script")) {
-        // IE 6-10; borrowed from https://github.com/YuzuJS/setImmediate
+        // IE 6-10
+        // From https://github.com/YuzuJS/setImmediate * Copyright (c) 2012 Barnesandnoble.com, llc, Donavon West, and Domenic Denicola * License: MIT
         scheduler = function (callback) {
             var script = document.createElement("script");
             script.onreadystatechange = function () {
@@ -30,40 +33,37 @@ ko.tasks = (function () {
     }
 
     function processTasks() {
-        try {
+        if (taskQueueLength) {
             // Each mark represents the end of a logical group of tasks and the number of these groups is
             // limited to prevent unchecked recursion.
             var mark = taskQueueLength, countMarks = 0;
 
-            for (var index = 0, task; index < taskQueueLength; ++index) {
-                if (taskQueue[index]) {
-                    if (index >= mark) {
-                        if (++countMarks >= 5000)
-                            throw Error("'Too much recursion' after processing " + countMarks + " task groups.");
+            // nextIndexToProcess keeps track of where we are in the queue; processTasks can be called recursively without issue
+            for (var task; nextIndexToProcess < taskQueueLength; ) {
+                if (task = taskQueue[nextIndexToProcess++]) {
+                    if (nextIndexToProcess > mark) {
+                        if (++countMarks >= 5000) {
+                            nextIndexToProcess = taskQueueLength;   // skip all tasks remaining in the queue since any of them could be causing the recursion
+                            ko.utils.deferError(Error("'Too much recursion' after processing " + countMarks + " task groups."));
+                            break;
+                        }
                         mark = taskQueueLength;
                     }
-                    task = taskQueue[index];
-                    task();
+                    try {
+                        task();
+                    } catch (ex) {
+                        ko.utils.deferError(ex);
+                    }
                 }
-            }
-        } finally {
-            // Remove the tasks we've just processed from the queue and reset the timer
-            if (++index < taskQueueLength) {
-                // There are still tasks to process because a task threw an exception
-                taskQueueLength -= index;
-                taskQueue = taskQueue.slice(index);
-                scheduleTaskProcessing();
-            } else {
-                // All tasks have been processed
-                taskQueueLength = taskQueue.length = 0;
             }
         }
     }
 
     function scheduledProcess() {
-        if (taskQueueLength) {
-            processTasks();
-        }
+        processTasks();
+
+        // Reset the queue
+        nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
     }
 
     function scheduleTaskProcessing() {
@@ -78,21 +78,25 @@ ko.tasks = (function () {
                 scheduleTaskProcessing();
             }
 
-            taskQueue[taskQueueLength++] = ko.utils.catchFunctionErrors(func);
+            taskQueue[taskQueueLength++] = func;
             return nextHandle++;
         },
 
         cancel: function (handle) {
             var index = handle - (nextHandle - taskQueueLength);
-            if (index >= 0 && index < taskQueueLength) {
+            if (index >= nextIndexToProcess && index < taskQueueLength) {
                 taskQueue[index] = null;
             }
         },
 
-        // For testing only: return the queue length
-        length: function () {
-            return taskQueueLength;
-        }
+        // For testing only: reset the queue and return the previous queue length
+        'resetForTesting': function () {
+            var length = taskQueueLength - nextIndexToProcess;
+            nextIndexToProcess = taskQueueLength = taskQueue.length = 0;
+            return length;
+        },
+
+        runEarly: processTasks
     };
 
     return tasks;
@@ -101,3 +105,4 @@ ko.tasks = (function () {
 ko.exportSymbol('tasks', ko.tasks);
 ko.exportSymbol('tasks.schedule', ko.tasks.schedule);
 //ko.exportSymbol('tasks.cancel', ko.tasks.cancel);  "cancel" isn't minified
+ko.exportSymbol('tasks.runEarly', ko.tasks.runEarly);

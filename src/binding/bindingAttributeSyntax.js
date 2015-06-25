@@ -7,8 +7,10 @@
     var bindingDoesNotRecurseIntoElementTypes = {
         // Don't want bindings that operate on text nodes to mutate <script> and <textarea> contents,
         // because it's unexpected and a potential XSS issue
+        // Also bindings should not operate on <template> elements since this breaks in Internet Explorer
         'script': true,
-        'textarea': true
+        'textarea': true,
+        'template': true
     };
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
