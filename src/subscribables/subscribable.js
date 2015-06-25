@@ -1,7 +1,8 @@
-var nextSubscriptionPriority = 0;
+var nextSubscriptionId = 0;
 
 ko.subscription = function (target, callback, disposeCallback) {
-    this._priority = nextSubscriptionPriority++;
+    this._id = nextSubscriptionId++;
+    this._queue = otherQueue;
     this._target = target;
     this.callback = callback;
     this.disposeCallback = disposeCallback;
@@ -44,6 +45,17 @@ var ko_subscribable_fn = {
         return subscription;
     },
 
+    computedSubscribe: function (callback, subscriptionId) {
+        var subscription = this.subscribe(callback);
+        subscription._queue = computedQueue;
+
+        if (subscriptionId) {
+            subscription._id = subscriptionId;
+        }
+
+        return subscription;
+    },
+
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
         if (event === defaultEvent) {
@@ -53,26 +65,28 @@ var ko_subscribable_fn = {
 
             // Add the callbacks for the most recent notify to the front of the queue
             for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
-                // In case a subscription was disposed during the arrayForEach cycle, check
-                // for isDisposed on each subscription before invoking its callback
-                notifyQueue.unshift(function(subscription) {
 
-                    if (!subscription.isDisposed) {
+                addToQueue(subscription._queue, {
+                    id: subscription._id,
+                    callback: function(subscription) {
 
-                        try {
-                            // Begin suppressing dependency detection (by setting the top frame to undefined)
-                            ko.dependencyDetection.begin();
-                            subscription.callback(valueToNotify);
+                        // In case a subscription was disposed during the arrayForEach cycle, check
+                        // for isDisposed on each subscription before invoking its callback
+                        if (!subscription.isDisposed) {
 
-                        } finally {
-                            // End suppressing dependency detection
-                            ko.dependencyDetection.end();
+                            try {
+                                // Begin suppressing dependency detection (by setting the top frame to undefined)
+                                ko.dependencyDetection.begin();
+                                subscription.callback(valueToNotify);
+
+                            } finally {
+                                // End suppressing dependency detection
+                                ko.dependencyDetection.end();
+                            }
                         }
-                    }
 
-                }.bind(null, subscription));
-
-                notifyQueue[0].priority = subscription._priority;
+                    }.bind(null, subscription)
+                });
 
             }
 
@@ -112,6 +126,7 @@ var ko_subscribable_fn = {
         }
 
         var finish = limitFunction(function() {
+            self.isPending = false;
             // If an observable provided a reference to itself, access it to get the latest value.
             // This allows computed observables to delay calculating their value until needed.
             if (selfIsObservable && pendingValue === self) {
@@ -124,7 +139,7 @@ var ko_subscribable_fn = {
         });
 
         self._rateLimitedChange = function(value) {
-            isPending = true;
+            self.isPending = isPending = true;
             pendingValue = value;
             finish();
         };

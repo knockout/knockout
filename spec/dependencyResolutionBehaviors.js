@@ -131,4 +131,79 @@ describe('Dependency Resolution', function() {
 
     });
 
+    it('Should prioritise computed subscriptions over explicit ones', function() {
+
+        /* Arrange */
+        var a = ko.observable('a'),
+            spy = jasmine.createSpy('callback'),
+            subscription = a.subscribe(spy),
+            b = ko.computed(function() {
+                if (a() === 'aa') {
+                    subscription.dispose();
+                }
+            });
+
+        /* Act */
+        a('aa');
+
+        /* Assert */
+        expect(spy.calls.length).toEqual(0);
+
+    });
+
+    it('Should discard waiting subscriptions when another subscription changes the value', function() {
+
+        /* Arrange */
+        var a = ko.observable('a'),
+            spy = jasmine.createSpy('callback');
+
+        a.subscribe(function(value) {
+            if (value === 'aa') {
+                a(value + 'A');
+            }
+        });
+
+        a.subscribe(spy);
+
+        /* Act */
+        a('aa');
+
+        /* Assert */
+        expect(spy.calls.length).toEqual(1);
+        expect(spy.argsForCall[0][0]).toEqual('aaA');
+
+    });
+
+    it('Should discard waiting subscriptions further down the tree when another subscription changes the value', function() {
+
+        /* Arrange */
+        var a = ko.observable('a'),
+            b = ko.computed(function() {
+                return 'b';
+            }),
+            c = ko.computed(function() {
+                var out = a();
+                out += b();
+                return out;
+            }),
+            spy = jasmine.createSpy('callback');
+
+        a.subscribe(function(value) {
+            if (value === 'aa') {
+                a(value + 'A');
+            }
+        });
+
+        c.subscribe(function(v) {
+            spy(v);
+        });
+
+        /* Act */
+        a('aa');
+
+        /* Assert */
+        expect(spy.calls.length).toEqual(1);
+        expect(spy.argsForCall[0][0]).toEqual('aaAb');
+
+    });
 });

@@ -355,6 +355,7 @@ describe('Pure Computed', function() {
         // when awakened after being accessed, such that it's not re-evaluated.
 
         it('when awakening, without re-evaluation', function() {
+
             var timesEvaluated = 0,
                 computed = ko.pureComputed(function () { ++timesEvaluated; return dataPureComputed() + data(); });
 

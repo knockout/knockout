@@ -29,6 +29,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
 
         dependencyTracking[id] = trackingObj;
+
+        if (!trackingObj._id) {
+            trackingObj._id = nextSubscriptionId++;
+        }
+
         trackingObj._order = _dependenciesCount++;
         trackingObj._version = target.getVersion();
     }
@@ -98,6 +103,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             _suppressDisposalUntilDisposeWhenReturnsFalse = false;
         }
 
+        if (_latestGlobalVersionNumber === globalVersionNumber) {
+            return;
+        }
+
+        if (dependentObservable.isPending) {
+            return;
+        }
+
         _isBeingEvaluated = true;
 
         try {
@@ -117,7 +130,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                             --disposalCount;
                         } else if (!dependencyTracking[id]) {
                             // Brand new subscription - add it
-                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.subscribe(evaluatePossiblyAsync));
+                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.computedSubscribe(evaluatePossiblyAsync));
                         }
                     }
                 },
@@ -186,7 +199,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         } else {
 
             if (_latestGlobalVersionNumber !== globalVersionNumber) {
-                processQueue();
+                processComputedQueue();
             }
 
             // Reading the value
@@ -272,7 +285,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     // Next, subscribe to each one
                     ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
                         var dependency = dependencyTracking[id],
-                            subscription = dependency._target.subscribe(evaluatePossiblyAsync);
+                            subscription = dependency._target.computedSubscribe(evaluatePossiblyAsync, dependency._id);
                         subscription._order = order;
                         subscription._version = dependency._version;
                         dependencyTracking[id] = subscription;
@@ -291,7 +304,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                         dependencyTracking[id] = {
                             _target: dependency._target,
                             _order: dependency._order,
-                            _version: dependency._version
+                            _version: dependency._version,
+                            _subscriptionId: dependency._id
                         };
                         dependency.dispose();
                     }

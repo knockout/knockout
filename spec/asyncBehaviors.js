@@ -418,30 +418,26 @@ describe('Rate-limited', function() {
         });
 
         it('Should delay change notifications and evaluation', function() {
+
             var observable = ko.observable();
             var evalSpy = jasmine.createSpy('evalSpy');
             var computed = ko.computed(function () { evalSpy(observable()); return observable(); }).extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');
             computed.subscribe(notifySpy);
-            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy')
-                .andCallFake(function(value) {expect(computed()).toBe(value); });
+            var beforeChangeSpy = jasmine.createSpy('beforeChangeSpy');
             computed.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             // Observable is changed, but notification is delayed
             evalSpy.reset();
             observable('a');
             expect(evalSpy).not.toHaveBeenCalled();
-            expect(computed()).toEqual('a');
-            expect(evalSpy).toHaveBeenCalledWith('a');      // evaluation happens when computed is accessed
-            expect(notifySpy).not.toHaveBeenCalled();       // but notification is still delayed
+            expect(computed()).toEqual(undefined);
+            expect(evalSpy).not.toHaveBeenCalled();         // nothing changes until the rate limit timer is over
+            expect(notifySpy).not.toHaveBeenCalled();       // and no notification happens
             expect(beforeChangeSpy).toHaveBeenCalledWith(undefined);    // beforeChange notification happens right away
 
             // Second change notification is also delayed
-            evalSpy.reset();
             observable('b');
-            expect(computed.peek()).toEqual('a');           // peek returns previously evaluated value
-            expect(evalSpy).not.toHaveBeenCalled();
-            expect(notifySpy).not.toHaveBeenCalled();
 
             // Advance clock; Change notification happens now using the latest value notified
             evalSpy.reset();
@@ -497,7 +493,7 @@ describe('Rate-limited', function() {
             computed.subscribe(beforeChangeSpy, null, 'beforeChange');
 
             observable('new');                      // change value
-            expect(computed()).toEqual('new');      // access computed to make sure it really has the changed value
+            expect(computed()).toEqual('original'); // nothing should happen yet
             observable('original');                 // and then change the value back
             expect(notifySpy).not.toHaveBeenCalled();
             jasmine.Clock.tick(500);
@@ -550,6 +546,7 @@ describe('Rate-limited', function() {
                 // Update observable to cause computed to throw an exception
                 observableSwitch(false);
                 computed();
+                jasmine.Clock.tick(500);
             }).toThrow("Error during computed evaluation");
 
             // The value of the computed is now undefined, although currently it keeps the previous value
@@ -560,10 +557,12 @@ describe('Rate-limited', function() {
 
             // Updating the second observable shouldn't re-evaluate computed
             observableValue(2);
+            jasmine.Clock.tick(500);
             expect(computed()).toEqual(1);
 
             // Update the first observable to cause computed to re-evaluate
             observableSwitch(1);
+            jasmine.Clock.tick(500);
             expect(computed()).toEqual(2);
         });
 
@@ -575,9 +574,9 @@ describe('Rate-limited', function() {
             // Check initial value
             expect(dependentComputed()).toBeUndefined();
 
-            // Rate-limited computed is changed, but dependent computed is not
+            // Neither should change
             observable('a');
-            expect(rateLimitComputed()).toEqual('a');
+            expect(rateLimitComputed()).toBeUndefined();
             expect(dependentComputed()).toBeUndefined();
 
             // Second change also
@@ -599,7 +598,7 @@ describe('Rate-limited', function() {
 
             // Rate-limited computed is changed, but dependent computed is not
             observable('a');
-            expect(rateLimitComputed()).toEqual('a');
+            expect(rateLimitComputed()).toBeUndefined();
             expect(dependentComputed()).toBeUndefined();
 
             // Second change also
@@ -735,30 +734,14 @@ describe('Deferred', function() {
 
             data('B');
             expect(timesEvaluated).toEqual(1);  // not immediately evaluated
-            expect(computed()).toEqual('B');
-            expect(timesEvaluated).toEqual(2);
+            expect(computed()).toEqual('A');
+            expect(timesEvaluated).toEqual(1);
             expect(notifySpy).not.toHaveBeenCalled();
 
             jasmine.Clock.tick(1);
+            expect(timesEvaluated).toEqual(2);
             expect(notifySpy.calls.length).toEqual(1);
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
-        });
-
-        it('Should notify first change of computed with deferEvaluation if value is changed to undefined', function () {
-            var data = ko.observable('A'),
-                computed = ko.computed(data, null, {deferEvaluation: true}).extend({deferred:true}),
-                notifySpy = jasmine.createSpy('notifySpy'),
-                subscription = computed.subscribe(notifySpy);
-
-            expect(computed()).toEqual('A');
-
-            data(undefined);
-            expect(computed()).toEqual(undefined);
-            expect(notifySpy).not.toHaveBeenCalled();
-
-            jasmine.Clock.tick(1);
-            expect(notifySpy.calls.length).toEqual(1);
-            expect(notifySpy.argsForCall).toEqual([ [undefined] ]);
         });
 
         it('Should notify first change to pure computed after awakening if value changed to last notified value', function() {
@@ -768,7 +751,7 @@ describe('Deferred', function() {
                 subscription = computed.subscribe(notifySpy);
 
             data('B');
-            expect(computed()).toEqual('B');
+            expect(computed()).toEqual('A');
             expect(notifySpy).not.toHaveBeenCalled();
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
@@ -776,13 +759,14 @@ describe('Deferred', function() {
             subscription.dispose();
             notifySpy.reset();
             data('C');
+
+            // Without subscribers the value updates immediately
             expect(computed()).toEqual('C');
-            jasmine.Clock.tick(1);
             expect(notifySpy).not.toHaveBeenCalled();
 
             subscription = computed.subscribe(notifySpy);
             data('B');
-            expect(computed()).toEqual('B');
+            expect(computed()).toEqual('C');
             expect(notifySpy).not.toHaveBeenCalled();
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([ ['B'] ]);
