@@ -348,13 +348,14 @@ describe('Pure Computed', function() {
         it('base behavior: order is observable, pure computed', function() {
             // This one accesses the base observable first, which results in an update before 'dataPureComputed' has updated
             var computed = ko.pureComputed(function () { return data() + dataPureComputed(); });
-            subscribeAndUpdate(computed, 'B', ['BA', 'BB']);
+            subscribeAndUpdate(computed, 'B', ['BB']);
         });
 
         // This test sets up a pure computed using the first order and checks that the order stays correct
         // when awakened after being accessed, such that it's not re-evaluated.
 
         it('when awakening, without re-evaluation', function() {
+
             var timesEvaluated = 0,
                 computed = ko.pureComputed(function () { ++timesEvaluated; return dataPureComputed() + data(); });
 
@@ -364,7 +365,7 @@ describe('Pure Computed', function() {
 
             // If the subscriptions happen in the wrong order, we'll get two notifications: 'AB', 'BB'
             subscribeAndUpdate(computed, 'B', ['BB']);
-            expect(timesEvaluated).toEqual(3);
+            expect(timesEvaluated).toEqual(2);
         });
     });
 

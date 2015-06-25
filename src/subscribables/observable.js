@@ -10,6 +10,7 @@ ko.observable = function (initialValue) {
                 observable.valueWillMutate();
                 _latestValue = arguments[0];
                 if (DEBUG) observable._latestValue = _latestValue;
+
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -25,7 +26,10 @@ ko.observable = function (initialValue) {
 
     if (DEBUG) observable._latestValue = _latestValue;
     observable.peek = function() { return _latestValue };
-    observable.valueHasMutated = function () { observable["notifySubscribers"](_latestValue); }
+    observable.valueHasMutated = function () {
+        globalVersionNumber++;
+        observable["notifySubscribers"](_latestValue);
+    }
     observable.valueWillMutate = function () { observable["notifySubscribers"](_latestValue, "beforeChange"); }
 
     ko.exportProperty(observable, 'peek', observable.peek);

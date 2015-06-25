@@ -9,6 +9,7 @@ knockoutDebugCallback([
     'src/utils.domManipulation.js',
     'src/memoization.js',
     'src/tasks.js',
+    'src/subscribables/notifyQueue.js',
     'src/subscribables/extenders.js',
     'src/subscribables/subscribable.js',
     'src/subscribables/dependencyDetection.js',

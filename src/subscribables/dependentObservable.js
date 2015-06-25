@@ -1,4 +1,5 @@
 ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+
     var _latestValue,
         _needsEvaluation = true,
         _isBeingEvaluated = false,
@@ -6,7 +7,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         _isDisposed = false,
         readFunction = evaluatorFunctionOrOptions,
         pure = false,
-        isSleeping = false;
+        isSleeping = false,
+        _latestGlobalVersionNumber = null;
 
     if (readFunction && typeof readFunction == "object") {
         // Single-parameter syntax - everything is on this "options" param
@@ -27,6 +29,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         }
 
         dependencyTracking[id] = trackingObj;
+
+        if (!trackingObj._id) {
+            trackingObj._id = nextSubscriptionId++;
+        }
+
         trackingObj._order = _dependenciesCount++;
         trackingObj._version = target.getVersion();
     }
@@ -96,6 +103,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             _suppressDisposalUntilDisposeWhenReturnsFalse = false;
         }
 
+        if (_latestGlobalVersionNumber === globalVersionNumber) {
+            return;
+        }
+
+        if (dependentObservable.isPending) {
+            return;
+        }
+
         _isBeingEvaluated = true;
 
         try {
@@ -115,7 +130,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                             --disposalCount;
                         } else if (!dependencyTracking[id]) {
                             // Brand new subscription - add it
-                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.subscribe(evaluatePossiblyAsync));
+                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.computedSubscribe(evaluatePossiblyAsync));
                         }
                     }
                 },
@@ -149,7 +164,10 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                 }
 
                 _latestValue = newValue;
+
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
+
+                _latestGlobalVersionNumber = globalVersionNumber;
 
                 if (isSleeping) {
                     dependentObservable.updateVersion();
@@ -179,6 +197,11 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             }
             return this; // Permits chained assignments
         } else {
+
+            if (_latestGlobalVersionNumber !== globalVersionNumber) {
+                processComputedQueue();
+            }
+
             // Reading the value
             ko.dependencyDetection.registerDependency(dependentObservable);
             if (_needsEvaluation || (isSleeping && haveDependenciesChanged())) {
@@ -262,7 +285,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     // Next, subscribe to each one
                     ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
                         var dependency = dependencyTracking[id],
-                            subscription = dependency._target.subscribe(evaluatePossiblyAsync);
+                            subscription = dependency._target.computedSubscribe(evaluatePossiblyAsync, dependency._id);
                         subscription._order = order;
                         subscription._version = dependency._version;
                         dependencyTracking[id] = subscription;
@@ -281,7 +304,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                         dependencyTracking[id] = {
                             _target: dependency._target,
                             _order: dependency._order,
-                            _version: dependency._version
+                            _version: dependency._version,
+                            _subscriptionId: dependency._id
                         };
                         dependency.dispose();
                     }
