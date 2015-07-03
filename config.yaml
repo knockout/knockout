@@ -260,7 +260,7 @@ sauceLauncherGroups:
     chrome_43:
       browserName: chrome
       platform: Windows 7
-      version: '44'
+      version: '43'
 
     chrome_35:
       browserName: chrome
