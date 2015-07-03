@@ -7,8 +7,8 @@ env:
   - CI_AUTOMATE_BUILD="Travis build No. $TRAVIS_BUILD_NUMBER for $TRAVIS_REPO_SLUG"
 script:
   - gulp test:phantomjs --once
-  - sleep 10 && gulp test:phantomjs --once --jquery
-  - sleep 10 && gulp test:sauce --chrome
+  - gulp test:phantomjs --once --jquery
+  - gulp test:sauce --chrome
   - sleep 10 && gulp test:sauce --firefox
   - sleep 10 && gulp test:sauce --mobile
   - sleep 10 && gulp test:sauce --opera

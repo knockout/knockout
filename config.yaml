@@ -259,34 +259,34 @@ sauceLauncherGroups:
     # Chrome
     chrome_43:
       browserName: chrome
-      platform: Windows 7
+      platform: Linux
       version: '43'
 
     chrome_35:
       browserName: chrome
-      platform: Windows 7
+      platform: Linux
       version: '35'
 
     chrome_24:
       browserName: chrome
-      platform: Windows 7
+      platform: Linux
       version: '26'
 
   firefox:
     # Firefox
     firefox_38:
       browserName: firefox
-      platform: Windows 7
+      platform: Linux
       version: '38'
 
     firefox_24:
       browserName: firefox
-      platform: Windows 7
+      platform: Linux
       version: '24'
 
     firefox_17:
       browserName: firefox
-      platform: Windows 7
+      platform: Linux
       version: '17'
   #
   # firefox_4:
