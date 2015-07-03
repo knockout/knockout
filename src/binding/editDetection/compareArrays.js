@@ -28,7 +28,7 @@ ko.utils.compareArrays = (function () {
         oldArray = oldArray || [];
         newArray = newArray || [];
 
-        if (oldArray.length <= newArray.length)
+        if (oldArray.length < newArray.length)
             return compareSmallArrayToBigArray(oldArray, newArray, statusNotInOld, statusNotInNew, options);
         else
             return compareSmallArrayToBigArray(newArray, oldArray, statusNotInNew, statusNotInOld, options);
@@ -91,7 +91,7 @@ ko.utils.compareArrays = (function () {
 
         // Set a limit on the number of consecutive non-matching comparisons; having it a multiple of
         // smlIndexMax keeps the time complexity of this algorithm linear.
-        ko.utils.findMovesInArrayComparison(notInSml, notInBig, smlIndexMax * 10);
+        ko.utils.findMovesInArrayComparison(notInBig, notInSml, !options['dontLimitMoves'] && smlIndexMax * 10);
 
         return editScript.reverse();
     }

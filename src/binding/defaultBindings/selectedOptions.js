@@ -14,13 +14,19 @@ ko.bindingHandlers['selectedOptions'] = {
         if (ko.utils.tagNameLower(element) != "select")
             throw new Error("values binding applies only to SELECT elements");
 
-        var newValue = ko.utils.unwrapObservable(valueAccessor());
+        var newValue = ko.utils.unwrapObservable(valueAccessor()),
+            previousScrollTop = element.scrollTop;
+
         if (newValue && typeof newValue.length == "number") {
             ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
                 var isSelected = ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0;
-                ko.utils.setOptionNodeSelectionState(node, isSelected);
+                if (node.selected != isSelected) {      // This check prevents flashing of the select element in IE
+                    ko.utils.setOptionNodeSelectionState(node, isSelected);
+                }
             });
         }
+
+        element.scrollTop = previousScrollTop;
     }
 };
 ko.expressionRewriting.twoWayBindings['selectedOptions'] = true;

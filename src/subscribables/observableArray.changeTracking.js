@@ -1,5 +1,12 @@
 var arrayChangeEventName = 'arrayChange';
-ko.extenders['trackArrayChanges'] = function(target) {
+ko.extenders['trackArrayChanges'] = function(target, options) {
+    // Use the provided options--each call to trackArrayChanges overwrites the previously set options
+    target.compareArrayOptions = {};
+    if (options && typeof options == "object") {
+        ko.utils.extend(target.compareArrayOptions, options);
+    }
+    target.compareArrayOptions['sparse'] = true;
+
     // Only modify the target observable once
     if (target.cacheDiffForKnownOperation) {
         return;
@@ -76,7 +83,7 @@ ko.extenders['trackArrayChanges'] = function(target) {
         // plugin, which without this check would not be compatible with arrayChange notifications. Normally,
         // notifications are issued immediately so we wouldn't be queueing up more than one.
         if (!cachedDiff || pendingNotifications > 1) {
-            cachedDiff = ko.utils.compareArrays(previousContents, currentContents, { 'sparse': true });
+            cachedDiff = ko.utils.compareArrays(previousContents, currentContents, target.compareArrayOptions);
         }
 
         return cachedDiff;

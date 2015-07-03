@@ -342,4 +342,3 @@ describe('Function.bind', function() {
         expect(bound3()).toEqual([object1, 'b']);
     });
 });
-
