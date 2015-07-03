@@ -1,10 +1,11 @@
+/* eslint no-undef:0, semi: 0*/
 //
 // Tasks related to single-run tests
 //
 var extend = require('extend')
-var gutil = require('gulp-util')
+// var gutil = require('gulp-util')
 var karmaServer = require('karma').server
-var env = process.env
+// var env = process.env
 var argv = process.argv;
 
 // TODO: Test other browsers
@@ -53,7 +54,7 @@ module.exports = function(gulp, plugins, config) {
                 testName: "Knockout unit tests"
             },
             reporters: ['saucelabs'],
-            customLaunchers: launchers,
+            customLaunchers: launchers
         })
     })
 
