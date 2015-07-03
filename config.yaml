@@ -24,14 +24,16 @@ build:
             JSON = window["JSON"];
 
 
-  # This is from what was build/fragments/amd-pre.js:
+  # This was originally from what was build/fragments/amd-pre.js:
+  # Based on
+  #  https://github.com/umdjs/umd/blob/master/returnExports.js#L41
   - |
     (function(factory) {
         // Support three module loading scenarios
         if (typeof define === 'function' && define['amd']) {
             // [1] AMD anonymous module
             define(['exports', 'require'], factory);
-        } else if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
+        } else if (typeof exports === 'object') {
             // [2] CommonJS/Node.js
             factory(module['exports'] || exports);  // module.exports is for Node.js
         } else {
