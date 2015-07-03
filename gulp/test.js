@@ -31,11 +31,11 @@ module.exports = function(gulp, plugins, config) {
         karmaServer.start(config.karma, process.exit);
     }
 
-    gulp.task("test:chrome", "Run tests in Chrome", function() {
+    gulp.task("test:chrome", "Run tests in Chrome (--once to run once)", function() {
         test(['Chrome'])
     })
 
-    gulp.task("test:phantomjs", "Run tests in PhantomJS", function() {
+    gulp.task("test:phantomjs", "Run tests in PhantomJS (--once to run once)", function() {
         test(['PhantomJS'])
     })
 
@@ -50,7 +50,7 @@ module.exports = function(gulp, plugins, config) {
         }
 
         if (!launchers) {
-            console.error("Specify a SauceLabs group: ",
+            console.error("Specify a SauceLabs group:\n",
                 Object.keys(groups).map(function(g) { return '--' + g })
             )
             return
@@ -72,6 +72,4 @@ module.exports = function(gulp, plugins, config) {
             customLaunchers: launchers
         })
     })
-
-    gulp.task('test', "Run tests in available browsers", ['test:chrome', 'test:phantomjs']);
 }

@@ -11,5 +11,6 @@ script:
   - gulp test:sauce --chrome
   - gulp test:sauce --firefox
   - gulp test:sauce --mobile
+  - gulp test:sauce --opera
   - gulp test:sauce --ie
   - gulp test:sauce --ie-legacy --innershiv --json2

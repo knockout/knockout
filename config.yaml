@@ -251,60 +251,78 @@ test_alt_libs:
 # These are the browsers that'll get tested by SauceLabs.
 # These are bucketed together in groups of no more than 3, because of
 #   https://github.com/karma-runner/karma-sauce-launcher/issues/40
+#
+# For more config options:
+ # https://docs.saucelabs.com/reference/platforms-configurator/#/
 sauceLauncherGroups:
   chrome:
     # Chrome
-    sl_chrome_35:
+    chrome_43:
       browserName: chrome
       platform: Windows 7
       version: '44'
 
-    sl_chrome_35:
+    chrome_35:
       browserName: chrome
       platform: Windows 7
       version: '35'
 
-    sl_chrome_24:
+    chrome_24:
       browserName: chrome
       platform: Windows 7
-      version: '15'
+      version: '26'
 
   firefox:
     # Firefox
-    sl_firefox_38:
+    firefox_38:
       browserName: firefox
       platform: Windows 7
-      version: '39'
+      version: '38'
 
-    sl_firefox_24:
+    firefox_24:
       browserName: firefox
       platform: Windows 7
       version: '24'
 
-    sl_firefox_17:
+    firefox_17:
       browserName: firefox
       platform: Windows 7
       version: '17'
   #
-  # sl_firefox_4:
+  # firefox_4:
   #   browserName: firefox
   #   version: '4'
+  safari:
+    safari_8:
+      browserName: safari
+      platform: OS X 10.10
+      version: '8.0'
+
+    safari_7:
+      browserName: safari
+      platform: OS X 10.9
+      version: '7.0'
+
+    safari_6:
+      browserName: safari
+      platform: OS X 10.8
+      version: '6.0'
 
   mobile:
     # iOS
-    sl_ios_safari:
+    ios_safari:
       browserName: iphone
       platform: OS X 10.10
       version: '8.2'
 
     # Android
-    sl_android_5_1:
+    android_5_1:
       browserName: android
       platform: Linux
       version: "5.1"
       deviceName: "Android Emulator"
 
-    sl_android_4_0:
+    android_4_0:
       browserName: android
       platform: Linux
       version: "4.0"
@@ -312,28 +330,34 @@ sauceLauncherGroups:
 
   ie:
   # Internet Explorer
-    sl_ie_11:
+    ie_11:
       browserName: internet explorer
       platform: Windows 8.1
       version: '11'
 
-    sl_ie_10:
+    ie_10:
       browserName: internet explorer
       platform: Windows 8
       version: "10.0"
 
-    sl_ie_9:
+    ie_9:
       browserName: internet explorer
       platform: Windows 7
       version: "9.0"
 
   ie-legacy:
-    sl_ie_8:
+    ie_8:
       browserName: internet explorer
       platform: Windows 7
       version: "8.0"
 
-    sl_ie_7:
+    ie_7:
       browserName: internet explorer
       platform: Windows XP
       version: '7.0'
+
+  opera:
+    opera_12_12:
+      browserName: opera
+      platform: Windows XP
+      version: '12.12'
