@@ -636,6 +636,17 @@ describe('Deferred', function() {
             expect(notifySpy.argsForCall).toEqual([ ['A'] ]);
         });
 
+        it('Should throw if you attempt to turn off deferred', function() {
+            // As of commit 6d5d786, the 'deferred' option cannot be deactivated (once activated for
+            // a given observable).
+            var observable = ko.observable();
+
+            observable.extend({deferred: true});
+            expect(function() {
+                observable.extend({deferred: false});    
+            }).toThrow('The \'deferred\' extender only accepts the value \'true\', because it is not supported to turn deferral off once enabled.');
+        });
+
         it('Should notify subscribers about only latest value', function() {
             var observable = ko.observable().extend({notify:'always', deferred:true});  // include notify:'always' to ensure notifications weren't suppressed by some other means
             var notifySpy = jasmine.createSpy('notifySpy');

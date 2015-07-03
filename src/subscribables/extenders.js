@@ -40,6 +40,10 @@ ko.extenders = {
     },
 
     'deferred': function(target, options) {
+        if (options !== true) {
+            throw new Error('The \'deferred\' extender only accepts the value \'true\', because it is not supported to turn deferral off once enabled.')
+        }
+
         if (!target._deferUpdates) {
             target._deferUpdates = true;
             target.limit(function (callback) {
