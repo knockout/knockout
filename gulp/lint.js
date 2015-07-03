@@ -19,4 +19,8 @@ module.exports = function(gulp, plugins, config) {
   })
 
   gulp.task('lint', 'Run javascript and trailing space linting', ['lint:js', 'lint:space'])
+
+  gulp.task('watch:lint', "Re-lint on changes to source", ['lint:js', 'lint:space'], function () {
+    gulp.watch(['spec/**/*.js', 'src/**/*.js', '*.js', 'gulp/*.js', '.eslintrc'], ['lint:js', 'lint:space'])
+  })
 }

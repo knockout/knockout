@@ -1,7 +1,10 @@
+/* global require module */
+/*eslint semi:0, indent:0, no-empty: 0 */
 //
 // Tasks related to releasing a build version
 //
 var fs = require('fs')
+var pkg = require('../package.json')
 
 
 module.exports = function(gulp, plugins, config) {
@@ -18,7 +21,7 @@ module.exports = function(gulp, plugins, config) {
   gulp.task("bump:major", "Bump to A+1.0.0", bump('major'))
 
 
-  gulp.task("release", "Compile a release", ['build', 'build:debug'], function (done) {
+  gulp.task("release", "Compile a release", ['build', 'build:debug'], function () {
       // Here is a reminder for some related tasks.
       //   To delete tag:
       //     $ git tag -d vX.X.X
@@ -28,7 +31,7 @@ module.exports = function(gulp, plugins, config) {
       //     $ npm publish
       var options = {
           distDir: config.distDir,
-          version: "v" + pkg.version,
+          version: "v" + pkg.version
         },
         commands = {
           add: "git add -f <%= options.distDir %>",

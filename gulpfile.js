@@ -1,6 +1,8 @@
-/*global module:false
+ /* globals require */
+ /* eslint semi:0, no-unised-vars:0*/
+/*
 
-    Well orchestrated tasks for Knockout.
+    Orchestrated tasks for Knockout.
 
  */
 require('colors')

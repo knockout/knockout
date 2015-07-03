@@ -1,3 +1,5 @@
+/* globals require module Buffer process*/
+/* eslint semi:0, indent: 0 */
 //
 // Tasks related to compiling the knockout.(min/debug).js files
 //
@@ -7,18 +9,18 @@ var gutil = require('gulp-util')
 module.exports = function(gulp, plugins, config) {
 
   gulp.task("clean", "Remove unused files.", function() {
-      var dests = [
-          config.buildDir + "*.js",
-          config.distDir,
-          'runner*.html'
-      ];
-      return gulp.src(dests, {read: false})
-          .pipe(plugins.clean())
+    var dests = [
+      config.buildDir + "*.js",
+      config.distDir,
+      'runner*.html'
+    ];
+    return gulp.src(dests, {read: false})
+               .pipe(plugins.clean())
   })
 
 
   gulp.task('build:debug', "Compile the unminified debug version", function () {
-      return gulp.src(config.sources)
+    return gulp.src(config.sources)
           .pipe(plugins.concat(config.build.debug))
           // amd + extern
           .pipe(plugins.header(config.build.headers.join("\n")))
