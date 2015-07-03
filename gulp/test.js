@@ -1,4 +1,4 @@
-/* eslint no-undef:0, semi: 0*/
+/* eslint no-undef:0, semi: 0, no-console:0 */
 //
 // Tasks related to single-run tests
 //
@@ -40,7 +40,22 @@ module.exports = function(gulp, plugins, config) {
     })
 
     gulp.task("test:sauce", "Run tests in SauceLabs", function() {
-        var launchers = config.sauceLaunchers
+        var groups = config.sauceLauncherGroups
+        var launchers
+
+        for (var groupName in groups) {
+            if (process.argv.indexOf('--' + groupName) !== -1) {
+                launchers = groups[groupName]
+            }
+        }
+
+        if (!launchers) {
+            console.error("Specify a SauceLabs group: ",
+                Object.keys(groups).map(function(g) { return '--' + g })
+            )
+            return
+        }
+
         var browsers = Object.keys(launchers)
         // Add the 'SauceLabs' base so we don't need it littering
         // the config file.

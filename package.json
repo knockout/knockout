@@ -6,9 +6,6 @@
   "license": "MIT",
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",
-  "scripts": {
-    "test": "gulp test"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/knockout/knockout.git"
