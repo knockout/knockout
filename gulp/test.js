@@ -2,6 +2,8 @@
 //
 // Tasks related to single-run tests
 //
+var figlet = require('figlet')
+
 var extend = require('extend')
 // var gutil = require('gulp-util')
 var karmaServer = require('karma').server
@@ -46,6 +48,7 @@ module.exports = function(gulp, plugins, config) {
         for (var groupName in groups) {
             if (process.argv.indexOf('--' + groupName) !== -1) {
                 launchers = groups[groupName]
+                console.log(figlet.textSync(groupName))
             }
         }
 

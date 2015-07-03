@@ -21,10 +21,12 @@
     "closure-compiler": "^0.2.6",
     "colors": "^1.1.2",
     "extend": "^3.0.0",
+    "figlet": "^1.1.1",
     "gulp": "^3.9.0",
     "gulp-bump": "^0.3.1",
     "gulp-clean": "^0.3.1",
     "gulp-concat": "^2.6.0",
+    "gulp-eslint": "^0.15.0",
     "gulp-exec": "^2.1.1",
     "gulp-footer": "^1.0.5",
     "gulp-header": "^1.2.2",
@@ -43,7 +45,6 @@
     "karma-phantomjs-launcher": "^0.2.0",
     "karma-sauce-launcher": "^0.2.14",
     "promise": "^7.0.3",
-    "through": "^2.3.8",
-    "gulp-eslint": "^0.15.0"
+    "through": "^2.3.8"
   }
 }
