@@ -30,27 +30,28 @@ ko.extenders = {
             method = options['method'];
         }
 
+        // rateLimit supersedes deferred updates
+        target._deferUpdates = false;
+
         limitFunction = method == 'notifyWhenChangesStop' ?  debounce : throttle;
         target.limit(function(callback) {
             return limitFunction(callback, timeout);
         });
     },
 
-    'deferred': function(target, value) {
-        // Calling with a true value sets up and enables deferred updates.
-        // A false value turns off deferred updates if it was previously enabled, but won't unnecessarily set a limit function.
-        target._deferUpdates = value;
-        if (value) {
+    'deferred': function(target, options) {
+        if (options !== true) {
+            throw new Error('The \'deferred\' extender only accepts the value \'true\', because it is not supported to turn deferral off once enabled.')
+        }
+
+        if (!target._deferUpdates) {
+            target._deferUpdates = true;
             target.limit(function (callback) {
                 var handle;
                 return function () {
                     ko.tasks.cancel(handle);
-                    if (target._deferUpdates) {
-                        handle = ko.tasks.schedule(callback);
-                    } else {
-                        handle = 0;
-                        callback();
-                    }
+                    handle = ko.tasks.schedule(callback);
+                    target['notifySubscribers'](undefined, 'dirty');
                 };
             });
         }
