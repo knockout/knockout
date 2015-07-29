@@ -1,23 +1,23 @@
 (function () {
-    var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
+    var none = [0, "", ""],
+        table = [1, "<table>", "</table>"],
+        tbody = [2, "<table><tbody>", "</tbody></table>"],
+        tr = [3, "<table><tbody><tr>", "</tr></tbody></table>"],
+        select = [1, "<select>", "</select>"],
+        lookup = {
+            'thead': table,
+            'tbody': table,
+            'tfoot': table,
+            'tr': tbody,
+            'td': tr,
+            'th': tr,
+            'option': select,
+            'optgroup': select
+        };
 
     function getWrap(tags) {
-        var m = tags.match(/^<(thead|tbody|tfoot|tr|td|th)( |>)/);
-        var tagName = m && m[1];
-
-        switch (tagName) {
-        case 'thead':
-        case 'tbody':
-        case 'tfoot':
-            return [1, "<table>", "</table>"];
-        case 'tr':
-            return [2, "<table><tbody>", "</tbody></table>"];
-        case 'td':
-        case 'th':
-            return [3, "<table><tbody><tr>", "</tr></tbody></table>"];
-        default:
-            return [0, "", ""];
-        }
+        var m = tags.match(/^<([a-z]+)[ >]/);
+        return (m && lookup[m[1]]) || none;
     }
 
     function simpleHtmlParse(html, documentContext) {
@@ -33,8 +33,9 @@
         // (possibly a text node) in front of the comment. So, KO does not attempt to workaround this IE issue automatically at present.
 
         // Trim whitespace, otherwise indexOf won't work as expected
-        var tags = ko.utils.stringTrim(html).toLowerCase(), div = documentContext.createElement("div");
-        var wrap = getWrap(tags);
+        var tags = ko.utils.stringTrim(html).toLowerCase(), div = documentContext.createElement("div"),
+            wrap = getWrap(tags),
+            depth = wrap[0];
 
         // Go to html and back, then peel off extra wrappers
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
@@ -46,7 +47,7 @@
         }
 
         // Move to the right depth
-        while (wrap[0]--)
+        while (depth--)
             div = div.lastChild;
 
         return ko.utils.makeArray(div.lastChild.childNodes);
