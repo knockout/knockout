@@ -1,6 +1,25 @@
 (function () {
     var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
 
+    function getWrap(tags) {
+        var m = tags.match(/^<(thead|tbody|tfoot|tr|td|th)(?: |>)/);
+        var tagName = m && m[1];
+
+        switch (tagName) {
+        case 'thead':
+        case 'tbody':
+        case 'tfoot':
+            return [1, "<table>", "</table>"];
+        case 'tr':
+            return [2, "<table><tbody>", "</tbody></table>"];
+        case 'td':
+        case 'th':
+            return [3, "<table><tbody><tr>", "</tr></tbody></table>"];
+        default:
+            return [0, "", ""];
+        }
+    }
+
     function simpleHtmlParse(html, documentContext) {
         documentContext || (documentContext = document);
         var windowContext = documentContext['parentWindow'] || documentContext['defaultView'] || window;
@@ -15,12 +34,7 @@
 
         // Trim whitespace, otherwise indexOf won't work as expected
         var tags = ko.utils.stringTrim(html).toLowerCase(), div = documentContext.createElement("div");
-
-        // Finds the first match from the left column, and returns the corresponding "wrap" data from the right column
-        var wrap = tags.match(/^<(thead|tbody|tfoot)/)              && [1, "<table>", "</table>"] ||
-                   !tags.indexOf("<tr")                             && [2, "<table><tbody>", "</tbody></table>"] ||
-                   (!tags.indexOf("<td") || !tags.indexOf("<th"))   && [3, "<table><tbody><tr>", "</tr></tbody></table>"] ||
-                   /* anything else */                                 [0, "", ""];
+        var wrap = getWrap(tags);
 
         // Go to html and back, then peel off extra wrappers
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
