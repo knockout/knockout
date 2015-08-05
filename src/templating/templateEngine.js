@@ -38,11 +38,63 @@ ko.templateEngine.prototype['createJavaScriptEvaluatorBlock'] = function (script
 ko.templateEngine.prototype['makeTemplateSource'] = function(template, templateDocument) {
     // Named template
     if (typeof template == "string") {
+        var namedTemplateCache = this.namedTemplateCache || {};
+
+        // Cache entries last for 10s after the last access
+        var cacheLifetime = 10000;
+
+        // Registers a timer to clean up stale entries from the template cache.
+        function cleanupCache() {
+            // If we do not yet have a cleanup scheduled, schedule one
+            if (!this.templateCacheCleanupTimeoutID) {
+                this.templateCacheCleanupTimeoutID = setTimeout(function() {
+                    this.templateCacheCleanupTimeoutID = null;
+
+                    var cacheEmpty = true;
+                    var currentTime = new Date().getTime();
+
+                    // Walk through the templates, and delete all that have expired
+                    for (var templateName in namedTemplateCache) {
+                        if (namedTemplateCache.hasOwnProperty(templateName)) {
+                            var template = namedTemplateCache[templateName];
+                            if (currentTime - template.lastAccessed > cacheLifetime) {
+                                delete namedTemplateCache[templateName];
+                            } else {
+                                cacheEmpty = false;
+                            }
+                        }
+                    }
+
+                    // If there are remaining cache entries, register a clean up timer
+                    if (!cacheEmpty) {
+                        cleanupCache();
+                    }
+              }, cacheLifetime);
+          }
+        }
+
+        // Garbage collect this template if not used within cacheLifetime (helpful for batch templating, like in a foreach)
+        cleanupCache();
+
+        // See if we've already build this template
+        if (namedTemplateCache[template]) {
+            var cacheEntry = namedTemplateCache[template];
+            cacheEntry.lastAccessed = new Date().getTime();
+            return cacheEntry.domElementSource;
+        }
+
         templateDocument = templateDocument || document;
         var elem = templateDocument.getElementById(template);
         if (!elem)
             throw new Error("Cannot find template with ID " + template);
-        return new ko.templateSources.domElement(elem);
+        var domElementSource = new ko.templateSources.domElement(elem);
+
+        namedTemplateCache[template] = {
+          domElementSource: domElementSource,
+          lastAccessed: new Date().getTime()
+        };
+
+        return domElementSource;
     } else if ((template.nodeType == 1) || (template.nodeType == 8)) {
         // Anonymous template
         return new ko.templateSources.anonymousTemplate(template);

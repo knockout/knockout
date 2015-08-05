@@ -1,5 +1,8 @@
 ko.nativeTemplateEngine = function () {
     this['allowTemplateRewriting'] = false;
+
+    // Maps a element id to the parsed HTML for that template
+    this.namedTemplateCache = {}
 }
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
@@ -10,7 +13,16 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
         templateNodes = templateNodesFunc ? templateSource['nodes']() : null;
 
     if (templateNodes) {
-        return ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
+        var nodes;
+        if (templateNodes instanceof Array) {
+            nodes = [];
+            for (var i = 0; i < templateNodes.length; ++i) {
+                nodes.push(templateNodes[i].cloneNode(true));
+            }
+        } else {
+            nodes = ko.utils.makeArray(templateNodes.cloneNode(true).childNodes);
+        }
+        return nodes;
     } else {
         var templateText = templateSource['text']();
         return ko.utils.parseHtmlFragment(templateText, templateDocument);
