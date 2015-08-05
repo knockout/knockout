@@ -6,7 +6,7 @@
         // Don't want bindings that operate on text nodes to mutate <script> and <textarea> contents,
         // because it's unexpected and a potential XSS issue.
         // Also bindings should not operate on <template> elements since this breaks in Internet Explorer
-        // and because such elements' contents are always intended to be bound in a different context 
+        // and because such elements' contents are always intended to be bound in a different context
         // from where they appear in the document.
         'script': true,
         'textarea': true,
