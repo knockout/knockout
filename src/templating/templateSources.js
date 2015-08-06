@@ -27,14 +27,29 @@
 
     // ---- ko.templateSources.domElement -----
 
+    // template types
+    var templateScript = 1,
+        templateTextArea = 2,
+        templateTemplate = 3,
+        templateElement = 4;
+
     ko.templateSources.domElement = function(element) {
         this.domElement = element;
+
+        if (element) {
+            var tagNameLower = ko.utils.tagNameLower(element);
+            this.templateType =
+                tagNameLower === "script" ? templateScript :
+                tagNameLower === "textarea" ? templateTextArea :
+                    // For browsers with proper <template> element support, where the .content property gives a document fragment
+                tagNameLower == "template" && element.content && element.content.nodeType === 11 ? templateTemplate :
+                templateElement;
+        }
     }
 
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
-        var tagNameLower = ko.utils.tagNameLower(this.domElement),
-            elemContentsProperty = tagNameLower === "script" ? "text"
-                                 : tagNameLower === "textarea" ? "value"
+        var elemContentsProperty = this.templateType === templateScript ? "text"
+                                 : this.templateType === templateTextArea ? "value"
                                  : "innerHTML";
 
         if (arguments.length == 0) {
@@ -57,12 +72,34 @@
         }
     };
 
+    var templatesDomDataKey = ko.utils.domData.nextKey();
+    function getTemplateDomData(element) {
+        return ko.utils.domData.get(element, templatesDomDataKey) || {};
+    }
+    function setTemplateDomData(element, data) {
+        ko.utils.domData.set(element, templatesDomDataKey, data);
+    }
+
+    ko.templateSources.domElement.prototype['nodes'] = function(/* valueToWrite */) {
+        var element = this.domElement;
+        if (arguments.length == 0) {
+            var templateData = getTemplateDomData(element),
+                containerData = templateData.containerData;
+            return containerData || (
+                this.templateType === templateTemplate ? element.content :
+                this.templateType === templateElement ? element :
+                undefined);
+        } else {
+            var valueToWrite = arguments[0];
+            setTemplateDomData(element, {containerData: valueToWrite});
+        }
+    };
+
     // ---- ko.templateSources.anonymousTemplate -----
     // Anonymous templates are normally saved/retrieved as DOM nodes through "nodes".
     // For compatibility, you can also read "text"; it will be serialized from the nodes on demand.
     // Writing to "text" is still supported, but then the template data will not be available as DOM nodes.
 
-    var anonymousTemplatesDomDataKey = ko.utils.domData.nextKey();
     ko.templateSources.anonymousTemplate = function(element) {
         this.domElement = element;
     }
@@ -70,22 +107,13 @@
     ko.templateSources.anonymousTemplate.prototype.constructor = ko.templateSources.anonymousTemplate;
     ko.templateSources.anonymousTemplate.prototype['text'] = function(/* valueToWrite */) {
         if (arguments.length == 0) {
-            var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
+            var templateData = getTemplateDomData(this.domElement);
             if (templateData.textData === undefined && templateData.containerData)
                 templateData.textData = templateData.containerData.innerHTML;
             return templateData.textData;
         } else {
             var valueToWrite = arguments[0];
-            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, {textData: valueToWrite});
-        }
-    };
-    ko.templateSources.domElement.prototype['nodes'] = function(/* valueToWrite */) {
-        if (arguments.length == 0) {
-            var templateData = ko.utils.domData.get(this.domElement, anonymousTemplatesDomDataKey) || {};
-            return templateData.containerData;
-        } else {
-            var valueToWrite = arguments[0];
-            ko.utils.domData.set(this.domElement, anonymousTemplatesDomDataKey, {containerData: valueToWrite});
+            setTemplateDomData(this.domElement, {textData: valueToWrite});
         }
     };
 
