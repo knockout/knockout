@@ -13,8 +13,7 @@ ko.subscription.prototype.dispose = function () {
 
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
-    this._subscriptions = {};
-    this._versionNumber = 1;
+    ko_subscribable_fn.init(this);
 }
 
 var defaultEvent = "change";
@@ -31,6 +30,11 @@ function limitNotifySubscribers(value, event) {
 }
 
 var ko_subscribable_fn = {
+    init: function(instance) {
+        instance._subscriptions = {};
+        instance._versionNumber = 1;
+    },
+
     subscribe: function (callback, callbackTarget, event) {
         var self = this;
 
