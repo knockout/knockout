@@ -1,12 +1,15 @@
+var shouldUseSymbol = !DEBUG && typeof Symbol === 'function';
+var latestValueSymbol = shouldUseSymbol ? Symbol('_latestValue') : '_latestValue';
+
 ko.observable = function (initialValue) {
     function observable() {
         if (arguments.length > 0) {
             // Write
 
             // Ignore writes if the value hasn't changed
-            if (observable.isDifferent(observable._latestValue, arguments[0])) {
+            if (observable.isDifferent(observable[latestValueSymbol], arguments[0])) {
                 observable.valueWillMutate();
-                observable._latestValue = arguments[0];
+                observable[latestValueSymbol] = arguments[0];
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -14,11 +17,11 @@ ko.observable = function (initialValue) {
         else {
             // Read
             ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
-            return observable._latestValue;
+            return observable[latestValueSymbol];
         }
     }
 
-    observable._latestValue = initialValue;
+    observable[latestValueSymbol] = initialValue;
 
     // Inherit from 'subscribable'
     if (ko.utils.canSetPrototype) {
@@ -31,7 +34,7 @@ ko.observable = function (initialValue) {
 
     // Inherit from 'observable'
     ko.utils.setPrototypeOfOrExtend(observable, observableFn);
-    
+
     if (ko.options['deferUpdates']) {
         ko.extenders['deferred'](observable, true);
     }
@@ -42,9 +45,9 @@ ko.observable = function (initialValue) {
 // Define prototype for observables
 var observableFn = {
     'equalityComparer': valuesArePrimitiveAndEqual,
-    peek: function() { return this._latestValue },
-    valueHasMutated: function () { this['notifySubscribers'](this._latestValue); },
-    valueWillMutate: function () { this['notifySubscribers'](this._latestValue, 'beforeChange'); }
+    peek: function() { return this[latestValueSymbol]; },
+    valueHasMutated: function () { this['notifySubscribers'](this[latestValueSymbol]); },
+    valueWillMutate: function () { this['notifySubscribers'](this[latestValueSymbol], 'beforeChange'); }
 };
 
 // Note that for browsers that don't support proto assignment, the
