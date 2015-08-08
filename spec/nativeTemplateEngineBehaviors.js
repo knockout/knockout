@@ -33,9 +33,9 @@ describe('Native template engine', function() {
 
         it('can display static content from regular DOM element', function () {
             var testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
-            window.testDivTemplate.innerHTML = "this is some static content";
-            ko.renderTemplate("testDivTemplate", null, null, window.testNode);
-            expect(window.testNode).toContainHtml("this is some static content");
+            testDivTemplate.innerHTML = "this is some static content";
+            ko.renderTemplate("testDivTemplate", null, null, testNode);
+            expect(testNode).toContainHtml("this is some static content");
         });
 
         it('can fetch template from regular DOM element and data-bind on results', function () {
@@ -61,8 +61,6 @@ describe('Native template engine', function() {
     });
 
     describe('Anonymous templates', function () {
-        beforeEach(jasmine.prepareTestNode);
-
         it('can display static content', function () {
             new ko.templateSources.anonymousTemplate(testNode).text("this is some static content");
             testNode.innerHTML = "irrelevant initial content";
@@ -137,8 +135,6 @@ describe('Native template engine', function() {
     });
 
     describe('Data-bind syntax', function () {
-        beforeEach(jasmine.prepareTestNode);
-
         it('should expose parent binding context as $parent if binding with an explicit \"data\" value', function() {
             testNode.innerHTML = "<div data-bind='template: { data: someItem }'>"
                                           + "ValueBound: <span data-bind='text: $parent.parentProp'></span>"
