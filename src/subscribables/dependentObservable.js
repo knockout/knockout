@@ -1,13 +1,5 @@
 ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
-    var _latestValue,
-        _needsEvaluation = true,
-        _isBeingEvaluated = false,
-        _suppressDisposalUntilDisposeWhenReturnsFalse = false,
-        _isDisposed = false,
-        readFunction = evaluatorFunctionOrOptions,
-        pure = false,
-        isSleeping = false;
-
+    var readFunction = evaluatorFunctionOrOptions;
     if (readFunction && typeof readFunction == "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = readFunction;
@@ -20,6 +12,26 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     }
     if (typeof readFunction != "function")
         throw new Error("Pass a function that returns the value of the ko.computed");
+
+    var _latestValue,
+        _needsEvaluation = true,
+        _isBeingEvaluated = false,
+        _suppressDisposalUntilDisposeWhenReturnsFalse = false,
+        _isDisposed = false,
+        pure = false,
+        isSleeping = false,
+        writeFunction = options["write"],
+        disposeWhenNodeIsRemoved = options["disposeWhenNodeIsRemoved"] || options.disposeWhenNodeIsRemoved || null,
+        disposeWhenOption = options["disposeWhen"] || options.disposeWhen,
+        disposeWhen = disposeWhenOption,
+        dispose = disposeComputed,
+        dependencyTracking = {},
+        _dependenciesCount = 0,
+        evaluationTimeoutInstance = null,
+        originalLimit = ko.dependentObservable['fn'].limit || ko.subscribable['fn'].limit;
+
+    if (!evaluatorFunctionTarget)
+        evaluatorFunctionTarget = options["owner"];
 
     function addDependencyTracking(id, target, trackingObj) {
         if (pure && target === dependentObservable) {
@@ -234,19 +246,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         dependentObservable["notifySubscribers"](value, event);
     }
 
-    // By here, "options" is always non-null
-    var writeFunction = options["write"],
-        disposeWhenNodeIsRemoved = options["disposeWhenNodeIsRemoved"] || options.disposeWhenNodeIsRemoved || null,
-        disposeWhenOption = options["disposeWhen"] || options.disposeWhen,
-        disposeWhen = disposeWhenOption,
-        dispose = disposeComputed,
-        dependencyTracking = {},
-        _dependenciesCount = 0,
-        evaluationTimeoutInstance = null;
-
-    if (!evaluatorFunctionTarget)
-        evaluatorFunctionTarget = options["owner"];
-
     ko.subscribable.call(dependentObservable);
     ko.utils.setPrototypeOfOrExtend(dependentObservable, ko.dependentObservable['fn']);
 
@@ -257,7 +256,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     dependentObservable.isActive = isActive;
 
     // Replace the limit function with one that delays evaluation as well.
-    var originalLimit = dependentObservable.limit;
     dependentObservable.limit = function(limitFunction) {
         originalLimit.call(dependentObservable, limitFunction);
         dependentObservable._evalDelayed = function() {
