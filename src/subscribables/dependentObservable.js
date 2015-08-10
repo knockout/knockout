@@ -75,70 +75,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     if (state.options['pure']) {
         state.pure = true;
         state.isSleeping = true;     // Starts off sleeping; will awake on the first subscription
-        dependentObservable.beforeSubscriptionAdd = function (event) {
-            // If asleep, wake up the computed by subscribing to any dependencies.
-            if (!state._isDisposed && state.isSleeping && event == 'change') {
-                state.isSleeping = false;
-                if (state._needsEvaluation || dependentObservable.haveDependenciesChanged()) {
-                    state.dependencyTracking = null;
-                    state._dependenciesCount = 0;
-                    state._needsEvaluation = true;
-                    dependentObservable.evaluateImmediate();
-                } else {
-                    // First put the dependencies in order
-                    var dependeciesOrder = [];
-                    ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
-                        dependeciesOrder[dependency._order] = id;
-                    });
-                    // Next, subscribe to each one
-                    ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
-                        var dependency = state.dependencyTracking[id],
-                            subscription = dependentObservable.subscribeToDependency(dependency._target);
-                        subscription._order = order;
-                        subscription._version = dependency._version;
-                        state.dependencyTracking[id] = subscription;
-                    });
-                }
-                if (!state._isDisposed) {     // test since evaluating could trigger disposal
-                    dependentObservable.notify(state._latestValue, "awake");
-                }
-            }
-        };
-
-        dependentObservable.afterSubscriptionRemove = function (event) {
-            if (!state._isDisposed && event == 'change' && !dependentObservable.hasSubscriptionsForEvent('change')) {
-                ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
-                    if (dependency.dispose) {
-                        state.dependencyTracking[id] = {
-                            _target: dependency._target,
-                            _order: dependency._order,
-                            _version: dependency._version
-                        };
-                        dependency.dispose();
-                    }
-                });
-                state.isSleeping = true;
-                dependentObservable.notify(undefined, "asleep");
-            }
-        };
-
-        // Because a pure computed is not automatically updated while it is sleeping, we can't
-        // simply return the version number. Instead, we check if any of the dependencies have
-        // changed and conditionally re-evaluate the computed observable.
-        dependentObservable._originalGetVersion = dependentObservable.getVersion;
-        dependentObservable.getVersion = function () {
-            if (state.isSleeping && (state._needsEvaluation || dependentObservable.haveDependenciesChanged())) {
-                dependentObservable.evaluateImmediate();
-            }
-            return dependentObservable._originalGetVersion();
-        };
+        ko.utils.extend(dependentObservable, pureComputedOverrides);
     } else if (state.options['deferEvaluation']) {
-        // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
-        dependentObservable.beforeSubscriptionAdd = function (event) {
-            if (event == 'change' || event == 'beforeChange') {
-                dependentObservable.peek();
-            }
-        }
+        ko.utils.extend(dependentObservable, deferEvaluationOverrides);
     }
 
     ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
@@ -397,6 +336,77 @@ ko.dependentObservable['fn'] = {
         this.state.disposeHandler();
     }
 };
+
+var pureComputedOverrides = {
+    beforeSubscriptionAdd: function (event) {
+        // If asleep, wake up the computed by subscribing to any dependencies.
+        var state = this.state;
+        var dependentObservable = this;
+        if (!state._isDisposed && state.isSleeping && event == 'change') {
+            state.isSleeping = false;
+            if (state._needsEvaluation || dependentObservable.haveDependenciesChanged()) {
+                state.dependencyTracking = null;
+                state._dependenciesCount = 0;
+                state._needsEvaluation = true;
+                dependentObservable.evaluateImmediate();
+            } else {
+                // First put the dependencies in order
+                var dependeciesOrder = [];
+                ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
+                    dependeciesOrder[dependency._order] = id;
+                });
+                // Next, subscribe to each one
+                ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
+                    var dependency = state.dependencyTracking[id],
+                        subscription = dependentObservable.subscribeToDependency(dependency._target);
+                    subscription._order = order;
+                    subscription._version = dependency._version;
+                    state.dependencyTracking[id] = subscription;
+                });
+            }
+            if (!state._isDisposed) {     // test since evaluating could trigger disposal
+                dependentObservable.notify(state._latestValue, "awake");
+            }
+        }
+    },
+    afterSubscriptionRemove: function (event) {
+        var state = this.state;
+        if (!state._isDisposed && event == 'change' && !this.hasSubscriptionsForEvent('change')) {
+            ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
+                if (dependency.dispose) {
+                    state.dependencyTracking[id] = {
+                        _target: dependency._target,
+                        _order: dependency._order,
+                        _version: dependency._version
+                    };
+                    dependency.dispose();
+                }
+            });
+            state.isSleeping = true;
+            this.notify(undefined, "asleep");
+        }
+    },
+    getVersion: function () {
+        // Because a pure computed is not automatically updated while it is sleeping, we can't
+        // simply return the version number. Instead, we check if any of the dependencies have
+        // changed and conditionally re-evaluate the computed observable.
+        var state = this.state;
+        if (state.isSleeping && (state._needsEvaluation || this.haveDependenciesChanged())) {
+            this.evaluateImmediate();
+        }
+        return ko.dependentObservable["fn"].getVersion.call(this);
+    }
+};
+
+var deferEvaluationOverrides = {
+    beforeSubscriptionAdd: function (event) {
+        // This will force a computed with deferEvaluation to evaluate when the first subscriptions is registered.
+        if (event == 'change' || event == 'beforeChange') {
+            this.peek();
+        }
+    }
+};
+
 // Note that for browsers that don't support proto assignment, the
 // inheritance chain is created manually in the ko.dependentObservable constructor
 if (ko.utils.canSetPrototype) {
