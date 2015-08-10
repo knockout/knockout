@@ -180,6 +180,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
                 _latestValue = newValue;
                 if (DEBUG) dependentObservable._latestValue = _latestValue;
+                
+                notify(_latestValue, "cache");
 
                 if (isSleeping) {
                     dependentObservable.updateVersion();
