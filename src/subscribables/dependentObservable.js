@@ -25,27 +25,12 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         disposeWhenNodeIsRemoved: options["disposeWhenNodeIsRemoved"] || options.disposeWhenNodeIsRemoved || null,
         disposeWhenOption: options["disposeWhen"] || options.disposeWhen,
         disposeWhen: options["disposeWhen"] || options.disposeWhen,
-        disposeHandler: disposeComputed,
         dependencyTracking: {},
         _dependenciesCount: 0,
         evaluationTimeoutInstance: null,
         evaluatorFunctionTarget: evaluatorFunctionTarget || options["owner"],
         options: options
     };
-
-    function disposeComputed() {
-        if (!state.isSleeping && state.dependencyTracking) {
-            ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
-                if (dependency.dispose)
-                    dependency.dispose();
-            });
-        }
-        state.dependencyTracking = null;
-        state._dependenciesCount = 0;
-        state._isDisposed = true;
-        state._needsEvaluation = false;
-        state.isSleeping = false;
-    }
 
     function dependentObservable() {
         if (arguments.length > 0) {
@@ -68,6 +53,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 
     dependentObservable.state = state;
     dependentObservable.hasWriteFunction = typeof state.writeFunction === "function";
+
+    // Unfortunately this function has to be bound to the dependentObservable. Ideally this should be refactored.
+    state.disposeHandler = function() { dependentObservable.disposeComputed(); };
 
     ko.subscribable.call(dependentObservable);
     ko.utils.setPrototypeOfOrExtend(dependentObservable, ko.dependentObservable['fn']);
@@ -112,7 +100,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     if (state.disposeWhenNodeIsRemoved && dependentObservable.isActive() && state.disposeWhenNodeIsRemoved.nodeType) {
         state.disposeHandler = function() {
             ko.utils.domNodeDisposal.removeDisposeCallback(state.disposeWhenNodeIsRemoved, state.disposeHandler);
-            disposeComputed();
+            dependentObservable.disposeComputed();
         };
         ko.utils.domNodeDisposal.addDisposeCallback(state.disposeWhenNodeIsRemoved, state.disposeHandler);
     }
@@ -329,6 +317,20 @@ ko.dependentObservable['fn'] = {
     },
     dispose: function() {
         this.state.disposeHandler();
+    },
+    disposeComputed: function() {
+        var state = this.state;
+        if (!state.isSleeping && state.dependencyTracking) {
+            ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
+                if (dependency.dispose)
+                    dependency.dispose();
+            });
+        }
+        state.dependencyTracking = null;
+        state._dependenciesCount = 0;
+        state._isDisposed = true;
+        state._needsEvaluation = false;
+        state.isSleeping = false;
     }
 };
 
