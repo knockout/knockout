@@ -80,11 +80,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         ko.utils.extend(dependentObservable, deferEvaluationOverrides);
     }
 
-    ko.exportProperty(dependentObservable, 'peek', dependentObservable.peek);
-    ko.exportProperty(dependentObservable, 'dispose', dependentObservable.dispose);
-    ko.exportProperty(dependentObservable, 'isActive', dependentObservable.isActive);
-    ko.exportProperty(dependentObservable, 'getDependenciesCount', dependentObservable.getDependenciesCount);
-
     // Add a "disposeWhen" callback that, on each evaluation, disposes if the node was removed without using ko.removeNode.
     if (state.disposeWhenNodeIsRemoved) {
         // Since this computed is associated with a DOM node, and we don't want to dispose the computed
@@ -418,6 +413,11 @@ ko.dependentObservable['fn'][protoProp] = ko.dependentObservable;
 ko.exportSymbol('dependentObservable', ko.dependentObservable);
 ko.exportSymbol('computed', ko.dependentObservable); // Make "ko.computed" an alias for "ko.dependentObservable"
 ko.exportSymbol('isComputed', ko.isComputed);
+
+ko.exportProperty(ko.dependentObservable['fn'], 'peek', ko.dependentObservable['fn'].peek);
+ko.exportProperty(ko.dependentObservable['fn'], 'dispose', ko.dependentObservable['fn'].dispose);
+ko.exportProperty(ko.dependentObservable['fn'], 'isActive', ko.dependentObservable['fn'].isActive);
+ko.exportProperty(ko.dependentObservable['fn'], 'getDependenciesCount', ko.dependentObservable['fn'].getDependenciesCount);
 
 ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget) {
     if (typeof evaluatorFunctionOrOptions === 'function') {
