@@ -33,7 +33,7 @@ build:
         if (typeof define === 'function' && define['amd']) {
             // [1] AMD anonymous module
             define(['exports', 'require'], factory);
-        } else if (typeof exports === 'object') {
+        } else if (typeof exports === 'object' && typeof module === 'object') {
             // [2] CommonJS/Node.js
             factory(module['exports'] || exports);  // module.exports is for Node.js
         } else {
@@ -178,6 +178,7 @@ spec_files:
   - ./spec/utilsBehaviors.js
   - ./spec/utilsDomBehaviors.js
   - ./spec/onErrorBehaviors.js
+  - ./spec/parseHtmlFragment.js
 
   - ./spec/components/loaderRegistryBehaviors.js
   - ./spec/components/defaultLoaderBehaviors.js

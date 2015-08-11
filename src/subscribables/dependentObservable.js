@@ -57,6 +57,36 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         isSleeping = false;
     }
 
+    function subscribeToDependency(target) {
+        if (target._deferUpdates && !disposeWhenNodeIsRemoved) {
+            var dirtySub = target.subscribe(markDirty, null, 'dirty'),
+                changeSub = target.subscribe(respondToChange);
+            return {
+                _target: target,
+                dispose: function () {
+                    dirtySub.dispose();
+                    changeSub.dispose();
+                }
+            };
+        } else {
+            return target.subscribe(evaluatePossiblyAsync);
+        }
+    }
+
+    function markDirty() {
+        // Process "dirty" events if we can handle delayed notifications
+        if (dependentObservable._evalDelayed && !_isBeingEvaluated) {
+            dependentObservable._evalDelayed();
+        }
+    }
+
+    function respondToChange() {
+        // Ignore "change" events if we've already scheduled a delayed notification
+        if (!dependentObservable._notificationIsPending) {
+            evaluatePossiblyAsync();
+        }
+    }
+
     function evaluatePossiblyAsync() {
         var throttleEvaluationTimeout = dependentObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
@@ -64,8 +94,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             evaluationTimeoutInstance = ko.utils.setTimeout(function () {
                 evaluateImmediate(true /*notifyChange*/);
             }, throttleEvaluationTimeout);
-        } else if (dependentObservable._evalRateLimited) {
-            dependentObservable._evalRateLimited();
+        } else if (dependentObservable._evalDelayed) {
+            dependentObservable._evalDelayed();
         } else {
             evaluateImmediate(true /*notifyChange*/);
         }
@@ -115,7 +145,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                             --disposalCount;
                         } else if (!dependencyTracking[id]) {
                             // Brand new subscription - add it
-                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribable.subscribe(evaluatePossiblyAsync));
+                            addDependencyTracking(id, subscribable, isSleeping ? { _target: subscribable } : subscribeToDependency(subscribable));
                         }
                     }
                 },
@@ -230,14 +260,14 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     var originalLimit = dependentObservable.limit;
     dependentObservable.limit = function(limitFunction) {
         originalLimit.call(dependentObservable, limitFunction);
-        dependentObservable._evalRateLimited = function() {
-            dependentObservable._rateLimitedBeforeChange(_latestValue);
+        dependentObservable._evalDelayed = function() {
+            dependentObservable._limitBeforeChange(_latestValue);
 
             _needsEvaluation = true;    // Mark as dirty
 
-            // Pass the observable to the rate-limit code, which will access it when
+            // Pass the observable to the "limit" code, which will access it when
             // it's time to do the notification.
-            dependentObservable._rateLimitedChange(dependentObservable);
+            dependentObservable._limitChange(dependentObservable);
         }
     };
 
@@ -262,7 +292,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
                     // Next, subscribe to each one
                     ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
                         var dependency = dependencyTracking[id],
-                            subscription = dependency._target.subscribe(evaluatePossiblyAsync);
+                            subscription = subscribeToDependency(dependency._target);
                         subscription._order = order;
                         subscription._version = dependency._version;
                         dependencyTracking[id] = subscription;

@@ -125,4 +125,14 @@ describe("Deferred bindings", function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">moving child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
         expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
     });
+
+    it('Should not throw an exception for value binding on multiple select boxes', function() {
+        testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
+        var observable = ko.observable();
+        expect(function() {
+            ko.applyBindings({ x: observable }, testNode);
+            jasmine.Clock.tick(1);
+        }).not.toThrow();
+        expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
+    });
 });

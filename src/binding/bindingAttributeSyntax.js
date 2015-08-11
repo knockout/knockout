@@ -1,13 +1,13 @@
 (function () {
     ko.bindingHandlers = {};
 
-    // The following element types will not be recursed into during binding. In the future, we
-    // may consider adding <template> to this list, because such elements' contents are always
-    // intended to be bound in a different context from where they appear in the document.
+    // The following element types will not be recursed into during binding.
     var bindingDoesNotRecurseIntoElementTypes = {
         // Don't want bindings that operate on text nodes to mutate <script> and <textarea> contents,
-        // because it's unexpected and a potential XSS issue
+        // because it's unexpected and a potential XSS issue.
         // Also bindings should not operate on <template> elements since this breaks in Internet Explorer
+        // and because such elements' contents are always intended to be bound in a different context
+        // from where they appear in the document.
         'script': true,
         'textarea': true,
         'template': true
