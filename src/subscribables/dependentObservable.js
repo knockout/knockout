@@ -105,7 +105,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     // Attach a DOM node disposal callback so that the computed will be proactively disposed as soon as the node is
     // removed using ko.removeNode. But skip if isActive is false (there will never be any dependencies to dispose).
     if (state.disposeWhenNodeIsRemoved && computedObservable.isActive()) {
-        ko.utils.domNodeDisposal.addDisposeCallback(state.disposeWhenNodeIsRemoved, state.domNodeDisposalCallback = function() {
+        ko.utils.domNodeDisposal.addDisposeCallback(state.disposeWhenNodeIsRemoved, state.domNodeDisposalCallback = function () {
             computedObservable.dispose();
         });
     }
@@ -118,7 +118,7 @@ function computedDisposeDependencyCallback(id, entryToDispose) {
     if (entryToDispose !== null && entryToDispose.dispose) {
         entryToDispose.dispose();
     }
-};
+}
 
 // This function gets called each time a dependency is detected while evaluating a computed.
 // It's factored out as a shared function to avoid creating unnecessary function instances during evaluation.
@@ -136,14 +136,14 @@ function computedBeginDependencyDetectionCallback(subscribable, id) {
             computedObservable.addDependencyTracking(id, subscribable, state.isSleeping ? { _target: subscribable } : computedObservable.subscribeToDependency(subscribable));
         }
     }
-};
+}
 
 var computedFn = {
     "equalityComparer": valuesArePrimitiveAndEqual,
     getDependenciesCount: function () {
         return this[computedState].dependenciesCount;
     },
-    addDependencyTracking: function(id, target, trackingObj) {
+    addDependencyTracking: function (id, target, trackingObj) {
         if (this[computedState].pure && target === this) {
             throw Error("A 'pure' computed must not be called recursively");
         }
@@ -152,7 +152,7 @@ var computedFn = {
         trackingObj._order = this[computedState].dependenciesCount++;
         trackingObj._version = target.getVersion();
     },
-    haveDependenciesChanged: function() {
+    haveDependenciesChanged: function () {
         var id, dependency, dependencyTracking = this[computedState].dependencyTracking;
         for (id in dependencyTracking) {
             if (dependencyTracking.hasOwnProperty(id)) {
@@ -163,22 +163,22 @@ var computedFn = {
             }
         }
     },
-    markDirty: function() {
+    markDirty: function () {
         // Process "dirty" events if we can handle delayed notifications
         if (this._evalDelayed && !this[computedState].isBeingEvaluated) {
             this._evalDelayed();
         }
     },
-    isActive: function() {
+    isActive: function () {
         return this[computedState].isStale || this[computedState].dependenciesCount > 0;
     },
-    respondToChange: function() {
+    respondToChange: function () {
         // Ignore "change" events if we've already scheduled a delayed notification
         if (!this._notificationIsPending) {
             this.evaluatePossiblyAsync();
         }
     },
-    subscribeToDependency: function(target) {
+    subscribeToDependency: function (target) {
         if (target._deferUpdates && !this[computedState].disposeWhenNodeIsRemoved) {
             var dirtySub = target.subscribe(this.markDirty, this, 'dirty'),
                 changeSub = target.subscribe(this.respondToChange, this);
@@ -193,7 +193,7 @@ var computedFn = {
             return target.subscribe(this.evaluatePossiblyAsync, this);
         }
     },
-    evaluatePossiblyAsync: function() {
+    evaluatePossiblyAsync: function () {
         var computedObservable = this,
             throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
@@ -207,10 +207,9 @@ var computedFn = {
             computedObservable.evaluateImmediate(true /*notifyChange*/);
         }
     },
-    evaluateImmediate: function(notifyChange) {
+    evaluateImmediate: function (notifyChange) {
         var computedObservable = this,
             state = computedObservable[computedState],
-            readFunction = state.readFunction,
             disposeWhen = state.disposeWhen;
 
         if (state.isBeingEvaluated) {
@@ -244,10 +243,11 @@ var computedFn = {
             state.isBeingEvaluated = false;
         }
 
-        if (!state.dependenciesCount)
+        if (!state.dependenciesCount) {
             computedObservable.dispose();
+        }
     },
-    evaluateImmediate_CallReadWithDependencyDetection: function(notifyChange) {
+    evaluateImmediate_CallReadWithDependencyDetection: function (notifyChange) {
         // This function is really just part of the evaluateImmediate logic. You would never call it from anywhere else.
         // Factoring it out into a separate function means it can be independent of the try/catch block in evaluateImmediate,
         // which contributes to saving about 40% off the CPU overhead of computed evaluation (on V8 at least).
@@ -294,7 +294,7 @@ var computedFn = {
             computedObservable["notifySubscribers"](state.latestValue, "awake");
         }
     },
-    evaluateImmediate_CallReadThenEndDependencyDetection: function(state, dependencyDetectionContext) {
+    evaluateImmediate_CallReadThenEndDependencyDetection: function (state, dependencyDetectionContext) {
         // This function is really part of the evaluateImmediate_CallReadWithDependencyDetection logic.
         // You'd never call it from anywhere else. Factoring it out means that evaluateImmediate_CallReadWithDependencyDetection
         // can be independent of try/finally blocks, which contributes to saving about 40% off the CPU
@@ -314,7 +314,7 @@ var computedFn = {
             state.isStale = false;
         }
     },
-    peek: function() {
+    peek: function () {
         // Peek won't re-evaluate, except while the computed is sleeping or to get the initial value when "deferEvaluation" is set.
         var state = this[computedState];
         if ((state.isStale && !state.dependenciesCount) || (state.isSleeping && this.haveDependenciesChanged())) {
@@ -322,10 +322,10 @@ var computedFn = {
         }
         return state.latestValue;
     },
-    limit: function(limitFunction) {
+    limit: function (limitFunction) {
         // Override the limit function with one that delays evaluation as well
         ko.subscribable['fn'].limit.call(this, limitFunction);
-        this._evalDelayed = function() {
+        this._evalDelayed = function () {
             this._limitBeforeChange(this[computedState].latestValue);
 
             this[computedState].isStale = true; // Mark as dirty
@@ -335,7 +335,7 @@ var computedFn = {
             this._limitChange(this);
         }
     },
-    dispose: function() {
+    dispose: function () {
         var state = this[computedState];
         if (!state.isSleeping && state.dependencyTracking) {
             ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
@@ -374,7 +374,7 @@ var pureComputedOverrides = {
                     dependeciesOrder[dependency._order] = id;
                 });
                 // Next, subscribe to each one
-                ko.utils.arrayForEach(dependeciesOrder, function(id, order) {
+                ko.utils.arrayForEach(dependeciesOrder, function (id, order) {
                     var dependency = state.dependencyTracking[id],
                         subscription = computedObservable.subscribeToDependency(dependency._target);
                     subscription._order = order;
@@ -436,7 +436,7 @@ var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 ko.computed[protoProp] = ko.observable;
 computedFn[protoProp] = ko.computed;
 
-ko.isComputed = function(instance) {
+ko.isComputed = function (instance) {
     return ko.hasPrototype(instance, ko.computed);
 };
 
