@@ -114,7 +114,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
 };
 
 // Utility function that disposes a given dependencyTracking entry
-var computedDisposeDependencyCallback = function(id, entryToDispose) {
+function computedDisposeDependencyCallback(id, entryToDispose) {
     if (entryToDispose !== null && entryToDispose.dispose) {
         entryToDispose.dispose();
     }
@@ -122,7 +122,7 @@ var computedDisposeDependencyCallback = function(id, entryToDispose) {
 
 // This function gets called each time a dependency is detected while evaluating a computed.
 // It's factored out as a shared function to avoid creating unnecessary function instances during evaluation.
-var computedBeginDependencyDetectionCallback = function(subscribable, id) {
+function computedBeginDependencyDetectionCallback(subscribable, id) {
     var computedObservable = this.computedObservable,
         state = computedObservable[computedState];
     if (!state.isDisposed) {
