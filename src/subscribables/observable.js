@@ -1,5 +1,4 @@
-var shouldUseSymbol = !DEBUG && typeof Symbol === 'function';
-var latestValueSymbol = shouldUseSymbol ? Symbol('_latestValue') : '_latestValue';
+var observableLatestValue = ko.utils.getSymbolOrString('_latestValue');
 
 ko.observable = function (initialValue) {
     function observable() {
@@ -7,9 +6,9 @@ ko.observable = function (initialValue) {
             // Write
 
             // Ignore writes if the value hasn't changed
-            if (observable.isDifferent(observable[latestValueSymbol], arguments[0])) {
+            if (observable.isDifferent(observable[observableLatestValue], arguments[0])) {
                 observable.valueWillMutate();
-                observable[latestValueSymbol] = arguments[0];
+                observable[observableLatestValue] = arguments[0];
                 observable.valueHasMutated();
             }
             return this; // Permits chained assignments
@@ -17,11 +16,11 @@ ko.observable = function (initialValue) {
         else {
             // Read
             ko.dependencyDetection.registerDependency(observable); // The caller only needs to be notified of changes if they did a "read" operation
-            return observable[latestValueSymbol];
+            return observable[observableLatestValue];
         }
     }
 
-    observable[latestValueSymbol] = initialValue;
+    observable[observableLatestValue] = initialValue;
 
     // Inherit from 'subscribable'
     if (!ko.utils.canSetPrototype) {
@@ -43,9 +42,9 @@ ko.observable = function (initialValue) {
 // Define prototype for observables
 var observableFn = {
     'equalityComparer': valuesArePrimitiveAndEqual,
-    peek: function() { return this[latestValueSymbol]; },
-    valueHasMutated: function () { this['notifySubscribers'](this[latestValueSymbol]); },
-    valueWillMutate: function () { this['notifySubscribers'](this[latestValueSymbol], 'beforeChange'); }
+    peek: function() { return this[observableLatestValue]; },
+    valueHasMutated: function () { this['notifySubscribers'](this[observableLatestValue]); },
+    valueWillMutate: function () { this['notifySubscribers'](this[observableLatestValue], 'beforeChange'); }
 };
 
 // Note that for browsers that don't support proto assignment, the
