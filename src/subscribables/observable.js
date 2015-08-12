@@ -1,4 +1,4 @@
-var observableLatestValue = ko.utils.getSymbolOrString('_latestValue');
+var observableLatestValue = ko.utils.createSymbolOrString('_latestValue');
 
 ko.observable = function (initialValue) {
     function observable() {

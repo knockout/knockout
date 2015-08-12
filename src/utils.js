@@ -490,7 +490,7 @@ ko.utils = (function () {
             return result;
         },
 
-        getSymbolOrString: function(identifier) {
+        createSymbolOrString: function(identifier) {
             return canUseSymbols ? Symbol(identifier) : identifier;
         },
 
