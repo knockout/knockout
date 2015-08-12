@@ -24,13 +24,11 @@ ko.observable = function (initialValue) {
     observable[latestValueSymbol] = initialValue;
 
     // Inherit from 'subscribable'
-    if (ko.utils.canSetPrototype) {
-        // 'subscribable' will come for free when we inherit from 'observable', so just set up the internal state needed for subscribables
-        ko.subscribable['fn'].init(observable);
-    } else {
+    if (!ko.utils.canSetPrototype) {
         // 'subscribable' won't be on the prototype chain unless we put it there directly
-        ko.subscribable.call(observable);
+        ko.utils.extend(observable, ko.subscribable['fn']);
     }
+    ko.subscribable['fn'].init(observable);
 
     // Inherit from 'observable'
     ko.utils.setPrototypeOfOrExtend(observable, observableFn);

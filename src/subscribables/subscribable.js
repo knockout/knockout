@@ -12,7 +12,7 @@ ko.subscription.prototype.dispose = function () {
 };
 
 ko.subscribable = function () {
-    ko.utils.setPrototypeOfOrExtend(this, ko.subscribable['fn']);
+    ko.utils.setPrototypeOfOrExtend(this, ko_subscribable_fn);
     ko_subscribable_fn.init(this);
 }
 
