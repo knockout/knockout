@@ -18,18 +18,20 @@ module.exports = function(gulp, plugins, config) {
                .pipe(plugins.clean())
   })
 
-
   gulp.task('build:debug', "Compile the unminified debug version", function () {
     return gulp.src(config.sources)
           .pipe(plugins.concat(config.build.debug))
           // amd + extern
-          .pipe(plugins.header(config.build.headers.join("\n")))
+          .pipe(plugins.header(config.build.headers.join("\n"), {debug: true}))
           .pipe(plugins.footer(config.build.footers.join("\n")))
-          .pipe(plugins.header("(function(){\nvar DEBUG=true;\n"))
           .pipe(plugins.header(config.banner, { pkg: pkg }))
-          .pipe(plugins.footer("})();\n"))
           .pipe(plugins.replace("##VERSION##", pkg.version + "-debug"))
+          .pipe(plugins.replace("##DEBUG##", true))
           .pipe(gulp.dest(config.buildDir))
+          .on('end', function () {
+            gutil.log("Debug build complete: ".green,
+              (config.buildDir + config.build.debug).underline)
+          })
   })
 
 
@@ -78,9 +80,8 @@ module.exports = function(gulp, plugins, config) {
           // combine into one source
           .pipe(plugins.concat(config.build.main))
           // add directive for closure compiler
-          .pipe(plugins.header("/** const */var DEBUG=false;"))
           // amd + extern
-          .pipe(plugins.header(config.build.headers.join("\n")))
+          .pipe(plugins.header(config.build.headers.join("\n"), {debug: false}))
           .pipe(plugins.footer(config.build.footers.join("\n")))
           // compile
           .pipe(through(buffer, make))
@@ -90,25 +91,36 @@ module.exports = function(gulp, plugins, config) {
           .pipe(plugins.replace("##VERSION##", pkg.version))
           // copy to build directory
           .pipe(gulp.dest(config.buildDir))
+          .on('end', function () {
+            gutil.log("Closure build complete: ".green,
+                (config.buildDir + config.build.main).underline)
+          })
   })
 
 
-  gulp.task("build:uglify", "Compile minified version with uglifyjs", ['build:debug'], function () {
+  gulp.task("build:uglify", "Compile + minify with UglifyJS", function () {
       return gulp.src(config.sources)
           .pipe(plugins.concat(config.build.main))
-          .pipe(plugins.header(config.build.headers.join("\n")))
+          .pipe(plugins.header(config.build.headers.join("\n"), {debug: false}))
           .pipe(plugins.footer(config.build.footers.join("\n")))
           .pipe(plugins.uglify(config.uglify_options))
           .pipe(plugins.header(config.banner, {pkg: pkg}))
           .pipe(plugins.replace("##VERSION##", pkg.version))
           .pipe(gulp.dest(config.buildDir))
+          .on('end', function () {
+            gutil.log("Uglify build complete: ".green,
+                (config.buildDir + config.build.main).underline)
+          })
   })
 
-  if (config.minifier === 'closure' || process.env.MINIFIER === 'closure')
-    gulp.task("build", "Build (with Closure)", ['build:closure'])
+  if (config.minifier === 'closure' || process.env.MINIFIER === 'closure') {
+    gulp.task("build", "Build (with Closure)", ['build:debug', 'build:closure'])
 
-  else if (config.minifier === 'uglify')
-    gulp.task("build", "Build (with UglifyJS)", ['build:uglify'])
+  } else if (config.minifier === 'uglify') {
+    gutil.log("Closure not detected.".yellow +
+      " (set MINIFIER environment variable to 'closure')")
+    gulp.task("build", "Build (with UglifyJS)", ['build:debug', 'build:uglify'])
+  }
 
   else throw new Error("Unknown minifier in config.yaml: " + config.minifier)
 }
