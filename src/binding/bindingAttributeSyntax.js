@@ -330,9 +330,10 @@
                 };
 
             // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
-            function allBindings() {
+            var allBindings = function allBindings() {
                 return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
-            }
+            };
+
             // The following is the 3.x allBindings API
             allBindings['get'] = function(key) {
                 return bindings[key] && evaluateValueAccessor(getValueAccessor(key));
