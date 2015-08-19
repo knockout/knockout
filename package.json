@@ -23,7 +23,6 @@
     "extend": "^3.0.0",
     "figlet": "^1.1.1",
     "gulp": "^3.9.0",
-    "gulp-bump": "^0.3.1",
     "gulp-clean": "^0.3.1",
     "gulp-concat": "^2.6.0",
     "gulp-eslint": "^0.15.0",

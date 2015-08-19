@@ -1,5 +1,5 @@
 /* global require module */
-/*eslint semi:0, indent:0, no-empty: 0 */
+/* eslint semi:0, indent:0, no-empty: 0 */
 //
 // Tasks related to releasing a build version
 //
@@ -8,19 +8,6 @@ var pkg = require('../package.json')
 
 
 module.exports = function(gulp, plugins, config) {
-  function bump(level) {
-      return function () {
-          gulp.src(config.PACKAGE_FILES)
-              .pipe(plugins.bump({type: level}))
-              .pipe(gulp.dest("./"))
-      }
-  }
-
-  gulp.task("bump:patch", "Bump to A.B.C+1", bump('patch'))
-  gulp.task("bump:minor", "Bump to A.B+1.0", bump('minor'))
-  gulp.task("bump:major", "Bump to A+1.0.0", bump('major'))
-
-
   gulp.task("release", "Compile a release", ['build', 'build:debug'], function () {
       // Here is a reminder for some related tasks.
       //   To delete tag:

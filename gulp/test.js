@@ -48,6 +48,7 @@ module.exports = function(gulp, plugins, config) {
         for (var groupName in groups) {
             if (process.argv.indexOf('--' + groupName) !== -1) {
                 launchers = groups[groupName]
+                console.log("")
                 console.log(figlet.textSync(groupName))
             }
         }
