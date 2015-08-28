@@ -31,6 +31,8 @@ describe('setTextContent', function () {
 });
 
 describe('registerEventHandler', function() {
+    beforeEach(jasmine.prepareTestNode);
+
     it ('if jQuery is referenced, should use jQuery eventing with useOnlyNativeEvents option set to false', function() {
         if (typeof jQuery === 'undefined') {
             return; // Nothing to test. Run the specs with jQuery referenced for this to do anything.
@@ -41,6 +43,8 @@ describe('registerEventHandler', function() {
         var element = document.createElement('button');
         var eventFired = false;
         var jQueryModified = false;
+
+        testNode.appendChild(element);
 
         // Set the option to true.
         ko.options.useOnlyNativeEvents = false;
@@ -67,6 +71,8 @@ describe('registerEventHandler', function() {
         var element = document.createElement('button');
         var eventFired = false;
         var jQueryModified = false;
+
+        testNode.appendChild(element);
 
         // Set the option to true.
         ko.options.useOnlyNativeEvents = true;
