@@ -16,8 +16,8 @@ describe('Parse HTML fragment', function() {
         { html: '<tbody></tbody>', parsed: ['<tbody></tbody>'] },
         { html: '<table><tbody></tbody></table>', parsed: ['<table><tbody></tbody></table>'] },
         { html: '<div></div><div></div>', parsed: ['<div></div>', '<div></div>'] },
-        { html: '<optgroup label="x"><option>text</option></optgroup>', parsedChoices: [ [ '<optgroup label="x"><option>text</option></optgroup>' ], [ '<optgroup label=x><option selected>text</option></optgroup>' ] ] },
-        { html: '<option>text</option>', parsedChoices: [ [ '<option>text</option>' ], [ '<option selected>text</option>' ] ] }
+        { html: '<optgroup label="x"><option>text</option></optgroup>', parsed: [ '<optgroup label="?x"?><option>text</option></optgroup>' ] },
+        { html: '<option>text</option>', parsed: [ '<option>text</option>' ] }
     ], function (data) {
         it('should parse ' + data.html + ' correctly', function () {
             var parsedNodes = ko.utils.parseHtmlFragment(data.html, document);
@@ -31,11 +31,7 @@ describe('Parse HTML fragment', function() {
                 var parsedStrings = ko.utils.arrayMap(parsedNodes, function (node) {
                     return node.outerHTML && node.outerHTML.toLowerCase().replace(/\r\n/g, "");
                 });
-                if (data.parsedChoices) {
-                    expect(parsedStrings).toEqualOneOf(data.parsedChoices);
-                } else {
-                    expect(parsedStrings).toEqual(data.parsed);
-                }
+                expect(parsedStrings).toMatch(data.parsed);
             }
         });
     });
