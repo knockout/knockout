@@ -9,8 +9,9 @@
     var dependencies = {
         // All specs should pass with or without jQuery+Modernizr being referenced
         jquery: {
-            url: "http://code.jquery.com/jquery-latest.js",
-            include: false
+            url: "http://code.jquery.com/jquery-1.11.3.js",
+            include: false,
+            versionString: "1.11.3"
         },
         modernizr: {
             url: "http://modernizr.com/downloads/modernizr-latest.js",
@@ -34,7 +35,7 @@
             var shouldInclude = getParam(name);
             if ((dependency.include || shouldInclude) && shouldInclude !== "0" && shouldInclude !== "false") {
                 if (shouldInclude && /^[0-9]+\.[0-9.]+$/.test(shouldInclude)) {
-                    url = url.replace('latest', shouldInclude);
+                    url = url.replace(dependency.versionString || 'latest', shouldInclude);
                 }
                 jasmine.addScriptReference(url);
             }

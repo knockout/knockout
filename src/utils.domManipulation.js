@@ -54,7 +54,7 @@
         return ko.utils.makeArray(div.lastChild.childNodes);
     }
 
-    function shouldUseJQueryToParse(html) {
+    function canUseJQueryToParse(html) {
         if (jQueryCanParseTrComponent === undefined) {
             jQueryCanParseTrComponent = (jQueryHtmlParse('<tr-component></tr-component>').length > 0);
         }
@@ -88,7 +88,7 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return (jQueryInstance && shouldUseJQueryToParse(html)) ?
+        return (jQueryInstance && canUseJQueryToParse(html)) ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
@@ -106,7 +106,7 @@
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (jQueryInstance && shouldUseJQueryToParse(html)) {
+            if (jQueryInstance && canUseJQueryToParse(html)) {
                 jQueryInstance(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.
