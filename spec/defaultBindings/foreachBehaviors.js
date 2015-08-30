@@ -257,7 +257,7 @@ describe('Binding: Foreach', function() {
 
     it('Exception in afterAdd callback should not cause extra elements on next update', function () {
         // See https://github.com/knockout/knockout/issues/1794
-        testNode.innerHTML = "<ul data-bind='foreach: { data: someItems, afterAdd: callback }'><li data-bind='text: $data'></li></ul>";
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: callback }'><span data-bind='text: $data'></span></div>";
         var someItems = ko.observableArray([ 'A', 'B', 'C' ]),
             callback = function(element, index, data) { if (data === 'D') throw "Exception"; };
 

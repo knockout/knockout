@@ -23,6 +23,10 @@ describe('Parse HTML fragment', function() {
             var parsedNodes = ko.utils.parseHtmlFragment(data.html, document);
 
             if (jasmine.ieVersion <= 8 && parsedNodes.length > 1 && data.parsed && data.parsed.length == 1) {
+                if (parsedNodes[1].tagName === "TBODY") {
+                    // IE 7 adds a tbody tag; ignore it for the purpose of the test
+                    parsedNodes.pop();
+                }
                 ko.utils.arrayForEach(parsedNodes, function (node) {
                     testNode.appendChild(node);
                 });
