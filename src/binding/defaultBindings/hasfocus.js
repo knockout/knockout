@@ -39,7 +39,7 @@ ko.bindingHandlers['hasfocus'] = {
     'update': function(element, valueAccessor) {
         var value = !!ko.utils.unwrapObservable(valueAccessor()); //force boolean to compare with last value
         if (!element[hasfocusUpdatingProperty] && element[hasfocusLastValue] !== value) {
-            value ? element.focus() : element.blur();
+            value ? element.focus() : (element.blur(), element.ownerDocument.body.focus());
             ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
         }
     }
