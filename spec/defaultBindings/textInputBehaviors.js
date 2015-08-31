@@ -197,7 +197,14 @@ describe('Binding: TextInput', function() {
         if (!jasmine.ieVersion || jasmine.ieVersion >= 9) {
             ko.utils.triggerEvent(testNode.childNodes[0], "input");
         }
-        expect(myobservable()).toEqual("some user-entered value");
+        if (jasmine.ieVersion === 9) {
+            // IE 9 responds to the event asynchronously (see #1788)
+            waitsFor(function () {
+                return myobservable() === "some user-entered value";
+            }, 50);
+        } else {
+            expect(myobservable()).toEqual("some user-entered value");
+        }
     });
 
     it('Should write only changed values to observable', function () {
