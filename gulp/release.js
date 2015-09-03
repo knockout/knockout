@@ -8,7 +8,7 @@ var pkg = require('../package.json')
 
 
 module.exports = function(gulp, plugins, config) {
-  gulp.task("release", "Compile a release", ['build', 'build:debug'], function () {
+  gulp.task("release", "Compile a release", ['build', 'build:closure'], function () {
       // Here is a reminder for some related tasks.
       //   To delete tag:
       //     $ git tag -d vX.X.X
