@@ -14,7 +14,8 @@
             'option': select,
             'optgroup': select
         },
-        jQueryCanParseTrComponent;
+        jQueryCanParseTrComponent,
+        mayRequireCreateElementHack = ko.utils.ieVersion <= 8;
 
     function getWrap(tags) {
         var m = tags.match(/^<([a-z]+)[ >]/);
@@ -42,9 +43,22 @@
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
         var markup = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
         if (typeof windowContext['innerShiv'] == "function") {
+            // Note that innerShiv is deprecated in favour of html5shiv. We should consider adding
+            // support for html5shiv (except if no explicit support is needed, e.g., if html5shiv
+            // somehow shims the native APIs so it just works anyway)
             div.appendChild(windowContext['innerShiv'](markup));
         } else {
+            if (mayRequireCreateElementHack) {
+                // The document.createElement('my-element') trick to enable custom elements in IE6-8
+                // only works if we assign innerHTML on an element associated with that document.
+                documentContext.appendChild(div);
+            }
+
             div.innerHTML = markup;
+
+            if (mayRequireCreateElementHack) {
+                div.parentNode.removeChild(div);
+            }
         }
 
         // Move to the right depth

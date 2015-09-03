@@ -19,8 +19,15 @@
         },
         // Knockout polyfills
         innershiv: {
+            // Note: Nobody should use innershiv - it's deprecated in favour of html5shiv (https://github.com/aFarkas/html5shiv)
+            // Using innershiv will prevent you from using custom elements on IE6/7, since innershiv always
+            // parses HTML inside a new temporary document context, meaning that the document.createElement('my-element')
+            // trick won't work.
+            // Knockout retains backward-compatible support for innershiv just to avoid breaking any applications that
+            // use innershiv-supported HTML5 elements (section, etc.) even though it's incompatible with custom elements.
+            // KO should drop innershiv support completely as of the next major KO version.
             url: "lib/innershiv.js",
-            include: true
+            include: false
         },
         json2: {
             url: "lib/json2.js",
