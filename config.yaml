@@ -2,9 +2,11 @@
 #   Configuration and settings for Knockout
 #
 banner: |
-  // Knockout JavaScript library v<%= pkg.version %>
-  // (c) Steven Sanderson - <%= pkg.homepage %>
-  // License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)
+  /*!
+   * Knockout JavaScript library v<%= pkg.version %>
+   * (c) Steven Sanderson - <%= pkg.homepage %>
+   * License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)
+   */
 
 # knockout-latest[.debug].js goes here when compiled
 buildDir: build/output/
