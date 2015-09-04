@@ -15,4 +15,8 @@ perf/*
 .DS_Store
 npm-debug.log
 node_modules
+
+# Knockout built files
+build/output/*
 dist
+_repo
