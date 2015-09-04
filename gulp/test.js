@@ -2,35 +2,37 @@
 //
 // Tasks related to single-run tests
 //
-var figlet = require('figlet')
-
-var extend = require('extend')
-// var gutil = require('gulp-util')
-var karmaServer = require('karma').server
-// var env = process.env
 var argv = process.argv;
 
-// TODO: Test other browsers
+var figlet = require('figlet')
+var extend = require('extend')
+var karma = require('karma')
+
 
 module.exports = function(gulp, plugins, config) {
     var libs = config.test_alt_libs;
 
     function test(browsers, extra_config) {
-        extend(config.karma, extra_config)
-        config.karma.files = config.karma.files.concat(config.sources, config.spec_files)
+        var options = extend(config.karma, extra_config)
+
+        options.files = options.files.concat(config.sources, config.spec_files)
 
         Object.keys(libs).forEach(function (lib) {
             if (argv.indexOf("--" + lib) >= 0) {
-                config.karma.files.unshift(libs[lib])
+                options.files.unshift(libs[lib])
             }
         })
 
-        config.karma.browsers = browsers
+        options.browsers = browsers
         if (process.argv.indexOf("--once") >= 0) {
-            config.karma.singleRun = true;
+            options.singleRun = true;
         }
 
-        karmaServer.start(config.karma, process.exit);
+        new karma.Server(options, process.exit)
+            .on('browser_complete', function(browser, results) {
+                console.log(browser.name.cyan, results)
+            })
+            .start()
     }
 
     gulp.task("test:chrome", "Run tests in Chrome (--once to run once)", function() {

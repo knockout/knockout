@@ -220,7 +220,7 @@ spec_files:
 # https://github.com/karma-runner/karma-sauce-launcher/issues/40
 karma:
   basePath: ''
-  port: 9876
+  port: 9875
   colors: true
   logLevel: INFO  # from karma/lib/constants.js
   autoWatch: true

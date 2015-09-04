@@ -117,8 +117,8 @@ module.exports = function(gulp, plugins, config) {
     gulp.task("build", "Build (with Closure)", ['build:debug', 'build:closure'])
 
   } else if (config.minifier === 'uglify') {
-    gutil.log("Closure not detected.".yellow +
-      " (set MINIFIER environment variable to 'closure')")
+    gutil.log("Closure environmental setting not detected.".yellow +
+      " To compile with closure set MINIFIER environment variable to 'closure', or run build:closure)")
     gulp.task("build", "Build (with UglifyJS)", ['build:debug', 'build:uglify'])
   }
 
