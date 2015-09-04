@@ -14,8 +14,15 @@
             'option': select,
             'optgroup': select
         },
-        jQueryCanParseTrComponent,
-        mayRequireCreateElementHack = ko.utils.ieVersion <= 8;
+
+        // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
+        mayRequireCreateElementHack = ko.utils.ieVersion <= 8,
+
+        // We prefer not to use jQuery's HTML parsing, because it fails on element names like tr-*, even
+        // on the latest browsers (not even just on IE). But we retain use of jQuery HTML parsing for old
+        // IE, to avoid breaking compatibility with parsing edge-cases. Strangely, jQuery's HTML parsing
+        // works OK on elements named tr-* on old IE browsers.
+        allowJQueryHtmlParsing = ko.utils.ieVersion <= 8;
 
     function getWrap(tags) {
         var m = tags.match(/^<([a-z]+)[ >]/);
@@ -68,14 +75,6 @@
         return ko.utils.makeArray(div.lastChild.childNodes);
     }
 
-    function canUseJQueryToParse(html) {
-        if (jQueryCanParseTrComponent === undefined) {
-            jQueryCanParseTrComponent = (jQueryHtmlParse('<tr-component></tr-component>').length > 0);
-        }
-        var isCustomElement = /^<[a-z]+-[a-z]+[ >]/.test(html);
-        return !isCustomElement || jQueryCanParseTrComponent;
-    }
-
     function jQueryHtmlParse(html, documentContext) {
         // jQuery's "parseHTML" function was introduced in jQuery 1.8.0 and is a documented public API.
         if (jQueryInstance['parseHTML']) {
@@ -102,7 +101,7 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return (jQueryInstance && canUseJQueryToParse(html)) ?
+        return allowJQueryHtmlParsing && jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
@@ -120,7 +119,7 @@
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (jQueryInstance && canUseJQueryToParse(html)) {
+            if (jQueryInstance) {
                 jQueryInstance(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.
