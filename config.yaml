@@ -249,8 +249,15 @@ karma:
 test_alt_libs:
   jquery: ./spec/helpers/jquery.js
   modernizr: ./spec/helpers/modernizr.js
-  innershiv: ./spec/helpers/innershiv.js
   json2: ./spec/helpers/json2.js
+
+  # Note: innerShiv is deprecated in favour of html5shiv (https://github.com/aFarkas/html5shiv)
+  # KO retains back-compatible support for innershiv, but we will consider dropping this and
+  # supporting only html5shiv as of the next major version of KO (unless KO itself drops support
+  # for IE 6-8 in the next major version, in which case this is all irrelevant).
+  # It doesn't really matter very much, because essentially everyone who targets IE6-8 is also
+  # using jQuery, and if you are using jQuery then you don't need innerShiv.
+  innershiv: ./spec/helpers/innershiv.js
 
 # These are the browsers that'll get tested by SauceLabs.
 # These are bucketed together in groups of no more than 3, because of
