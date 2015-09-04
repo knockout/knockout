@@ -19,6 +19,12 @@
         },
         // Knockout polyfills
         innershiv: {
+            // Note: innerShiv is deprecated in favour of html5shiv (https://github.com/aFarkas/html5shiv)
+            // KO retains back-compatible support for innershiv, but we will consider dropping this and
+            // supporting only html5shiv as of the next major version of KO (unless KO itself drops support
+            // for IE 6-8 in the next major version, in which case this is all irrelevant).
+            // It doesn't really matter very much, because essentially everyone who targets IE6-8 is also
+            // using jQuery, and if you are using jQuery then you don't need innerShiv.
             url: "lib/innershiv.js",
             include: true
         },
