@@ -15,6 +15,11 @@ describe('Dependent Observable', function() {
         expect(ko.isComputed(instance)).toEqual(true);
     });
 
+    it('Should advertise that instances are not pure computed', function () {
+        var instance = ko.computed(function () { });
+        expect(ko.isPureComputed(instance)).toEqual(false);
+    });
+
     it('Should advertise that instances cannot have values written to them', function () {
         var instance = ko.computed(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(false);
