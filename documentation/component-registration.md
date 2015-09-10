@@ -239,7 +239,7 @@ If your component configuration has a boolean `synchronous` property, Knockout u
     ko.components.register('my-component', {
         viewModel: { ... anything ... },
         template: { ... anything ... },
-        synchronous: true // Injects synchronously if already loaded, otherwise still async
+        synchronous: true // Injects synchronously if possible, otherwise still async
     });
 
 **Why is component loading normally forced to be asynchronous?**
@@ -248,9 +248,9 @@ Normally, Knockout ensures that component loading, and hence component injection
 
 **Why would you ever enable synchronous loading?**
 
-If you want to change the policy for a particular component, you can specify `synchronous: true` on that component's configuration. Then it might load asynchronously on first use, followed by synchronously on all subsequent uses. If you do this, then you need to account for this changeable behavior in any code that waits for components to load.
+If you want to change the policy for a particular component, you can specify `synchronous: true` on that component's configuration. Then it might load asynchronously on first use, followed by synchronously on all subsequent uses. If you do this, then you need to account for this changeable behavior in any code that waits for components to load. However, if your component can always be loaded and initialized synchronously, then enabling this option will ensure consistently synchronous behavior. This might be important if you're using a component within a `foreach` binding and want to use the `afterAdd` or `afterRender` options to do post-processing.
 
-The benefit of `synchronous: true` is primarily that, if you're injecting a long list of copies of a certain component (e.g., inside a `foreach` binding), and if the component definition is already in memory due to previous usage, then all the new copies may be injected synchronously and cause only a single DOM reflow, which is preferable for performance especially on mobiles.
+Prior to Knockout 3.4.0, you might need to use synchronous loading to prevent multiple DOM reflows when including many components simultaneously (such as with the `foreach` binding). With Knockout 3.4.0, components use Knockout's [microtasks](microtasks.html) to ensure asynchronicity, and so will generally perform as well as synchronous loading.
 
 ## How Knockout loads components via AMD
 
