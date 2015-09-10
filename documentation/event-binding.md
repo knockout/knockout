@@ -128,6 +128,12 @@ By default, Knockout will allow the event to continue to bubble up to any higher
 
 Normally, in this case `myButtonHandler` would be called first, then the event would bubble up to `myDivHandler`.  However, the `mouseoverBubble` binding that we added with a value of `false` prevents the event from making it past `myButtonHandler`.
 
+### Note 5: Interaction with jQuery
+
+Knockout will use jQuery, if it is present, for handling UI events. To disable this behavior and instruct Knockout to always use native event handling, you can set the following option in your code before calling `ko.applyBindings`:
+
+    ko.options.useOnlyNativeEvents = true;
+
 ### Dependencies
 
 None, other than the core Knockout library.
