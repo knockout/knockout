@@ -17,8 +17,7 @@ ko.subscribable = function () {
 }
 
 var defaultEvent = "change";
-var allEvent = "__allSubscribableEvents"[]
-    
+var allEvent = "__allSubscribableEvents";
 
 // Moved out of "limit" to avoid the extra closure
 function limitNotifySubscribers(value, event) {
@@ -59,7 +58,7 @@ var ko_subscribable_fn = {
         return subscription;
     },
     subscribeAll: function(callback, context) {
-        return this.subscribe(callback, context, this.allEvent);
+        return this.subscribe(callback, context, allEvent);
     },
     "allEvent": "__allSubscribableEvents",
     "notifySubscribers": function (valueToNotify, event) {
