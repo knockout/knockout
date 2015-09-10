@@ -164,12 +164,12 @@ describe('Subscribable', function() {
 
         var sub = new ko.subscribable();
         sub.subscribe(callCount('test'), null, 'test');
-        sub.subscribe(callCount(ko.subscribable.fn.allEvent), null, ko.subscribable.fn.allEvent);
+        sub.subscribe(callCount(ko.subscribable.allEvent), null, ko.subscribable.allEvent);
         sub.subscribe(callCount('test2'), null, 'test2');
 
         sub.notifySubscribers('a',  'test');
         expect(callCounts.test).toEqual(1);
-        expect(callCounts[ko.subscribable.fn.allEvent]).toEqual(1);
+        expect(callCounts[ko.subscribable.allEvent]).toEqual(1);
         expect(callCounts.test2).toEqual(0);
     });
 
@@ -183,11 +183,11 @@ describe('Subscribable', function() {
 
         var sub = new ko.subscribable();
         sub.subscribe(callCount('test'), null, 'test');
-        sub.subscribe(callCount(ko.subscribable.fn.allEvent), null, ko.subscribable.fn.allEvent);
+        sub.subscribe(callCount(ko.subscribable.allEvent), null, ko.subscribable.allEvent);
         sub.subscribe(callCount('test2'), null, 'test2');
 
-        sub.notifySubscribers('a',  ko.subscribable.fn.allEvent);
-        expect(callCounts[ko.subscribable.fn.allEvent]).toEqual(1);
+        sub.notifySubscribers('a',  ko.subscribable.allEvent);
+        expect(callCounts[ko.subscribable.allEvent]).toEqual(1);
     });
 
     it('Should support subscribeAll convenience method', function() {
@@ -200,10 +200,10 @@ describe('Subscribable', function() {
 
         var sub = new ko.subscribable();
         sub.subscribe(callCount('test'), null, 'test');
-        sub.subscribeAll(callCount(ko.subscribable.fn.allEvent));
+        sub.subscribeAll(callCount(ko.subscribable.allEvent));
 
-        sub.notifySubscribers('a',  ko.subscribable.fn.allEvent);
-        expect(callCounts[ko.subscribable.fn.allEvent]).toEqual(1);
+        sub.notifySubscribers('a', ko.subscribable.allEvent);
+        expect(callCounts[ko.subscribable.allEvent]).toEqual(1);
     });
 
     it('Should supply event type in callback when notifying allEvent', function() {
