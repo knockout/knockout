@@ -56,6 +56,9 @@ var ko_subscribable_fn = {
 
         return subscription;
     },
+    subscribeAll: function(callback, context) {
+        return this.subscribe(callback, context, ko.subscribable.fn.ALL_EVENT);
+    },
     "allEvent": "__allSubscribableEvents",
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
@@ -165,6 +168,7 @@ var ko_subscribable_fn = {
 };
 
 ko.exportProperty(ko_subscribable_fn, 'subscribe', ko_subscribable_fn.subscribe);
+ko.exportProperty(ko_subscribable_fn, 'subscribeAll', ko_subscribable_fn.subscribeA;;);
 ko.exportProperty(ko_subscribable_fn, 'extend', ko_subscribable_fn.extend);
 ko.exportProperty(ko_subscribable_fn, 'getSubscriptionsCount', ko_subscribable_fn.getSubscriptionsCount);
 ko.exportProperty(ko_subscribable_fn, 'allEvent', ko_subscribable_fn.allEvent);
