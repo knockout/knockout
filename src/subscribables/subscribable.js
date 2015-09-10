@@ -57,7 +57,7 @@ var ko_subscribable_fn = {
         return subscription;
     },
     subscribeAll: function(callback, context) {
-        return this.subscribe(callback, context, ko.subscribable.fn.ALL_EVENT);
+        return this.subscribe(callback, context, this.allEvent);
     },
     "allEvent": "__allSubscribableEvents",
     "notifySubscribers": function (valueToNotify, event) {
