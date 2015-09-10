@@ -92,7 +92,6 @@ var ko_subscribable_fn = {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
             }
         }
-        
     },
 
     getVersion: function () {
