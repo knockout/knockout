@@ -168,7 +168,7 @@ var ko_subscribable_fn = {
 };
 
 ko.exportProperty(ko_subscribable_fn, 'subscribe', ko_subscribable_fn.subscribe);
-ko.exportProperty(ko_subscribable_fn, 'subscribeAll', ko_subscribable_fn.subscribeA;;);
+ko.exportProperty(ko_subscribable_fn, 'subscribeAll', ko_subscribable_fn.subscribeAll);
 ko.exportProperty(ko_subscribable_fn, 'extend', ko_subscribable_fn.extend);
 ko.exportProperty(ko_subscribable_fn, 'getSubscriptionsCount', ko_subscribable_fn.getSubscriptionsCount);
 ko.exportProperty(ko_subscribable_fn, 'allEvent', ko_subscribable_fn.allEvent);
