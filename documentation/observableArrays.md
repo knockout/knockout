@@ -58,14 +58,14 @@ The `slice` function is the `observableArray` equivalent of the native JavaScrip
 
 All of these functions are equivalent to running the native JavaScript array functions on the underlying array, and then notifying listeners about the change:
 
- * `myObservableArray.push('Some new value')` adds a new item to the end of array
- * `myObservableArray.pop()` removes the last value from the array and returns it
- * `myObservableArray.unshift('Some new value')` inserts a new item at the beginning of the array
- * `myObservableArray.shift()` removes the first value from the array and returns it
- * `myObservableArray.reverse()` reverses the order of the array
- * `myObservableArray.sort()` sorts the array contents.
-   * The default sort is alphabetical, but you can optionally pass a function to control how the array should be sorted. Your function should accept any two objects from the array and return a negative value if the first argument is smaller, a positive value is the second is smaller, or zero to treat them as equal. For example, to sort an array of 'person' objects by last name, you could write `myObservableArray.sort(function(left, right) { return left.lastName == right.lastName ? 0 : (left.lastName < right.lastName ? -1 : 1) })`
- * `myObservableArray.splice()` removes and returns a given number of elements starting from a given index. For example, `myObservableArray.splice(1, 3)` removes three elements starting from index position 1 (i.e., the 2nd, 3rd, and 4th elements) and returns them as an array.
+ * `push( value )` --- Adds a new item to the end of array.
+ * `pop()` --- Removes the last value from the array and returns it.
+ * `unshift( value )` --- Inserts a new item at the beginning of the array.
+ * `shift()` --- Removes the first value from the array and returns it.
+ * `reverse()` --- Reverses the order of the array and returns the `observableArray` (not the underlying array).
+ * `sort()` --- Sorts the array contents and returns the `observableArray`.
+   * The default sort is alphabetical, but you can optionally pass a function to control how the array should be sorted. Your function should accept any two objects from the array and return a negative value if the first argument is smaller, a positive value is the second is smaller, or zero to treat them as equal. For example, to sort an array of 'person' objects by last name, you could write `myObservableArray.sort(function (left, right) { return left.lastName == right.lastName ? 0 : (left.lastName < right.lastName ? -1 : 1) })`
+ * `splice()` --- Removes and returns a given number of elements starting from a given index. For example, `myObservableArray.splice(1, 3)` removes three elements starting from index position 1 (i.e., the 2nd, 3rd, and 4th elements) and returns them as an array.
 
 For more details about these `observableArray` functions, see the equivalent documentation of the [standard JavaScript array functions](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array#Methods_2).
 
@@ -73,19 +73,19 @@ For more details about these `observableArray` functions, see the equivalent doc
 
 `observableArray` adds some more useful methods that aren't found on JavaScript arrays by default:
 
- * `myObservableArray.remove(someItem)` removes all values that equal `someItem` and returns them as an array
- * `myObservableArray.remove(function(item) { return item.age < 18 })` removes all values whose `age` property is less than 18, and returns them as an array
- * `myObservableArray.removeAll(['Chad', 132, undefined])` removes all values that equal `'Chad'`, `123`, or `undefined` and returns them as an array
- * `myObservableArray.removeAll()` removes all values and returns them as an array
+ * `remove( someItem )` --- Removes all values that equal `someItem` and returns them as an array.
+ * `remove( function (item) { return item.age < 18; } )` --- Removes all values whose `age` property is less than 18, and returns them as an array.
+ * `removeAll( ['Chad', 132, undefined] )` --- Removes all values that equal `'Chad'`, `123`, or `undefined` and returns them as an array.
+ * `removeAll()` --- Removes all values and returns them as an array.
 
 ### destroy and destroyAll (Note: Usually relevant to Ruby on Rails developers only) {#destroy-and-destroyall}
 
 The `destroy` and `destroyAll` functions are mainly intended as a convenience for developers using Ruby on Rails:
 
- * `myObservableArray.destroy(someItem)` finds any objects in the array that equal `someItem` and gives them a special property called `_destroy` with value `true`
- * `myObservableArray.destroy(function(someItem) { return someItem.age < 18 })` finds any objects in the array whose `age` property is less than 18, and gives those objects a special property called `_destroy` with value `true`
- * `myObservableArray.destroyAll(['Chad', 132, undefined])` finds any objects in the array that equal `'Chad'`, `123`, or `undefined` and gives them a special property called `_destroy` with value `true`
- * `myObservableArray.destroyAll()` gives a special property called `_destroy` with value `true` to all objects in the array
+ * `destroy( someItem )` --- Finds any objects in the array that equal `someItem` and gives them a special property called `_destroy` with value `true`.
+ * `destroy( function (someItem) { return someItem.age < 18; } )` --- Finds any objects in the array whose `age` property is less than 18, and gives those objects a special property called `_destroy` with value `true`.
+ * `destroyAll( ['Chad', 132, undefined] )` --- Finds any objects in the array that equal `'Chad'`, `123`, or `undefined` and gives them a special property called `_destroy` with value `true`.
+ * `destroyAll()` --- Gives a special property called `_destroy` with value `true` to all objects in the array.
 
 So, what's this `_destroy` thing all about? It's only really interesting to Rails developers. The convention in Rails is that, when you pass into an action a JSON object graph, the framework can automatically convert it to an ActiveRecord object graph and then save it to your database. It knows which of the objects are already in your database, and issues the correct INSERT or UPDATE statements. To tell the framework to DELETE a record, you just mark it with `_destroy` set to `true`.
 
