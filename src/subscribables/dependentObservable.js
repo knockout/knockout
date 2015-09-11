@@ -441,9 +441,9 @@ ko.isComputed = function (instance) {
 };
 
 ko.isPureComputed = function (instance) {
-    return ko.hasPrototype(instance, ko.computed) &&
-        instance.getVersion === pureComputedOverrides.getVersion;
-}
+    return ko.hasPrototype(instance, ko.computed)
+        && instance[computedState] && instance[computedState].pure;
+};
 
 ko.exportSymbol('computed', ko.computed);
 ko.exportSymbol('dependentObservable', ko.computed);    // export ko.dependentObservable for backwards compatibility (1.x)
