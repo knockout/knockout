@@ -12,7 +12,7 @@ A *pure* computed observable automatically switches between two states based on 
 
 1. Whenever it has *no* `change` subscribers, it is ***sleeping***. When entering the *sleeping* state, it disposes all subscriptions to its dependencies. During this state, it will not subscribe to any observables accessed in the evaluator function (although it does keep track of them). If the computed observable's value is read while it is *sleeping*, it is automatically re-evaluated if any of its dependencies have changed.
 
-2. Whenever it has *any* `change` subscribers, it is awake and ***listening***. When entering the *listening* state, it immediately subscribes to any dependencies. In this state, it operates just like a regular computed observable, as described in [how dependency tracking works](computed-dependency-tracking.md).
+2. Whenever it has *any* `change` subscribers, it is awake and ***listening***. When entering the *listening* state, it immediately subscribes to any dependencies. In this state, it operates just like a regular computed observable, as described in [how dependency tracking works](computed-dependency-tracking.html).
 
 #### Why "pure"? {#pure-computed-function-defined}
 
