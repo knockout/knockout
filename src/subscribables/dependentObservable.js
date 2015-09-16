@@ -440,9 +440,15 @@ ko.isComputed = function (instance) {
     return ko.hasPrototype(instance, ko.computed);
 };
 
+ko.isPureComputed = function (instance) {
+    return ko.hasPrototype(instance, ko.computed)
+        && instance[computedState] && instance[computedState].pure;
+};
+
 ko.exportSymbol('computed', ko.computed);
 ko.exportSymbol('dependentObservable', ko.computed);    // export ko.dependentObservable for backwards compatibility (1.x)
 ko.exportSymbol('isComputed', ko.isComputed);
+ko.exportSymbol('isPureComputed', ko.isPureComputed);
 ko.exportSymbol('computed.fn', computedFn);
 ko.exportProperty(computedFn, 'peek', computedFn.peek);
 ko.exportProperty(computedFn, 'dispose', computedFn.dispose);
