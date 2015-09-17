@@ -25,3 +25,14 @@ globals:
   koExports: true
   jQueryInstance: true
   DEBUG: true
+
+  # jasmine global variables
+  jasmine: true
+  describe: true
+  it: true
+  iit: true
+  ddescribe: true
+  afterEach: true
+  beforeEach: true
+  expect: true
+  testNode: true
