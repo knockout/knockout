@@ -9,6 +9,7 @@ describe('Parse HTML fragment', function() {
         temporarilyRegisteredComponents = [];
     });
 
+    // See: https://github.com/knockout/knockout/issues/1880
     ko.utils.arrayForEach(
     [
         { html: '<tr-component></tr-component>', parsed: ['<tr-component></tr-component>'] },
@@ -25,7 +26,11 @@ describe('Parse HTML fragment', function() {
         { html: '<table><tbody></tbody></table>', parsed: ['<table><tbody></tbody></table>'] },
         { html: '<div></div><div></div>', parsed: ['<div></div>', '<div></div>'] },
         { html: '<optgroup label=x><option>text</option></optgroup>', parsed: ['<optgroup label=x><option>text</option></optgroup>'] },
-        { html: '<option>text</option>', parsed: [ '<option>text</option>' ] }
+        { html: '<option>text</option>', parsed: [ '<option>text</option>' ] },
+        { html: '<colgroup><col></colgroup>', parsed: ['<colgroup><col></colgroup>'] },
+        { html: '<param>', parsed: ['<param>'] },
+        { html: '<area>', parsed: ['<area>'] },
+        { html: '<legend>lgt</legend>', parsed: ['<legend>lgt</legend>'] }
     ], function (data) {
         it('should parse ' + data.html + ' correctly', function () {
             // IE 6-8 has a lot of trouble with custom elements. We have several strategies for dealing with
@@ -88,4 +93,14 @@ describe('Parse HTML fragment', function() {
             }
         });
     });
+
+    it("returns copies of the nodes", function () {
+        var html = '<div><i></i></div>';
+        var parsedNodes1 = ko.utils.parseHtmlFragment(html, document);
+        var parsedNodes2 = ko.utils.parseHtmlFragment(html, document);
+        expect(parsedNodes1).toNotEqual(parsedNodes2);
+        expect(parsedNodes1[0]).toNotEqual(parsedNodes2[0]);
+        // We need to test for deep inequality
+        expect(parsedNodes1[0].children[0]).toNotEqual(parsedNodes2[0].children[0]);
+    })
 });

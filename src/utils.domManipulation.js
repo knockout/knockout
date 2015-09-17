@@ -5,6 +5,7 @@
         tr = [3, "<table><tbody><tr>", "</tr></tbody></table>"],
         select = [1, "<select multiple='multiple'>", "</select>"],
         lookup = {
+            'colgroup': table,
             'thead': table,
             'tbody': table,
             'tfoot': table,
@@ -17,6 +18,9 @@
 
         // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
         mayRequireCreateElementHack = ko.utils.ieVersion <= 8,
+
+        // The canonical way to test that the HTML5 <template> tag is supported
+        supportsTemplateTag = 'content' in document.createElement('template'),
 
         // We prefer not to use jQuery's HTML parsing, because it fails on element names like tr-*, even
         // on the latest browsers (not even just on IE). But we retain use of jQuery HTML parsing for old
@@ -75,6 +79,13 @@
         return ko.utils.makeArray(div.lastChild.childNodes);
     }
 
+    function templateHtmlParse(html, documentContext) {
+        if (!documentContext) { documentContext = document; }
+        var template = documentContext.createElement('template');
+        template.innerHTML = html;
+        return ko.utils.makeArray(template.content.childNodes);
+    }
+
     function jQueryHtmlParse(html, documentContext) {
         // jQuery's "parseHTML" function was introduced in jQuery 1.8.0 and is a documented public API.
         if (jQueryInstance['parseHTML']) {
@@ -103,6 +114,7 @@
     ko.utils.parseHtmlFragment = function(html, documentContext) {
         return allowJQueryHtmlParsing && jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
+            supportsTemplateTag ? templateHtmlParse(html, documentContext) :
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
 
