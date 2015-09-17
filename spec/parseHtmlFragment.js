@@ -31,7 +31,7 @@ describe('Parse HTML fragment', function() {
         { html: '<option>text</option>', parsed: [ '<option>text</option>' ] },
         { html: '<colgroup><col></colgroup>', parsed: ['<colgroup><col></colgroup>'] },
         { html: '<col data-param="p">', parsed: ['<col data-param="p">'] },
-        { html: '<param name=x value="b">', parsed: ['<param name=x value="b">'] },
+        { html: '<param name=x>', parsed: ['<param name=x>'] },
         { html: '<area>', parsed: ['<area>'] },
         { html: '<legend>lgt</legend>', parsed: ['<legend>lgt</legend>'] },
         { html: '<!-- z --><div>ct</div><!-- zz -->', parsed: ['<!-- z -->', '<div>ct</div>', '<!-- zz -->'] },
