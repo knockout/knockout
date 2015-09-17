@@ -24,18 +24,13 @@
             'optgroup': select,
             'param': object
         },
+        tagWithDashRegex = /<(?:area|col|colgroup|caption|legend|thead|tbody|tfoot|tr|td|th|option|optgroup|param)-/i,
 
         // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
         mayRequireCreateElementHack = ko.utils.ieVersion <= 8,
 
         // The canonical way to test that the HTML5 <template> tag is supported
-        supportsTemplateTag = 'content' in document.createElement('template'),
-
-        // We prefer not to use jQuery's HTML parsing, because it fails on element names like tr-*, even
-        // on the latest browsers (not even just on IE). But we retain use of jQuery HTML parsing for old
-        // IE, to avoid breaking compatibility with parsing edge-cases. Strangely, jQuery's HTML parsing
-        // works OK on elements named tr-* on old IE browsers.
-        allowJQueryHtmlParsing = ko.utils.ieVersion <= 8;
+        supportsTemplateTag = 'content' in document.createElement('template');
 
     function getWrap(tags) {
         var m = tags.match(/^<([a-z]+)[ >]/);
@@ -122,10 +117,13 @@
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
         return supportsTemplateTag ? templateHtmlParse(html, documentContext) :
-            allowJQueryHtmlParsing && jQueryInstance ?
+        // We may prefer not to use jQuery's HTML parsing as it fails on element names like tr-*, even
+        // on the latest browsers (not even just on IE). But we retain use of jQuery HTML parsing for most cases, to avoid breaking compatibility with parsing edge-cases. Strangely, jQuery's HTML parsing
+        // works OK on elements named tr-* on old IE browsers.
+            (jQueryInstance && !tagWithDashRegex.test(html) ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
 
-            simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
+            simpleHtmlParse(html, documentContext));  // ... otherwise, this simple logic will do in most common cases.
     };
 
     ko.utils.setHtml = function(node, html) {
@@ -141,7 +139,7 @@
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (allowJQueryHtmlParsing && jQueryInstance) {
+            if (jQueryInstance) {
                 jQueryInstance(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.

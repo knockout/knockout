@@ -1,6 +1,8 @@
 var temporarilyRegisteredComponents = [];
 
 describe('Parse HTML fragment', function() {
+    var supportsTemplateTag = 'content' in document.createElement('template');
+
     beforeEach(jasmine.prepareTestNode);
     afterEach(function() {
         ko.utils.arrayForEach(temporarilyRegisteredComponents, function(componentName) {
@@ -32,9 +34,17 @@ describe('Parse HTML fragment', function() {
         { html: '<param>', parsed: ['<param>'] },
         { html: '<area>', parsed: ['<area>'] },
         { html: '<legend>lgt</legend>', parsed: ['<legend>lgt</legend>'] },
-        { html: '<!-- z --><div>ct</div><!-- zz -->', parsed: ['<!-- z -->', '<div>ct</div>', '<!-- zz -->'] }
+        { html: '<!-- z --><div>ct</div><!-- zz -->', parsed: ['<!-- z -->', '<div>ct</div>', '<!-- zz -->'] },
+        // The following fails with the simple HTML parser
+        { html: '<!-- v --><thead></thead><!-- vv -->', parsed: ['<!-- v -->', '<thead></thead>', '<!-- vv -->'], simpleParserFails: true }
     ], function (data) {
         it('should parse ' + data.html + ' correctly', function () {
+            // Early out if Simple HTML parser is known to fail for this data
+            if (data.simpleParserFails &&
+                !supportsTemplateTag &&
+                !jQueryInstance) {
+                return;
+            }
             // IE 6-8 has a lot of trouble with custom elements. We have several strategies for dealing with
             // this, each involving different (awkward) requirements for the application.
             // [1] If you use KO alone, then the document.createElement('my-element') hack is sufficient.
