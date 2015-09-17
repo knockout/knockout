@@ -28,9 +28,11 @@ describe('Parse HTML fragment', function() {
         { html: '<optgroup label=x><option>text</option></optgroup>', parsed: ['<optgroup label=x><option>text</option></optgroup>'] },
         { html: '<option>text</option>', parsed: [ '<option>text</option>' ] },
         { html: '<colgroup><col></colgroup>', parsed: ['<colgroup><col></colgroup>'] },
+        { html: '<col data-param>', parsed: ['<col data-param="">'] },
         { html: '<param>', parsed: ['<param>'] },
         { html: '<area>', parsed: ['<area>'] },
-        { html: '<legend>lgt</legend>', parsed: ['<legend>lgt</legend>'] }
+        { html: '<legend>lgt</legend>', parsed: ['<legend>lgt</legend>'] },
+        { html: '<!-- z --><div>ct</div><!-- zz -->', parsed: ['<!-- z -->', '<div>ct</div>', '<!-- zz -->'] }
     ], function (data) {
         it('should parse ' + data.html + ' correctly', function () {
             // IE 6-8 has a lot of trouble with custom elements. We have several strategies for dealing with

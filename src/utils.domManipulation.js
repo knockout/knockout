@@ -2,10 +2,18 @@
     var none = [0, "", ""],
         table = [1, "<table>", "</table>"],
         tbody = [2, "<table><tbody>", "</tbody></table>"],
+        colgroup = [ 2, "<table><tbody></tbody><colgroup>", "</colgroup></table>"],
         tr = [3, "<table><tbody><tr>", "</tr></tbody></table>"],
         select = [1, "<select multiple='multiple'>", "</select>"],
+        fieldset = [1, "<fieldset>", "</fieldset>"],
+        map = [1, "<map>", "</map>"],
+        object = [1, "<object>", "</object>"],
         lookup = {
+            'area': map,
+            'col': colgroup,
             'colgroup': table,
+            'caption': table,
+            'legend': fieldset,
             'thead': table,
             'tbody': table,
             'tfoot': table,
@@ -13,7 +21,8 @@
             'td': tr,
             'th': tr,
             'option': select,
-            'optgroup': select
+            'optgroup': select,
+            'param': object
         },
 
         // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
@@ -112,9 +121,10 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return allowJQueryHtmlParsing && jQueryInstance ?
+        return supportsTemplateTag ? templateHtmlParse(html, documentContext) :
+            allowJQueryHtmlParsing && jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
-            supportsTemplateTag ? templateHtmlParse(html, documentContext) :
+
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
 
