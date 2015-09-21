@@ -101,3 +101,4 @@ ko.exportSymbol('removeNode', ko.removeNode);
 ko.exportSymbol('utils.domNodeDisposal', ko.utils.domNodeDisposal);
 ko.exportSymbol('utils.domNodeDisposal.addDisposeCallback', ko.utils.domNodeDisposal.addDisposeCallback);
 ko.exportSymbol('utils.domNodeDisposal.removeDisposeCallback', ko.utils.domNodeDisposal.removeDisposeCallback);
+ko.exportSymbol('utils.domNodeDisposal.cleanExternalData', utils.domNodeDisposal.cleanExternalData);
