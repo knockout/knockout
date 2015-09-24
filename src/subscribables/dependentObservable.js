@@ -29,8 +29,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         disposeWhen: options["disposeWhen"] || options.disposeWhen,
         domNodeDisposalCallback: null,
         dependencyTracking: {},
-        dependenciesCount: 0,
-        evaluationTimeoutInstance: null
+        dependenciesCount: 0
     };
 
     function computedObservable() {
@@ -51,6 +50,29 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             return state.latestValue;
         }
     }
+
+    // evaluatePossiblyAsync is defined in the constructor so that it can access the computed properties
+    // and method using a closure instead of "this", meaning that we can pass the function to "subscribe"
+    // without the need to use "bind". Older versions of Firefox seem to use up a lot more stack space
+    // when using a bound function or using "call". See #1622.
+    var evaluationTimeoutInstance = null;
+    computedObservable.evaluatePossiblyAsync = function () {
+        var throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
+        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+            clearTimeout(evaluationTimeoutInstance);
+            evaluationTimeoutInstance = ko.utils.setTimeout(function () {
+                if (computedObservable.evaluateImmediate()) {
+                    computedObservable["notifySubscribers"](state.latestValue);
+                }
+            }, throttleEvaluationTimeout);
+        } else if (computedObservable._evalDelayed) {
+            computedObservable._evalDelayed();
+        } else {
+            if (computedObservable.evaluateImmediate()) {
+                computedObservable["notifySubscribers"](state.latestValue);
+            }
+        }
+    };
 
     computedObservable[computedState] = state;
     computedObservable.hasWriteFunction = typeof writeFunction === "function";
@@ -190,24 +212,10 @@ var computedFn = {
                 }
             };
         } else {
-            return target.subscribe(this.evaluatePossiblyAsync, this);
+            return target.subscribe(this.evaluatePossiblyAsync);
         }
     },
-    evaluatePossiblyAsync: function () {
-        var computedObservable = this,
-            throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
-        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
-            clearTimeout(this[computedState].evaluationTimeoutInstance);
-            this[computedState].evaluationTimeoutInstance = ko.utils.setTimeout(function () {
-                computedObservable.evaluateImmediate(true /*notifyChange*/);
-            }, throttleEvaluationTimeout);
-        } else if (computedObservable._evalDelayed) {
-            computedObservable._evalDelayed();
-        } else {
-            computedObservable.evaluateImmediate(true /*notifyChange*/);
-        }
-    },
-    evaluateImmediate: function (notifyChange) {
+    evaluateImmediate: function () {
         var computedObservable = this,
             state = computedObservable[computedState],
             disposeWhen = state.disposeWhen;
@@ -238,22 +246,19 @@ var computedFn = {
 
         state.isBeingEvaluated = true;
         try {
-            this.evaluateImmediate_CallReadWithDependencyDetection(notifyChange);
+            return this.evaluateImmediate_CallReadWithDependencyDetection();
         } finally {
             state.isBeingEvaluated = false;
         }
-
-        if (!state.dependenciesCount) {
-            computedObservable.dispose();
-        }
     },
-    evaluateImmediate_CallReadWithDependencyDetection: function (notifyChange) {
+    evaluateImmediate_CallReadWithDependencyDetection: function () {
         // This function is really just part of the evaluateImmediate logic. You would never call it from anywhere else.
         // Factoring it out into a separate function means it can be independent of the try/catch block in evaluateImmediate,
         // which contributes to saving about 40% off the CPU overhead of computed evaluation (on V8 at least).
 
         var computedObservable = this,
-            state = computedObservable[computedState];
+            state = computedObservable[computedState],
+            valueChanged;
 
         // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
         // Then, during evaluation, we cross off any that are in fact still being used.
@@ -277,6 +282,8 @@ var computedFn = {
         var newValue = this.evaluateImmediate_CallReadThenEndDependencyDetection(state, dependencyDetectionContext);
 
         if (computedObservable.isDifferent(state.latestValue, newValue)) {
+            valueChanged = true;
+
             if (!state.isSleeping) {
                 computedObservable["notifySubscribers"](state.latestValue, "beforeChange");
             }
@@ -285,14 +292,18 @@ var computedFn = {
 
             if (state.isSleeping) {
                 computedObservable.updateVersion();
-            } else if (notifyChange) {
-                computedObservable["notifySubscribers"](state.latestValue);
             }
         }
 
         if (isInitial) {
             computedObservable["notifySubscribers"](state.latestValue, "awake");
         }
+
+        if (!state.dependenciesCount) {
+            computedObservable.dispose();
+        }
+
+        return valueChanged;
     },
     evaluateImmediate_CallReadThenEndDependencyDetection: function (state, dependencyDetectionContext) {
         // This function is really part of the evaluateImmediate_CallReadWithDependencyDetection logic.
