@@ -40,7 +40,7 @@
         if (url) {
             var shouldInclude = getParam(name);
             if ((dependency.include || shouldInclude) && shouldInclude !== "0" && shouldInclude !== "false") {
-                if (shouldInclude && /^[0-9]+\.[0-9.]+$/.test(shouldInclude)) {
+                if (shouldInclude && shouldInclude !== "1" && shouldInclude !== "true") {
                     url = url.replace(dependency.versionString || 'latest', shouldInclude);
                 }
                 jasmine.addScriptReference(url);
