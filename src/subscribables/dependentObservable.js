@@ -29,7 +29,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         disposeWhen: options["disposeWhen"] || options.disposeWhen,
         domNodeDisposalCallback: null,
         dependencyTracking: {},
-        dependenciesCount: 0
+        dependenciesCount: 0,
+        evaluationTimeoutInstance: null
     };
 
     function computedObservable() {
@@ -50,29 +51,6 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             return state.latestValue;
         }
     }
-
-    // evaluatePossiblyAsync is defined in the constructor so that it can access the computed properties
-    // and method using a closure instead of "this", meaning that we can pass the function to "subscribe"
-    // without the need to use "bind". Older versions of Firefox seem to use up a lot more stack space
-    // when using a bound function or using "call". See #1622.
-    var evaluationTimeoutInstance = null;
-    computedObservable.evaluatePossiblyAsync = function () {
-        var throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
-        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
-            clearTimeout(evaluationTimeoutInstance);
-            evaluationTimeoutInstance = ko.utils.setTimeout(function () {
-                if (computedObservable.evaluateImmediate()) {
-                    computedObservable["notifySubscribers"](state.latestValue);
-                }
-            }, throttleEvaluationTimeout);
-        } else if (computedObservable._evalDelayed) {
-            computedObservable._evalDelayed();
-        } else {
-            if (computedObservable.evaluateImmediate()) {
-                computedObservable["notifySubscribers"](state.latestValue);
-            }
-        }
-    };
 
     computedObservable[computedState] = state;
     computedObservable.hasWriteFunction = typeof writeFunction === "function";
@@ -212,7 +190,26 @@ var computedFn = {
                 }
             };
         } else {
-            return target.subscribe(this.evaluatePossiblyAsync);
+            return target.subscribe(this.evaluatePossiblyAsync, this);
+        }
+    },
+    evaluatePossiblyAsync: function () {
+        var computedObservable = this,
+            state = computedObservable[computedState],
+            throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
+        if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
+            clearTimeout(state.evaluationTimeoutInstance);
+            state.evaluationTimeoutInstance = ko.utils.setTimeout(function () {
+                if (computedObservable.evaluateImmediate()) {
+                    computedObservable["notifySubscribers"](state.latestValue);
+                }
+            }, throttleEvaluationTimeout);
+        } else if (computedObservable._evalDelayed) {
+            computedObservable._evalDelayed();
+        } else {
+            if (computedObservable.evaluateImmediate()) {
+                computedObservable["notifySubscribers"](state.latestValue);
+            }
         }
     },
     evaluateImmediate: function () {
