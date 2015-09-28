@@ -11,10 +11,10 @@ describe('Parse HTML fragment', function() {
 
     ko.utils.arrayForEach(
     [
-        { html: '<tr-component></tr-component>', parsed: ['<tr-component></tr-component>'] },
+        { html: '<tr-component></tr-component>', parsed: ['<tr-component></tr-component>'], jQueryRequiredVersion: "3.0" },
         { html: '<thead><tr><th><thcomponent>hello</thcomponent></th></tr></thead>', parsed: ['<thead><tr><th><thcomponent>hello</thcomponent></th></tr></thead>'], ignoreRedundantTBody: true },
-        { html: '<tbody-component>world</tbody-component>', parsed: ['<tbody-component>world</tbody-component>'], minSupportedIEVersion: 8 },
-        { html: '<tfoot-component>foo</tfoot-component>', parsed: ['<tfoot-component>foo</tfoot-component>'] },
+        { html: '<tbody-component>world</tbody-component>', parsed: ['<tbody-component>world</tbody-component>'], jQueryRequiredVersion: "3.0" },
+        { html: '<tfoot-component>foo</tfoot-component>', parsed: ['<tfoot-component>foo</tfoot-component>'], jQueryRequiredVersion: "3.0" },
         { html: '<div></div>', parsed: ['<div></div>'] },
         { html: '<custom-component></custom-component>', parsed: ['<custom-component></custom-component>'] },
         { html: '<tr></tr>', parsed: ['<tr></tr>'] },
@@ -27,6 +27,12 @@ describe('Parse HTML fragment', function() {
         { html: '<optgroup label=x><option>text</option></optgroup>', parsed: ['<optgroup label=x><option>text</option></optgroup>'] },
         { html: '<option>text</option>', parsed: [ '<option>text</option>' ] }
     ], function (data) {
+        // jQuery's HTML parsing fails on element names like tr-* (but this is fixed in jQuery 3.x).
+        if (window.jQuery && data.jQueryRequiredVersion && jQuery.fn.jquery < data.jQueryRequiredVersion) {
+            it('unsupported environment for parsing ' + data.html, function () { });
+            return;
+        }
+
         it('should parse ' + data.html + ' correctly', function () {
             // IE 6-8 has a lot of trouble with custom elements. We have several strategies for dealing with
             // this, each involving different (awkward) requirements for the application.
@@ -54,14 +60,6 @@ describe('Parse HTML fragment', function() {
 
                 if (window.innerShiv) {
                     window.innerShiv.reset();
-                }
-
-                // Out of all the combinations above, there is still one edge case we can't support without
-                // dropping jQuery HTML parsing altogether. That is, if you're using jQuery, its parser fails
-                // on elements named 'tbody-*', on IE 6 and 7 (but it works on IE 8+). This is such an extreme
-                // edge case that it's preferable to leave this element name unsupported.
-                if (jasmine.ieVersion < data.minSupportedIEVersion) {
-                    return;
                 }
             }
 

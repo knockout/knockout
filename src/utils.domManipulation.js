@@ -16,13 +16,7 @@
         },
 
         // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
-        mayRequireCreateElementHack = ko.utils.ieVersion <= 8,
-
-        // We prefer not to use jQuery's HTML parsing, because it fails on element names like tr-*, even
-        // on the latest browsers (not even just on IE). But we retain use of jQuery HTML parsing for old
-        // IE, to avoid breaking compatibility with parsing edge-cases. Strangely, jQuery's HTML parsing
-        // works OK on elements named tr-* on old IE browsers.
-        allowJQueryHtmlParsing = ko.utils.ieVersion <= 8;
+        mayRequireCreateElementHack = ko.utils.ieVersion <= 8;
 
     function getWrap(tags) {
         var m = tags.match(/^<([a-z]+)[ >]/);
@@ -101,7 +95,7 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return allowJQueryHtmlParsing && jQueryInstance ?
+        return jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
@@ -119,7 +113,7 @@
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.
             // If you've referenced jQuery we'll use that rather than duplicating its code.
-            if (allowJQueryHtmlParsing && jQueryInstance) {
+            if (jQueryInstance) {
                 jQueryInstance(node)['html'](html);
             } else {
                 // ... otherwise, use KO's own parsing logic.
