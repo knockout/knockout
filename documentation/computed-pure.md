@@ -127,6 +127,17 @@ You should not use the *pure* feature for a computed observable that is meant to
 
 The reason you shouldn't use a *pure* computed if the evaluator has important side effects is simply that the evaluator will not run whenever the computed has no active subscribers (and so is sleeping). If it's important for the evaluator to always run when dependencies change, use a [regular computed](computedObservables.html) instead.
 
+### Determining if a property is a pure computed observable
+
+In some scenarios, it is useful to programmatically determine if you are dealing with a pure computed observable. Knockout provides a utility function, `ko.isPureComputed` to help with this situation. For example, you might want to exclude non-pure computed observables from data that you are sending back to the server.
+
+    var result = {};
+    ko.utils.objectForEach(myObject, function (name, value) {
+        if (!ko.isComputed(value) || ko.isPureComputed(value)) {
+            result[name] = value;
+        }
+    });
+
 ### State-change notifications
 
 A pure computed observable notifies an `awake` event (using its current value) whenever it enters the *listening* state and notifies an `asleep` event (using an `undefined` value) whevener it enter the *sleeping* state. You won't normally need to know about the internal state of your computed observables. But since the internal state can correspond to whether the computed observable is bound to the view or not, you might use that information to do some view-model initialization or cleanup.
