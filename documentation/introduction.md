@@ -16,7 +16,7 @@ Additional benefits:
 * **Pure JavaScript library** - works with any server or client-side technology
 * **Can be added on top of your existing web application** without requiring major architectural changes
 * **Compact** - around 13kb after gzipping
-* **Works on any mainstream browser** (IE 6+, Firefox 2+, Chrome, Safari, others)
+* **Works on any mainstream browser** (IE 6+, Firefox 2+, Chrome, Safari, Edge, others)
 * **Comprehensive suite of specifications** (developed BDD-style) means its correct functioning can easily be verified on new browsers and platforms
 
 Developers familiar with Ruby on Rails, ASP.NET MVC, or other MV* technologies may see MVVM as a real-time form of MVC with declarative syntax. In another sense, you can think of KO as a general way to make UIs for editing JSON data... whatever works for you :)
