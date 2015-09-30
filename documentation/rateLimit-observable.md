@@ -11,6 +11,8 @@ The `rateLimit` extender can be applied to any type of observable, including [ob
 
  * Making things respond after a certain delay
  * Combining multiple changes into a single update
+ 
+If you only need to combine updates without adding a delay, [deferred updates](deferred-updates.html) provides a more efficient method.
 
 ### Applying the rateLimit extender
 
@@ -55,8 +57,7 @@ In this live example, there's an `instantaneousValue` observable that reacts imm
 Try it:
 
 {% capture live_example_view %}
-<p>Type stuff here: <input data-bind='value: instantaneousValue,
-    valueUpdate: ["input", "afterkeydown"]' /></p>
+<p>Type stuff here: <input data-bind='textInput: instantaneousValue' /></p>
 <p>Current delayed value: <b data-bind='text: delayedValue'> </b></p>
 
 <div data-bind="visible: loggedValues().length > 0">
@@ -85,45 +86,6 @@ ko.applyBindings(new AppViewModel());
 {% endcapture %}
 {% include live-example-minimal.html %}
 
-### Example 3: Avoiding multiple Ajax requests
-
-The following model represents data that you could render as a paged grid:
-
-    function GridViewModel() {
-        this.pageSize = ko.observable(20);
-        this.pageIndex = ko.observable(1);
-        this.currentPageData = ko.observableArray();
-
-        // Query /Some/Json/Service whenever pageIndex or pageSize changes,
-        // and use the results to update currentPageData
-        ko.computed(function() {
-            var params = { page: this.pageIndex(), size: this.pageSize() };
-            $.getJSON('/Some/Json/Service', params, this.currentPageData);
-        }, this);
-    }
-
-Because the computed observable evaluates both `pageIndex` and `pageSize`, it becomes dependent on both of them. So, this code will use jQuery's [`$.getJSON` function](http://api.jquery.com/jQuery.getJSON/) to reload `currentPageData` when a `GridViewModel` is first instantiated *and* whenever the `pageIndex` or `pageSize` properties are later changed.
-
-This is very simple and elegant (and it's trivial to add yet more observable query parameters that also trigger a refresh automatically whenever they change), but there is a potential efficiency problem. Suppose you add the following function to `GridViewModel` that changes both `pageIndex` and `pageSize`:
-
-    this.setPageSize = function(newPageSize) {
-        // Whenever you change the page size, we always reset the page index to 1
-        this.pageSize(newPageSize);
-        this.pageIndex(1);
-    }
-
-The problem is that this will cause *two* Ajax requests: the first one will start when you update `pageSize`, and the second one will start immediately afterwards when you update `pageIndex`. This is a waste of bandwidth and server resources, and a source of unpredictable race conditions.
-
-When applied to a computed observable, the `rateLimit` extender will also avoid excess evaluation of the computed function. Using a short rate-limit timeout (e.g., 0 milliseconds) ensures that any sequence of synchronous changes to dependencies will trigger just *one* re-evaluation of your computed observable. For example:
-
-    ko.computed(function() {
-        // This evaluation logic is exactly the same as before
-        var params = { page: this.pageIndex(), size: this.pageSize() };
-        $.getJSON('/Some/Json/Service', params, this.currentPageData);
-    }, this).extend({ rateLimit: 0 });
-
-Now you can change `pageIndex` and `pageSize` as many times as you like, and the Ajax call will only happen once after you release your thread back to the JavaScript runtime.
-
 ## Special consideration for computed observables
 
 For a computed observable, the rate-limit timer is triggered when one of the computed observable's dependencies change instead of when its value changes. The computed observable is not re-evaluated until its value is actually needed---after the timeout period when the change notification should happen, or when the computed observable value is accessed directly. If you need to access the value of the computed's most recent evaluation, you can do so with the `peek` method.
@@ -137,6 +99,14 @@ If you want to ensure that the subscribers are always notified of an update, eve
     myViewModel.fullName = ko.computed(function() {
         return myViewModel.firstName() + " " + myViewModel.lastName();
     }).extend({ notify: 'always', rateLimit: 500 });
+    
+## Comparison with deferred updates
+
+Knockout version 3.4.0 added support for [*deferred updates*](deferred-updates.html), which works similarly to rate-limiting by making notifications and updates asynchronous. But instead of using a timed delay, deferred updates are processed as soon as possible after the current task, before yielding for I/O, reflow, or redrawing. If you are upgrading to 3.4.0 and have code that uses a short rate-limit timeout (e.g., 0 milliseconds), you could modify it to use deferred updates instead:
+
+    ko.computed(function() {
+        // ....
+    }).extend({ deferred: true });
     
 ## Comparison with the throttle extender
 
