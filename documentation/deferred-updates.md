@@ -9,9 +9,9 @@ In complex applications, with multiple, intertwined dependencies, updating a sin
 
 Using deferred updates ensures that computed observables and bindings are updated only after their dependencies are stable. Even if an observable might go through multiple intermediate values, only the latest value is used to update its dependencies. To facilitate this, all notifications become asynchronous, scheduled using the [Knockout microtask queue](microtasks.html). This may sound very similar to [rate-limiting](rateLimit-observable.html), which also helps prevent extra notifications, but deferred updates can provide these benefits across an entire application without adding delays. Here's how notification scheduling differs between the standard, deferred, and rate-limited modes:
 
-* *Standard* – Notifications happen immediately and synchronously. Dependencies are often notified of intermediate values.
-* *Deferred* – Notifications happen asynchronously, immediately after the current task and generally before any UI redraws.
-* *Rate-limited* – Notifications happen after the specified period of time (a minimum of 2-10 ms depending on the browser).
+* *Standard* -- Notifications happen immediately and synchronously. Dependencies are often notified of intermediate values.
+* *Deferred* -- Notifications happen asynchronously, immediately after the current task and generally before any UI redraws.
+* *Rate-limited* -- Notifications happen after the specified period of time (a minimum of 2-10 ms depending on the browser).
 
 ## Enabling deferred updates
 
