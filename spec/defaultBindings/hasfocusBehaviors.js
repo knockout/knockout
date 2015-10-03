@@ -84,4 +84,15 @@ describe('Binding: Hasfocus', function() {
         model.isFocused(null);
         expect(didBlurAgain).toEqual(false);
     });
+
+    it('Should not cause unrelated items to lose focus when initialized with false', function () {
+        // See #1893
+        testNode.innerHTML = '<input data-bind="hasFocus: true" value="This should be focused initially" /><input data-bind="hasFocus: false" value="This should not be focused" />';
+        ko.applyBindings({}, testNode);
+
+        // Can only test for focus in browsers that support it
+        if ("activeElement" in document) {
+            expect(document.activeElement).toBe(testNode.childNodes[0]);
+        }
+    });
 });
