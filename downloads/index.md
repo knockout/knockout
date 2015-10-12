@@ -39,9 +39,9 @@ Of course, update the `src` attribute to match the location where you put the do
 
 To give your users the fastest download speeds, you might instead prefer to reference `knockout.js` on one of the following third-party CDNs:
 
-* **Microsoft Ajax CDN** ([about](http://www.asp.net/ajaxlibrary/CDN.ashx))
+* **Microsoft Ajax CDN** ([about](http://www.asp.net/ajax/cdn))
 
-  * [Knockout version 3.1.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js)
+  * [Knockout version 3.3.0](http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.3.0.js)
 
 * **CDNJS** ([about](https://cdnjs.com/))
 
@@ -49,6 +49,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v3.4.0 Release Candidate](knockout-3.4.0rc.js) ([debug](knockout-3.4.0rc.debug.js)) --- October 12th, 2015
 * [v3.3.0](knockout-3.3.0.js) ([debug](knockout-3.3.0.debug.js)) --- February 18th, 2015
 * [v3.2.0](knockout-3.2.0.js) ([debug](knockout-3.2.0.debug.js)) --- August 12th, 2014
 * [v3.2.0 Beta](knockout-3.2.0beta.js) ([debug](knockout-3.2.0beta.debug.js)) --- June 19th, 2014
