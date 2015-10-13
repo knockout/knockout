@@ -195,24 +195,19 @@ var computedFn = {
     },
     evaluatePossiblyAsync: function () {
         var computedObservable = this,
-            state = computedObservable[computedState],
             throttleEvaluationTimeout = computedObservable['throttleEvaluation'];
         if (throttleEvaluationTimeout && throttleEvaluationTimeout >= 0) {
-            clearTimeout(state.evaluationTimeoutInstance);
-            state.evaluationTimeoutInstance = ko.utils.setTimeout(function () {
-                if (computedObservable.evaluateImmediate()) {
-                    computedObservable["notifySubscribers"](state.latestValue);
-                }
+            clearTimeout(this[computedState].evaluationTimeoutInstance);
+            this[computedState].evaluationTimeoutInstance = ko.utils.setTimeout(function () {
+                computedObservable.evaluateImmediate(true /*notifyChange*/);
             }, throttleEvaluationTimeout);
         } else if (computedObservable._evalDelayed) {
             computedObservable._evalDelayed();
         } else {
-            if (computedObservable.evaluateImmediate()) {
-                computedObservable["notifySubscribers"](state.latestValue);
-            }
+            computedObservable.evaluateImmediate(true /*notifyChange*/);
         }
     },
-    evaluateImmediate: function () {
+    evaluateImmediate: function (notifyChange) {
         var computedObservable = this,
             state = computedObservable[computedState],
             disposeWhen = state.disposeWhen;
@@ -243,19 +238,22 @@ var computedFn = {
 
         state.isBeingEvaluated = true;
         try {
-            return this.evaluateImmediate_CallReadWithDependencyDetection();
+            this.evaluateImmediate_CallReadWithDependencyDetection(notifyChange);
         } finally {
             state.isBeingEvaluated = false;
         }
+
+        if (!state.dependenciesCount) {
+            computedObservable.dispose();
+        }
     },
-    evaluateImmediate_CallReadWithDependencyDetection: function () {
+    evaluateImmediate_CallReadWithDependencyDetection: function (notifyChange) {
         // This function is really just part of the evaluateImmediate logic. You would never call it from anywhere else.
         // Factoring it out into a separate function means it can be independent of the try/catch block in evaluateImmediate,
         // which contributes to saving about 40% off the CPU overhead of computed evaluation (on V8 at least).
 
         var computedObservable = this,
-            state = computedObservable[computedState],
-            valueChanged;
+            state = computedObservable[computedState];
 
         // Initially, we assume that none of the subscriptions are still being used (i.e., all are candidates for disposal).
         // Then, during evaluation, we cross off any that are in fact still being used.
@@ -279,8 +277,6 @@ var computedFn = {
         var newValue = this.evaluateImmediate_CallReadThenEndDependencyDetection(state, dependencyDetectionContext);
 
         if (computedObservable.isDifferent(state.latestValue, newValue)) {
-            valueChanged = true;
-
             if (!state.isSleeping) {
                 computedObservable["notifySubscribers"](state.latestValue, "beforeChange");
             }
@@ -289,18 +285,14 @@ var computedFn = {
 
             if (state.isSleeping) {
                 computedObservable.updateVersion();
+            } else if (notifyChange) {
+                computedObservable["notifySubscribers"](state.latestValue);
             }
         }
 
         if (isInitial) {
             computedObservable["notifySubscribers"](state.latestValue, "awake");
         }
-
-        if (!state.dependenciesCount) {
-            computedObservable.dispose();
-        }
-
-        return valueChanged;
     },
     evaluateImmediate_CallReadThenEndDependencyDetection: function (state, dependencyDetectionContext) {
         // This function is really part of the evaluateImmediate_CallReadWithDependencyDetection logic.
