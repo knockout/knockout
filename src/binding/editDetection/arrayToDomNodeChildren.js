@@ -91,12 +91,18 @@
                         }
 
                         // Queue these nodes for later removal
-                        nodesToDelete.push.apply(nodesToDelete, ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode) || []);
-                        if (options['beforeRemove'] && mapData.mappedNodes.length) {
-                            newMappingResult.push(mapData);
-                            itemsToProcess.push(mapData);
-                            if (mapData.arrayEntry !== deletedItemDummyValue) {
-                                itemsForBeforeRemoveCallbacks[i] = mapData;
+                        if (ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode).length) {
+                            if (options['beforeRemove']) {
+                                newMappingResult.push(mapData);
+                                itemsToProcess.push(mapData);
+                                if (mapData.arrayEntry === deletedItemDummyValue) {
+                                    mapData = null;
+                                } else {
+                                    itemsForBeforeRemoveCallbacks[i] = mapData;
+                                }
+                            }
+                            if (mapData) {
+                                nodesToDelete.push.apply(nodesToDelete, mapData.mappedNodes);
                             }
                         }
                     }
