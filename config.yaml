@@ -248,6 +248,8 @@ karma:
 # Run with e.g. --jquery, --modernizr, ...
 test_alt_libs:
   jquery: ./spec/helpers/jquery.js
+  jquery3-compat: ./spec/helpers/jquery3-compat.js
+  jquery3: ./spec/helpers/jquery3.js
   modernizr: ./spec/helpers/modernizr.js
   json2: ./spec/helpers/json2.js
 

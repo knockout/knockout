@@ -9,6 +9,7 @@ env:
 script:
   - gulp test:phantomjs --once
   - gulp test:phantomjs --once --jquery
+  - gulp test:phantomjs --once --jquery3-compat
   - gulp test:sauce --chrome
   - sleep 10 && gulp test:sauce --firefox
   - sleep 10 && gulp test:sauce --mobile
