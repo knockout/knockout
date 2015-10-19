@@ -17,6 +17,7 @@ knockoutDebugCallback([
     'src/subscribables/observableArray.changeTracking.js',
     'src/subscribables/dependentObservable.js',
     'src/subscribables/mappingHelpers.js',
+    'src/subscribables/typedObservables.js',
     'src/binding/selectExtensions.js',
     'src/binding/expressionRewriting.js',
     'src/virtualElements.js',
@@ -46,6 +47,7 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/visible.js',
     // click depends on event - The order matters for specs, which includes each file individually
     'src/binding/defaultBindings/click.js',
+    'src/binding/defaultBindings/typeSpecific.js',
     'src/templating/templateEngine.js',
     'src/templating/templateRewriting.js',
     'src/templating/templateSources.js',
