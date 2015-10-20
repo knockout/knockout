@@ -272,7 +272,7 @@ ko.utils = (function () {
 
                 // Rule [B]
                 while (continuousNodeArray.length > 1 && continuousNodeArray[continuousNodeArray.length - 1].parentNode !== parentNode)
-                    continuousNodeArray.splice(-1, 1);
+                    continuousNodeArray.length--;
 
                 // Rule [C]
                 if (continuousNodeArray.length > 1) {
@@ -282,10 +282,6 @@ ko.utils = (function () {
                     while (current !== last) {
                         continuousNodeArray.push(current);
                         current = current.nextSibling;
-                        if (!current) { // Won't happen, except if the developer has manually removed some DOM elements (then we're in an undefined scenario)
-                            continuousNodeArray.length = 0;
-                            return continuousNodeArray;
-                        }
                     }
                     continuousNodeArray.push(last);
                 }
