@@ -291,7 +291,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('added childhidden child');
     });
 
-    it('Should call an beforeRemove callback function and not cause updates if an observable accessed in the callback is changed', function () {
+    it('Should call a beforeRemove callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeRemove: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
             someItems = ko.observableArray([{ childprop: 'first child' }, { childprop: 'second child' }]),
@@ -331,7 +331,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('added childfirst childhidden child');
     });
 
-    it('Should call an beforeMove callback function and not cause updates if an observable accessed in the callback is changed', function () {
+    it('Should call a beforeMove callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeMove: callback }'><span data-bind='text: childprop'></span></div>";
         var callbackObservable = ko.observable(1),
             someItems = ko.observableArray([{ childprop: 'first child' }]),
@@ -630,5 +630,51 @@ describe('Binding: Foreach', function() {
         x('second');
         expect(testNode.childNodes[0]).toContainText('second');
         expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+    });
+
+    it('Should not clean unrelated nodes when beforeRemove callback removes some nodes before others', function() {
+        // In this scenario, a beforeRemove callback removes non-element nodes (such as text nodes)
+        // immediately, but delays removing element nodes (for a fade effect, for example). See #1903.
+        jasmine.Clock.useMock();
+        testNode.innerHTML = "<div data-bind='foreach: {data: planets, beforeRemove: beforeRemove}'>--<span data-bind='text: name'></span>++</div>";
+        var planets = ko.observableArray([
+            { name: ko.observable('Mercury') },
+            { name: ko.observable('Venus') },
+            { name: ko.observable('Earth') },
+            { name: ko.observable('Moon') },
+            { name: ko.observable('Ceres') }
+        ]), beforeRemove = function(elem) {
+            if (elem.nodeType === 1) {
+                setTimeout(function() {
+                    ko.removeNode(elem);
+                }, 1);
+            } else {
+                ko.removeNode(elem);
+            }
+        };
+        ko.applyBindings({ planets: planets, beforeRemove, beforeRemove }, testNode);
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Moon++--Ceres++');
+
+        // Remove an item; the surrounding text nodes are removed immediately, but not the element node
+        var deleted = planets.splice(3, 1);
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++Moon--Ceres++');
+
+        // Add some items; this causes the binding to update
+        planets.push({ name: ko.observable('Jupiter') });
+        planets.push({ name: ko.observable('Saturn') });
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++Moon--Ceres++--Jupiter++--Saturn++');
+
+        // Update the text of the item following the removed item; it should respond to updates normally
+        planets()[3].name('Mars');
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++Moon--Mars++--Jupiter++--Saturn++');
+
+        // Update the text of the deleted item; it should not update the node
+        deleted[0].name('Pluto');
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++Moon--Mars++--Jupiter++--Saturn++');
+
+        // After the delay, the deleted item's node is removed
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Mars++--Jupiter++--Saturn++');
+
     });
 });
