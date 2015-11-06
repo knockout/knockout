@@ -67,7 +67,14 @@ ko.bindingHandlers['checked'] = {
                 element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
             } else if (isCheckbox) {
                 // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish
-                element.checked = modelValue;
+                if (modelValue === 'mixed') {
+                    element.checked = true;
+                    element.indeterminate = true;
+                }
+                else {
+                    element.checked = !!modelValue;
+                    element.indeterminate = false;
+                }
             } else {
                 // For radio buttons, being checked means that the radio button's value corresponds to the model value
                 element.checked = (checkedValue() === modelValue);
