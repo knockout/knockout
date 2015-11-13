@@ -24,15 +24,17 @@
   }
 
   /**
-   * This is where the actual transclusino takes place. Given a contentNode
+   * This is where the actual transclusion takes place. Given a contentNode
    * @method replaceContentNodeWithTranscludedNodes
    * @for ko.transclusion
+   * @param select - CSS selector string that selects the node to be replaced/removed
    * @param contentNode {HTMLElement} - The content node which will be replaced/removed
-   * @param componentNode {HTMLElement} - The
+   * @param componentNode {HTMLElement} - The component node from which the content will be removed
+   * @param componentDefinition - The component definition object containing 'findContent' function optionally
    */
   ko.transclusion.replaceContentNodeWithTranscludedNodes = function(select, contentNode, componentNode, componentDefinition){
-    var contentFromDefinition = componentDefinition.findContent && componentDefinition.findContent(select, componentNode)
-    if(typeof contentFromDefinition == 'string') contentFromDefinition = ko.utils.parseHtmlFragment(contentFromDefinition)
+    var contentFromDefinition = componentDefinition['findContent'] && componentDefinition['findContent'](select, componentNode);
+    if(typeof contentFromDefinition == 'string') contentFromDefinition = ko.utils.parseHtmlFragment(contentFromDefinition);
 
     var toMove = contentFromDefinition || ko.transclusion.findBySelect(select, componentNode),
       parent = contentNode.parentNode;
