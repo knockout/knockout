@@ -32,7 +32,7 @@ ko.computedContext = ko.dependencyDetection = (function () {
             if (currentFrame) {
                 if (!ko.isSubscribable(subscribable))
                     throw new Error("Only subscribable things can act as dependencies");
-                currentFrame.callback(subscribable, subscribable._id || (subscribable._id = getId()));
+                currentFrame.callback.call(currentFrame.callbackTarget, subscribable, subscribable._id || (subscribable._id = getId()));
             }
         },
 
@@ -60,4 +60,5 @@ ko.computedContext = ko.dependencyDetection = (function () {
 ko.exportSymbol('computedContext', ko.computedContext);
 ko.exportSymbol('computedContext.getDependenciesCount', ko.computedContext.getDependenciesCount);
 ko.exportSymbol('computedContext.isInitial', ko.computedContext.isInitial);
-ko.exportSymbol('computedContext.isSleeping', ko.computedContext.isSleeping);
+
+ko.exportSymbol('ignoreDependencies', ko.ignoreDependencies = ko.dependencyDetection.ignore);

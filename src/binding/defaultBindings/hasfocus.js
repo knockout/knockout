@@ -37,10 +37,20 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
     },
     'update': function(element, valueAccessor) {
-        var value = !!ko.utils.unwrapObservable(valueAccessor()); //force boolean to compare with last value
+        var value = !!ko.utils.unwrapObservable(valueAccessor());
+
         if (!element[hasfocusUpdatingProperty] && element[hasfocusLastValue] !== value) {
             value ? element.focus() : element.blur();
-            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]); // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
+
+            // In IE, the blur method doesn't always cause the element to lose focus (for example, if the window is not in focus).
+            // Setting focus to the body element does seem to be reliable in IE, but should only be used if we know that the current
+            // element was focused already.
+            if (!value && element[hasfocusLastValue]) {
+                element.ownerDocument.body.focus();
+            }
+
+            // For IE, which doesn't reliably fire "focus" or "blur" events synchronously
+            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, value ? "focusin" : "focusout"]);
         }
     }
 };

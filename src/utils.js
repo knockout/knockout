@@ -24,6 +24,7 @@ ko.utils = (function () {
     }
 
     var canSetPrototype = ({ __proto__: [] } instanceof Array);
+    var canUseSymbols = !DEBUG && typeof Symbol === 'function';
 
     // Represent the known event types in a compact way, then at runtime transform it into a hash with event name as key (for fast lookup)
     var knownEvents = {}, knownEventTypesByEventName = {};
@@ -254,8 +255,11 @@ ko.utils = (function () {
             // Rules:
             //   [A] Any leading nodes that have been removed should be ignored
             //       These most likely correspond to memoization nodes that were already removed during binding
-            //       See https://github.com/SteveSanderson/knockout/pull/440
-            //   [B] We want to output a continuous series of nodes. So, ignore any nodes that have already been removed,
+            //       See https://github.com/knockout/knockout/pull/440
+            //   [B] Any trailing nodes that have been remove should be ignored
+            //       This prevents the code here from adding unrelated nodes to the array while processing rule [C]
+            //       See https://github.com/knockout/knockout/pull/1903
+            //   [C] We want to output a continuous series of nodes. So, ignore any nodes that have already been removed,
             //       and include any nodes that have been inserted among the previous collection
 
             if (continuousNodeArray.length) {
@@ -267,6 +271,10 @@ ko.utils = (function () {
                     continuousNodeArray.splice(0, 1);
 
                 // Rule [B]
+                while (continuousNodeArray.length > 1 && continuousNodeArray[continuousNodeArray.length - 1].parentNode !== parentNode)
+                    continuousNodeArray.length--;
+
+                // Rule [C]
                 if (continuousNodeArray.length > 1) {
                     var current = continuousNodeArray[0], last = continuousNodeArray[continuousNodeArray.length - 1];
                     // Replace with the actual new continuous node set
@@ -274,8 +282,6 @@ ko.utils = (function () {
                     while (current !== last) {
                         continuousNodeArray.push(current);
                         current = current.nextSibling;
-                        if (!current) // Won't happen, except if the developer has manually removed some DOM elements (then we're in an undefined scenario)
-                            return;
                     }
                     continuousNodeArray.push(last);
                 }
@@ -335,14 +341,38 @@ ko.utils = (function () {
             return element && element.tagName && element.tagName.toLowerCase();
         },
 
+        catchFunctionErrors: function (delegate) {
+            return ko['onError'] ? function () {
+                try {
+                    return delegate.apply(this, arguments);
+                } catch (e) {
+                    ko['onError'] && ko['onError'](e);
+                    throw e;
+                }
+            } : delegate;
+        },
+
+        setTimeout: function (handler, timeout) {
+            return setTimeout(ko.utils.catchFunctionErrors(handler), timeout);
+        },
+
+        deferError: function (error) {
+            setTimeout(function () {
+                ko['onError'] && ko['onError'](error);
+                throw error;
+            }, 0);
+        },
+
         registerEventHandler: function (element, eventType, handler) {
+            var wrappedHandler = ko.utils.catchFunctionErrors(handler);
+
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
-            if (!mustUseAttachEvent && jQueryInstance) {
-                jQueryInstance(element)['bind'](eventType, handler);
+            if (!ko.options['useOnlyNativeEvents'] && !mustUseAttachEvent && jQueryInstance) {
+                jQueryInstance(element)['bind'](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
-                element.addEventListener(eventType, handler, false);
+                element.addEventListener(eventType, wrappedHandler, false);
             else if (typeof element.attachEvent != "undefined") {
-                var attachEventHandler = function (event) { handler.call(element, event); },
+                var attachEventHandler = function (event) { wrappedHandler.call(element, event); },
                     attachEventName = "on" + eventType;
                 element.attachEvent(attachEventName, attachEventHandler);
 
@@ -365,7 +395,7 @@ ko.utils = (function () {
             // In both cases, we'll use the click method instead.
             var useClickWorkaround = isClickOnCheckableElement(element, eventType);
 
-            if (jQueryInstance && !useClickWorkaround) {
+            if (!ko.options['useOnlyNativeEvents'] && jQueryInstance && !useClickWorkaround) {
                 jQueryInstance(element)['trigger'](eventType);
             } else if (typeof document.createEvent == "function") {
                 if (typeof element.dispatchEvent == "function") {
@@ -463,6 +493,10 @@ ko.utils = (function () {
                 result.push(arrayLikeObject[i]);
             };
             return result;
+        },
+
+        createSymbolOrString: function(identifier) {
+            return canUseSymbols ? Symbol(identifier) : identifier;
         },
 
         isIe6 : isIe6,
@@ -567,6 +601,7 @@ ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
+ko.exportSymbol('utils.setTextContent', ko.utils.setTextContent);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {

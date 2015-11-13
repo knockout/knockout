@@ -22,16 +22,16 @@
         }
 
         defaultConfigRegistry[componentName] = config;
-    }
+    };
 
     ko.components.isRegistered = function(componentName) {
-        return componentName in defaultConfigRegistry;
-    }
+        return defaultConfigRegistry.hasOwnProperty(componentName);
+    };
 
     ko.components.unregister = function(componentName) {
         delete defaultConfigRegistry[componentName];
         ko.components.clearCachedDefinition(componentName);
-    }
+    };
 
     ko.components.defaultLoader = {
         'getConfig': function(componentName, callback) {
@@ -197,8 +197,8 @@
     function possiblyGetConfigFromAmd(errorCallback, config, callback) {
         if (typeof config['require'] === 'string') {
             // The config is the value of an AMD module
-            if (require || window['require']) {
-                (require || window['require'])([config['require']], callback);
+            if (amdRequire || window['require']) {
+                (amdRequire || window['require'])([config['require']], callback);
             } else {
                 errorCallback('Uses require, but no AMD loader is present');
             }

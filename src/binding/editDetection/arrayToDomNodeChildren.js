@@ -30,7 +30,8 @@
         return { mappedNodes : mappedNodes, dependentObservable : (dependentObservable.isActive() ? dependentObservable : undefined) };
     }
 
-    var lastMappingResultDomDataKey = ko.utils.domData.nextKey();
+    var lastMappingResultDomDataKey = ko.utils.domData.nextKey(),
+        deletedItemDummyValue = ko.utils.domData.nextKey();
 
     ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
         // Compare the provided array against the previous one
@@ -84,14 +85,25 @@
                         mapData = lastMappingResult[lastMappingResultIndex];
 
                         // Stop tracking changes to the mapping for these nodes
-                        if (mapData.dependentObservable)
+                        if (mapData.dependentObservable) {
                             mapData.dependentObservable.dispose();
+                            mapData.dependentObservable = undefined;
+                        }
 
                         // Queue these nodes for later removal
-                        nodesToDelete.push.apply(nodesToDelete, ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode));
-                        if (options['beforeRemove']) {
-                            itemsForBeforeRemoveCallbacks[i] = mapData;
-                            itemsToProcess.push(mapData);
+                        if (ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode).length) {
+                            if (options['beforeRemove']) {
+                                newMappingResult.push(mapData);
+                                itemsToProcess.push(mapData);
+                                if (mapData.arrayEntry === deletedItemDummyValue) {
+                                    mapData = null;
+                                } else {
+                                    itemsForBeforeRemoveCallbacks[i] = mapData;
+                                }
+                            }
+                            if (mapData) {
+                                nodesToDelete.push.apply(nodesToDelete, mapData.mappedNodes);
+                            }
                         }
                     }
                     lastMappingResultIndex++;
@@ -114,6 +126,9 @@
                     break;
             }
         }
+
+        // Store a copy of the array items we just considered so we can difference it next time
+        ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
@@ -147,12 +162,18 @@
         // Perhaps we'll make that change in the future if this scenario becomes more common.
         callCallback(options['beforeRemove'], itemsForBeforeRemoveCallbacks);
 
+        // Replace the stored values of deleted items with a dummy value. This provides two benefits: it marks this item
+        // as already "removed" so we won't call beforeRemove for it again, and it ensures that the item won't match up
+        // with an actual item in the array and appear as "retained" or "moved".
+        for (i = 0; i < itemsForBeforeRemoveCallbacks.length; ++i) {
+            if (itemsForBeforeRemoveCallbacks[i]) {
+                itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
+            }
+        }
+
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
-
-        // Store a copy of the array items we just considered so we can difference it next time
-        ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
     }
 })();
 

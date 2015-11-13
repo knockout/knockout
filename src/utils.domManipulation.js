@@ -1,5 +1,27 @@
 (function () {
-    var leadingCommentRegex = /^(\s*)<!--(.*?)-->/;
+    var none = [0, "", ""],
+        table = [1, "<table>", "</table>"],
+        tbody = [2, "<table><tbody>", "</tbody></table>"],
+        tr = [3, "<table><tbody><tr>", "</tr></tbody></table>"],
+        select = [1, "<select multiple='multiple'>", "</select>"],
+        lookup = {
+            'thead': table,
+            'tbody': table,
+            'tfoot': table,
+            'tr': tbody,
+            'td': tr,
+            'th': tr,
+            'option': select,
+            'optgroup': select
+        },
+
+        // This is needed for old IE if you're *not* using either jQuery or innerShiv. Doesn't affect other cases.
+        mayRequireCreateElementHack = ko.utils.ieVersion <= 8;
+
+    function getWrap(tags) {
+        var m = tags.match(/^<([a-z]+)[ >]/);
+        return (m && lookup[m[1]]) || none;
+    }
 
     function simpleHtmlParse(html, documentContext) {
         documentContext || (documentContext = document);
@@ -14,25 +36,34 @@
         // (possibly a text node) in front of the comment. So, KO does not attempt to workaround this IE issue automatically at present.
 
         // Trim whitespace, otherwise indexOf won't work as expected
-        var tags = ko.utils.stringTrim(html).toLowerCase(), div = documentContext.createElement("div");
-
-        // Finds the first match from the left column, and returns the corresponding "wrap" data from the right column
-        var wrap = tags.match(/^<(thead|tbody|tfoot)/)              && [1, "<table>", "</table>"] ||
-                   !tags.indexOf("<tr")                             && [2, "<table><tbody>", "</tbody></table>"] ||
-                   (!tags.indexOf("<td") || !tags.indexOf("<th"))   && [3, "<table><tbody><tr>", "</tr></tbody></table>"] ||
-                   /* anything else */                                 [0, "", ""];
+        var tags = ko.utils.stringTrim(html).toLowerCase(), div = documentContext.createElement("div"),
+            wrap = getWrap(tags),
+            depth = wrap[0];
 
         // Go to html and back, then peel off extra wrappers
         // Note that we always prefix with some dummy text, because otherwise, IE<9 will strip out leading comment nodes in descendants. Total madness.
         var markup = "ignored<div>" + wrap[1] + html + wrap[2] + "</div>";
         if (typeof windowContext['innerShiv'] == "function") {
+            // Note that innerShiv is deprecated in favour of html5shiv. We should consider adding
+            // support for html5shiv (except if no explicit support is needed, e.g., if html5shiv
+            // somehow shims the native APIs so it just works anyway)
             div.appendChild(windowContext['innerShiv'](markup));
         } else {
+            if (mayRequireCreateElementHack) {
+                // The document.createElement('my-element') trick to enable custom elements in IE6-8
+                // only works if we assign innerHTML on an element associated with that document.
+                documentContext.appendChild(div);
+            }
+
             div.innerHTML = markup;
+
+            if (mayRequireCreateElementHack) {
+                div.parentNode.removeChild(div);
+            }
         }
 
         // Move to the right depth
-        while (wrap[0]--)
+        while (depth--)
             div = div.lastChild;
 
         return ko.utils.makeArray(div.lastChild.childNodes);
@@ -64,8 +95,9 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return jQueryInstance ? jQueryHtmlParse(html, documentContext)   // As below, benefit from jQuery's optimisations where possible
-                              : simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
+        return jQueryInstance ?
+            jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
+            simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
 
     ko.utils.setHtml = function(node, html) {

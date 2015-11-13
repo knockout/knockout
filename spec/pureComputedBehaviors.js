@@ -5,6 +5,11 @@ describe('Pure Computed', function() {
         expect(ko.isComputed(computed)).toEqual(true);
     });
 
+    it('Should advertise that instances are pure computed', function () {
+        var instance = ko.pureComputed(function () { });
+        expect(ko.isPureComputed(instance)).toEqual(true);
+    });
+
     it('Should require an evaluator function as constructor param', function () {
         expect(function () { ko.pureComputed(); }).toThrow();
     });
@@ -71,10 +76,9 @@ describe('Pure Computed', function() {
         expect(computed.peek()).toEqual('C');
         expect(timesEvaluated).toEqual(3);
 
-        // Access without changing dependency also causes evaluation
-        // This matches current behavior but is not required by the spec
+        // Access without changing dependency does not cause evaluation
         expect(computed()).toEqual('C');
-        expect(timesEvaluated).toEqual(4);
+        expect(timesEvaluated).toEqual(3);
     });
 
     it('Should not subscribe to dependencies while sleeping', function() {
@@ -166,6 +170,45 @@ describe('Pure Computed', function() {
         expect(data.getSubscriptionsCount()).toEqual(0);
     });
 
+    it('Should subscribe to dependencies when awakened while minimizing evaluations', function() {
+        var timesEvaluated = 0,
+            data = ko.observable('A'),
+            computed = ko.pureComputed(function () { ++timesEvaluated; return data(); }),
+            notifiedValues = [],
+            subscribeFunc = function (value) { notifiedValues.push(value); },
+            subscription;
+
+        expect(timesEvaluated).toEqual(0);
+
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(1);
+        expect(computed.getDependenciesCount()).toEqual(1);
+
+        // Subscribing to the computed adds a subscription to the dependency without re-evaluating
+        subscription = computed.subscribe(subscribeFunc);
+        expect(data.getSubscriptionsCount()).toEqual(1);
+        expect(timesEvaluated).toEqual(1);
+
+        // Dispose the subscription; reading the sleeping computed doesn't cause re-evaluation
+        subscription.dispose();
+        expect(computed()).toEqual('A');
+        expect(timesEvaluated).toEqual(1);
+
+        // Updating data doesn't trigger re-evaluation (computed is sleeping)
+        data('B');
+        expect(timesEvaluated).toEqual(1);
+
+        // Subscribing to the computed now does cause a re-evaluation because the dependency was changed
+        subscription = computed.subscribe(subscribeFunc);
+        expect(timesEvaluated).toEqual(2);
+        expect(notifiedValues).toEqual([]); // But nothing notified
+
+        // Updating data should re-evaluate and trigger the subscription
+        data('C');
+        expect(timesEvaluated).toEqual(3);
+        expect(notifiedValues).toEqual(['C']);
+    });
+
     it('Should minimize evaluations when accessed from a computed', function() {
         var timesEvaluated = 0,
             data = ko.observable('A'),
@@ -184,6 +227,35 @@ describe('Pure Computed', function() {
         // Double check that disposing subscriptions puts the pure computed to sleep
         computed.dispose();
         expect(data.getSubscriptionsCount()).toEqual(0);
+    });
+
+    it('Should evaluate latest value when chaining pure computeds', function() {
+        var data = ko.observable('A'),
+            computed1 = ko.pureComputed(data),
+            computed2 = ko.pureComputed(computed1);
+
+        expect(computed2()).toEqual('A');
+
+        data('B');
+        expect(computed2()).toEqual('B');
+    });
+
+    it('Should minimize evaluations when chaining pure computeds', function() {
+        var timesEvaluated = 0,
+            data = ko.observable('A'),
+            computed1 = ko.pureComputed(function () { return data() <= 'M'; } ),  // This computed will return the same value for many values of data
+            computed2 = ko.pureComputed(function () { ++timesEvaluated; return computed1(); });     // This computed should only be re-evaluated when computed1 actually changes
+
+        expect(computed2()).toEqual(true);
+        expect(timesEvaluated).toEqual(1);
+
+        data('B');
+        expect(computed2()).toEqual(true);
+        expect(timesEvaluated).toEqual(1);
+
+        data('Z');
+        expect(computed2()).toEqual(false);
+        expect(timesEvaluated).toEqual(2);
     });
 
     it('Should be able to re-evaluate a sleeping computed that previously threw an exception', function() {
@@ -248,6 +320,57 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(2);
         expect(computed.getDependenciesCount()).toEqual(0);
+    });
+
+    describe('Should maintain order of subscriptions', function () {
+        var data, dataPureComputed;
+
+        function subscribeAndUpdate(computed, newDataValue, expectedNotifiedValues) {
+            var notifiedValues = [];
+            computed.subscribe(function (value) { notifiedValues.push(value); });
+
+            data(newDataValue);
+            expect(notifiedValues).toEqual(expectedNotifiedValues);
+        }
+
+        beforeEach(function() {
+            data = ko.observable('A');
+            ko.computed(data); // This computed ensures that the 'data' observable gets an id number right away
+
+            // Because this is a pure computed, it will subscribe to 'data' in response to awakening, such
+            // as being accessed from another computed. It will also then get a higher id number than 'data'.
+            dataPureComputed = ko.pureComputed(data);
+        });
+
+        // The following two tests demonstrate that the difference in the order of subscriptions can be tested.
+
+        it('base behavior: order is pure computed, observable', function() {
+            // This one accesses the base observable second, so that the first update happens after both values have been updated
+            var computed = ko.pureComputed(function () { return dataPureComputed() + data(); });
+            subscribeAndUpdate(computed, 'B', ['BB']);
+        });
+
+        it('base behavior: order is observable, pure computed', function() {
+            // This one accesses the base observable first, which results in an update before 'dataPureComputed' has updated
+            var computed = ko.pureComputed(function () { return data() + dataPureComputed(); });
+            subscribeAndUpdate(computed, 'B', ['BA', 'BB']);
+        });
+
+        // This test sets up a pure computed using the first order and checks that the order stays correct
+        // when awakened after being accessed, such that it's not re-evaluated.
+
+        it('when awakening, without re-evaluation', function() {
+            var timesEvaluated = 0,
+                computed = ko.pureComputed(function () { ++timesEvaluated; return dataPureComputed() + data(); });
+
+            // Access the pure computed while it is sleeping to evaluate it and record the dependencies
+            expect(computed()).toEqual('AA');
+            expect(timesEvaluated).toEqual(1);
+
+            // If the subscriptions happen in the wrong order, we'll get two notifications: 'AB', 'BB'
+            subscribeAndUpdate(computed, 'B', ['BB']);
+            expect(timesEvaluated).toEqual(3);
+        });
     });
 
     describe('Context', function() {

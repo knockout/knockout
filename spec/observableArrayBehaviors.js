@@ -277,6 +277,14 @@ describe('Observable Array', function() {
         expect(timesEvaluated).toEqual(1);
     });
 
+    it('Should return the observableArray reference from "sort" and "reverse"', function() {
+        expect(testObservableArray.reverse()).toBe(testObservableArray);
+        expect(testObservableArray.sort()).toBe(testObservableArray);
+
+        // Verify that reverse and sort notified their changes
+        expect(notifiedValues).toEqual([ [3, 2, 1], [1, 2, 3] ]);
+    });
+
     it('Should inherit any properties defined on ko.subscribable.fn, ko.observable.fn, or ko.observableArray.fn', function() {
         this.after(function() {
             delete ko.subscribable.fn.subscribableProp; // Will be able to reach this

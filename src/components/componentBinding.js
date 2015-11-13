@@ -11,7 +11,7 @@
                     if (typeof currentViewModelDispose === 'function') {
                         currentViewModelDispose.call(currentViewModel);
                     }
-
+                    currentViewModel = null;
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
                 },

@@ -1,14 +1,16 @@
 (function () {
     ko.bindingHandlers = {};
 
-    // The following element types will not be recursed into during binding. In the future, we
-    // may consider adding <template> to this list, because such elements' contents are always
-    // intended to be bound in a different context from where they appear in the document.
+    // The following element types will not be recursed into during binding.
     var bindingDoesNotRecurseIntoElementTypes = {
         // Don't want bindings that operate on text nodes to mutate <script> and <textarea> contents,
-        // because it's unexpected and a potential XSS issue
+        // because it's unexpected and a potential XSS issue.
+        // Also bindings should not operate on <template> elements since this breaks in Internet Explorer
+        // and because such elements' contents are always intended to be bound in a different context
+        // from where they appear in the document.
         'script': true,
-        'textarea': true
+        'textarea': true,
+        'template': true
     };
 
     // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
@@ -25,7 +27,7 @@
         // any child contexts, must be updated when the view model is changed.
         function updateContext() {
             // Most of the time, the context will directly get a view model object, but if a function is given,
-            // we call the function to retrieve the view model. If the function accesses any obsevables or returns
+            // we call the function to retrieve the view model. If the function accesses any observables or returns
             // an observable, the dependency is tracked, and those observables can later cause the binding
             // context to be updated.
             var dataItemOrObservable = isFunc ? dataItemOrAccessor() : dataItemOrAccessor,
@@ -107,7 +109,7 @@
     }
 
     // Extend the binding context hierarchy with a new view model object. If the parent context is watching
-    // any obsevables, the new child context will automatically get a dependency on the parent context.
+    // any observables, the new child context will automatically get a dependency on the parent context.
     // But this does not mean that the $data value of the child context will also get updated. If the child
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
@@ -301,7 +303,7 @@
             var bindingsUpdater = ko.dependentObservable(
                 function() {
                     bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
-                    // Register a dependency on the binding context to support obsevable view models.
+                    // Register a dependency on the binding context to support observable view models.
                     if (bindings && bindingContext._subscribable)
                         bindingContext._subscribable();
                     return bindings;

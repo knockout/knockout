@@ -15,6 +15,11 @@ describe('Dependent Observable', function() {
         expect(ko.isComputed(instance)).toEqual(true);
     });
 
+    it('Should advertise that instances are not pure computed', function () {
+        var instance = ko.computed(function () { });
+        expect(ko.isPureComputed(instance)).toEqual(false);
+    });
+
     it('Should advertise that instances cannot have values written to them', function () {
         var instance = ko.computed(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(false);
@@ -132,6 +137,17 @@ describe('Dependent Observable', function() {
     it('Should be able to use \'peek\' on an observable to avoid a dependency', function() {
         var observable = ko.observable(1),
             computed = ko.computed(function () { return observable.peek() + 1; });
+        expect(computed()).toEqual(2);
+
+        observable(50);
+        expect(computed()).toEqual(2);    // value wasn't changed
+    });
+
+    it('Should be able to use \'ko.ignoreDependencies\' within a computed to avoid dependencies', function() {
+        var observable = ko.observable(1),
+            computed = ko.dependentObservable(function () {
+                return ko.ignoreDependencies(function() { return observable() + 1 } );
+            });
         expect(computed()).toEqual(2);
 
         observable(50);
@@ -486,7 +502,8 @@ describe('Dependent Observable', function() {
     it('Should allow long chains without overflowing the stack', function() {
         // maximum with previous code (when running this test only): Chrome 28: 1310, IE 10: 2200; FF 23: 103
         // maximum with changed code: Chrome 28: 2620, +100%, IE 10: 4900, +122%; FF 23: 267, +160%
-        var depth = 200;
+        // (per #1622 and #1905, max depth reduced to pass tests in older FF)
+        var depth = 100;
         var first = ko.observable(0);
         var last = first;
         for (var i = 0; i < depth; i++) {
