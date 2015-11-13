@@ -13,6 +13,10 @@
     while(--idx>=0){
       found = ko.transclusion.getElementsByTagName('content', nodeList[idx]);
       if(found.length){
+        if (found.item) {
+          // convert NodeList to an Array to make PhantomJS 1.x happy
+          found = Array.prototype.slice.call(found);
+        }
         res.push.apply(res, found);
       }
     }
