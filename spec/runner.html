@@ -1,96 +1,95 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <!-- jasmine -->
-    <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
-    <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
-    <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
-    <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-tap.js"></script>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-    <!-- our jasmine extensions -->
-    <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
-    <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
+        <!-- jasmine -->
+        <link rel="stylesheet" type="text/css" href="lib/jasmine-1.2.0/jasmine.css" />
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-html.js"></script>
+        <script type="text/javascript" src="lib/jasmine-1.2.0/jasmine-tap.js"></script>
 
-    <!-- All specs should pass with or without jQuery+Modernizr being referenced -->
-    <!--<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.js"></script>-->
-    <!--<script type="text/javascript" src="http://modernizr.com/downloads/modernizr-latest.js"></script>-->
+        <!-- our jasmine extensions -->
+        <link rel="stylesheet" type="text/css" href="lib/jasmine.extensions.css" />
+        <script type="text/javascript" src="lib/jasmine.extensions.js"></script>
 
-    <!-- knockout polyfills -->
-    <script type="text/javascript" src="lib/innershiv.js"></script>
-    <script type="text/javascript" src="lib/json2.js"></script>
+        <!-- knockout and other dependencies -->
+        <script type="text/javascript" src="lib/loadDependencies.js"></script>
 
-    <!-- knockout -->
-    <script type="text/javascript">
-        // By default, we run the tests against knockout-raw.js, but you can specify an alternative test
-        // subject as a querystring parameter, e.g., runner.html?src=build/output/knockout-latest.js.
-        // This is used by our automated test runners (PhantomJS and Testling CI).
-        (function() {
-            var koFilenameParam = location.href.match(/[?&]src=([^&]+)/);
-            jasmine.addScriptReference("../" + (koFilenameParam ? koFilenameParam[1] : "downloads/knockout-3.3.0.js"));
-        })();
-    </script>
+        <!-- specs -->
+        <script type="text/javascript" src="arrayEditDetectionBehaviors.js"></script>
+        <script type="text/javascript" src="arrayToDomEditDetectionBehaviors.js"></script>
+        <script type="text/javascript" src="asyncBehaviors.js"></script>
+        <script type="text/javascript" src="asyncBindingBehaviors.js"></script>
+        <script type="text/javascript" src="memoizationBehaviors.js"></script>
+        <script type="text/javascript" src="subscribableBehaviors.js"></script>
+        <script type="text/javascript" src="observableBehaviors.js"></script>
+        <script type="text/javascript" src="observableArrayBehaviors.js"></script>
+        <script type="text/javascript" src="observableArrayChangeTrackingBehaviors.js"></script>
+        <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
+        <script type="text/javascript" src="dependentObservableDomBehaviors.js"></script>
+        <script type="text/javascript" src="pureComputedBehaviors.js"></script>
+        <script type="text/javascript" src="extenderBehaviors.js"></script>
+        <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
+        <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
+        <script type="text/javascript" src="expressionRewritingBehaviors.js"></script>
+        <script type="text/javascript" src="bindingPreprocessingBehaviors.js"></script>
+        <script type="text/javascript" src="nodePreprocessingBehaviors.js"></script>
+        <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
+        <script type="text/javascript" src="bindingDependencyBehaviors.js"></script>
+        <script type="text/javascript" src="templatingBehaviors.js"></script>
+        <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
+        <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
+        <script type="text/javascript" src="taskBehaviors.js"></script>
+        <script type="text/javascript" src="utilsBehaviors.js"></script>
+        <script type="text/javascript" src="utilsDomBehaviors.js"></script>
+        <script type="text/javascript" src="onErrorBehaviors.js"></script>
+        <script type="text/javascript" src="parseHtmlFragment.js"></script>
+        <script type="text/javascript" src="components/loaderRegistryBehaviors.js"></script>
+        <script type="text/javascript" src="components/defaultLoaderBehaviors.js"></script>
+        <script type="text/javascript" src="components/componentBindingBehaviors.js"></script>
+        <script type="text/javascript" src="components/customElementBehaviors.js"></script>
 
-    <!-- specs -->
-    <script type="text/javascript" src="arrayEditDetectionBehaviors.js"></script>
-    <script type="text/javascript" src="arrayToDomEditDetectionBehaviors.js"></script>
-    <script type="text/javascript" src="asyncBehaviors.js"></script>
-    <script type="text/javascript" src="memoizationBehaviors.js"></script>
-    <script type="text/javascript" src="subscribableBehaviors.js"></script>
-    <script type="text/javascript" src="observableBehaviors.js"></script>
-    <script type="text/javascript" src="observableArrayBehaviors.js"></script>
-    <script type="text/javascript" src="observableArrayChangeTrackingBehaviors.js"></script>
-    <script type="text/javascript" src="dependentObservableBehaviors.js"></script>
-    <script type="text/javascript" src="dependentObservableDomBehaviors.js"></script>
-    <script type="text/javascript" src="extenderBehaviors.js"></script>
-    <script type="text/javascript" src="domNodeDisposalBehaviors.js"></script>
-    <script type="text/javascript" src="mappingHelperBehaviors.js"></script>
-    <script type="text/javascript" src="expressionRewritingBehaviors.js"></script>
-    <script type="text/javascript" src="bindingPreprocessingBehaviors.js"></script>
-    <script type="text/javascript" src="nodePreprocessingBehaviors.js"></script>
-    <script type="text/javascript" src="bindingAttributeBehaviors.js"></script>
-    <script type="text/javascript" src="bindingDependencyBehaviors.js"></script>
-    <script type="text/javascript" src="templatingBehaviors.js"></script>
-    <script type="text/javascript" src="jsonPostingBehaviors.js"></script>
-    <script type="text/javascript" src="nativeTemplateEngineBehaviors.js"></script>
-    <script type="text/javascript" src="utilsBehaviors.js"></script>
+        <!-- Default bindings -->
+        <script type="text/javascript" src="defaultBindings/attrBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/checkedBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/clickBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/cssBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/enableDisableBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/eventBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/foreachBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/hasfocusBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/htmlBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/ifBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/ifnotBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/optionsBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/selectedOptionsBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/styleBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/submitBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/textBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/textInputBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/uniqueNameBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/visibleBehaviors.js"></script>
+        <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
 
-    <!-- Default bindings -->
-    <script type="text/javascript" src="defaultBindings/attrBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/checkedBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/clickBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/cssBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/enableDisableBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/eventBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/foreachBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/hasfocusBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/htmlBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/ifBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/ifnotBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/optionsBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/selectedOptionsBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/styleBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/submitBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/textBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/uniqueNameBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/valueBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/visibleBehaviors.js"></script>
-    <script type="text/javascript" src="defaultBindings/withBehaviors.js"></script>
-</head>
-<body>
-<script type="text/javascript">
-    (function() {
-        var jasmineEnv = jasmine.getEnv();
-        jasmineEnv.updateInterval = 500;
+        <script type="text/javascript" src="crossWindowBehaviors.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+          (function() {
+            var jasmineEnv = jasmine.getEnv();
+            jasmineEnv.updateInterval = 500;
 
-        var htmlReporter = new jasmine.HtmlReporter();
-        jasmineEnv.addReporter(htmlReporter);
-        jasmineEnv.specFilter = htmlReporter.specFilter;
+            var htmlReporter = new jasmine.HtmlReporter();
+            jasmineEnv.addReporter(htmlReporter);
+            jasmineEnv.specFilter = htmlReporter.specFilter;
 
-        var testlingParam = /[?&]testling=true/.test(location.href);
-        if (testlingParam)
-            jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
-        jasmineEnv.execute();
-    })();
-</script>
-</body>
+            var testlingParam = /[?&]testling=true/.test(location.href);
+            if (testlingParam)
+                jasmineEnv.addReporter(new jasmine.TapReporter()); // For Testling CI
+            jasmineEnv.execute();
+          })();
+        </script>
+    </body>
 </html>

@@ -5,6 +5,11 @@ describe('Pure Computed', function() {
         expect(ko.isComputed(computed)).toEqual(true);
     });
 
+    it('Should advertise that instances are pure computed', function () {
+        var instance = ko.pureComputed(function () { });
+        expect(ko.isPureComputed(instance)).toEqual(true);
+    });
+
     it('Should require an evaluator function as constructor param', function () {
         expect(function () { ko.pureComputed(); }).toThrow();
     });

@@ -1,100 +1,115 @@
 describe('Native template engine', function() {
-    beforeEach(function() {
-        function ensureNodeExistsAndIsEmpty(id, tagName, type) {
-            var existingNode = document.getElementById(id);
-            if (existingNode != null)
-                existingNode.parentNode.removeChild(existingNode);
-            var resultNode = document.createElement(tagName || "div");
-            resultNode.id = id;
-            if (type)
-                resultNode.setAttribute("type", type);
-            document.body.appendChild(resultNode);
-            return resultNode;
-        }
+    function ensureNodeExistsAndIsEmpty(id, tagName, type) {
+        var existingNode = document.getElementById(id);
+        if (existingNode != null)
+            existingNode.parentNode.removeChild(existingNode);
+        var resultNode = document.createElement(tagName || "div");
+        resultNode.id = id;
+        if (type)
+            resultNode.setAttribute("type", type);
+        document.body.appendChild(resultNode);
+        return resultNode;
+    }
 
-        window.testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
-        window.testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script", "text/html");
-        window.testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea");
-        window.templateOutput = ensureNodeExistsAndIsEmpty("templateOutput");
-    });
+    beforeEach(jasmine.prepareTestNode);
 
     describe('Named templates', function () {
+        function testRenderTemplate(templateElem, templateElemId, templateElementProp) {
+            templateElementProp || (templateElementProp = "innerHTML");
+            templateElem[templateElementProp] = "name: <div data-bind='text: name'></div>";
+
+            ko.renderTemplate(templateElemId, { name: 'bert' }, null, testNode);
+            expect(testNode).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
+
+            // A second render also works
+            ko.renderTemplate(templateElemId, { name: 'tom' }, null, testNode);
+            expect(testNode).toContainHtml("name: <div data-bind=\"text: name\">tom</div>");
+
+            // A change to the element contents is picked up
+            templateElem[templateElementProp] = "welcome <div data-bind='text: name'></div>";
+            ko.renderTemplate(templateElemId, { name: 'dave' }, null, testNode);
+            expect(testNode).toContainHtml("welcome <div data-bind=\"text: name\">dave</div>");
+        }
+
         it('can display static content from regular DOM element', function () {
-            window.testDivTemplate.innerHTML = "this is some static content";
-            ko.renderTemplate("testDivTemplate", null, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("this is some static content");
+            var testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
+            testDivTemplate.innerHTML = "this is some static content";
+            ko.renderTemplate("testDivTemplate", null, null, testNode);
+            expect(testNode).toContainHtml("this is some static content");
         });
 
         it('can fetch template from regular DOM element and data-bind on results', function () {
-            window.testDivTemplate.innerHTML = "name: <div data-bind='text: name'></div>";
-            ko.renderTemplate("testDivTemplate", { name: 'bert' }, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
+            var testDivTemplate = ensureNodeExistsAndIsEmpty("testDivTemplate");
+            testRenderTemplate(testDivTemplate, "testDivTemplate");
         });
 
         it('can fetch template from <script> elements and data-bind on results', function () {
-            window.testScriptTemplate.text = "name: <div data-bind='text: name'></div>";
-            ko.renderTemplate("testScriptTemplate", { name: 'bert' }, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
+            var testScriptTemplate = ensureNodeExistsAndIsEmpty("testScriptTemplate", "script", "text/html");
+            testRenderTemplate(testScriptTemplate, "testScriptTemplate", "text");
         });
 
         it('can fetch template from <textarea> elements and data-bind on results', function () {
-            var prop = (typeof window.testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
-            window.testTextAreaTemplate[prop] = "name: <div data-bind='text: name'></div>";
-            ko.renderTemplate("testTextAreaTemplate", { name: 'bert' }, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
+            var testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea"),
+                prop = (typeof testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
+            testRenderTemplate(testTextAreaTemplate, "testTextAreaTemplate", prop);
+        });
+
+        it('can fetch template from <template> elements and data-bind on results', function () {
+            var testTemplateTemplate = ensureNodeExistsAndIsEmpty("testTemplateTemplate", "template");
+            testRenderTemplate(testTemplateTemplate, "testTemplateTemplate");
         });
     });
 
     describe('Anonymous templates', function () {
         it('can display static content', function () {
-            new ko.templateSources.anonymousTemplate(window.templateOutput).text("this is some static content");
-            window.templateOutput.innerHTML = "irrelevant initial content";
-            ko.renderTemplate(window.templateOutput, null, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("this is some static content");
+            new ko.templateSources.anonymousTemplate(testNode).text("this is some static content");
+            testNode.innerHTML = "irrelevant initial content";
+            ko.renderTemplate(testNode, null, null, testNode);
+            expect(testNode).toContainHtml("this is some static content");
         });
 
         it('can data-bind on results', function () {
-            new ko.templateSources.anonymousTemplate(window.templateOutput).text("name: <div data-bind='text: name'></div>");
-            window.templateOutput.innerHTML = "irrelevant initial content";
-            ko.renderTemplate(window.templateOutput, { name: 'bert' }, null, window.templateOutput);
-            expect(window.templateOutput).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
+            new ko.templateSources.anonymousTemplate(testNode).text("name: <div data-bind='text: name'></div>");
+            testNode.innerHTML = "irrelevant initial content";
+            ko.renderTemplate(testNode, { name: 'bert' }, null, testNode);
+            expect(testNode).toContainHtml("name: <div data-bind=\"text: name\">bert</div>");
         });
 
         it('can be supplied by not giving a template name', function() {
-            window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>Value: <span data-bind='text: val'></span></div>"
+            testNode.innerHTML = "<div data-bind='template: { data: someItem }'>Value: <span data-bind='text: val'></span></div>"
 
             var viewModel = {
                 someItem: { val: 'abc' }
             };
-            ko.applyBindings(viewModel, window.testDivTemplate);
+            ko.applyBindings(viewModel, testNode);
 
-            expect(window.testDivTemplate.childNodes[0]).toContainText("Value: abc");
+            expect(testNode.childNodes[0]).toContainText("Value: abc");
         });
 
         it('work in conjunction with foreach', function() {
-            window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
+            testNode.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
             var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
-            ko.applyBindings({ myItems: myItems }, window.testDivTemplate);
+            ko.applyBindings({ myItems: myItems }, testNode);
 
-            expect(window.testDivTemplate.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
-            expect(window.testDivTemplate.childNodes[0].childNodes[1]).toContainText("Item: Beta");
-            expect(window.testDivTemplate.childNodes[0].childNodes[2]).toContainText("Item: Gamma");
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
+            expect(testNode.childNodes[0].childNodes[1]).toContainText("Item: Beta");
+            expect(testNode.childNodes[0].childNodes[2]).toContainText("Item: Gamma");
 
             // Can cause re-rendering
             myItems.push({ itemProp: 'Pushed' });
-            expect(window.testDivTemplate.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
-            expect(window.testDivTemplate.childNodes[0].childNodes[1]).toContainText("Item: Beta");
-            expect(window.testDivTemplate.childNodes[0].childNodes[2]).toContainText("Item: Gamma");
-            expect(window.testDivTemplate.childNodes[0].childNodes[3]).toContainText("Item: Pushed");
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
+            expect(testNode.childNodes[0].childNodes[1]).toContainText("Item: Beta");
+            expect(testNode.childNodes[0].childNodes[2]).toContainText("Item: Gamma");
+            expect(testNode.childNodes[0].childNodes[3]).toContainText("Item: Pushed");
 
             myItems.splice(1, 1);
-            expect(window.testDivTemplate.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
-            expect(window.testDivTemplate.childNodes[0].childNodes[1]).toContainText("Item: Gamma");
-            expect(window.testDivTemplate.childNodes[0].childNodes[2]).toContainText("Item: Pushed");
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("Item: Alpha");
+            expect(testNode.childNodes[0].childNodes[1]).toContainText("Item: Gamma");
+            expect(testNode.childNodes[0].childNodes[2]).toContainText("Item: Pushed");
         });
 
         it('may be nested', function() {
-            window.testDivTemplate.innerHTML = "<div data-bind='template: { foreach: items }'>"
+            testNode.innerHTML = "<div data-bind='template: { foreach: items }'>"
                                            + "<div data-bind='template: { foreach: children }'>"
                                                + "(Val: <span data-bind='text: $data'></span>, Invocations: <span data-bind='text: $root.invocationCount()'></span>, Parents: <span data-bind='text: $parents.length'></span>)"
                                            + "</div>"
@@ -107,29 +122,29 @@ describe('Native template engine', function() {
                 ])
             };
             viewModel.invocationCount = function() { return ++this.invocations }.bind(viewModel);
-            ko.applyBindings(viewModel, window.testDivTemplate);
+            ko.applyBindings(viewModel, testNode);
 
-            expect(window.testDivTemplate.childNodes[0].childNodes[0]).toContainText("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
-            expect(window.testDivTemplate.childNodes[0].childNodes[1]).toContainText("(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
+            expect(testNode.childNodes[0].childNodes[1]).toContainText("(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
 
             // Check we can insert without causing anything else to rerender
             viewModel.items()[1].children.unshift('ANew');
-            expect(window.testDivTemplate.childNodes[0].childNodes[0]).toContainText("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
-            expect(window.testDivTemplate.childNodes[0].childNodes[1]).toContainText("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("(Val: A1, Invocations: 1, Parents: 2)(Val: A2, Invocations: 2, Parents: 2)(Val: A3, Invocations: 3, Parents: 2)");
+            expect(testNode.childNodes[0].childNodes[1]).toContainText("(Val: ANew, Invocations: 6, Parents: 2)(Val: B1, Invocations: 4, Parents: 2)(Val: B2, Invocations: 5, Parents: 2)");
         });
     });
 
     describe('Data-bind syntax', function () {
         it('should expose parent binding context as $parent if binding with an explicit \"data\" value', function() {
-            window.testDivTemplate.innerHTML = "<div data-bind='template: { data: someItem }'>"
+            testNode.innerHTML = "<div data-bind='template: { data: someItem }'>"
                                           + "ValueBound: <span data-bind='text: $parent.parentProp'></span>"
                                       + "</div>";
-            ko.applyBindings({ someItem: {}, parentProp: 'Hello' }, window.testDivTemplate);
-            expect(window.testDivTemplate.childNodes[0]).toContainText("ValueBound: Hello");
+            ko.applyBindings({ someItem: {}, parentProp: 'Hello' }, testNode);
+            expect(testNode.childNodes[0]).toContainText("ValueBound: Hello");
         });
 
         it('should expose all ancestor binding contexts as $parents, with top frame also given as $root', function() {
-            window.testDivTemplate.innerHTML = "<div data-bind='template: { data: outerItem }'>"
+            testNode.innerHTML = "<div data-bind='template: { data: outerItem }'>"
                                            + "<div data-bind='template: { data: middleItem }'>"
                                                + "<div data-bind='template: { data: innerItem }'>("
                                                    + "data: <span data-bind='text: $data.val'></span>, "
@@ -151,8 +166,8 @@ describe('Native template engine', function() {
                         innerItem: { val: "INNER" }
                     }
                 }
-            }, window.testDivTemplate);
-            expect(window.testDivTemplate.childNodes[0].childNodes[0].childNodes[0]).toContainText("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
+            }, testNode);
+            expect(testNode.childNodes[0].childNodes[0].childNodes[0]).toContainText("(data: INNER, parent: MIDDLE, parents[0]: MIDDLE, parents[1]: OUTER, parents.length: 3, root: ROOT)");
         });
     });
 });

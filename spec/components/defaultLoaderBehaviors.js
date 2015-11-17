@@ -18,6 +18,17 @@ describe('Components: Default loader', function() {
         expect(ko.components.isRegistered(testComponentName)).toBe(false);
     });
 
+    it('Allows registering component names that may conflict with properties on Object.prototype', function() {
+        var prototypeProperty = 'toString';
+
+        expect(ko.components.isRegistered(prototypeProperty)).toBe(false);
+        ko.components.register(prototypeProperty, {});
+        expect(ko.components.isRegistered(prototypeProperty)).toBe(true);
+
+        ko.components.unregister(prototypeProperty);
+        expect(ko.components.isRegistered(prototypeProperty)).toBe(false);
+    });
+
     it('Throws if you try to register a component that is already registered', function() {
         ko.components.register(testComponentName, {});
 

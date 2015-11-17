@@ -31,9 +31,9 @@ describe('Observable Array change tracking', function() {
             var subscription = myArray.subscribe(function(changes) { changelist = changes; }, null, 'arrayChange');
             myArray(['Changed']);
             expect(callLog.length).toBe(1);
-            expect(changelist).toEqual([
-                { status: 'deleted', value: 'Another', index: 0 },
-                { status: 'added', value: 'Changed', index: 0 }
+            expect(changelist.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Changed', index: 0 },
+                { status: 'deleted', value: 'Another', index: 0 }
             ]);
 
             // If all the subscriptions are disposed, it stops computing diffs
@@ -47,9 +47,9 @@ describe('Observable Array change tracking', function() {
             myArray(['Changed once more']);
             expect(callLog.length).toBe(2);
             // Verify that changes are from the previous array value (at subscription time) and not from the last notified value
-            expect(changelist).toEqual([
-                { status: 'deleted', value: 'Changed again', index: 0 },
-                { status: 'added', value: 'Changed once more', index: 0 }
+            expect(changelist.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Changed once more', index: 0 },
+                { status: 'deleted', value: 'Changed again', index: 0 }
             ]);
         });
     });
@@ -76,9 +76,9 @@ describe('Observable Array change tracking', function() {
             // Then when there's a further change, there's a further diff
             myArray(['Delta']);
             expect(callLog.length).toBe(2);
-            expect(changelist1).toEqual([
-                { status: 'deleted', value: 'Gamma', index: 0 },
-                { status: 'added', value: 'Delta', index: 0 }
+            expect(changelist1.sort(compareChangeListItems)).toEqual([
+                { status: 'added', value: 'Delta', index: 0 },
+                { status: 'deleted', value: 'Gamma', index: 0 }
             ]);
             expect(changelist2).toBe(changelist1);
         });
@@ -266,7 +266,7 @@ describe('Observable Array change tracking', function() {
     });
 
     // Per: https://github.com/knockout/knockout/issues/1503
-    it('Should cleanup a single arrayChange dependency', function() {
+    it('Should clean up a single arrayChange dependency', function() {
         var source = ko.observableArray();
         var arrayChange = source.subscribe(function() {}, null, "arrayChange");
         expect(source.getSubscriptionsCount("arrayChange")).toBe(1);
@@ -357,6 +357,31 @@ describe('Observable Array change tracking', function() {
         // See that descendent nodes are also added
         expect(list()).toEqual([ toAdd, toAdd.nodes[0], toAdd.nodes[1], toAdd.nodes[2], toAdd.nodes[0].nodes[0] ]);
     });
+
+    it('Should honor "dontLimitMoves" option', function() {
+        // In order to test this, we must have a scenario in which a move is not recognized as such without the option.
+        // This scenario doesn't represent the definition of the spec itself and may need to be modified if the move
+        // detection algorithm in Knockout is changed. (See also the similar test in arrayEditDetectionBehaviors.js)
+        var array1 = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
+        var array2 = [1, 2, 3, 4, "T", 6, 7, 8, 9, 10];
+
+        var myArray = ko.observableArray(array1),
+            changelist;
+
+        myArray.subscribe(function(changes) {
+            changelist = changes;
+        }, null, 'arrayChange');
+
+        // The default behavior is to limit moves
+        myArray(array2);
+        expect(changelist[changelist.length-1]).toEqual({ status: 'deleted', value: 'T', index: 19 });
+
+        // Change the behavior by extending again with the dontLimitMoves option
+        myArray.extend({ trackArrayChanges: { dontLimitMoves: true } });
+        myArray(array1);
+        expect(changelist[changelist.length-1]).toEqual({ status: 'added', value: 'T', index: 19, moved: 4 });
+    });
+
 
     function testKnownOperation(array, operationName, options) {
         var changeList,

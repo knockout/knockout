@@ -465,7 +465,6 @@ describe('Binding attribute syntax', function() {
 
 
         it('<script>', function() {
-            // Check that the only text nodes whose contents are mutated are the ones *not* inside <script> elements.
             testNode.innerHTML = "<p>Hello</p><script>alert(123);</script><p>Goodbye</p>";
             ko.applyBindings({ sometext: 'hello' }, testNode);
             expect(testNode).toContainHtml('<p>replaced</p><script>alert(123);</script><p>replaced</p>');
@@ -473,10 +472,16 @@ describe('Binding attribute syntax', function() {
 
 
         it('<textarea>', function() {
-            // Check that the only text nodes whose contents are mutated are the ones *not* inside <textarea> elements.
             testNode.innerHTML = "<p>Hello</p><textarea>test</textarea><p>Goodbye</p>";
             ko.applyBindings({ sometext: 'hello' }, testNode);
             expect(testNode).toContainHtml('<p>replaced</p><textarea>test</textarea><p>replaced</p>');
+        });
+
+        it('<template>', function() {
+            document.createElement('template'); // For old IE
+            testNode.innerHTML = "<p>Hello</p><template>test</template><p>Goodbye</p>";
+            ko.applyBindings({ sometext: 'hello' }, testNode);
+            expect(testNode).toContainHtml('<p>replaced</p><template>test</template><p>replaced</p>');
         });
     });
 });
