@@ -7,6 +7,7 @@ Knockout is tested on the following browsers:
 
  * Mozilla Firefox (versions 3.5 - current)
  * Google Chrome (current)
+ * Microsoft Edge (current)
  * Microsoft Internet Explorer (versions 6 - 11)
  * Apple Safari for Mac OS (current)
  * Apple Safari for iOS (versions 6 - 8)

@@ -91,9 +91,9 @@ Normally, a computed observable updates and notifies its subscribers immediately
 In some scenarios, it is useful to programmatically determine if you are dealing with a computed observable. Knockout provides a utility function, `ko.isComputed` to help with this situation. For example, you might want to exclude computed observables from data that you are sending back to the server.
 
     for (var prop in myObject) {
-      if (myObject.hasOwnProperty(prop) && !ko.isComputed(myObject[prop])) {
-          result[prop] = myObject[prop];
-      }
+        if (myObject.hasOwnProperty(prop) && !ko.isComputed(myObject[prop])) {
+            result[prop] = myObject[prop];
+        }
     }
 
 Additionally, Knockout provides similar functions that can operate on observables and computed observables:

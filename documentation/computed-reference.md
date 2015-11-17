@@ -16,7 +16,7 @@ A computed observable can be constructed using one of the following forms:
 
 1. `ko.computed( options )` --- This single parameter form for creating a computed observable accepts a JavaScript object with any of the following properties.
   * `read` --- Required. A function that is used to evaluate the computed observable's current value.
-  * `write` --- Optional. If given, makes the computed observable writable. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
+  * `write` --- Optional. If given, makes the computed observable *writable*. This is a function that receives values that other code is trying to write to your computed observable. It's up to you to supply custom logic to handle the incoming values, typically by writing the values to some underlying observable(s).
   * `owner` --- Optional. If given, defines the value of `this` whenever KO invokes your `read` or `write` callbacks.
   * `pure` --- Optional. If this option is `true`, the computed observable will be set up as a [*pure* computed observable](computed-pure.html). This option is an alternative to the `ko.pureComputed` constructor.
   * `deferEvaluation` --- Optional. If this option is `true`, then the value of the computed observable will not be evaluated until something actually attempts to access its value or manually subscribes to it. By default, a computed observable has its value determined immediately during creation.
@@ -38,6 +38,15 @@ A computed observable provides the following functions:
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
 * `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section on [`peek`](computed-dependency-tracking.html#controlling-dependencies-using-peek)).
 * `subscribe( callback [,callbackTarget, event] )` --- Registers a [manual subscription](observables.html#explicitly-subscribing-to-observables) to be notified of changes to the computed observable.
+
+## Determining the observable type
+
+To check if a property is observable, computed, etc., use the following set of functions:
+
+* `ko.isObservable` --- returns `true` for observables, observable arrays, and all computed observables.
+* `ko.isWritableObservable` --- returns `true` for observables, observable arrays, and *writable* computed observables (also aliased as `ko.isWriteableObservable`).
+* `ko.isComputed` --- returns `true` for all computed observables.
+* `ko.isPureComputed` --- returns `true` for *pure* computed observables.
 
 ## Using the computed context
 
