@@ -652,7 +652,7 @@ describe('Binding: Foreach', function() {
                 ko.removeNode(elem);
             }
         };
-        ko.applyBindings({ planets: planets, beforeRemove, beforeRemove }, testNode);
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove }, testNode);
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Moon++--Ceres++');
 
         // Remove an item; the surrounding text nodes are removed immediately, but not the element node
