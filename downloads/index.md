@@ -45,7 +45,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 * **CDNJS** ([about](https://cdnjs.com/))
 
-  * [Knockout version 3.3.0](https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js)
+  * [Knockout version 3.4.0](https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js)
 
 ### Archive of all versions
 
