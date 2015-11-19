@@ -142,14 +142,9 @@
             return ko.dependentObservable( // So the DOM is automatically updated when any dependency changes
                 function () {
                     // Ensure we've got a proper binding context to work with
-                    var bindingContext;
-                    if (dataOrBindingContext instanceof ko.bindingContext) {
-                        bindingContext = dataOrBindingContext;
-                    } else {
-                        // Create dependency so that a new context is created when data updates
-                        ko.utils.unwrapObservable(dataOrBindingContext);
-                        bindingContext = new ko.bindingContext(dataOrBindingContext);
-                    }
+                    var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
+                        ? dataOrBindingContext
+                        : new ko.bindingContext(dataOrBindingContext, null, null, null, { "exportDependencies": true });
 
                     var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext),
                         renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
@@ -266,9 +261,6 @@
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
-
-                // Create dependency on template view model to re-render when it mutates:
-                ko.utils.unwrapObservable(options['data']);
             }
 
             if ('foreach' in options) {
@@ -280,7 +272,7 @@
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var innerBindingContext = ('data' in options) ?
-                    bindingContext['createChildContext'](options['data'], options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
+                    bindingContext.createStaticChildContext(options['data'], options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
                     bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
                 templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }
