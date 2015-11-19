@@ -1,1 +1,21 @@
 language: node_js
+node_js:
+- '0.10'
+sudo: false
+env:
+  global:
+  - CI_AUTOMATE_PROJECT="$TRAVIS_REPO_SLUG"
+  - CI_AUTOMATE_BUILD="Travis build No. $TRAVIS_BUILD_NUMBER for $TRAVIS_REPO_SLUG"
+script:
+  - gulp test:phantomjs --once
+  - gulp test:phantomjs --once --jquery
+  - gulp test:phantomjs --once --jquery3-compat
+  - gulp test:sauce --chrome
+  - sleep 10 && gulp test:sauce --firefox
+  - sleep 10 && gulp test:sauce --mobile
+  - sleep 10 && gulp test:sauce --opera
+  - sleep 10 && gulp test:sauce --ie
+  - sleep 10 && gulp test:sauce --ie-legacy --innershiv --json2
+cache:
+  directories:
+    - node_modules

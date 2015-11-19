@@ -1,0 +1,38 @@
+rules:
+  indent:
+    - 2
+    - 4
+  quotes:
+    - 2
+    - single
+  linebreak-style:
+    - 2
+    - unix
+  semi:
+    - 2
+    - always
+  strict: 0
+  dot-notation: 0
+  no-underscore-dangle: 0
+  eol-last: 0
+  curly: 0
+  quotes: 0
+  camelcase: 0
+env:
+  browser: true
+globals:
+  ko: true
+  koExports: true
+  jQueryInstance: true
+  DEBUG: true
+
+  # jasmine global variables
+  jasmine: true
+  describe: true
+  it: true
+  iit: true
+  ddescribe: true
+  afterEach: true
+  beforeEach: true
+  expect: true
+  testNode: true

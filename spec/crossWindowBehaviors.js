@@ -1,7 +1,6 @@
 describe('Cross-window support', function() {
-
     it('Should work in another window', function () {
-        var win2 = window.open("blank.html", "_blank", "height=150,location=no,menubar=no,toolbar=no,width=250"),
+        var win2 = window.open("/base/spec/blank.html", "_blank", "height=150,location=no,menubar=no,toolbar=no,width=250"),
             body2;
 
         if (win2) {

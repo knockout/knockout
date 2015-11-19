@@ -1,0 +1,376 @@
+#
+#   Configuration and settings for Knockout
+#
+banner: |
+  /*!
+   * Knockout JavaScript library v<%= pkg.version %>
+   * (c) Steven Sanderson - <%= pkg.homepage %>
+   * License: <%= pkg.licenses[0].type %> (<%= pkg.licenses[0].url %>)
+   */
+
+# knockout-latest[.debug].js goes here when compiled
+buildDir: build/output/
+build:
+  main: knockout-latest.js
+  debug: knockout-latest.debug.js
+  headers:
+  # This is from what was build/fragments/extern-pre.js:
+  - |-
+    (function(undefined){
+        // (0, eval)('this') is a robust way of getting a reference to the global object
+        // For details, see http://stackoverflow.com/questions/14119988/return-this-0-evalthis/14120023#14120023
+        /* const */var DEBUG = <%= debug %>;
+        var window = this || (0, eval)('this'),
+            document = window['document'],
+            navigator = window['navigator'],
+            jQueryInstance = window["jQuery"],
+            JSON = window["JSON"];
+
+
+  # This was originally from what was build/fragments/amd-pre.js:
+  # Based on
+  #  https://github.com/umdjs/umd/blob/master/returnExports.js#L41
+  - |
+    (function(factory) {
+        // Support three module loading scenarios
+        if (typeof define === 'function' && define['amd']) {
+            // [1] AMD anonymous module
+            define(['exports', 'require'], factory);
+        } else if (typeof exports === 'object' && typeof module === 'object') {
+            // [2] CommonJS/Node.js
+            factory(module['exports'] || exports);  // module.exports is for Node.js
+        } else {
+            // [3] No module loader (plain <script> tag) - put directly in global namespace
+            factory(window['ko'] = {});
+        }
+    }(function(koExports, amdRequire){
+
+  footers:
+  # This is from what was build/fragments/amd-post.js:
+  - |-
+    }));
+
+  # This is from what was build/fragments/extern-post.js
+  - |-
+    }());
+
+
+# Created in tagged 'release' versions
+distDir: dist/
+dist:
+  min: knockout.min.js
+  debug: knockout.debug.js
+
+
+
+# Files that have their 'version' bumped
+PACKAGE_FILES:
+  - ./package.json
+  - ./bower.json
+
+# Minifier
+# uglify | closure
+minifier: uglify
+
+# Uglify options
+uglify_options: {}
+
+# Closure compiler
+closure_options:
+  compilation_level: ADVANCED_OPTIMIZATIONS
+  output_wrapper: "(function() {%output%})();"
+
+# Files that have their trailing spaces checked on lint
+lint:
+  sources:
+    - 'spec/*.{js,html,css,bat,ps1,sh}'
+    - 'src/*.{js,html,css,bat,ps1,sh}'
+    - 'build/fragments/*'
+  space_options:
+    newline: false
+    trailingspaces: true
+    ignores:
+      - js-comments
+
+# Source files
+sources:
+  - src/namespace.js
+  - src/google-closure-compiler-utils.js
+  - src/version.js
+  - src/options.js
+  - src/utils.js
+  - src/utils.domData.js
+  - src/utils.domNodeDisposal.js
+  - src/utils.domManipulation.js
+  - src/memoization.js
+  - src/tasks.js
+  - src/subscribables/extenders.js
+  - src/subscribables/subscribable.js
+  - src/subscribables/dependencyDetection.js
+  - src/subscribables/observable.js
+  - src/subscribables/observableArray.js
+  - src/subscribables/observableArray.changeTracking.js
+  - src/subscribables/dependentObservable.js
+  - src/subscribables/mappingHelpers.js
+  - src/binding/selectExtensions.js
+  - src/binding/expressionRewriting.js
+  - src/virtualElements.js
+  - src/binding/bindingProvider.js
+  - src/binding/bindingAttributeSyntax.js
+  - src/components/loaderRegistry.js
+  - src/components/defaultLoader.js
+  - src/components/customElements.js
+  - src/components/componentBinding.js
+  - src/binding/defaultBindings/attr.js
+  - src/binding/defaultBindings/checked.js
+  - src/binding/defaultBindings/css.js
+  - src/binding/defaultBindings/enableDisable.js
+  - src/binding/defaultBindings/event.js
+  - src/binding/defaultBindings/foreach.js
+  - src/binding/defaultBindings/hasfocus.js
+  - src/binding/defaultBindings/html.js
+  - src/binding/defaultBindings/ifIfnotWith.js
+  - src/binding/defaultBindings/options.js
+  - src/binding/defaultBindings/selectedOptions.js
+  - src/binding/defaultBindings/style.js
+  - src/binding/defaultBindings/submit.js
+  - src/binding/defaultBindings/text.js
+  - src/binding/defaultBindings/textInput.js
+  - src/binding/defaultBindings/uniqueName.js
+  - src/binding/defaultBindings/value.js
+  - src/binding/defaultBindings/visible.js
+  # click depends on event - The order matters for specs, which includes each file individually
+  - src/binding/defaultBindings/click.js
+  - src/templating/templateEngine.js
+  - src/templating/templateRewriting.js
+  - src/templating/templateSources.js
+  - src/templating/templating.js
+  - src/binding/editDetection/compareArrays.js
+  - src/binding/editDetection/arrayToDomNodeChildren.js
+  - src/templating/native/nativeTemplateEngine.js
+  - src/templating/jquery.tmpl/jqueryTmplTemplateEngine.js
+
+spec_files:
+  # Note: There are some side-effects in the specs, so the order of these
+  # tests is important, until those side-effects are fixed.
+  # FIXME: Ideally these should be in alphabetical order.
+  - ./spec/arrayEditDetectionBehaviors.js
+  - ./spec/arrayToDomEditDetectionBehaviors.js
+  - ./spec/asyncBehaviors.js
+  - ./spec/asyncBindingBehaviors.js
+  - ./spec/memoizationBehaviors.js
+  - ./spec/subscribableBehaviors.js
+  - ./spec/observableBehaviors.js
+  - ./spec/observableArrayBehaviors.js
+  - ./spec/observableArrayChangeTrackingBehaviors.js
+  - ./spec/dependentObservableBehaviors.js
+  - ./spec/dependentObservableDomBehaviors.js
+  - ./spec/pureComputedBehaviors.js
+  - ./spec/extenderBehaviors.js
+  - ./spec/domNodeDisposalBehaviors.js
+  - ./spec/mappingHelperBehaviors.js
+  - ./spec/expressionRewritingBehaviors.js
+  - ./spec/bindingPreprocessingBehaviors.js
+  - ./spec/nodePreprocessingBehaviors.js
+  - ./spec/bindingAttributeBehaviors.js
+  - ./spec/bindingDependencyBehaviors.js
+  - ./spec/templatingBehaviors.js
+  - ./spec/jsonPostingBehaviors.js
+  - ./spec/nativeTemplateEngineBehaviors.js
+  - ./spec/taskBehaviors.js
+  - ./spec/utilsBehaviors.js
+  - ./spec/utilsDomBehaviors.js
+  - ./spec/onErrorBehaviors.js
+  - ./spec/parseHtmlFragment.js
+
+  - ./spec/components/loaderRegistryBehaviors.js
+  - ./spec/components/defaultLoaderBehaviors.js
+  - ./spec/components/componentBindingBehaviors.js
+  - ./spec/components/customElementBehaviors.js
+
+  - ./spec/defaultBindings/attrBehaviors.js
+  - ./spec/defaultBindings/checkedBehaviors.js
+  - ./spec/defaultBindings/clickBehaviors.js
+  - ./spec/defaultBindings/cssBehaviors.js
+  - ./spec/defaultBindings/enableDisableBehaviors.js
+  - ./spec/defaultBindings/eventBehaviors.js
+  - ./spec/defaultBindings/foreachBehaviors.js
+  - ./spec/defaultBindings/hasfocusBehaviors.js
+  - ./spec/defaultBindings/htmlBehaviors.js
+  - ./spec/defaultBindings/ifBehaviors.js
+  - ./spec/defaultBindings/ifnotBehaviors.js
+  - ./spec/defaultBindings/optionsBehaviors.js
+  - ./spec/defaultBindings/selectedOptionsBehaviors.js
+  - ./spec/defaultBindings/styleBehaviors.js
+  - ./spec/defaultBindings/submitBehaviors.js
+  - ./spec/defaultBindings/textBehaviors.js
+  - ./spec/defaultBindings/textInputBehaviors.js
+  - ./spec/defaultBindings/uniqueNameBehaviors.js
+  - ./spec/defaultBindings/valueBehaviors.js
+  - ./spec/defaultBindings/visibleBehaviors.js
+  - ./spec/defaultBindings/withBehaviors.js
+
+  - ./spec/crossWindowBehaviors.js
+
+
+#       Karma!
+#       ~~~~~~
+#
+# Note issues with concurrency:
+# https://github.com/karma-runner/karma-sauce-launcher/issues/40
+karma:
+  basePath: ''
+  port: 9875
+  colors: true
+  logLevel: INFO  # from karma/lib/constants.js
+  autoWatch: true
+  browsers: []  # Set dynamically in gulp/test.js
+  singleRun: false
+  frameworks:
+    - jasmine
+  files:
+    - ./spec/helpers/setup.js
+    - {pattern: "spec/blank.html", included: false}
+    # Extended by gulpfile
+  exclude: []
+  client:
+    # Set captureConsole to true to print log messages to the console, per:
+    #    karma-runner/karma-mocha/issues/47
+    # Note that trying to print a DOM element will trigger a SecurityError
+    # accessing document.cookie, as per:
+    #    https://github.com/karma-runner/karma/issues/1106
+    captureConsole: true
+  reporters:
+    # - progress
+    - dots
+
+# These are libraries that can be loaded to test variants.
+# Run with e.g. --jquery, --modernizr, ...
+test_alt_libs:
+  jquery: ./spec/helpers/jquery.js
+  jquery3-compat: ./spec/helpers/jquery3-compat.js
+  jquery3: ./spec/helpers/jquery3.js
+  modernizr: ./spec/helpers/modernizr.js
+  json2: ./spec/helpers/json2.js
+
+  # Note: innerShiv is deprecated in favour of html5shiv (https://github.com/aFarkas/html5shiv)
+  # KO retains back-compatible support for innershiv, but we will consider dropping this and
+  # supporting only html5shiv as of the next major version of KO (unless KO itself drops support
+  # for IE 6-8 in the next major version, in which case this is all irrelevant).
+  # It doesn't really matter very much, because essentially everyone who targets IE6-8 is also
+  # using jQuery, and if you are using jQuery then you don't need innerShiv.
+  innershiv: ./spec/helpers/innershiv.js
+
+# These are the browsers that'll get tested by SauceLabs.
+# These are bucketed together in groups of no more than 3, because of
+#   https://github.com/karma-runner/karma-sauce-launcher/issues/40
+#
+# For more config options:
+ # https://docs.saucelabs.com/reference/platforms-configurator/#/
+sauceLauncherGroups:
+  chrome:
+    # Chrome
+    chrome_43:
+      browserName: chrome
+      platform: Linux
+      version: '43'
+
+    chrome_35:
+      browserName: chrome
+      platform: Linux
+      version: '35'
+
+    chrome_24:
+      browserName: chrome
+      platform: Linux
+      version: '26'
+
+  firefox:
+    # Firefox
+    firefox_38:
+      browserName: firefox
+      platform: Linux
+      version: '38'
+
+    firefox_24:
+      browserName: firefox
+      platform: Linux
+      version: '24'
+
+    firefox_17:
+      browserName: firefox
+      platform: Linux
+      version: '17'
+  #
+  # firefox_4:
+  #   browserName: firefox
+  #   version: '4'
+  safari:
+    safari_8:
+      browserName: safari
+      platform: OS X 10.10
+      version: '8.0'
+
+    safari_7:
+      browserName: safari
+      platform: OS X 10.9
+      version: '7.0'
+
+    safari_6:
+      browserName: safari
+      platform: OS X 10.8
+      version: '6.0'
+
+  mobile:
+    # iOS
+    ios_safari:
+      browserName: iphone
+      platform: OS X 10.10
+      version: '8.2'
+
+    # Android
+    android_5_1:
+      browserName: android
+      platform: Linux
+      version: "5.1"
+      deviceName: "Android Emulator"
+
+    android_4_0:
+      browserName: android
+      platform: Linux
+      version: "4.0"
+      deviceName: "Android Emulator"
+
+  ie:
+  # Internet Explorer
+    ie_11:
+      browserName: internet explorer
+      platform: Windows 8.1
+      version: '11'
+
+    ie_10:
+      browserName: internet explorer
+      platform: Windows 8
+      version: "10.0"
+
+    ie_9:
+      browserName: internet explorer
+      platform: Windows 7
+      version: "9.0"
+
+  ie-legacy:
+    ie_8:
+      browserName: internet explorer
+      platform: Windows 7
+      version: "8.0"
+
+    ie_7:
+      browserName: internet explorer
+      platform: Windows XP
+      version: '7.0'
+
+  opera:
+    opera_12_12:
+      browserName: opera
+      platform: Windows XP
+      version: '12.12'
