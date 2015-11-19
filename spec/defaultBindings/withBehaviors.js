@@ -181,6 +181,7 @@ describe('Binding: With', function() {
         testNode.innerHTML = "<div data-bind='with: item'><input data-bind='value: $rawData'/></div>";
         var item = ko.observable('one');
         ko.applyBindings({ item: item }, testNode);
+        expect(item.getSubscriptionsCount('change')).toEqual(2);    // only subscriptions are the with and value bindings
         expect(testNode.childNodes[0]).toHaveValues(['one']);
 
         // Should update observable when input is changed

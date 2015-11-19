@@ -386,19 +386,22 @@ describe('Templating', function() {
     });
 
     it('Data binding syntax should be able to use $rawData in binding value to refer to a top level template\'s view model observable', function() {
+        var data = ko.observable('value');
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: ko.isObservable($rawData)'></div>" }));
-        ko.renderTemplate("someTemplate", ko.observable('value'), null, testNode);
+        ko.renderTemplate("someTemplate", data, null, testNode);
         expect(testNode.childNodes[0]).toContainText("true");
+        expect(data.getSubscriptionsCount('change')).toEqual(1);    // only subscription is from the templating code
     });
 
     it('Data binding syntax should be able to use $rawData in binding value to refer to a data-bound template\'s view model observable', function() {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: ko.isObservable($rawData)'></div>" }));
         testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
 
-        viewModel = { someProp: ko.observable('value') };
+        var viewModel = { someProp: ko.observable('value') };
         ko.applyBindings(viewModel, testNode);
 
         expect(testNode.childNodes[0].childNodes[0]).toContainText("true");
+        expect(viewModel.someProp.getSubscriptionsCount('change')).toEqual(1);    // only subscription is from the templating code
     });
 
     it('Data binding syntax should defer evaluation of variables until the end of template rendering (so bindings can take independent subscriptions to them)', function () {
