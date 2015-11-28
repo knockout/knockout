@@ -104,8 +104,9 @@ ko.utils = (function () {
 
         arrayIndexOf: function (array, item, unwrapArrayElements) {
             if (unwrapArrayElements) {
+                var itemToCompare = ko.utils.peekObservable(item);
                 for (var i = 0, j = array.length; i < j; i++)
-                    if (ko.utils.unwrapObservable(array[i]) === ko.utils.unwrapObservable(item))
+                    if (ko.utils.peekObservable(array[i]) === itemToCompare)
                         return i;
             }
             else {
