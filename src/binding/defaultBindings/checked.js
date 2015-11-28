@@ -14,6 +14,9 @@ ko.bindingHandlers['checked'] = {
             return element.value;
         });
 
+        // This binding tells the control that the items in the array will be observable objects
+        var checkedArrayContainsObservables = allBindings['has']('checkedArrayContainsObservables') && allBindings.get('checkedArrayContainsObservables');
+
         function updateModel() {
             // This updates the model value from the view value.
             // It runs in response to DOM events (click) and changes in checkedValue.
@@ -39,15 +42,15 @@ ko.bindingHandlers['checked'] = {
                     // currently checked, replace the old elem value with the new elem value
                     // in the model array.
                     if (isChecked) {
-                        ko.utils.addOrRemoveItem(writableValue, elemValue, true);
-                        ko.utils.addOrRemoveItem(writableValue, oldElemValue, false);
+                        ko.utils.addOrRemoveItem(writableValue, elemValue, true, checkedArrayContainsObservables);
+                        ko.utils.addOrRemoveItem(writableValue, oldElemValue, false, checkedArrayContainsObservables);
                     }
 
                     oldElemValue = elemValue;
                 } else {
                     // When we're responding to the user having checked/unchecked a checkbox,
                     // add/remove the element value to the model array.
-                    ko.utils.addOrRemoveItem(writableValue, elemValue, isChecked);
+                    ko.utils.addOrRemoveItem(writableValue, elemValue, isChecked, checkedArrayContainsObservables);
                 }
                 if (rawValueIsNonArrayObservable && ko.isWriteableObservable(modelValue)) {
                     modelValue(writableValue);
@@ -64,7 +67,7 @@ ko.bindingHandlers['checked'] = {
 
             if (valueIsArray) {
                 // When a checkbox is bound to an array, being checked represents its value being present in that array
-                element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
+                element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue(), checkedArrayContainsObservables) >= 0;
             } else if (isCheckbox) {
                 // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish
                 element.checked = modelValue;

@@ -102,12 +102,19 @@ ko.utils = (function () {
                 action(array[i], i);
         },
 
-        arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
-            for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] === item)
-                    return i;
+        arrayIndexOf: function (array, item, unwrapArrayElements) {
+            if (unwrapArrayElements) {
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (ko.utils.unwrapObservable(array[i]) === ko.utils.unwrapObservable(item))
+                        return i;
+            }
+            else {
+                if (typeof Array.prototype.indexOf == "function")
+                    return Array.prototype.indexOf.call(array, item);
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (array[i] === item)
+                        return i;
+            }
             return -1;
         },
 
@@ -164,8 +171,13 @@ ko.utils = (function () {
             return array;
         },
 
-        addOrRemoveItem: function(array, value, included) {
-            var existingEntryIndex = ko.utils.arrayIndexOf(ko.utils.peekObservable(array), value);
+        addOrRemoveItem: function(array, value, included, wrapArrayElements) {
+            var existingEntryIndex = ko.utils.arrayIndexOf(ko.utils.peekObservable(array), value, wrapArrayElements);
+
+            if (wrapArrayElements && !ko.isObservable(value)) {
+                value = ko.observable(value);
+            }
+
             if (existingEntryIndex < 0) {
                 if (included)
                     array.push(value);
