@@ -108,6 +108,30 @@ describe('Components: Component binding', function() {
         expect(testNode).toContainText('From the viewmodel');
     });
 
+    it('will run the afterRender function', function() {
+        var testObject = {
+            a: 'b'
+        };
+        var componentConfig = {
+            template: '<div>testData</div>',
+            viewModel: {
+                createViewModel: function(params, componentInfo) {
+                    return { someValue: 'From the viewmodel' };
+                }
+            },
+            afterRender: function() {
+                this.a = 'c';
+            }.bind(testObject)
+        };
+        testNode.innerHTML = '<div id="testNodeID" data-bind="component: testComponentBindingValue">testData</div>';
+
+        ko.components.register(testComponentName, componentConfig);
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+        console.log('i ran');
+        expect(testObject.a).toEqual('c');
+    });
+
     it('Handles absence of viewmodel by using the params', function() {
         ko.components.register(testComponentName, { template: '<div data-bind="text: myvalue"></div>' });
         testComponentParams.myvalue = 'some parameter value';
