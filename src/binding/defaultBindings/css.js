@@ -1,5 +1,5 @@
 var classesWrittenByBindingKey = '__ko__cssValue';
-ko.bindingHandlers['css'] = {
+ko.bindingHandlers['class'] = ko.bindingHandlers['css'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
         if (value !== null && typeof value == "object") {

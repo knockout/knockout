@@ -144,7 +144,7 @@
                     // Ensure we've got a proper binding context to work with
                     var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
                         ? dataOrBindingContext
-                        : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
+                        : new ko.bindingContext(dataOrBindingContext, null, null, null, { "exportDependencies": true });
 
                     var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext),
                         renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
@@ -245,7 +245,6 @@
         },
         'update': function (element, valueAccessor, allBindings, viewModel, bindingContext) {
             var value = valueAccessor(),
-                dataValue,
                 options = ko.utils.unwrapObservable(value),
                 shouldDisplay = true,
                 templateComputed = null,
@@ -262,8 +261,6 @@
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
-
-                dataValue = ko.utils.unwrapObservable(options['data']);
             }
 
             if ('foreach' in options) {
@@ -275,7 +272,7 @@
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var innerBindingContext = ('data' in options) ?
-                    bindingContext['createChildContext'](dataValue, options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
+                    bindingContext.createStaticChildContext(options['data'], options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
                     bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
                 templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }

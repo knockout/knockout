@@ -176,4 +176,21 @@ describe('Binding: With', function() {
         viewModel.topitem(null);
         expect(testNode).toContainHtml("hello <!-- ko with: topitem --><!-- /ko -->");
     });
+
+    it('Should provide access to an observable viewModel through $rawData', function() {
+        testNode.innerHTML = "<div data-bind='with: item'><input data-bind='value: $rawData'/></div>";
+        var item = ko.observable('one');
+        ko.applyBindings({ item: item }, testNode);
+        expect(item.getSubscriptionsCount('change')).toEqual(2);    // only subscriptions are the with and value bindings
+        expect(testNode.childNodes[0]).toHaveValues(['one']);
+
+        // Should update observable when input is changed
+        testNode.childNodes[0].childNodes[0].value = 'two';
+        ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+        expect(item()).toEqual('two');
+
+        // Should update the input when the observable changes
+        item('three');
+        expect(testNode.childNodes[0]).toHaveValues(['three']);
+    });
 });
