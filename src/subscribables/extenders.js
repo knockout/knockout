@@ -49,6 +49,7 @@ ko.extenders = {
             target.limit(function (callback) {
                 var handle;
                 return function () {
+                    if (ko.tasks.isScheduled(callback)) return;
                     ko.tasks.cancel(handle);
                     handle = ko.tasks.schedule(callback);
                     target['notifySubscribers'](undefined, 'dirty');
