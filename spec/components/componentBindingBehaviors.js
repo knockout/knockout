@@ -128,7 +128,7 @@ describe('Components: Component binding', function() {
         ko.components.register(testComponentName, componentConfig);
         ko.applyBindings(outerViewModel, testNode);
         jasmine.Clock.tick(1);
-        console.log('i ran');
+        
         expect(testObject.a).toEqual('c');
     });
 
