@@ -49,19 +49,17 @@ ko.extenders = {
             target.limit(function (callback) {
                 var handle;
                 return function () {
-                    var previouslyScheduled = scheduleStack.indexOf(handle) >= 0;
+                    if (scheduleStack.indexOf(handle) >= 0)
+                        return;
 
-                    // reschedule the task in any event
                     ko.tasks.cancel(handle);
                     handle = ko.tasks.schedule(callback);
 
-                    if (!previouslyScheduled) {
-                        try {
-                           scheduleStack.push(handle);
-                           target['notifySubscribers'](undefined, 'dirty');
-                        } finally {
-                           scheduleStack.pop();
-                        }
+                    try {
+                       scheduleStack.push(handle);
+                       target['notifySubscribers'](undefined, 'dirty');
+                    } finally {
+                       scheduleStack.pop();
                     }
                 };
             });
