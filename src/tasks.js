@@ -89,13 +89,6 @@ ko.tasks = (function () {
             }
         },
 
-        isScheduled: function(func) {
-            var keys = Object.keys(taskQueue);
-            for (var a = keys.length - 1; a >= 0; a--)
-                if (taskQueue[keys[a]] === func) return true;
-            return false;
-        },
-
         // For testing only: reset the queue and return the previous queue length
         'resetForTesting': function () {
             var length = taskQueueLength - nextIndexToProcess;

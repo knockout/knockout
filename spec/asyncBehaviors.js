@@ -949,5 +949,18 @@ describe('Deferred', function() {
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([['i(x,h(cx,g(ex,fx),d(bx,cx)),bx,fx)']]);    // only one evaluation and notification
         });
+
+        it('Should prevent infinite scheduling of circular deferred computed observables', function() {
+           var a = ko.observable(); // dependency to prevent the following computeds from going inactive
+
+           // computeds depend on each other to create circular dependencies
+           var b = ko.computed({ read : function() { a(); return d(); }, deferEvaluation : true }).extend({ deferred : true });
+           var d = ko.computed({ read : function() { a(); return b(); }, deferEvaluation : true }).extend({ deferred : true });
+
+           d();
+           a('something');   // this will throw a Max stack error if it doesn't work properly
+
+           jasmine.Clock.tick(1);
+        });
     });
 });

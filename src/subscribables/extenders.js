@@ -49,10 +49,20 @@ ko.extenders = {
             target.limit(function (callback) {
                 var handle;
                 return function () {
-                    if (ko.tasks.isScheduled(callback)) return;
+                    var previouslyScheduled = scheduleStack.indexOf(handle) >= 0;
+
+                    // reschedule the task in any event
                     ko.tasks.cancel(handle);
                     handle = ko.tasks.schedule(callback);
-                    target['notifySubscribers'](undefined, 'dirty');
+
+                    if (!previouslyScheduled) {
+                        try {
+                           scheduleStack.push(handle);
+                           target['notifySubscribers'](undefined, 'dirty');
+                        } finally {
+                           scheduleStack.pop();
+                        }
+                    }
                 };
             });
         }
@@ -64,6 +74,8 @@ ko.extenders = {
             valuesArePrimitiveAndEqual;
     }
 };
+
+var scheduleStack = [];
 
 var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
 function valuesArePrimitiveAndEqual(a, b) {
