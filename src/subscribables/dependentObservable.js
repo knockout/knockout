@@ -463,6 +463,7 @@ ko.exportProperty(computedFn, 'peek', computedFn.peek);
 ko.exportProperty(computedFn, 'dispose', computedFn.dispose);
 ko.exportProperty(computedFn, 'isActive', computedFn.isActive);
 ko.exportProperty(computedFn, 'getDependenciesCount', computedFn.getDependenciesCount);
+ko.exportProperty(computedFn, 'getDependencies', computedFn.getDependencies);
 
 ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget) {
     if (typeof evaluatorFunctionOrOptions === 'function') {
