@@ -143,6 +143,15 @@ var computedFn = {
     getDependenciesCount: function () {
         return this[computedState].dependenciesCount;
     },
+    getDependencies: function () {
+        var dependencyTracking = this[computedState].dependencyTracking, dependentObservables = [];
+
+        ko.utils.objectForEach(dependencyTracking, function (id, dependency) {
+            dependentObservables[dependency._order] = dependency._target;
+        });
+
+        return dependentObservables;
+    },
     addDependencyTracking: function (id, target, trackingObj) {
         if (this[computedState].pure && target === this) {
             throw Error("A 'pure' computed must not be called recursively");

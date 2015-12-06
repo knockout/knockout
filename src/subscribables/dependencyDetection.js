@@ -50,6 +50,11 @@ ko.computedContext = ko.dependencyDetection = (function () {
                 return currentFrame.computed.getDependenciesCount();
         },
 
+        getDependencies: function () {
+            if (currentFrame)
+                return currentFrame.computed.getDependencies();
+        },
+
         isInitial: function() {
             if (currentFrame)
                 return currentFrame.isInitial;
