@@ -15,13 +15,13 @@ ko.bindingHandlers['value'] = {
         
         var isSafari = window && window.navigator && (window.navigator.userAgent.toLowerCase().indexOf("safari") >= 0);
         if (isSafari) {
-          var isPossibleTextInput = element.tagName.toLowerCase() == "input" && 
-              ["hidden", "checkbox", "radio", "file", "submit", "button"].indexOf(element.type) < 0;
+			var isPossibleTextInput = element.tagName.toLowerCase() == "input" && 
+				["hidden", "checkbox", "radio", "file", "submit", "button"].indexOf(element.type) < 0;
           
-          var safariAutoCompleteHackNeeded = isPossibleTextInput && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
-          if (safariAutoCompleteHackNeeded) {
-            eventsToCatch.unshift("blur");
-          }
+			var safariAutoCompleteHackNeeded = isPossibleTextInput && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
+			if (safariAutoCompleteHackNeeded) {
+				eventsToCatch.unshift("blur");
+			}
         }
 		
         if (requestedEventsToCatch) {
