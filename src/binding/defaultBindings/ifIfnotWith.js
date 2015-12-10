@@ -23,10 +23,8 @@ function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
                         }
                         var newContext = makeContextCallback ? makeContextCallback(bindingContext, rawValue) : bindingContext;
                         ko.applyBindingsToDescendants(newContext, element);
-                        if (element.childNodes.length) {
-                            if (allBindings.has('afterRender')) {
-                                ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [element.childNodes, newContext['$data']]);
-                            }
+                        if (element.childNodes.length && allBindings.has('afterRender')) {
+                            ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [element.childNodes, newContext['$data']]);
                         }
                     } else {
                         ko.virtualElements.emptyNode(element);
