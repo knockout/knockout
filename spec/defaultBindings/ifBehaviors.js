@@ -118,7 +118,7 @@ describe('Binding: If', function() {
         ko.applyBindings(viewModel, testNode);
         expect(callbacks).toEqual(1);
         expect(testNode.childNodes[0]).toContainText('hello');
-        
+
         viewModel.condition(false);
         expect(callbacks).toEqual(1);
         expect(testNode.childNodes[0].childNodes.length).toEqual(0);
@@ -165,7 +165,7 @@ describe('Binding: If', function() {
                 callbacks++;
             }
         };
-        
+
         ko.applyBindings(viewModel, testNode);
 
         expect(testNode.childNodes[0]).toContainText('[hello]');
