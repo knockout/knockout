@@ -11,8 +11,19 @@ ko.bindingHandlers['value'] = {
         var eventsToCatch = ["change"];
         var requestedEventsToCatch = allBindings.get("valueUpdate");
         var propertyChangedFired = false;
-        var elementValueBeforeEvent = null;
-
+        var elementValueBeforeEvent = null;      
+        
+        var isSafari = window && window.navigator && (window.navigator.userAgent.toLowerCase().indexOf("safari") >= 0);
+        if (isSafari) {
+          var isPossibleTextInput = element.tagName.toLowerCase() == "input" && 
+              ["hidden", "checkbox", "radio", "file", "submit", "button"].indexOf(element.type) < 0;
+          
+          var safariAutoCompleteHackNeeded = isPossibleTextInput && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
+          if (safariAutoCompleteHackNeeded) {
+            eventsToCatch.unshift("blur");
+          }
+        }
+		
         if (requestedEventsToCatch) {
             if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
                 requestedEventsToCatch = [requestedEventsToCatch];
