@@ -10,7 +10,7 @@ describe('Observable', function() {
         expect(ko.isObservable(instance)).toEqual(true);
     });
 
-    it('Should advertise that instances are not observable', function () {
+    it('Should advertise that constructors are not observable', function () {
         expect(ko.isObservable(ko.computed)).toEqual(false);
     });
 
