@@ -64,7 +64,7 @@ ko.hasPrototype = function(instance, prototype) {
 
 ko.isObservable = function (instance) {
     //test if not constructor function;
-    return  ko.hasPrototype(instance, ko.observable) && instance.fn === undefined;
+    return  ko.hasPrototype(instance, ko.observable) && (instance['fn'] === undefined);
 };
 
 ko.isWriteableObservable = function (instance) {
