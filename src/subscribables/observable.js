@@ -37,7 +37,7 @@ ko.observable = function (initialValue) {
     }
 
     return observable;
-}
+};
 
 // Define prototype for observables
 var observableFn = {
@@ -63,8 +63,10 @@ ko.hasPrototype = function(instance, prototype) {
 };
 
 ko.isObservable = function (instance) {
-    return ko.hasPrototype(instance, ko.observable);
-}
+    //test if not constructor function;
+    return  ko.hasPrototype(instance, ko.observable) && instance.fn === undefined;
+};
+
 ko.isWriteableObservable = function (instance) {
     // Observable
     if ((typeof instance == 'function') && instance[protoProperty] === ko.observable)
@@ -74,7 +76,7 @@ ko.isWriteableObservable = function (instance) {
         return true;
     // Anything else
     return false;
-}
+};
 
 ko.exportSymbol('observable', ko.observable);
 ko.exportSymbol('isObservable', ko.isObservable);

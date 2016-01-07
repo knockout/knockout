@@ -10,6 +10,11 @@ describe('Observable', function() {
         expect(ko.isObservable(instance)).toEqual(true);
     });
 
+    it('Should advertise that instances are not observable', function () {
+        expect(ko.isObservable(ko.computed)).toEqual(false);
+    });
+
+
     it('Should advertise that instances are not pure computed', function () {
         var instance = ko.observable();
         expect(ko.isPureComputed(instance)).toEqual(false);
