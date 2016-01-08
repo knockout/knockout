@@ -212,6 +212,26 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainText('first childhidden child');
     });
 
+    it('Should call an afterRenderAll callback function and not cause updates if an observable accessed in the callback is changed', function () {
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterRenderAll: callback }'><span data-bind='text: childprop'></span></div>";
+        var contentToBe = 'first childsecond childthird childfourth child',
+            callbackObservable = ko.observable(1),
+            someItems = ko.observableArray([{ childprop: 'first child' },{ childprop: 'second child'},{ childprop: 'third child'}, {childprop: 'fourth child'}]),
+            callbacks = 0;
+        ko.applyBindings({ someItems: someItems, callback: function() { callbackObservable(); callbacks++; } }, testNode);
+
+        expect(callbacks).toEqual(1);
+        // Change the array, but don't update the observableArray so that the foreach binding isn't updated
+        someItems().push({ childprop: 'hidden child'});
+        expect(testNode.childNodes[0]).toContainText(contentToBe);
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        expect(testNode.childNodes[0]).toContainText(contentToBe);
+        // Update the observableArray and verify that the binding is now updated
+        someItems.valueHasMutated();
+        expect(testNode.childNodes[0]).toContainText(contentToBe + 'hidden child');
+    });
+
     it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function() {
         // Set up a binding provider that converts text nodes to expressions
         var originalBindingProvider = ko.bindingProvider.instance,
