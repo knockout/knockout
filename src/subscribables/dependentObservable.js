@@ -282,6 +282,7 @@ var computedFn = {
             }
 
             state.latestValue = newValue;
+            if (DEBUG) computedObservable._latestValue = newValue;
 
             if (state.isSleeping) {
                 computedObservable.updateVersion();
