@@ -368,6 +368,7 @@ var pureComputedOverrides = {
                 state.dependenciesCount = 0;
                 state.isStale = true;
                 computedObservable.evaluateImmediate();
+                computedObservable.updateVersion();
             } else {
                 // First put the dependencies in order
                 var dependeciesOrder = [];
