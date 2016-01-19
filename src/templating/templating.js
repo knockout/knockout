@@ -4,7 +4,7 @@
         if ((templateEngine != undefined) && !(templateEngine instanceof ko.templateEngine))
             throw new Error("templateEngine must inherit from ko.templateEngine");
         _templateEngine = templateEngine;
-    }
+    };
 
     function invokeForEachNodeInContinuousRange(firstNode, lastNode, action) {
         var node, nextInQueue = firstNode, firstOutOfRangeNode = ko.virtualElements.nextSibling(lastNode);
@@ -127,6 +127,11 @@
         }
     }
 
+    //test array against a given object to see if its the last one
+    function testArrayEnd(forEachNodesArray, nodeData) {
+        return (forEachNodesArray[forEachNodesArray.length - 1] === nodeData);
+    }
+
     ko.renderTemplate = function (template, dataOrBindingContext, options, targetNodeOrNodeArray, renderMode) {
         options = options || {};
         if ((options['templateEngine'] || _templateEngine) == undefined)
@@ -169,7 +174,7 @@
         // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
         // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
         var arrayItemContext;
-
+        var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
             // Support selecting template as a function of the data being rendered
@@ -179,21 +184,21 @@
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
             return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
-        }
+        };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
             activateBindingsOnContinuousNodeArray(addedNodesArray, arrayItemContext);
             if (options['afterRender'])
                 options['afterRender'](addedNodesArray, arrayValue);
-
+            if (options['afterRenderAll'] && testArrayEnd(unwrappedArray, arrayValue))
+                options['afterRenderAll'](unwrappedArray, arrayValue);
             // release the "cache" variable, so that it can be collected by
             // the GC when its value isn't used from within the bindings anymore.
             arrayItemContext = null;
         };
 
         return ko.dependentObservable(function () {
-            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
             if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
                 unwrappedArray = [unwrappedArray];
 
