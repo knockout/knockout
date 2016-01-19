@@ -130,6 +130,10 @@
         // Store a copy of the array items we just considered so we can difference it next time
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
+        //if a beforeRenderAll callback has been set, call it with empty dom node
+        if(options['beforeRenderAll'])
+           options['beforeRenderAll'](domNode);
+
         // Call beforeMove first before any changes have been made to the DOM
         callCallback(options['beforeMove'], itemsForMoveCallbacks);
 
@@ -174,6 +178,10 @@
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
+
+        //if a afterRenderAll callback has been set, call it with updated dom node
+        if(options['afterRenderAll'])
+            options['afterRenderAll'](domNode);
     }
 })();
 
