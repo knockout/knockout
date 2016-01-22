@@ -63,7 +63,7 @@ ko.utils = (function () {
         return (inputType == "checkbox") || (inputType == "radio");
     }
 
-    // For details on the pattern for changing node classes
+    // For details on the pattern for changing node classes.
     // see: https://github.com/knockout/knockout/issues/1597
     var cssClassNameRegex = /\S+/g;
 
@@ -460,7 +460,7 @@ ko.utils = (function () {
         forceRefresh: function(node) {
             // Workaround for an IE9 rendering bug - https://github.com/SteveSanderson/knockout/issues/209
             if (ieVersion >= 9) {
-                // For text nodes and comment nodes (most likely virtual elements), we will have to refresh the container
+                // For text nodes and comment nodes (most likely virtual elements), we will have to refresh the container.
                 var elem = node.nodeType == 1 ? node : node.parentNode;
                 if (elem.style)
                     elem.style.zoom = elem.style.zoom;
@@ -540,7 +540,7 @@ ko.utils = (function () {
             var includeFields = options['includeFields'] || this.fieldsIncludedWithJsonPost;
             var url = urlOrForm;
 
-            // If we were given a form, use its 'action' URL and pick out any requested field values
+            // If we were given a form, use its 'action' URL and pick out any requested field values.
             if((typeof urlOrForm == 'object') && (ko.utils.tagNameLower(urlOrForm) === "form")) {
                 var originalForm = urlOrForm;
                 url = originalForm.action;
@@ -557,7 +557,7 @@ ko.utils = (function () {
             form.action = url;
             form.method = "post";
             for (var key in data) {
-                // Since 'data' this is a model object, we include all properties including those inherited from its prototype
+                // Since 'data' this is a model object, we include all properties including those inherited from its prototype.
                 var input = document.createElement("input");
                 input.type = "hidden";
                 input.name = key;
