@@ -213,14 +213,20 @@ The `ignore` array you specify in the mapping options is combined with the defau
 When converting your view model back to a JS object, by default the mapping plugin will only include properties that were part of your original view model, except it will also include the Knockout-generated `_destroy` property even if it was not part of your original object. However, you can choose to customize this array:
 
 	var mapping = {
-		'include': ["propertyToInclude", "alsoIncludeThis"]
+		'myProperty': ["propertyToInclude", "alsoIncludeThis"]
 	}
 	var viewModel = ko.mapping.fromJS(data, mapping);
 
-The `include` array you specify in the mapping options is combined with the default `include` array, which by default only contains `_destroy`. You can manipulate this default array like this:
+By default, the `myProperty` array you specify in the mapping options is not included.  To include it, you can manipulate the `ko.mapping.defaultOptions().include` array, which by default only contains `_destroy`.  Add `myProperty` as follows: 
 
-	var oldOptions = ko.mapping.defaultOptions().include;
-    ko.mapping.defaultOptions().include = ["alwaysIncludeThis"];
+    var mappingOptions = ko.mapping.defaultOptions();
+    mappingOptions.include.push('checked');
+    ko.mapping.defaultOptions(mappingOptions);
+    
+or
+
+	var defaultOptions = ko.mapping.defaultOptions().include;
+    ko.mapping.defaultOptions().include = ["myProperty"];
 	
 ###### Copying certain properties using "copy"
 
