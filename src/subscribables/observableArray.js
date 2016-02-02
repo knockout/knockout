@@ -37,7 +37,7 @@ ko.observableArray['fn'] = {
             var underlyingArray = this.peek();
             var allValues = underlyingArray.slice(0);
             this.valueWillMutate();
-            underlyingArray.splice(0, underlyingArray.length);
+            underlyingArray.length = 0;
             this.valueHasMutated();
             return allValues;
         }
