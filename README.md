@@ -17,7 +17,7 @@ Pattern](https://upload.wikimedia.org/wikipedia/commons/8/87/MVVMPattern.png)
 both displaying and editing data - for example shopping carts - with a clean
 underlying data model.
 
-## When to Use It
+## When to Use Knockout
 
 Any time you have sections of UI that update dynamically (e.g., changing
 depending on the user’s actions or when an external data source changes),
