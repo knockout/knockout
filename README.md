@@ -13,24 +13,25 @@ Pattern](https://upload.wikimedia.org/wikipedia/commons/8/87/MVVMPattern.png)
 
 ## What to Use Knockout for
 
-**Knockout** makes it easier to create rich, responsive display and editor user
-interfaces like for example shopping carts with a clean underlying data model.
+**Knockout** makes it easier to create rich and responsive user interfaces for
+both displaying and editing data - for example shopping carts - with a clean
+underlying data model.
 
 ## When to Use It
 
 Any time you have sections of UI that update dynamically (e.g., changing
 depending on the user’s actions or when an external data source changes),
-**Knockout** can help you implement it more simply and maintainably.
+**Knockout** can help you implement it in a simpler and more maintainable way.
 
-Headline features:
+Key features:
 
-+ **Elegant dependency tracking** - automatically updates the right parts of
++ **Elegant dependency tracking** - automatically updates the necessary parts of
   your UI whenever your data model changes.
 + **Declarative bindings** - a simple and obvious way to connect parts of your
-  UI to your data model. You can construct a complex dynamic UIs easily using
+  UI to your data model. You can construct complex dynamic UIs easily using
   arbitrarily nested binding contexts.
-+ **Trivially extensible** - implement custom behaviors as new declarative
-  bindings for easy reuse in just a few lines of code.
++ **Easily extensible** - implement custom behaviors as new declarative bindings
+  for easy reuse in just a few lines of code.
 
 Additional benefits:
 
