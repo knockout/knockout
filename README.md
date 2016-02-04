@@ -1,5 +1,11 @@
 **Knockout** is a JavaScript [MVVM](http://en.wikipedia.org/wiki/Model_View_ViewModel) (a modern variant of MVC) library that makes it easier to create rich, desktop-like user interfaces with JavaScript and HTML. It uses *observers* to make your UI automatically stay in sync with an underlying data model, along with a powerful and extensible set of *declarative bindings* to enable productive development.
 
+**Knockout** uses pre-written JavaScript code to enable easier development for user interfaces, controlled from the user to output to the web. It works on all mainstream browsers. Some well-known web applications that use **Knockout** are [Microsoft Azure's Management Portal](https://manage.windowsazure.com/), [INRTracker](http://www.inrtracker.com), and [JSFiddle](http://www.jsfiddle.com).
+
+Updates are automatic and let the user know when values are changed. Additionally, **Knockout** has built-in template engines that enable you to read and manage code more easily. You can bind HTML to a document, and you can use it with JQuery. 
+
+**Knockout** makes the user interface data driven and scalable, and therefore more effective.
+
 ##Getting started
 
 [![Join the chat at https://gitter.im/knockout/knockout](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/knockout/knockout?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
