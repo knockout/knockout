@@ -367,11 +367,7 @@
 
                 var valueAccessor = ko.pureComputed(
                     function() {
-                        var value = getValueAccessor(bindingKey);
-                        if (typeof value === "function") {
-                            value = value();
-                        }
-                        return value;
+                        return getValueAccessor(bindingKey);
                     },
                     null,
                     { disposeWhenNodeIsRemoved: node }
@@ -381,7 +377,7 @@
                     // Run init, ignoring any dependencies
                     if (typeof handlerInitFn == "function") {
                         ko.dependencyDetection.ignore(function() {
-                            var initResult = handlerInitFn(node, valueAccessor, allBindings, bindingContext['$data'], bindingContext);
+                            var initResult = handlerInitFn(node, valueAccessor(), allBindings, bindingContext['$data'], bindingContext);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -396,7 +392,7 @@
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, valueAccessor, allBindings, bindingContext['$data'], bindingContext);
+                                handlerUpdateFn(node, valueAccessor(), allBindings, bindingContext['$data'], bindingContext);
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
