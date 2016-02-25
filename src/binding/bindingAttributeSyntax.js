@@ -332,7 +332,15 @@
             var getValueAccessor = bindingsUpdater
                 ? function(bindingKey) {
                     return function() {
-                        return evaluateValueAccessor(bindingsUpdater()[bindingKey]);
+                        var bs = bindingsUpdater();
+                        if (bs[bindingKey].cache) {
+                            return bs[bindingKey].cache;
+                        }
+                        var value = evaluateValueAccessor(bs[bindingKey]);
+                        if (ko.isSubscribable(value)) {
+                            bs[bindingKey].cache = value;
+                        }
+                        return value;
                     };
                 } : function(bindingKey) {
                     return bindings[bindingKey];
@@ -365,19 +373,11 @@
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
                 }
 
-                var valueAccessor = ko.pureComputed(
-                    function() {
-                        return getValueAccessor(bindingKey);
-                    },
-                    null,
-                    { disposeWhenNodeIsRemoved: node }
-                );
-
                 try {
                     // Run init, ignoring any dependencies
                     if (typeof handlerInitFn == "function") {
                         ko.dependencyDetection.ignore(function() {
-                            var initResult = handlerInitFn(node, valueAccessor(), allBindings, bindingContext['$data'], bindingContext);
+                            var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -392,7 +392,7 @@
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, valueAccessor(), allBindings, bindingContext['$data'], bindingContext);
+                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
