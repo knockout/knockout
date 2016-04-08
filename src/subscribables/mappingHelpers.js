@@ -39,6 +39,7 @@
                 case "number":
                 case "string":
                 case "function":
+                case "symbol":
                     outputProperties[indexer] = propertyValue;
                     break;
                 case "object":
