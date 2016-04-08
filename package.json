@@ -3,6 +3,9 @@
   "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
   "homepage": "http://knockoutjs.com/",
   "version": "3.5.0-pre",
+  "engines": {
+    "node": ">=4.0.0"
+  },
   "license": "MIT",
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",
