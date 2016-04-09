@@ -174,7 +174,37 @@ ko.utils = (function () {
                     array.splice(existingEntryIndex, 1);
             }
         },
-
+        
+    	store: function(method, param) {
+    	    if(!window.localStorage)
+    	        throw new Error('The browser you are using does not support localStorage');
+    		if(method.toLowerCase() == 'get') {
+    			if(typeof(param) == 'string')
+    				return window.localStorage.getItem(param);
+    			throw new Error('Param must be a string');
+    		}
+    		else if(method.toLowerCase() == 'set') {
+    			if(typeof(param) == 'object' && !Array.isArray(param)) {
+    				for(key in param) {
+    					window.localStorage.setItem(key, param[key]);
+    				}
+    				return;
+    			}
+    			throw new Error('Param must be an object');
+    		}
+    		else if(method.toLowerCase() == 'remove') {
+    			if(typeof(param) == 'string')
+    				return window.localStorage.removeItem(param);
+    			throw new Error('param must be a string');
+    		}
+    		else if(method.toLowerCase() == 'clear') {
+    			return window.localStorage.clear();
+    		}
+    		else {
+    		    throw new Error('The method you are using is not supported by localStorage')
+    		}
+    	},
+    	
         canSetPrototype: canSetPrototype,
 
         extend: extend,
@@ -602,6 +632,7 @@ ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
 ko.exportSymbol('utils.setTextContent', ko.utils.setTextContent);
+ko.exportSymbol('utils.store', ko.utils.store);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {
