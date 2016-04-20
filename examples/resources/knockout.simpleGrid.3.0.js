@@ -22,11 +22,21 @@
             this.columns = configuration.columns || getColumnsForScaffolding(ko.unwrap(this.data));
 
             this.itemsOnCurrentPage = ko.computed(function () {
+                if (this.data().length === 0) {
+                    return [];
+                }
+                if (startIndex !== 0 && startIndex >= ko.unwrap(this.data).length) {
+                    this.currentPageIndex(Math.ceil(ko.unwrap(this.data).length / this.pageSize) - 1);
+                    startIndex = this.pageSize * this.currentPageIndex();
+                }
                 var startIndex = this.pageSize * this.currentPageIndex();
                 return this.data.slice(startIndex, startIndex + this.pageSize);
             }, this);
 
             this.maxPageIndex = ko.computed(function () {
+                if (this.data().length === 0) {
+                    return 0;
+                }
                 return Math.ceil(ko.unwrap(this.data).length / this.pageSize) - 1;
             }, this);
         }
