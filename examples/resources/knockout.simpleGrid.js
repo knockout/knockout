@@ -75,9 +75,9 @@
     templateEngine.addTemplate("ko_simpleGrid_pageLinks", "\
                     <div class=\"ko-grid-pageLinks\">\
                         <span>Page:</span>\
-                        {{each(i) ko.utils.range(0, maxPageIndex)}}\
-                            <a href=\"#\" data-bind=\"click: function() { currentPageIndex(i) }, css: { selected: i == currentPageIndex() }\">\
-                                ${ i + 1 }\
+                        {{each(i) ko.utils.range(1, maxPageIndex)}}\
+                            <a href=\"#\" data-bind=\"click: function() { currentPageIndex(i - 1) }, css: { selected: i == currentPageIndex() + 1 }\">\
+                                ${ i }\
                             </a>\
                         {{/each}}\
                     </div>");
