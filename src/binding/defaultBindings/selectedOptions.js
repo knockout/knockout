@@ -5,7 +5,7 @@ ko.bindingHandlers['selectedOptions'] = {
             var value = valueAccessor(), valueToWrite = [];
             ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
                 if (node.selected)
-                    valueToWrite.push(ko.selectExtensions.readValue(node));
+                    valueToWrite.push(ko.utils.wrapObservable(ko.selectExtensions.readValue(node)));
             });
             ko.expressionRewriting.writeValueToProperty(value, allBindings, 'selectedOptions', valueToWrite);
         });
@@ -19,7 +19,7 @@ ko.bindingHandlers['selectedOptions'] = {
 
         if (newValue && typeof newValue.length == "number") {
             ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
-                var isSelected = ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node)) >= 0;
+                var isSelected = ko.utils.arrayIndexOf(newValue, ko.selectExtensions.readValue(node), true) >= 0;
                 if (node.selected != isSelected) {      // This check prevents flashing of the select element in IE
                     ko.utils.setOptionNodeSelectionState(node, isSelected);
                 }

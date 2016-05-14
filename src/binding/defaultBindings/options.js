@@ -108,7 +108,7 @@ ko.bindingHandlers['options'] = {
             } else if (previousSelectedValues.length) {
                 // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
                 // That's why we first added them without selection. Now it's time to set the selection.
-                var isSelected = ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[0])) >= 0;
+                var isSelected = ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[0]), true) >= 0;
                 ko.utils.setOptionNodeSelectionState(newOptions[0], isSelected);
 
                 // If this option was changed from being selected during a single-item update, notify the change

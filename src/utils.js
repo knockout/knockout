@@ -432,6 +432,10 @@ ko.utils = (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
+        wrapObservable: function (value) {
+            return ko.isObservable(value) ? value : ko.observable(value);
+        },
+
         peekObservable: function (value) {
             return ko.isObservable(value) ? value.peek() : value;
         },
