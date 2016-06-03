@@ -22,12 +22,24 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should be able to parse object literals containing string literals', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\\' brace} bracket] quot\"'");
-        expect(result.length).toEqual(2);
+        var result = ko.expressionRewriting.parseObjectLiteral(
+          // double quotes
+          "a: \"comma, colon: brace{ bracket[ apos' backtick` escapedQuot\\\" end\"," +
+          // single quotes
+          "b: 'escapedApos\\\' backtick` brace} bracket] quot\"'," +
+          // template literals
+          "c: `escapedBacktick\\\` comma, colon: brace{ bracket[ apos', quot\"`"
+        );
+        expect(result.length).toEqual(3);
+        // double quotes
         expect(result[0].key).toEqual("a");
-        expect(result[0].value).toEqual("\"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
+        expect(result[0].value).toEqual("\"comma, colon: brace{ bracket[ apos' backtick` escapedQuot\\\" end\"");
+        // single quotes
         expect(result[1].key).toEqual("b");
-        expect(result[1].value).toEqual("'escapedApos\\\' brace} bracket] quot\"'");
+        expect(result[1].value).toEqual("'escapedApos\\\' backtick` brace} bracket] quot\"'");
+        // template literals
+        expect(result[2].key).toEqual("c");
+        expect(result[2].value).toEqual("`escapedBacktick\\\` comma, colon: brace{ bracket[ apos', quot\"`");
     });
 
     it('Should be able to parse object literals containing child objects, arrays, function literals, and newlines', function() {
