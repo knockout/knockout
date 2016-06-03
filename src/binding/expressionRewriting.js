@@ -15,15 +15,16 @@ ko.expressionRewriting = (function () {
 
     // The following regular expressions will be used to split an object-literal string into tokens
 
-        // These two match strings, either with double quotes or single quotes
+        // These three match strings, either with double quotes or single quotes or template literals
     var stringDouble = '"(?:[^"\\\\]|\\\\.)*"',
         stringSingle = "'(?:[^'\\\\]|\\\\.)*'",
+        stringTemplate = "`(?:[^`\\\\]|\\\\.)*`",
         // Matches a regular expression (text enclosed by slashes), but will also match sets of divisions
         // as a regular expression (this is handled by the parsing loop below).
         stringRegexp = '/(?:[^/\\\\]|\\\\.)*/\w*',
         // These characters have special meaning to the parser and must not appear in the middle of a
         // token, except as part of a string.
-        specials = ',"\'{}()/:[\\]',
+        specials = ',"\'`{}()/:[\\]',
         // Match text (at least two characters) that does not contain any of the above special characters,
         // although some of the special characters are allowed to start it (all but the colon and comma).
         // The text can contain spaces, but leading or trailing spaces are skipped.
@@ -34,7 +35,7 @@ ko.expressionRewriting = (function () {
         oneNotSpace = '[^\\s]',
 
         // Create the actual regular expression by or-ing the above strings. The order is important.
-        bindingToken = RegExp(stringDouble + '|' + stringSingle + '|' + stringRegexp + '|' + everyThingElse + '|' + oneNotSpace, 'g'),
+        bindingToken = RegExp(stringDouble + '|' + stringSingle + '|' + stringTemplate + '|' + stringRegexp + '|' + everyThingElse + '|' + oneNotSpace, 'g'),
 
         // Match end of previous token to determine whether a slash is a division or regex.
         divisionLookBehind = /[\])"'A-Za-z0-9_$]+$/,
