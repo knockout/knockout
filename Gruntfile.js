@@ -26,17 +26,6 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('clean', 'Clean up output files.', function (target) {
-        var output = grunt.config('build');
-        var files = [ output.debug, output.min ];
-        var options = { force: (target == 'force') };
-        _.forEach(files, function (file) {
-            if (grunt.file.exists(file))
-                grunt.file.delete(file, options);
-        });
-        return !this.errorCount;
-    });
-
     function getReferencedSources(sourceReferencesFilename) {
         // Returns the array of filenames referenced by a file like source-references.js
         var result;
@@ -103,24 +92,6 @@ module.exports = function(grunt) {
         return !this.errorCount;
     });
 
-    grunt.registerMultiTask('test', 'Run tests', function () {
-        var done = this.async();
-        grunt.util.spawn({ cmd: this.target, args: [this.data] },
-            function (error, result, code) {
-                if (code === 127 /*not found*/) {
-                    grunt.verbose.error(result.stderr);
-                    // ignore this error
-                    done(true);
-                } else {
-                    grunt.log.writeln(result.stdout);
-                    if (error)
-                        grunt.log.error(result.stderr);
-                    done(!error);
-                }
-            }
-        );
-    });
-
     grunt.registerTask('dist', function() {
         var version = grunt.config('pkg.version'),
             buildConfig = grunt.config('build'),
@@ -140,5 +111,5 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', ['clean', 'build', 'test']);
+    grunt.registerTask('default', ['build']);
 };
