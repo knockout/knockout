@@ -7,8 +7,11 @@
   "author": "The Knockout.js team",
   "main": "build/output/knockout-latest.debug.js",
   "scripts": {
+    "clean:output": "rimraf build/output/**.js",
+    "clean:generated": "rimraf generated",
+    "clean": "npm run clean:output & npm run clean:generated",
     "ts": "tsc -p src",
-    "build": "npm run ts && grunt",
+    "build": "npm run clean && npm run ts && grunt",
     "prepublish": "npm run build && npm test",
     "test": "node spec/runner.node.js"
   },
@@ -40,6 +43,7 @@
     "closure-compiler": "~0.2.1",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.0",
+    "rimraf": "^2.5.2",
     "typescript": "^1.8.10"
   }
 }
