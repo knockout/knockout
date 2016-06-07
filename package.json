@@ -9,7 +9,7 @@
   "scripts": {
     "ts": "tsc -p src",
     "build": "npm run ts && grunt",
-    "prepublish": "npm run build",
+    "prepublish": "npm run build && npm test",
     "test": "node spec/runner.node.js"
   },
   "repository": {
