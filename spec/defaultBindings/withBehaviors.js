@@ -134,6 +134,40 @@ describe('Binding: With', function() {
         expect(ko.contextFor(firstSpan).$parents[1].name).toEqual("top");
     });
 
+    it('Should be able to access all parent binding when using `as:`', function() {
+        testNode.innerHTML = "<div data-bind='with: topItem'>" +
+                                "<div data-bind='with: middleItem, as: \"middle\"'>" +
+                                    "<div data-bind='with: bottomItem'>" +
+                                        "<span data-bind='text: name'></span>" +
+                                        "<span data-bind='text: $parent.name'></span>" +
+                                        "<span data-bind='text: middle.name'></span>" +
+                                        "<span data-bind='text: $parents[1].name'></span>" +
+                                        "<span data-bind='text: $parents[2].name'></span>" +
+                                        "<span data-bind='text: $root.name'></span>" +
+                                    "</div>" +
+                                "</div>" +
+                              "</div>";
+        ko.applyBindings({
+            name: 'outer',
+            topItem: {
+                name: 'top',
+                middleItem: {
+                    name: 'middle',
+                    bottomItem: {
+                        name: "bottom"
+                    }
+                }
+            }
+        }, testNode);
+        var finalContainer = testNode.childNodes[0].childNodes[0].childNodes[0];
+        expect(finalContainer.childNodes[0]).toContainText("bottom");
+        expect(finalContainer.childNodes[1]).toContainText("middle");
+        expect(finalContainer.childNodes[2]).toContainText("middle");
+        expect(finalContainer.childNodes[3]).toContainText("top");
+        expect(finalContainer.childNodes[4]).toContainText("outer");
+        expect(finalContainer.childNodes[5]).toContainText("outer");
+    });
+
     it('Should be able to define an \"with\" region using a containerless template', function() {
         var someitem = ko.observable(undefined);
         testNode.innerHTML = "hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";

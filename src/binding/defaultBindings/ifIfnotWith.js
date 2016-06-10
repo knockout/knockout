@@ -23,7 +23,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                         ko.virtualElements.setDomNodeChildren(element, renderNodes = ko.utils.cloneNodes(savedNodes));
                     }
                     var newContext = isWith ?
-                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
+                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, allBindings.get('as')) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext;
@@ -46,4 +46,4 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 // Construct the actual binding handlers
 makeWithIfBinding('if');
 makeWithIfBinding('ifnot', false /* isWith */, true /* isNot */);
-makeWithIfBinding('with', true /* isWith */);
+makeWithIfBinding('with', true /* isWith */, false /* isNot */);
