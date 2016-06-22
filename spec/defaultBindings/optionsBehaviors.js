@@ -68,6 +68,17 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0]).toHaveValues(["bob", "frank"]);
     });
 
+    it('Given the optionsSort binding, should sort options by text alphabetically', function() {
+        var modelValues = new ko.observableArray([
+            { name: 'frank' },
+            { name: 'Al' },
+            { name: 'aaron' }
+        ]);
+        testNode.innerHTML = "<select data-bind='options: myValues, optionsText: \"name\", optionsSort: true'></select>";
+        ko.applyBindings({ myValues: modelValues }, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts(["aaron", "Al", "frank"]);
+    });
+
     it('Should update the SELECT node\'s options if the model changes', function () {
         var observable = new ko.observableArray(["A", "B", "C"]);
         testNode.innerHTML = "<select data-bind='options:myValues'><option>should be deleted</option></select>";
