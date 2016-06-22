@@ -38,6 +38,29 @@ ko.utils = (function () {
         }
     });
     var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
+    var canUsePassiveEventHandlers = false;
+    var parentElement = document && document.createElement('div');
+    if (document && typeof parentElement.addEventListener === "function") {
+      // prepare DOM for the test
+      var childElement = document.createElement('div'),
+        handler = function (ev) {
+          ev.preventDefault();
+          if (ev.eventPhase === ev.BUBBLING_PHASE && ev.defaultPrevented === false)
+            canUsePassiveEventHandlers = true;
+        };
+      parentElement.appendChild(childElement);
+      parentElement.addEventListener('click', handler, {capture: false, passive: true});
+      // run test
+      var ev = document.createEvent('MouseEvent');
+      ev.initEvent('click', true, false);
+      childElement.dispatchEvent(ev);
+      // clear test
+      parentElement.removeChild(childElement);
+      parentElement.removeEventListener('click', handler);
+      parentElement = null;
+      childElement = null;
+      handler = null;
+    }
 
     // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
     // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
@@ -176,6 +199,8 @@ ko.utils = (function () {
         },
 
         canSetPrototype: canSetPrototype,
+
+        canUsePassiveEventHandlers: canUsePassiveEventHandlers,
 
         extend: extend,
 
@@ -363,14 +388,14 @@ ko.utils = (function () {
             }, 0);
         },
 
-        registerEventHandler: function (element, eventType, handler) {
+        registerEventHandler: function (element, eventType, handler, options) {
             var wrappedHandler = ko.utils.catchFunctionErrors(handler);
 
             var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!ko.options['useOnlyNativeEvents'] && !mustUseAttachEvent && jQueryInstance) {
                 jQueryInstance(element)['bind'](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
-                element.addEventListener(eventType, wrappedHandler, false);
+                element.addEventListener(eventType, wrappedHandler, canUsePassiveEventHandlers ? options || false : false);
             else if (typeof element.attachEvent != "undefined") {
                 var attachEventHandler = function (event) { wrappedHandler.call(element, event); },
                     attachEventName = "on" + eventType;

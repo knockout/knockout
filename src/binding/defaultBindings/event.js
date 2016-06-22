@@ -18,6 +18,9 @@ ko.bindingHandlers['event'] = {
         var eventsToHandle = valueAccessor() || {};
         ko.utils.objectForEach(eventsToHandle, function(eventName) {
             if (typeof eventName == "string") {
+                var options = false;
+                if (allBindings.get(eventName + 'Passive') === true)
+                  options = {passive: true, capture: false};
                 ko.utils.registerEventHandler(element, eventName, function (event) {
                     var handlerReturnValue;
                     var handlerFunction = valueAccessor()[eventName];
@@ -32,7 +35,7 @@ ko.bindingHandlers['event'] = {
                         handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler);
                     } finally {
                         if (handlerReturnValue !== true) { // Normally we want to prevent default action. Developer can override this be explicitly returning true.
-                            if (event.preventDefault)
+                            if (event.preventDefault && allBindings.get(eventName + 'Passive') !== true)
                                 event.preventDefault();
                             else
                                 event.returnValue = false;
@@ -45,7 +48,7 @@ ko.bindingHandlers['event'] = {
                         if (event.stopPropagation)
                             event.stopPropagation();
                     }
-                });
+                }, options);
             }
         });
     }
