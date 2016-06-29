@@ -1,16 +1,17 @@
+{% assign pathprefix = page.pathprefix | default: layout.pathprefix %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>Knockout : {{ page.title }}</title>
-        <link href="{{ page.pathprefix }}css/tripoli.simple.css" type="text/css" rel="stylesheet" />
+        <link href="{{ pathprefix }}css/tripoli.simple.css" type="text/css" rel="stylesheet" />
         {% if page.canonicalUrl %}<link rel="canonical" href="{{ page.canonicalUrl }}" />{% endif %}
-        <link rel="stylesheet" type="text/css" href="{{ page.pathprefix }}css/styles.css" />
-        <link rel="stylesheet" type="text/css" href="{{ page.pathprefix }}css/smallScreen.css" media="only screen and (max-device-width: 800px)" />
-        <link rel="shortcut icon" href="{{ page.pathprefix }}img/favicon.ico" />
-        <!--[if IE]><link rel="stylesheet" type="text/css" href="{{ page.pathprefix }}css/tripoli.simple.ie.css" /><![endif]-->
-        <!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{{ page.pathprefix }}css/ie6ie7.css" /><![endif]-->
-        <!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="{{ page.pathprefix }}css/ie6.css" /><![endif]-->
+        <link rel="stylesheet" type="text/css" href="{{ pathprefix }}css/styles.css" />
+        <link rel="stylesheet" type="text/css" href="{{ pathprefix }}css/smallScreen.css" media="only screen and (max-device-width: 800px)" />
+        <link rel="shortcut icon" href="{{ pathprefix }}img/favicon.ico" />
+        <!--[if IE]><link rel="stylesheet" type="text/css" href="{{ pathprefix }}css/tripoli.simple.ie.css" /><![endif]-->
+        <!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{{ pathprefix }}css/ie6ie7.css" /><![endif]-->
+        <!--[if lte IE 6]><link rel="stylesheet" type="text/css" href="{{ pathprefix }}css/ie6.css" /><![endif]-->
         {% include global-scripts.html %}
     </head>
     <body>
@@ -22,19 +23,19 @@
             <div class="clear"></div>
             {% include main-menu.html %}
         </div>
-        
-        <div id="page-footer">(c) knockoutjs.com</div> 
-        
-        <script type="text/javascript">               
+
+        <div id="page-footer">(c) knockoutjs.com</div>
+
+        <script type="text/javascript">
             // Analytics
             var _gaq = _gaq || [];
             _gaq.push(['_setAccount', 'UA-65756-7']);
-            _gaq.push(['_trackPageview']);	
+            _gaq.push(['_trackPageview']);
             (function() {
                 var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
                 ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                 var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-            })();             
+            })();
         </script>
     </body>
 </html>

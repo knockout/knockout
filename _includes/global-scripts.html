@@ -1,27 +1,27 @@
-<script type="text/javascript" src="{{ page.pathprefix }}js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}downloads/knockout-latest.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}js/cufon-yui.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}js/titilliummaps.font.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}js/json2.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}downloads/knockout-latest.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/cufon-yui.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/titilliummaps.font.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/json2.js"></script>
 
 <!--[if lt IE 7]>
-<script defer type="text/javascript" src="{{ page.pathprefix }}js/ie6pngfix.js"></script>
+<script defer type="text/javascript" src="{{ pathprefix }}js/ie6pngfix.js"></script>
 <![endif]-->
 
-<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script> 
-<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script> 
-<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
-<script type="text/javascript" src="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
-<link type="text/css" rel="stylesheet" href="{{ page.pathprefix }}js/syntaxhighlighter_3.0.83/styles/shThemeFadeToGrey.css"/>  
+<script type="text/javascript" src="{{ pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shCore.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushJScript.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushXml.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/syntaxhighlighter_3.0.83/scripts/shBrushBash.js"></script>
+<link type="text/css" rel="stylesheet" href="{{ pathprefix }}js/syntaxhighlighter_3.0.83/styles/shThemeFadeToGrey.css"/>
 
 <script type="text/javascript">
     $(function() {
         // Fancy fonts
         Cufon.replace('.titillium');
         Cufon.replace('.engraved', {
-            textShadow: 'rgba(253, 224, 217, 0.45) 1.2px 1px'	
+            textShadow: 'rgba(253, 224, 217, 0.45) 1.2px 1px'
         });
-        
+
         // Syntax highlighting
         $("pre > code").each(function() {
             var codeText = $(this).text();
@@ -30,11 +30,11 @@
         SyntaxHighlighter.defaults['toolbar'] = false;
         SyntaxHighlighter.defaults['gutter'] = false;
         SyntaxHighlighter.all();
-        
+
         // Highlight current top menu item
         var desiredMenuItem = '{{ page.mainmenukeyoverride }}' || '{{ page.mainmenukey }}';
         $(".main-menu a[rel=" + desiredMenuItem + "]").addClass("active");
-        
+
         // Highlight current left-hand-nav menu item
         var urlFilename = location.href.match(/\/([^\/]+)$/);
         if (urlFilename) {
@@ -48,12 +48,12 @@
      site pre-dates our use of AMD and assumes 'ko' and other libraries as global objects in
      many places. So for back-compatibility, we reference require.js *after* loading knockout.js
      and various other libraries as globals. -->
-<script type="text/javascript" src="{{ page.pathprefix }}js/require.js"></script>
+<script type="text/javascript" src="{{ pathprefix }}js/require.js"></script>
 <script type="text/javascript">
 require.config({
     paths: {
-        'knockout': '{{ page.pathprefix }}downloads/knockout-latest',
-        'text':     '{{ page.pathprefix }}js/require.text'
+        'knockout': '{{ pathprefix }}downloads/knockout-latest',
+        'text':     '{{ pathprefix }}js/require.text'
     }
 });
 

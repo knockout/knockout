@@ -3,22 +3,22 @@ layout: default
 pathprefix: ../
 mainmenukey: examples
 ---
-
-<div>	
-	<div class="leftCol">		
+{% assign pathprefix = page.pathprefix | default: layout.pathprefix %}
+<div>
+	<div class="leftCol">
 		<div class="leftColBackground">&nbsp;</div>
 		<div class="leftColContents">
 			{% include examples-menu.html %}
-		</div>		
+		</div>
 	</div>
 	<div class="rightCol">
 		<div class="example sticker">
 		    <div class="content">
-		    	<h1>{{ page.title }}</h1>	
-		    	{{ content }}   		    		    	
+		    	<h1>{{ page.title }}</h1>
+		    	{{ content }}
 		    </div>
-		    
+
 		    <div class="clear"></div>
 		</div>
-	</div>	
+	</div>
 </div>
