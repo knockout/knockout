@@ -5,6 +5,7 @@ mainmenukeyoverride: installation
 pathprefix: ../
 ---
 
+{% assign pathprefix = page.pathprefix | default: layout.pathprefix %}
 Get the latest stable production build of Knockout.js:
 
 <div class="download-panel">
@@ -17,7 +18,7 @@ Get the latest stable production build of Knockout.js:
     development, because it exposes additional unsupported private APIs.
 </div>
 
-###Bower
+### Bower
 
 Knockout is available through the [Bower](http://bower.io) package manager. Learn more about using and installing Bower at [http://bower.io](http://bower.io). To add Knockout to your application, you can run:
 
