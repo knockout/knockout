@@ -361,6 +361,7 @@ var computedFn = {
         state.isStale = false;
         state.isSleeping = false;
         state.disposeWhenNodeIsRemoved = null;
+        state.evaluatorFunctionTarget = null;
     }
 };
 
