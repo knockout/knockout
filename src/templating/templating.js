@@ -224,7 +224,7 @@
             if (typeof bindingValue == "string" || bindingValue['name']) {
                 // It's a named template - clear the element
                 ko.virtualElements.emptyNode(element);
-            } else if ('nodes' in bindingValue) {
+            } else if (bindingValue['nodes']) {
                 // We've been given an array of DOM nodes. Save them as the template source.
                 // There is no known use case for the node array being an observable array (if the output
                 // varies, put that behavior *into* your template - that's what templates are for), and
