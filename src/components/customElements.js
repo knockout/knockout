@@ -101,7 +101,7 @@
         // This is needed to make innerShiv/jQuery HTML parsing correctly handle the custom elements
         document.createDocumentFragment = (function(originalFunction) {
             return function() {
-                var newDocFrag = originalFunction(),
+                var newDocFrag = originalFunction.call(document),
                     allComponents = ko.components._allRegisteredComponents;
                 for (var componentName in allComponents) {
                     if (allComponents.hasOwnProperty(componentName)) {
