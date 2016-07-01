@@ -83,9 +83,10 @@ describe('Dependent Observable', function() {
     it('Should use options.owner as "this" when invoking the "write" callback, and can pass multiple parameters', function() {
         var invokedWriteWithArgs, invokedWriteWithThis;
         var someOwner = {};
+        var observable = ko.observable();
         var instance = ko.computed({
-            read: function() {},
-            write: function() { invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
+            read: function() {return observable()},
+            write: function() {observable(null); invokedWriteWithArgs = Array.prototype.slice.call(arguments, 0); invokedWriteWithThis = this; },
             owner: someOwner
         });
 
@@ -99,9 +100,10 @@ describe('Dependent Observable', function() {
 
     it('Should use the second arg (evaluatorFunctionTarget) for "this" when calling read/write if no options.owner was given', function() {
         var expectedThis = {}, actualReadThis, actualWriteThis;
+        var observable = ko.observable();
         var instance = ko.computed({
-            read: function() { actualReadThis = this },
-            write: function() { actualWriteThis = this }
+            read: function() { actualReadThis = this; return observable(); },
+            write: function() { actualWriteThis = this; observable(null); }
         }, expectedThis);
 
         instance("force invocation of write");
