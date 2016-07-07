@@ -362,8 +362,12 @@ var computedFn = {
         state.isSleeping = false;
         state.disposeWhenNodeIsRemoved = null;
         state.evaluatorFunctionTarget = null;
-        if (DEBUG)
+        state.readFunction = null;
+        if (DEBUG) {
           this["_options"].owner = null;
+          this["_options"].read = null;
+          this["_options"].write = null;
+        }
     }
 };
 
