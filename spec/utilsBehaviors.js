@@ -148,6 +148,48 @@ describe('arrayFirst', function () {
         expect(matchD.calls[1].args).toEqual(["b", 1]);
         expect(matchD.calls[2].args).toEqual(["c", 2]);
     });
+
+    it('Should match no non-objects with object match', function () {
+        var result = ko.utils.arrayFirst(["a", "b", "c"], { a: 2 });
+
+        expect(result).toBe(null);
+    });
+
+    it('Should match objects with when all keys in predicate object matches', function () {
+        var obj = { a: 2 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2 });
+        expect(result).toBe(obj);
+
+        obj = { a: 2, b: 3 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2 });
+        expect(result).toBe(obj);
+
+        obj = { a: 2 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2, b: 3 });
+        expect(result).toBe(null);
+
+        obj = { a: 2, b: 4 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2, b: 3 });
+        expect(result).toBe(null);
+
+        obj = { a: 2, b: 3 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2, b: 3 });
+        expect(result).toBe(obj);
+    });
+
+    it('Should match first objects when predicate is empty object', function () {
+        obj = { a: 2 };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { });
+
+        expect(result).toBe(obj);
+    });
+
+    it('Should unwrap array item values prior to matching with predicate object', function () {
+        obj = { a: ko['observable'](2) };
+        var result = ko.utils.arrayFirst(["a", "b", obj], { a: 2 });
+
+        expect(result).toBe(obj);
+    });
 });
 
 describe('arrayGetDistinctValues', function () {
