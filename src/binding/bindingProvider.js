@@ -66,7 +66,7 @@
         // Example result: with(sc1) { with(sc0) { return (expression) } }
         var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString, options),
             functionBody = "with($context){with($data||{}){return{" + rewrittenBindings + "}}}";
-        return new Function("$context", "$element", functionBody);
+        return Function.apply(this, ["$context", "$element", functionBody]);
     }
 })();
 
