@@ -391,6 +391,7 @@
                         );
                     }
                 } catch (ex) {
+                    ex.bindingInfo = { context: bindingContext, node: node };
                     ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
                     throw ex;
                 }
