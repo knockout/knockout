@@ -8,7 +8,8 @@ ko.utils = (function () {
     }
 
     function extend(target, source) {
-        var descriptors = Object.keys(source).reduce(function(descriptors, key) {
+        if(source){
+            var descriptors = Object.keys(source).reduce(function(descriptors, key) {
             descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
             return descriptors;
         }, {});
@@ -18,7 +19,7 @@ ko.utils = (function () {
                 descriptors[sym] = descriptor;
             }
         });
-        Object.defineProperties(target, descriptors);
+        Object.defineProperties(target, descriptors);}
         return target;
     }
 
