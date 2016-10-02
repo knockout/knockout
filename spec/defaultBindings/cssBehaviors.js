@@ -103,10 +103,6 @@ describe('Binding: CSS classes', function() {
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass1 my-Rule");
     });
 
-    it('Should be aliased as class as well as css', function() {
-        expect(ko.bindingHandlers['class']).toEqual(ko.bindingHandlers.css);
-    });
-
     it('Should be able to combine "class" and "css" bindings with dynamic and static classes', function () {
         // This test doesn't cover cases where the static and dynamic bindings try to set or unset the same class name
         // because the behavior for that scenario isn't defined.

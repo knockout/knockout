@@ -274,6 +274,14 @@ describe('Observable Array change tracking', function() {
         expect(source.getSubscriptionsCount()).toBe(0);
     });
 
+    it('should restore previous subscription notifications', function () {
+        var source = ko.observableArray();
+        var notifySubscribers = source.notifySubscribers;
+        var arrayChange = source.subscribe(function () { }, null, 'arrayChange');
+        arrayChange.dispose();
+        expect(source.notifySubscribers).toBe(notifySubscribers);
+    });
+
     it('Should support tracking of a computed observable using extender', function() {
         var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
             myComputed = ko.computed(function() {

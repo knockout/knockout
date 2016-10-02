@@ -135,4 +135,29 @@ describe("Deferred bindings", function() {
         }).not.toThrow();
         expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
     });
+
+    it('Should get latest value when conditionally included', function() {
+        // Test is based on example in https://github.com/knockout/knockout/issues/1975
+
+        testNode.innerHTML = "<div data-bind=\"if: show\"><div data-bind=\"text: status\"></div></div>";
+        var value = ko.observable(0),
+            is1 = ko.pureComputed(function () {  return value() == 1; }),
+            status = ko.pureComputed(function () { return is1() ? 'ok' : 'error'; }),
+            show = ko.pureComputed(function () { return value() > 0 && is1(); });
+
+        ko.applyBindings({ status: status, show: show }, testNode);
+        expect(testNode.childNodes[0]).toContainHtml('');
+
+        value(1);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
+
+        value(0);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('');
+
+        value(1);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
+    });
 });
