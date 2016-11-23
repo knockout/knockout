@@ -1,5 +1,5 @@
-ko.expressionRewriting = (function () {
-    var javaScriptReservedWords = ["true", "false", "null", "undefined"];
+ko["expressionRewriting"] = (function () {
+    var javaScriptReservedWords = {'true':1,'false':1,'null':1,'undefined':1};
 
     // Matches something that can be assigned to--either an isolated identifier or something ending with a property accessor
     // This is designed to be simple and avoid false negatives, but could produce false positives (e.g., a+b.c).
@@ -7,7 +7,7 @@ ko.expressionRewriting = (function () {
     var javaScriptAssignmentTarget = /^(?:[$_a-z][$\w]*|(.+)(\.\s*[$_a-z][$\w]*|\[.+\]))$/i;
 
     function getWriteableValue(expression) {
-        if (ko.utils.arrayIndexOf(javaScriptReservedWords, expression) >= 0)
+        if (javaScriptReservedWords.hasOwnProperty(expression))
             return false;
         var match = expression.match(javaScriptAssignmentTarget);
         return match === null ? false : match[1] ? ('Object(' + match[1] + ')' + match[2]) : expression;
@@ -20,7 +20,7 @@ ko.expressionRewriting = (function () {
         stringSingle = "'(?:[^'\\\\]|\\\\.)*'",
         // Matches a regular expression (text enclosed by slashes), but will also match sets of divisions
         // as a regular expression (this is handled by the parsing loop below).
-        stringRegexp = '/(?:[^/\\\\]|\\\\.)*/\w*',
+        stringRegexp = '/(?:[^/\\\\]|\\\\.)*/\\w*',
         // These characters have special meaning to the parser and must not appear in the middle of a
         // token, except as part of a string.
         specials = ',"\'{}()/:[\\]',
@@ -34,7 +34,7 @@ ko.expressionRewriting = (function () {
         oneNotSpace = '[^\\s]',
 
         // Create the actual regular expression by or-ing the above strings. The order is important.
-        bindingToken = RegExp(stringDouble + '|' + stringSingle + '|' + stringRegexp + '|' + everyThingElse + '|' + oneNotSpace, 'g'),
+        bindingToken = new RegExp(stringDouble + '|' + stringSingle + '|' + stringRegexp + '|' + everyThingElse + '|' + oneNotSpace, 'g'),
 
         // Match end of previous token to determine whether a slash is a division or regex.
         divisionLookBehind = /[\])"'A-Za-z0-9_$]+$/,
@@ -45,7 +45,7 @@ ko.expressionRewriting = (function () {
         var str = ko.utils.stringTrim(objectLiteralString);
 
         // Trim braces '{' surrounding the whole object literal
-        if (str.charCodeAt(0) === 123) str = str.slice(1, -1);
+        if (str.charCodeAt(0) === 123 && str.charCodeAt(str.length - 1) === 125) str = str.slice(1, -1);
 
         // Split into tokens
         var result = [], toks = str.match(bindingToken), key, values = [], depth = 0;
@@ -144,16 +144,16 @@ ko.expressionRewriting = (function () {
     }
 
     return {
-        bindingRewriteValidators: [],
+        "bindingRewriteValidators": [],
 
         twoWayBindings: twoWayBindings,
 
-        parseObjectLiteral: parseObjectLiteral,
+        "parseObjectLiteral": parseObjectLiteral,
 
-        preProcessBindings: preProcessBindings,
+        "preProcessBindings": preProcessBindings,
 
         keyValueArrayContainsKey: function(keyValueArray, key) {
-            for (var i = 0; i < keyValueArray.length; i++)
+            for (var i = 0, length = keyValueArray.length; i < length; i++)
                 if (keyValueArray[i]['key'] == key)
                     return true;
             return false;
@@ -180,10 +180,6 @@ ko.expressionRewriting = (function () {
     };
 })();
 
-ko.exportSymbol('expressionRewriting', ko.expressionRewriting);
-ko.exportSymbol('expressionRewriting.bindingRewriteValidators', ko.expressionRewriting.bindingRewriteValidators);
-ko.exportSymbol('expressionRewriting.parseObjectLiteral', ko.expressionRewriting.parseObjectLiteral);
-ko.exportSymbol('expressionRewriting.preProcessBindings', ko.expressionRewriting.preProcessBindings);
 
 // Making bindings explicitly declare themselves as "two way" isn't ideal in the long term (it would be better if
 // all bindings could use an official 'property writer' API without needing to declare that they might). However,
