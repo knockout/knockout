@@ -6,11 +6,16 @@
         'init': function(element, valueAccessor, ignored1, ignored2, bindingContext) {
             var currentViewModel,
                 currentLoadingOperationId,
+                currentAfterRenderWatcher,
                 disposeAssociatedComponentViewModel = function () {
                     var currentViewModelDispose = currentViewModel && currentViewModel['dispose'];
                     if (typeof currentViewModelDispose === 'function') {
                         currentViewModelDispose.call(currentViewModel);
                     }
+                    if (currentAfterRenderWatcher) {
+                        currentAfterRenderWatcher.dispose();
+                    }
+                    currentAfterRenderWatcher = null;
                     currentViewModel = null;
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
@@ -34,6 +39,10 @@
                     throw new Error('No component name specified');
                 }
 
+                if (ko.isObservable(bindingContext._componentActiveChildrenCount)) {
+                    bindingContext._componentActiveChildrenCount(bindingContext._componentActiveChildrenCount.peek() + 1);
+                }
+
                 var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
                 ko.components.get(componentName, function(componentDefinition) {
                     // If this is not the current load operation for this element, ignore it.
@@ -55,7 +64,28 @@
                             ctx['$componentTemplateNodes'] = originalChildNodes;
                         });
                     currentViewModel = componentViewModel;
+                    childBindingContext._componentActiveChildrenCount = ko.observable(0);
                     ko.applyBindingsToDescendants(childBindingContext, element);
+
+                    var callAfterRenderWhenChildrenDone = function(activeChildren) {
+                        if (!activeChildren) {
+                            if (currentAfterRenderWatcher) {
+                                currentAfterRenderWatcher.dispose();
+                            }
+                            var currentViewModelAfterRender = currentViewModel && currentViewModel['afterRender'];
+                            if (typeof currentViewModelAfterRender === 'function') {
+                                ko.dependencyDetection.ignore(currentViewModelAfterRender, currentViewModel);
+                            }
+                            if (ko.isObservable(bindingContext._componentActiveChildrenCount)) {
+                                bindingContext._componentActiveChildrenCount(bindingContext._componentActiveChildrenCount.peek() - 1);
+                            }
+                        }
+                    };
+                    if (childBindingContext._componentActiveChildrenCount.peek() === 0) {
+                        callAfterRenderWhenChildrenDone();
+                    } else {
+                        currentAfterRenderWatcher = childBindingContext._componentActiveChildrenCount.subscribe(callAfterRenderWhenChildrenDone);
+                    }
                 });
             }, null, { disposeWhenNodeIsRemoved: element });
 
