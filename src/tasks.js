@@ -89,6 +89,15 @@ ko.tasks = (function () {
             }
         },
 
+        reschedule: function (handle) {
+            var index = handle - (nextHandle - taskQueueLength);
+            if (index >= nextIndexToProcess && index < taskQueueLength && taskQueue[index]) {
+                taskQueue[taskQueueLength++] = taskQueue[index];
+                taskQueue[index] = null;
+                return nextHandle++;
+            }
+        },
+
         // For testing only: reset the queue and return the previous queue length
         'resetForTesting': function () {
             var length = taskQueueLength - nextIndexToProcess;

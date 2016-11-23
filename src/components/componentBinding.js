@@ -6,7 +6,11 @@
         'init': function(element, valueAccessor, ignored1, ignored2, bindingContext) {
             var currentViewModel,
                 currentLoadingOperationId,
+                componentAfterRenderHandle,
                 disposeAssociatedComponentViewModel = function () {
+                    if (componentAfterRenderHandle) {
+                        ko.tasks.cancel(componentAfterRenderHandle);
+                    }
                     var currentViewModelDispose = currentViewModel && currentViewModel['dispose'];
                     if (typeof currentViewModelDispose === 'function') {
                         currentViewModelDispose.call(currentViewModel);
@@ -14,6 +18,29 @@
                     currentViewModel = null;
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
+                    componentAfterRenderHandle = null;
+                },
+                rescheduleComponentAfterRender = function () {
+                    componentAfterRenderHandle = ko.tasks.reschedule(componentAfterRenderHandle);
+                    if (typeof bindingContext._rescheduleComponentAfterRender === 'function') {
+                        bindingContext._rescheduleComponentAfterRender();
+                    }
+                },
+                scheduleComponentAfterRender = function (childBindingContext) {
+                    childBindingContext._rescheduleComponentAfterRender = rescheduleComponentAfterRender;
+                    if (componentAfterRenderHandle) {
+                        ko.tasks.cancel(componentAfterRenderHandle);
+                    }
+                    var currentViewModelafterRender = currentViewModel && currentViewModel['afterRender'];
+                    if (typeof currentViewModelafterRender === 'function') {
+                        componentAfterRenderHandle = ko.tasks.schedule(function () {
+                            componentAfterRenderHandle = null;
+                            currentViewModelafterRender.call(currentViewModel);
+                        });
+                        if (typeof bindingContext._rescheduleComponentAfterRender === 'function') {
+                            bindingContext._rescheduleComponentAfterRender();
+                        }
+                    }
                 },
                 originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
@@ -34,7 +61,8 @@
                     throw new Error('No component name specified');
                 }
 
-                var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
+                var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId,
+                    completedAsync;
                 ko.components.get(componentName, function(componentDefinition) {
                     // If this is not the current load operation for this element, ignore it.
                     if (currentLoadingOperationId !== loadingOperationId) {
@@ -56,7 +84,17 @@
                         });
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
+
+                    if (completedAsync) {
+                        scheduleComponentAfterRender(childBindingContext);
+                    } else {
+                        var currentViewModelafterRender = currentViewModel && currentViewModel['afterRender'];
+                        if (typeof currentViewModelafterRender === 'function') {
+                            ko.dependencyDetection.ignore(currentViewModelafterRender, currentViewModel);
+                        }
+                    }
                 });
+                completedAsync = true;
             }, null, { disposeWhenNodeIsRemoved: element });
 
             return { 'controlsDescendantBindings': true };
