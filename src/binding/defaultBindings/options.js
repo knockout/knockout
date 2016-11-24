@@ -22,17 +22,23 @@ ko.bindingHandlers['options'] = {
             previousScrollTop = (!selectWasPreviouslyEmpty && multiple) ? element.scrollTop : null,
             unwrappedArray = ko.utils.unwrapObservable(valueAccessor()),
             valueAllowUnset = allBindings.get('valueAllowUnset') && allBindings['has']('value'),
+            optionsCompare = allBindings.get('optionsCompare'),
+            optionsValue = allBindings.get('optionsValue'),
             includeDestroyed = allBindings.get('optionsIncludeDestroyed'),
             arrayToDomNodeChildrenOptions = {},
             captionValue,
             filteredArray,
             previousSelectedValues = [];
 
+        if (optionsCompare && optionsValue)
+            throw new Error("optionsCompare and optionsValue binding usage are exclusive")
+
         if (!valueAllowUnset) {
             if (multiple) {
-                previousSelectedValues = ko.utils.arrayMap(selectedOptions(), ko.selectExtensions.readValue);
+                previousSelectedValues = ko.utils.arrayMap(selectedOptions(), ko.selectExtensions.readValue);    //// FIXME:
             } else if (element.selectedIndex >= 0) {
-                previousSelectedValues.push(ko.selectExtensions.readValue(element.options[element.selectedIndex]));
+                var value = ko.selectExtensions.readValue(element.options[element.selectedIndex]);
+                previousSelectedValues.push(ko.utils.unwrapObservable(ko.utils.applyToObject(value, optionsCompare, value)));
             }
         }
 
@@ -57,16 +63,6 @@ ko.bindingHandlers['options'] = {
             // If a falsy value is provided (e.g. null), we'll simply empty the select element
         }
 
-        function applyToObject(object, predicate, defaultValue) {
-            var predicateType = typeof predicate;
-            if (predicateType == "function")    // Given a function; run it against the data value
-                return predicate(object);
-            else if (predicateType == "string") // Given a string; treat it as a property name on the data value
-                return object[predicate];
-            else                                // Given no optionsText arg; use the data value itself
-                return defaultValue;
-        }
-
         // The following functions can run at two different times:
         // The first is when the whole array is being updated directly from this binding handler.
         // The second is when an observable value for a specific array entry is updated.
@@ -74,7 +70,8 @@ ko.bindingHandlers['options'] = {
         var itemUpdate = false;
         function optionForArrayItem(arrayEntry, index, oldOptions) {
             if (oldOptions.length) {
-                previousSelectedValues = !valueAllowUnset && oldOptions[0].selected ? [ ko.selectExtensions.readValue(oldOptions[0]) ] : [];
+                var value = ko.selectExtensions.readValue(oldOptions[0]);
+                previousSelectedValues = !valueAllowUnset && oldOptions[0].selected ? [ ko.utils.unwrapObservable(ko.utils.applyToObject(value, optionsCompare, value)) ] : [];
                 itemUpdate = true;
             }
             var option = element.ownerDocument.createElement("option");
@@ -83,11 +80,11 @@ ko.bindingHandlers['options'] = {
                 ko.selectExtensions.writeValue(option, undefined);
             } else {
                 // Apply a value to the option element
-                var optionValue = applyToObject(arrayEntry, allBindings.get('optionsValue'), arrayEntry);
+                var optionValue = ko.utils.applyToObject(arrayEntry, optionsValue, arrayEntry);
                 ko.selectExtensions.writeValue(option, ko.utils.unwrapObservable(optionValue));
 
                 // Apply some text to the option element
-                var optionText = applyToObject(arrayEntry, allBindings.get('optionsText'), optionValue);
+                var optionText = ko.utils.applyToObject(arrayEntry, allBindings.get('optionsText'), optionValue);
                 ko.utils.setTextContent(option, optionText);
             }
             return [option];
@@ -104,11 +101,12 @@ ko.bindingHandlers['options'] = {
             if (itemUpdate && valueAllowUnset) {
                 // The model value is authoritative, so make sure its value is the one selected
                 // There is no need to use dependencyDetection.ignore since setDomNodeChildrenFromArrayMapping does so already.
-                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */, optionsCompare);
             } else if (previousSelectedValues.length) {
                 // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
                 // That's why we first added them without selection. Now it's time to set the selection.
                 var isSelected = ko.utils.arrayIndexOf(previousSelectedValues, ko.selectExtensions.readValue(newOptions[0])) >= 0;
+
                 ko.utils.setOptionNodeSelectionState(newOptions[0], isSelected);
 
                 // If this option was changed from being selected during a single-item update, notify the change
@@ -131,7 +129,7 @@ ko.bindingHandlers['options'] = {
         ko.dependencyDetection.ignore(function () {
             if (valueAllowUnset) {
                 // The model value is authoritative, so make sure its value is the one selected
-                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */, optionsCompare);
             } else {
                 // Determine if the selection has changed as a result of updating the options list
                 var selectionChanged;
@@ -142,9 +140,12 @@ ko.bindingHandlers['options'] = {
                 } else {
                     // For a single-select box, compare the current value to the previous value
                     // But if nothing was selected before or nothing is selected now, just look for a change in selection
-                    selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
-                        ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
-                        : (previousSelectedValues.length || element.selectedIndex >= 0);
+                    if (previousSelectedValues.length && element.selectedIndex >= 0) {
+                        var value = ko.selectExtensions.readValue(element.options[element.selectedIndex]);
+                        selectionChanged = (ko.utils.unwrapObservable(ko.utils.applyToObject(value, optionsCompare, value)) !== previousSelectedValues[0])
+                    } else {
+                        selectionChanged = (previousSelectedValues.length || element.selectedIndex >= 0);
+                    }
                 }
 
                 // Ensure consistency between model value and selected option.

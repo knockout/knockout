@@ -10,6 +10,7 @@ ko.bindingHandlers['value'] = {
         // Always catch "change" event; possibly other events too if asked
         var eventsToCatch = ["change"];
         var requestedEventsToCatch = allBindings.get("valueUpdate");
+        var optionsCompare = allBindings.get('optionsCompare');
         var propertyChangedFired = false;
         var elementValueBeforeEvent = null;
 
@@ -57,6 +58,7 @@ ko.bindingHandlers['value'] = {
                     // techniques like rateLimit can trigger model changes at critical moments that will
                     // override the user's inputs, causing keystrokes to be lost.
                     elementValueBeforeEvent = ko.selectExtensions.readValue(element);
+                    elementValueBeforeEvent = ko.utils.unwrapObservable(ko.utils.applyToObject(elementValueBeforeEvent, optionsCompare, elementValueBeforeEvent));
                     ko.utils.setTimeout(valueUpdateHandler, 0);
                 };
                 eventName = eventName.substring("after".length);
@@ -66,24 +68,29 @@ ko.bindingHandlers['value'] = {
 
         var updateFromModel = function () {
             var newValue = ko.utils.unwrapObservable(valueAccessor());
+            var newKey = ko.utils.unwrapObservable(ko.utils.applyToObject(newValue, optionsCompare, newValue));
             var elementValue = ko.selectExtensions.readValue(element);
+            var elementKey = ko.utils.unwrapObservable(ko.utils.applyToObject(elementValue, optionsCompare, elementValue));
 
-            if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
+            if (elementValueBeforeEvent !== null && newKey === elementValueBeforeEvent) {
                 ko.utils.setTimeout(updateFromModel, 0);
                 return;
             }
 
-            var valueHasChanged = (newValue !== elementValue);
+            var valueHasChanged = (newKey !== elementKey);
 
             if (valueHasChanged) {
                 if (ko.utils.tagNameLower(element) === "select") {
                     var allowUnset = allBindings.get('valueAllowUnset');
                     var applyValueAction = function () {
-                        ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                        ko.selectExtensions.writeValue(element, newValue, allowUnset, optionsCompare);
                     };
                     applyValueAction();
 
-                    if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
+                    var updElementValue = ko.selectExtensions.readValue(element);
+                    var updElementKey = ko.utils.unwrapObservable(ko.utils.applyToObject(updElementValue, optionsCompare, updElementValue));
+
+                    if (!allowUnset && newKey !== updElementKey) {
                         // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
                         // because you're not allowed to have a model value that disagrees with a visible UI selection.
                         ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
