@@ -20,7 +20,7 @@
             }
         },
 
-        writeValue: function(element, value, allowUnset) {
+        writeValue: function(element, value, allowUnset, comparePredicate) {
             switch (ko.utils.tagNameLower(element)) {
                 case 'option':
                     switch(typeof value) {
@@ -45,10 +45,14 @@
                     if (value === "" || value === null)       // A blank string or null value will select the caption
                         value = undefined;
                     var selection = -1;
+                    var key = ko.utils.unwrapObservable(ko.utils.applyToObject(value, comparePredicate, value));
+
                     for (var i = 0, n = element.options.length, optionValue; i < n; ++i) {
                         optionValue = ko.selectExtensions.readValue(element.options[i]);
+                        var optionKey = ko.utils.unwrapObservable(ko.utils.applyToObject(optionValue, comparePredicate, optionValue));
+
                         // Include special check to handle selecting a caption with a blank string value
-                        if (optionValue == value || (optionValue == "" && value === undefined)) {
+                        if (optionKey == key || (optionKey == "" && key === undefined)) {
                             selection = i;
                             break;
                         }

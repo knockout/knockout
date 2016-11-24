@@ -299,4 +299,12 @@ describe('Binding: Options', function() {
         // Ensure bindings were applied normally
         expect(testNode.childNodes[0]).toContainText('first child');
     });
+
+    it('Should use optionsValue and optionsCompare exclusive', function () {
+        var threw = false;
+        testNode.innerHTML = "<select data-bind=\"options: {}, optionsValue: 'x', optionsCompare: 'y'\"></select>";
+        try { ko.applyBindings({}, testNode); }
+        catch (ex) { threw = true; }
+        expect(threw).toEqual(true);
+    });
 });
