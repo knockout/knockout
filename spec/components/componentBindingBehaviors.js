@@ -219,7 +219,9 @@ describe('Components: Component binding', function() {
             template: '<div data-bind="text: myvalue"></div>',
             viewModel: function() {
                 this.myvalue = 123;
-                this.afterRender = function () {
+                this.afterRender = function (element) {
+                    expect(element).toBe(testNode.childNodes[0]);
+                    expect(element).toContainHtml('<div data-bind="text: myvalue">123</div>');
                     renderedCount++;
                 };
             }
@@ -232,20 +234,28 @@ describe('Components: Component binding', function() {
         expect(renderedCount).toBe(1);
     });
 
-    it('Calls all inner components\' afterRender functions and then an outer component\'s', function() {
+    it('Inner components\' afterRender occurs before the outer component\'s', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
 
         var renderedComponents = [];
         ko.components.register(testComponentName, {
-            template: '<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>',
-            viewModel: function() { this.afterRender = function () { renderedComponents.push(testComponentName); }; }
+            template: 'x<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>x',
+            viewModel: function() {
+                this.afterRender = function (element) {
+                    expect(element).toContainText('x12x', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
+                    renderedComponents.push(testComponentName);
+                };
+            }
         });
 
         ko.components.register('sub-component', {
-            template: '<span></span>',
-            viewModel: function(params) { this.afterRender = function () { renderedComponents.push('sub-component' + params); }; }
+            template: '<span data-bind="text: myvalue"></span>',
+            viewModel: function(params) {
+                this.myvalue = params;
+                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+            }
         });
 
         ko.applyBindings(outerViewModel, testNode);
@@ -255,7 +265,42 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
     });
 
-    it('When components are rendered synchronously, calls all inner components\' afterRender functions and then an outer component\'s', function() {
+    it('When components are rendered synchronously, afterRender is also synchronous even if inner components are not', function() {
+        this.after(function() {
+            ko.components.unregister('sub-component');
+        });
+
+        var renderedComponents = [];
+        ko.components.register(testComponentName, {
+            synchronous: true,
+            template: 'x<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>x',
+            viewModel: function() {
+                this.afterRender = function (element) {
+                    expect(element).toBe(testNode.childNodes[0]);
+                    expect(element).toContainText('xx', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
+                    renderedComponents.push(testComponentName);
+                };
+            }
+        });
+
+        ko.components.register('sub-component', {
+            template: '<span data-bind="text: myvalue"></span>',
+            viewModel: function(params) {
+                this.myvalue = params;
+                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+            }
+        });
+
+        ko.applyBindings(outerViewModel, testNode);
+        expect(renderedComponents).toEqual([ 'test-component' ]);
+        expect(testNode.childNodes[0]).toContainText('xx', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
+
+        jasmine.Clock.tick(1);
+        expect(renderedComponents).toEqual([ 'test-component', 'sub-component1', 'sub-component2' ]);
+        expect(testNode.childNodes[0]).toContainText('x12x', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
+    });
+
+    it('When all components are rendered synchronously, inner components\' afterRender occurs before the outer component\'s', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -275,6 +320,46 @@ describe('Components: Component binding', function() {
 
         ko.applyBindings(outerViewModel, testNode);
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
+    });
+
+    it('afterRender doesn\'t wait for inner components that are not yet loaded', function() {
+        this.restoreAfter(window, 'require');
+        this.after(function() {
+            ko.components.unregister('sub-component');
+        });
+
+        var templateProviderCallback,
+            templateRequirePath = 'path/componentTemplateModule',
+            renderedComponents = [];
+
+        window.require = function(modules, callback) {
+            expect(modules.length).toBe(1);
+            if (modules[0] === templateRequirePath) {
+                templateProviderCallback = callback;
+            } else {
+                throw new Error('Undefined module: ' + modules[0]);
+            }
+        };
+
+        ko.components.register(testComponentName, {
+            template: '<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>',
+            viewModel: function() { this.afterRender = function () { renderedComponents.push(testComponentName); }; }
+        });
+
+        ko.components.register('sub-component', {
+            template: { require: templateRequirePath },
+            viewModel: function(params) { this.afterRender = function () { renderedComponents.push('sub-component' + params); }; }
+        });
+
+        ko.applyBindings(outerViewModel, testNode);
+        expect(renderedComponents).toEqual([]);
+
+        jasmine.Clock.tick(1);
+        expect(renderedComponents).toEqual([ 'test-component' ]);
+
+        templateProviderCallback('<span></span>');
+        jasmine.Clock.tick(1);
+        expect(renderedComponents).toEqual([ 'test-component', 'sub-component1', 'sub-component2' ]);
     });
 
     it('Passes nonobservable params to the component', function() {
@@ -727,7 +812,7 @@ describe('Components: Component binding', function() {
         expect(testNode).toContainText('Hello! Your param is 456 Goodbye.');
     });
 
-    it('Does not call outer component\'s afterRender function if inner component is re-rendered', function() {
+    it('Does not call outer component\'s afterRender function if an inner component is re-rendered', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });

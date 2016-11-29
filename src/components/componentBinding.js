@@ -35,7 +35,7 @@
                     if (typeof currentViewModelafterRender === 'function') {
                         componentAfterRenderHandle = ko.tasks.schedule(function () {
                             componentAfterRenderHandle = null;
-                            currentViewModelafterRender.call(currentViewModel);
+                            currentViewModelafterRender.call(currentViewModel, element);
                         });
                         if (typeof bindingContext._rescheduleComponentAfterRender === 'function') {
                             bindingContext._rescheduleComponentAfterRender();
@@ -90,7 +90,7 @@
                     } else {
                         var currentViewModelafterRender = currentViewModel && currentViewModel['afterRender'];
                         if (typeof currentViewModelafterRender === 'function') {
-                            ko.dependencyDetection.ignore(currentViewModelafterRender, currentViewModel);
+                            ko.dependencyDetection.ignore(currentViewModelafterRender, currentViewModel, [element]);
                         }
                     }
                 });
