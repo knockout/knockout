@@ -26,7 +26,8 @@
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
-                    componentName, componentParams;
+                    componentName, componentParams,
+                    completedAsync;
 
                 if (typeof value === 'string') {
                     componentName = value;
@@ -74,19 +75,21 @@
                             }
                             var currentViewModelAfterRender = currentViewModel && currentViewModel['afterRender'];
                             if (typeof currentViewModelAfterRender === 'function') {
-                                ko.dependencyDetection.ignore(currentViewModelAfterRender, currentViewModel);
+                                currentViewModelAfterRender.call(currentViewModel, element);
                             }
                             if (ko.isObservable(bindingContext._componentActiveChildrenCount)) {
                                 bindingContext._componentActiveChildrenCount(bindingContext._componentActiveChildrenCount.peek() - 1);
                             }
                         }
                     };
-                    if (childBindingContext._componentActiveChildrenCount.peek() === 0) {
+                    if (!completedAsync || childBindingContext._componentActiveChildrenCount.peek() === 0) {
                         callAfterRenderWhenChildrenDone();
                     } else {
                         currentAfterRenderWatcher = childBindingContext._componentActiveChildrenCount.subscribe(callAfterRenderWhenChildrenDone);
                     }
                 });
+
+                completedAsync = true;
             }, null, { disposeWhenNodeIsRemoved: element });
 
             return { 'controlsDescendantBindings': true };
