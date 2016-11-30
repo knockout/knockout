@@ -7,6 +7,7 @@
             var currentViewModel,
                 currentLoadingOperationId,
                 componentAfterRenderHandle,
+                currentViewModelAfterRender,
                 disposeAssociatedComponentViewModel = function () {
                     if (componentAfterRenderHandle) {
                         ko.tasks.cancel(componentAfterRenderHandle);
@@ -22,22 +23,18 @@
                 },
                 rescheduleComponentAfterRender = function () {
                     componentAfterRenderHandle = ko.tasks.reschedule(componentAfterRenderHandle);
-                    if (typeof bindingContext._rescheduleComponentAfterRender === 'function') {
+                    if (bindingContext._rescheduleComponentAfterRender) {
                         bindingContext._rescheduleComponentAfterRender();
                     }
                 },
                 scheduleComponentAfterRender = function (childBindingContext) {
                     childBindingContext._rescheduleComponentAfterRender = rescheduleComponentAfterRender;
-                    if (componentAfterRenderHandle) {
-                        ko.tasks.cancel(componentAfterRenderHandle);
-                    }
-                    var currentViewModelafterRender = currentViewModel && currentViewModel['afterRender'];
-                    if (typeof currentViewModelafterRender === 'function') {
+                    if (typeof currentViewModelAfterRender === 'function') {
                         componentAfterRenderHandle = ko.tasks.schedule(function () {
                             componentAfterRenderHandle = null;
-                            currentViewModelafterRender.call(currentViewModel, element);
+                            currentViewModelAfterRender.call(currentViewModel, element);
                         });
-                        if (typeof bindingContext._rescheduleComponentAfterRender === 'function') {
+                        if (bindingContext._rescheduleComponentAfterRender) {
                             bindingContext._rescheduleComponentAfterRender();
                         }
                     }
@@ -48,7 +45,8 @@
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
-                    componentName, componentParams;
+                    componentName, componentParams,
+                    completedAsync;
 
                 if (typeof value === 'string') {
                     componentName = value;
@@ -61,8 +59,7 @@
                     throw new Error('No component name specified');
                 }
 
-                var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId,
-                    completedAsync;
+                var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
                 ko.components.get(componentName, function(componentDefinition) {
                     // If this is not the current load operation for this element, ignore it.
                     if (currentLoadingOperationId !== loadingOperationId) {
@@ -83,17 +80,16 @@
                             ctx['$componentTemplateNodes'] = originalChildNodes;
                         });
                     currentViewModel = componentViewModel;
+                    currentViewModelAfterRender = currentViewModel && currentViewModel['afterRender'];
                     ko.applyBindingsToDescendants(childBindingContext, element);
 
                     if (completedAsync) {
                         scheduleComponentAfterRender(childBindingContext);
-                    } else {
-                        var currentViewModelafterRender = currentViewModel && currentViewModel['afterRender'];
-                        if (typeof currentViewModelafterRender === 'function') {
-                            ko.dependencyDetection.ignore(currentViewModelafterRender, currentViewModel, [element]);
-                        }
+                    } else if (typeof currentViewModelAfterRender === 'function') {
+                        currentViewModelAfterRender.call(currentViewModel, element);
                     }
                 });
+
                 completedAsync = true;
             }, null, { disposeWhenNodeIsRemoved: element });
 
