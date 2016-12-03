@@ -442,18 +442,16 @@ if (ko.utils.canSetPrototype) {
     ko.utils.setPrototypeOf(computedFn, ko.subscribable['fn']);
 }
 
-// Set the proto chain values for ko.hasPrototype
+// Set the proto values for ko.computed
 var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
-ko.computed[protoProp] = ko.observable;
 computedFn[protoProp] = ko.computed;
 
 ko.isComputed = function (instance) {
-    return ko.hasPrototype(instance, ko.computed);
+    return (typeof instance == 'function' && instance[protoProp] === ko.computed);
 };
 
 ko.isPureComputed = function (instance) {
-    return ko.hasPrototype(instance, ko.computed)
-        && instance[computedState] && instance[computedState].pure;
+    return ko.isComputed(instance) && instance[computedState] && instance[computedState].pure;
 };
 
 ko.exportSymbol('computed', ko.computed);

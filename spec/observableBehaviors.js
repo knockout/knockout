@@ -10,9 +10,37 @@ describe('Observable', function() {
         expect(ko.isObservable(instance)).toEqual(true);
     });
 
+    it('Should not advertise that ko.observable is observable', function () {
+        expect(ko.isObservable(ko.observable)).toEqual(false);
+    });
+
+    it('Should advertise that instances are not computed', function () {
+        var instance = ko.observable();
+        expect(ko.isComputed(instance)).toEqual(false);
+    });
+
     it('Should advertise that instances are not pure computed', function () {
         var instance = ko.observable();
         expect(ko.isPureComputed(instance)).toEqual(false);
+    });
+
+    it('ko.isObservable should return false for non-observable values', function () {
+        ko.utils.arrayForEach([
+            undefined,
+            null,
+            "x",
+            {},
+            function() {},
+            new ko.subscribable()
+        ], function (value) {
+            expect(ko.isObservable(value)).toEqual(false);
+        });
+    });
+
+    it('ko.isObservable should throw exception for value that has fake observable pointer', function () {
+        var x = ko.observable();
+        x.__ko_proto__= {};
+        expect(function () { ko.isObservable(x); }).toThrow();
     });
 
     it('Should be able to write values to it', function () {

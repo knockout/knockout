@@ -10,6 +10,10 @@ describe('Dependent Observable', function() {
         expect(ko.isObservable(instance)).toEqual(true);
     });
 
+    it('Should not advertise that ko.computed is observable', function () {
+        expect(ko.isObservable(ko.computed)).toEqual(false);
+    });
+
     it('Should advertise that instances are computed', function () {
         var instance = ko.computed(function () { });
         expect(ko.isComputed(instance)).toEqual(true);
@@ -24,6 +28,20 @@ describe('Dependent Observable', function() {
         var instance = ko.computed(function () { });
         expect(ko.isWriteableObservable(instance)).toEqual(false);
         expect(ko.isWritableObservable(instance)).toEqual(false);
+    });
+
+    it('ko.isComputed should return false for non-computed values', function () {
+        ko.utils.arrayForEach([
+            undefined,
+            null,
+            "x",
+            {},
+            function() {},
+            ko.observable(),
+            (function() { var x = ko.computed(function() {}); x.__ko_proto__= {}; return x; }())
+        ], function (value) {
+            expect(ko.isComputed(value)).toEqual(false);
+        });
     });
 
     it('Should require an evaluator function as constructor param', function () {
