@@ -1,6 +1,6 @@
 var computedState = ko.utils.createSymbolOrString('_state');
 
-ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
+ko.originalComputed = ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget, options) {
     if (typeof evaluatorFunctionOrOptions === "object") {
         // Single-parameter syntax - everything is on this "options" param
         options = evaluatorFunctionOrOptions;
@@ -448,7 +448,7 @@ ko.computed[protoProp] = ko.observable;
 computedFn[protoProp] = ko.computed;
 
 ko.isComputed = function (instance) {
-    return ko.hasPrototype(instance, ko.computed);
+    return ko.hasPrototype(instance, ko.originalComputed);
 };
 
 ko.isPureComputed = function (instance) {
