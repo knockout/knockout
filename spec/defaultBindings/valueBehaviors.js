@@ -304,6 +304,15 @@ describe('Binding: Value', function() {
         }
     });
 
+    it('Should bind to file inputs but not allow setting an non-empty value', function() {
+        var observable = ko.observable('zzz');
+        var vm = { prop: observable };
+
+        testNode.innerHTML = "<input type='file' data-bind='value: prop' />";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0].value).toEqual("");
+    });
+
     describe('For select boxes', function() {
         it('Should update selectedIndex when the model changes (options specified before value)', function() {
             var observable = new ko.observable('B');
