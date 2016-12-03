@@ -1,7 +1,9 @@
 ko.utils = (function () {
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
     function objectForEach(obj, action) {
         for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
+            if (hasOwnProperty.call(obj, prop)) {
                 action(prop, obj[prop]);
             }
         }
@@ -10,7 +12,7 @@ ko.utils = (function () {
     function extend(target, source) {
         if (source) {
             for(var prop in source) {
-                if(source.hasOwnProperty(prop)) {
+                if(hasOwnProperty.call(source, prop)) {
                     target[prop] = source[prop];
                 }
             }
@@ -190,7 +192,7 @@ ko.utils = (function () {
                 return source;
             var target = {};
             for (var prop in source) {
-                if (source.hasOwnProperty(prop)) {
+                if (hasOwnProperty.call(source, prop)) {
                     target[prop] = mapping(source[prop], prop, source);
                 }
             }

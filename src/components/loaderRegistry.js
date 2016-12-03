@@ -30,7 +30,7 @@
     };
 
     function getObjectOwnProperty(obj, propName) {
-        return obj.hasOwnProperty(propName) ? obj[propName] : undefined;
+        return Object.prototype.hasOwnProperty.call(obj, propName) ? obj[propName] : undefined;
     }
 
     function loadComponentAndNotify(componentName, callback) {

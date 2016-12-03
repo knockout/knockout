@@ -72,7 +72,7 @@
             // Give access to the raw computeds, as long as that wouldn't overwrite any custom param also called '$raw'
             // This is in case the developer wants to react to outer (binding) observability separately from inner
             // (model value) observability, or in case the model value observable has subobservables.
-            if (!result.hasOwnProperty('$raw')) {
+            if (!Object.prototype.hasOwnProperty.call(result, '$raw')) {
                 result['$raw'] = rawParamComputedValues;
             }
 
@@ -104,7 +104,7 @@
                 var newDocFrag = originalFunction(),
                     allComponents = ko.components._allRegisteredComponents;
                 for (var componentName in allComponents) {
-                    if (allComponents.hasOwnProperty(componentName)) {
+                    if (Object.prototype.hasOwnProperty.call(allComponents, componentName)) {
                         newDocFrag.createElement(componentName);
                     }
                 }
