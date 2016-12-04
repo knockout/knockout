@@ -355,12 +355,17 @@ var computedFn = {
         if (state.disposeWhenNodeIsRemoved && state.domNodeDisposalCallback) {
             ko.utils.domNodeDisposal.removeDisposeCallback(state.disposeWhenNodeIsRemoved, state.domNodeDisposalCallback);
         }
-        state.dependencyTracking = null;
+        state.dependencyTracking = undefined;
         state.dependenciesCount = 0;
         state.isDisposed = true;
         state.isStale = false;
         state.isSleeping = false;
-        state.disposeWhenNodeIsRemoved = null;
+        state.disposeWhenNodeIsRemoved = undefined;
+        state.disposeWhen = undefined;
+        state.readFunction = undefined;
+        if (!this.hasWriteFunction) {
+            state.evaluatorFunctionTarget = undefined;
+        }
     }
 };
 
