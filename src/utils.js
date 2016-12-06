@@ -69,6 +69,8 @@ ko.utils = (function () {
     // see: https://github.com/knockout/knockout/issues/1597
     var cssClassNameRegex = /\S+/g;
 
+    var jQueryEventAttachName;
+
     function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
         var addOrRemoveFn;
         if (classNames) {
@@ -370,7 +372,10 @@ ko.utils = (function () {
 
             var mustUseAttachEvent = eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!ko.options['useOnlyNativeEvents'] && !mustUseAttachEvent && jQueryInstance) {
-                jQueryInstance(element)['bind'](eventType, wrappedHandler);
+                if (!jQueryEventAttachName) {
+                    jQueryEventAttachName = (typeof jQueryInstance(element)['on'] == 'function') ? 'on' : 'bind';
+                }
+                jQueryInstance(element)[jQueryEventAttachName](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, wrappedHandler, false);
             else if (typeof element.attachEvent != "undefined") {
