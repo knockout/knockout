@@ -107,8 +107,11 @@ var ko_subscribable_fn = {
             if (selfIsObservable && pendingValue === self) {
                 pendingValue = self._evalIfChanged ? self._evalIfChanged() : self();
             }
-            ignoreBeforeChange = false;
-            if (self.isDifferent(previousValue, pendingValue)) {
+            var shouldNotify = self._notifyNextChange || self.isDifferent(previousValue, pendingValue);
+
+            self._notifyNextChange = ignoreBeforeChange = false;
+
+            if (shouldNotify) {
                 self._origNotifySubscribers(previousValue = pendingValue);
             }
         });

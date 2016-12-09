@@ -426,6 +426,36 @@ describe('Rate-limited', function() {
             expect(evalSpy).not.toHaveBeenCalled();
         });
 
+
+        it('Should not cause loss of updates when an intermediate value is read by a dependent computed observable', function() {
+            // From https://github.com/knockout/knockout/issues/1835
+            var one = ko.observable(false).extend({rateLimit: 100}),
+                two = ko.observable(false),
+                three = ko.computed(function() { return one() || two(); }),
+                threeNotifications = [];
+
+            three.subscribe(function(val) {
+                threeNotifications.push(val);
+            });
+
+            // The loop shows that the same steps work continuously
+            for (var i = 0; i < 3; i++) {
+                expect(one() || two() || three()).toEqual(false);
+                threeNotifications = [];
+
+                one(true);
+                expect(threeNotifications).toEqual([]);
+                two(true);
+                expect(threeNotifications).toEqual([true]);
+                two(false);
+                expect(threeNotifications).toEqual([true]);
+                one(false);
+                expect(threeNotifications).toEqual([true]);
+
+                jasmine.Clock.tick(100);
+                expect(threeNotifications).toEqual([true, false]);
+            }
+        });
     });
 
     describe('Observable Array change tracking', function() {
@@ -672,7 +702,38 @@ describe('Rate-limited', function() {
             // Advance clock; Change notification happens now using the latest value notified
             jasmine.Clock.tick(500);
             expect(dependentComputed()).toEqual('b');
-       });
+        });
+
+        it('Should not cause loss of updates when an intermediate value is read by a dependent computed observable', function() {
+            // From https://github.com/knockout/knockout/issues/1835
+            var one = ko.observable(false),
+                onePointOne = ko.computed(one).extend({rateLimit: 100}),
+                two = ko.observable(false),
+                three = ko.computed(function() { return onePointOne() || two(); }),
+                threeNotifications = [];
+
+            three.subscribe(function(val) {
+                threeNotifications.push(val);
+            });
+
+            // The loop shows that the same steps work continuously
+            for (var i = 0; i < 3; i++) {
+                expect(onePointOne() || two() || three()).toEqual(false);
+                threeNotifications = [];
+
+                one(true);
+                expect(threeNotifications).toEqual([]);
+                two(true);
+                expect(threeNotifications).toEqual([true]);
+                two(false);
+                expect(threeNotifications).toEqual([true]);
+                one(false);
+                expect(threeNotifications).toEqual([true]);
+
+                jasmine.Clock.tick(100);
+                expect(threeNotifications).toEqual([true, false]);
+            }
+        });
     });
 });
 
