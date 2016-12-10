@@ -100,10 +100,19 @@ describe('Observable', function() {
 
         instance('A');
         instance('B');
+        expect(notifiedValues).toEqual([ 'A', 'B' ]);
+    });
 
-        expect(notifiedValues.length).toEqual(2);
-        expect(notifiedValues[0]).toEqual('A');
-        expect(notifiedValues[1]).toEqual('B');
+    it('Should notify "spectator" subscribers about each new value', function () {
+        var instance = new ko.observable();
+        var notifiedValues = [];
+        instance.subscribe(function (value) {
+            notifiedValues.push(value);
+        }, null, "spectate");
+
+        instance('A');
+        instance('B');
+        expect(notifiedValues).toEqual([ 'A', 'B' ]);
     });
 
     it('Should be able to tell it that its value has mutated, at which point it notifies subscribers', function () {
@@ -288,11 +297,13 @@ describe('Observable', function() {
         };
         instance(456);
 
-        expect(interceptedNotifications.length).toEqual(2);
-        expect(interceptedNotifications[0].eventName).toEqual("beforeChange");
-        expect(interceptedNotifications[1].eventName).toEqual("None");
-        expect(interceptedNotifications[0].value).toEqual(123);
-        expect(interceptedNotifications[1].value).toEqual(456);
+        // This represents the current set of events that are generated for an observable. This set might
+        // expand in the future.
+        expect(interceptedNotifications).toEqual([
+            { eventName: 'beforeChange', value: 123 },
+            { eventName: 'spectate', value: 456 },
+            { eventName: 'None', value: 456 }
+        ]);
     });
 
     it('Should inherit any properties defined on ko.subscribable.fn or ko.observable.fn', function() {

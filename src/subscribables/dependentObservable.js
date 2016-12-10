@@ -283,14 +283,16 @@ var computedFn = {
         if (computedObservable.isDifferent(state.latestValue, newValue)) {
             if (!state.isSleeping) {
                 computedObservable["notifySubscribers"](state.latestValue, "beforeChange");
+            } else {
+                computedObservable.updateVersion();
             }
 
             state.latestValue = newValue;
             if (DEBUG) computedObservable._latestValue = newValue;
 
-            if (state.isSleeping) {
-                computedObservable.updateVersion();
-            } else if (notifyChange) {
+            computedObservable["notifySubscribers"](state.latestValue, "spectate");
+
+            if (!state.isSleeping && notifyChange) {
                 computedObservable["notifySubscribers"](state.latestValue);
             }
 

@@ -245,6 +245,31 @@ describe('Rate-limited', function() {
             expect(beforeChangeSpy.calls.length).toBe(1);   // Only one beforeChange notification
         });
 
+        it('Should notify "spectator" subscribers whenever the value changes', function () {
+            var observable = new ko.observable('A').extend({rateLimit:500}),
+                spectateSpy = jasmine.createSpy('notifySpy'),
+                notifySpy = jasmine.createSpy('notifySpy');
+
+            observable.subscribe(spectateSpy, null, "spectate");
+            observable.subscribe(notifySpy);
+
+            expect(spectateSpy).not.toHaveBeenCalled();
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            observable('B');
+            expect(spectateSpy).toHaveBeenCalledWith('B');
+            observable('C');
+            expect(spectateSpy).toHaveBeenCalledWith('C');
+
+            expect(notifySpy).not.toHaveBeenCalled();
+            jasmine.Clock.tick(500);
+
+            // "spectate" was called for each new value
+            expect(spectateSpy.argsForCall).toEqual([ ['B'], ['C'] ]);
+            // whereas "change" was only called for the final value
+            expect(notifySpy.argsForCall).toEqual([ ['C'] ]);
+        });
+
         it('Should suppress change notification when value is changed/reverted', function() {
             var observable = ko.observable('original').extend({rateLimit:500});
             var notifySpy = jasmine.createSpy('notifySpy');

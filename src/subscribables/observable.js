@@ -43,7 +43,10 @@ ko.observable = function (initialValue) {
 var observableFn = {
     'equalityComparer': valuesArePrimitiveAndEqual,
     peek: function() { return this[observableLatestValue]; },
-    valueHasMutated: function () { this['notifySubscribers'](this[observableLatestValue]); },
+    valueHasMutated: function () {
+        this['notifySubscribers'](this[observableLatestValue], 'spectate');
+        this['notifySubscribers'](this[observableLatestValue]);
+    },
     valueWillMutate: function () { this['notifySubscribers'](this[observableLatestValue], 'beforeChange'); }
 };
 

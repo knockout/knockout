@@ -81,6 +81,31 @@ describe('Pure Computed', function() {
         expect(timesEvaluated).toEqual(3);
     });
 
+    it('Should notify "spectator" subscribers whenever the value changes', function () {
+        var observable = new ko.observable('A');
+        var computed = ko.pureComputed(function () { return observable(); });
+        var notifiedValues = [];
+        computed.subscribe(function (value) {
+            notifiedValues.push(value);
+        }, null, "spectate");
+
+        expect(notifiedValues).toEqual([]);
+
+        // Reading the computed for the first time causes a notification
+        expect(computed()).toEqual('A');
+        expect(notifiedValues).toEqual(['A']);
+
+        // Reading it a second time doesn't
+        expect(computed()).toEqual('A');
+        expect(notifiedValues).toEqual(['A']);
+
+        // Changing the dependency doesn't, but reading the computed again does
+        observable('B');
+        expect(notifiedValues).toEqual(['A']);
+        expect(computed()).toEqual('B');
+        expect(notifiedValues).toEqual(['A', 'B']);
+    });
+
     it('Should not subscribe to dependencies while sleeping', function() {
         var data = ko.observable('A'),
             computed = ko.pureComputed(data);
