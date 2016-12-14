@@ -211,6 +211,19 @@ describe('Dependent Observable', function() {
         expect(notifiedValue).toEqual(3);
     });
 
+    it('Should notify "spectator" subscribers about changes', function () {
+        var observable = new ko.observable();
+        var computed = ko.computed(function () { return observable(); });
+        var notifiedValues = [];
+        computed.subscribe(function (value) {
+            notifiedValues.push(value);
+        }, null, "spectate");
+
+        observable('A');
+        observable('B');
+        expect(notifiedValues).toEqual([ 'A', 'B' ]);
+    });
+
     it('Should notify "beforeChange" subscribers before changes', function () {
         var notifiedValue;
         var observable = new ko.observable(1);
