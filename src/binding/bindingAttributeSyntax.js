@@ -194,56 +194,51 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    function applyBindingsToDescendantsInternal (bindingContext, elementOrVirtualElement, bindingContextsMayDifferFromDomParentElement) {
-        var currentChild,
-            nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement),
-            provider = ko.bindingProvider['instance'],
-            preprocessNode = provider['preprocessNode'];
+    function applyBindingsToDescendantsInternal(bindingContext, elementOrVirtualElement) {
+        var nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
 
-        // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
-        // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
-        // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
-        // trigger insertion of <template> contents at that point in the document.
-        if (preprocessNode) {
-            while (currentChild = nextInQueue) {
-                nextInQueue = ko.virtualElements.nextSibling(currentChild);
-                preprocessNode.call(provider, currentChild);
+        if (nextInQueue) {
+            var currentChild,
+                provider = ko.bindingProvider['instance'],
+                preprocessNode = provider['preprocessNode'];
+
+            // Preprocessing allows a binding provider to mutate a node before bindings are applied to it. For example it's
+            // possible to insert new siblings after it, and/or replace the node with a different one. This can be used to
+            // implement custom binding syntaxes, such as {{ value }} for string interpolation, or custom element types that
+            // trigger insertion of <template> contents at that point in the document.
+            if (preprocessNode) {
+                while (currentChild = nextInQueue) {
+                    nextInQueue = ko.virtualElements.nextSibling(currentChild);
+                    preprocessNode.call(provider, currentChild);
+                }
+                // Reset nextInQueue for the next loop
+                nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
             }
-            // Reset nextInQueue for the next loop
-            nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
-        }
 
-        while (currentChild = nextInQueue) {
-            // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
-            nextInQueue = ko.virtualElements.nextSibling(currentChild);
-            applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild, bindingContextsMayDifferFromDomParentElement);
+            while (currentChild = nextInQueue) {
+                // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
+                nextInQueue = ko.virtualElements.nextSibling(currentChild);
+                applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
+            }
         }
     }
 
-    function applyBindingsToNodeAndDescendantsInternal (bindingContext, nodeVerified, bindingContextMayDifferFromDomParentElement) {
+    function applyBindingsToNodeAndDescendantsInternal(bindingContext, nodeVerified) {
         var shouldBindDescendants = true;
 
-        // Perf optimisation: Apply bindings only if...
-        // (1) We need to store the binding context on this node (because it may differ from the DOM parent node's binding context)
-        //     Note that we can't store binding contexts on non-elements (e.g., text nodes), as IE doesn't allow expando properties for those
-        // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var isElement = (nodeVerified.nodeType === 1);
         if (isElement) // Workaround IE <= 8 HTML parsing weirdness
             ko.virtualElements.normaliseVirtualElementDomStructure(nodeVerified);
 
-        var shouldApplyBindings = (isElement && bindingContextMayDifferFromDomParentElement)             // Case (1)
-                               || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);       // Case (2)
+        // Perf optimisation: Apply bindings only if...
+        // (1) We need to store the binding info for the node (all element nodes)
+        // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
+        var shouldApplyBindings = isElement || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);
         if (shouldApplyBindings)
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext, bindingContextMayDifferFromDomParentElement)['shouldBindDescendants'];
+            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext)['shouldBindDescendants'];
 
         if (shouldBindDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
-            // We're recursing automatically into (real or virtual) child nodes without changing binding contexts. So,
-            //  * For children of a *real* element, the binding context is certainly the same as on their DOM .parentNode,
-            //    hence bindingContextsMayDifferFromDomParentElement is false
-            //  * For children of a *virtual* element, we can't be sure. Evaluating .parentNode on those children may
-            //    skip over any number of intermediate virtual elements, any of which might define a custom binding context,
-            //    hence bindingContextsMayDifferFromDomParentElement is true
-            applyBindingsToDescendantsInternal(bindingContext, nodeVerified, /* bindingContextsMayDifferFromDomParentElement: */ !isElement);
+            applyBindingsToDescendantsInternal(bindingContext, nodeVerified);
         }
     }
 
@@ -283,21 +278,18 @@
         return result;
     }
 
-    function applyBindingsToNodeInternal(node, sourceBindings, bindingContext, bindingContextMayDifferFromDomParentElement) {
+    function applyBindingsToNodeInternal(node, sourceBindings, bindingContext) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
-        var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
+        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
-            if (alreadyBound) {
+            if (bindingInfo) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
-            ko.utils.domData.set(node, boundElementDomDataKey, true);
-        }
 
-        // Optimization: Don't store the binding context on this node if it's definitely the same as on node.parentNode, because
-        // we can easily recover it just by scanning up the node's ancestors in the DOM
-        // (note: here, parent node means "real DOM parent" not "virtual parent", as there's no O(1) way to find the virtual parent)
-        if (!alreadyBound && bindingContextMayDifferFromDomParentElement)
-            ko.storedBindingContextForNode(node, bindingContext);
+            ko.utils.domData.set(node, boundElementDomDataKey, {context: bindingContext});
+            if (bindingContext._subscribable)
+                bindingContext._subscribable._addNode(node);
+        }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
         var bindings;
@@ -402,15 +394,9 @@
         };
     };
 
-    var storedBindingContextDomDataKey = ko.utils.domData.nextKey();
-    ko.storedBindingContextForNode = function (node, bindingContext) {
-        if (arguments.length == 2) {
-            ko.utils.domData.set(node, storedBindingContextDomDataKey, bindingContext);
-            if (bindingContext._subscribable)
-                bindingContext._subscribable._addNode(node);
-        } else {
-            return ko.utils.domData.get(node, storedBindingContextDomDataKey);
-        }
+    ko.storedBindingContextForNode = function (node) {
+        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
+        return bindingInfo && bindingInfo.context;
     }
 
     function getBindingContext(viewModelOrBindingContext) {
@@ -457,13 +443,8 @@
     // Retrieving binding context from arbitrary nodes
     ko.contextFor = function(node) {
         // We can only do something meaningful for elements and comment nodes (in particular, not text nodes, as IE can't store domdata for them)
-        switch (node.nodeType) {
-            case 1:
-            case 8:
-                var context = ko.storedBindingContextForNode(node);
-                if (context) return context;
-                if (node.parentNode) return ko.contextFor(node.parentNode);
-                break;
+        if (node && (node.nodeType === 1 || node.nodeType === 8)) {
+            return ko.storedBindingContextForNode(node);
         }
         return undefined;
     };
