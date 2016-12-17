@@ -249,7 +249,7 @@ describe('Binding attribute syntax', function() {
             }
         };
         var vm = {isVisible: true};
-        ko.applyBindings(vm);
+        ko.applyBindings(vm, testNode);
 
         // All of the bound nodes return the viewmodel
         expect(ko.dataFor(testNode.childNodes[0])).toBe(vm);
