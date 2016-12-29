@@ -949,5 +949,25 @@ describe('Deferred', function() {
             jasmine.Clock.tick(1);
             expect(notifySpy.argsForCall).toEqual([['i(x,h(cx,g(ex,fx),d(bx,cx)),bx,fx)']]);    // only one evaluation and notification
         });
+
+        it('Should minimize evaluation when dependent computed doesn\'t actually change', function() {
+            // From https://github.com/knockout/knockout/issues/2174
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+
+            var source = ko.observable({ key: 'value' }),
+                c1 = ko.computed(function () {
+                    return source()['key'];
+                }),
+                countEval = 0,
+                c2 = ko.computed(function () {
+                    countEval++;
+                    return c1();
+                });
+
+            source({ key: 'value' });
+            jasmine.Clock.tick(1);
+            expect(countEval).toEqual(1);
+        });
     });
 });
