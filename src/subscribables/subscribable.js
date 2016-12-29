@@ -104,7 +104,7 @@ var ko_subscribable_fn = {
             // If an observable provided a reference to itself, access it to get the latest value.
             // This allows computed observables to delay calculating their value until needed.
             if (selfIsObservable && pendingValue === self) {
-                pendingValue = self();
+                pendingValue = self._evalIfChanged ? self._evalIfChanged() : self();
             }
             ignoreBeforeChange = false;
             if (self.isDifferent(previousValue, pendingValue)) {
