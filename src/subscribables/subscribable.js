@@ -31,7 +31,7 @@ function limitNotifySubscribers(value, event) {
 
 var ko_subscribable_fn = {
     init: function(instance) {
-        instance._subscriptions = {};
+        instance._subscriptions = { "change": [] };
         instance._versionNumber = 1;
     },
 
@@ -63,9 +63,10 @@ var ko_subscribable_fn = {
             this.updateVersion();
         }
         if (this.hasSubscriptionsForEvent(event)) {
+            var subs = event === defaultEvent && this._changeSubscriptions || this._subscriptions[event].slice(0);
             try {
                 ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
-                for (var a = this._subscriptions[event].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
+                for (var i = 0, subscription; subscription = subs[i]; ++i) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
                     if (!subscription.isDisposed)
@@ -113,6 +114,7 @@ var ko_subscribable_fn = {
         });
 
         self._limitChange = function(value) {
+            self._changeSubscriptions = self._subscriptions[defaultEvent].slice(0);
             self._notificationIsPending = ignoreBeforeChange = true;
             pendingValue = value;
             finish();
