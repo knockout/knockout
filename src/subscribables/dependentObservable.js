@@ -335,7 +335,7 @@ var computedFn = {
         // By default, peek won't re-evaluate, except while the computed is sleeping or to get the initial value when "deferEvaluation" is set.
         // Pass in true to evaluate if needed.
         var state = this[computedState];
-        if ((state.isStale && (evaluate || !state.dependenciesCount)) || (state.isSleeping && this.haveDependenciesChanged())) {
+        if (((state.isStale || state.isDirty) && (evaluate || !state.dependenciesCount)) || (state.isSleeping && this.haveDependenciesChanged())) {
             this.evaluateImmediate();
         }
         return state.latestValue;
