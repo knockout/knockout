@@ -18,7 +18,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
     var state = {
         latestValue: undefined,
         isStale: true,
-        isDirty: false,
+        isDirty: true,
         isBeingEvaluated: false,
         suppressDisposalUntilDisposeWhenReturnsFalse: false,
         isDisposed: false,
@@ -46,7 +46,7 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         } else {
             // Reading the value
             ko.dependencyDetection.registerDependency(computedObservable);
-            if (state.isStale || state.isDirty || (state.isSleeping && computedObservable.haveDependenciesChanged())) {
+            if (state.isDirty || (state.isSleeping && computedObservable.haveDependenciesChanged())) {
                 computedObservable.evaluateImmediate();
             }
             return state.latestValue;
@@ -176,7 +176,7 @@ var computedFn = {
     },
     isActive: function () {
         var state = this[computedState];
-        return state.isStale || state.isDirty || state.dependenciesCount > 0;
+        return state.isDirty || state.dependenciesCount > 0;
     },
     respondToChange: function () {
         // Ignore "change" events if we've already scheduled a delayed notification
@@ -335,7 +335,7 @@ var computedFn = {
         // By default, peek won't re-evaluate, except while the computed is sleeping or to get the initial value when "deferEvaluation" is set.
         // Pass in true to evaluate if needed.
         var state = this[computedState];
-        if (((state.isStale || state.isDirty) && (evaluate || !state.dependenciesCount)) || (state.isSleeping && this.haveDependenciesChanged())) {
+        if ((state.isDirty && (evaluate || !state.dependenciesCount)) || (state.isSleeping && this.haveDependenciesChanged())) {
             this.evaluateImmediate();
         }
         return state.latestValue;
@@ -353,10 +353,9 @@ var computedFn = {
             this._limitBeforeChange(this[computedState].latestValue);
 
             // Mark as dirty
+            this[computedState].isDirty = true;
             if (isChange) {
                 this[computedState].isStale = true;
-            } else {
-                this[computedState].isDirty = true;
             }
 
             // Pass the observable to the "limit" code, which will evaluate it when
@@ -395,7 +394,6 @@ var pureComputedOverrides = {
             if (state.isStale || computedObservable.haveDependenciesChanged()) {
                 state.dependencyTracking = null;
                 state.dependenciesCount = 0;
-                state.isStale = true;
                 if (computedObservable.evaluateImmediate()) {
                     computedObservable.updateVersion();
                 }
