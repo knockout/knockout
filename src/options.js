@@ -3,7 +3,7 @@ ko.options = {
     'deferUpdates': false,
     'useOnlyNativeEvents': false,
     'catchBindingExceptions': false,
-    'logBindingExceptions' : true
+    'logBindingExceptions' : true    // only used when catchBindingExceptions : true
 };
 
 //ko.exportSymbol('options', ko.options);   // 'options' isn't minified
