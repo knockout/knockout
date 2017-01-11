@@ -107,28 +107,28 @@ module.exports = function(grunt) {
         var options = {
             compilationLevel: 'ADVANCED',
             outputWrapper: '(function() {%output%})();',
-			jsCode: [{src: '/**@const*/var DEBUG=false;' + getCombinedSources()}]
-		};
+            jsCode: [{src: '/**@const*/var DEBUG=false;' + getCombinedSources()}]
+        };
         grunt.log.write('Compiling...');
         var out = cc.compile(options);
-		if (out.errors.length) {
-			if (out.warnings.length)
-				out.warnings.forEach(err => grunt.log.error(
-					err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
-				));
-			out.errors.forEach(err => grunt.log.error(
-				err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
-			));
-			done(false);
-		} else {
-			if (out.warnings.length)
-				out.warnings.forEach(err => grunt.log.error(
-					err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
-				));
-			grunt.log.ok();
-			grunt.file.write(output, (grunt.config('banner') + out.compiledCode).replace(/\r\n/g, '\n'));
-			done(true);
-		}
+        if (out.errors.length) {
+            if (out.warnings.length)
+                out.warnings.forEach(function(err) { return grunt.log.error(
+                    err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+                )});
+                out.errors.forEach(function(err) { return grunt.log.error(
+                    err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+                )});
+                done(false);
+        } else {
+            if (out.warnings.length)
+                out.warnings.forEach(function(err) { return grunt.log.error(
+                    err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+                )});
+                grunt.log.ok();
+                grunt.file.write(output, (grunt.config('banner') + out.compiledCode).replace(/\r\n/g, '\n'));
+                done(true);
+        }
     }
 
     grunt.registerMultiTask('build', 'Build', function() {
