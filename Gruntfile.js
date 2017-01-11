@@ -103,22 +103,32 @@ module.exports = function(grunt) {
     }
 
     function buildMin(output, done) {
-        var cc = require('closure-compiler');
+        var cc = require('google-closure-compiler-js');
         var options = {
-            compilation_level: 'ADVANCED_OPTIMIZATIONS',
-            output_wrapper: '(function() {%output%})();'
-        };
+            compilationLevel: 'ADVANCED',
+            outputWrapper: '(function() {%output%})();',
+			jsCode: [{src: '/**@const*/var DEBUG=false;' + getCombinedSources()}]
+		};
         grunt.log.write('Compiling...');
-        cc.compile('/**@const*/var DEBUG=false;' + getCombinedSources(), options, function (err, stdout, stderr) {
-            if (err) {
-                grunt.log.error(err);
-                done(false);
-            } else {
-                grunt.log.ok();
-                grunt.file.write(output, (grunt.config('banner') + stdout).replace(/\r\n/g, '\n'));
-                done(true);
-            }
-        });
+        var out = cc.compile(options);
+		if (out.errors.length) {
+			if (out.warnings.length)
+				out.warnings.forEach(err => grunt.log.error(
+					err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+				));
+			out.errors.forEach(err => grunt.log.error(
+				err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+			));
+			done(false);
+		} else {
+			if (out.warnings.length)
+				out.warnings.forEach(err => grunt.log.error(
+					err.file + ' ' + err.lineNo + ':' + err.charNo + ' ' + err.type + ' ' + err.description
+				));
+			grunt.log.ok();
+			grunt.file.write(output, (grunt.config('banner') + out.compiledCode).replace(/\r\n/g, '\n'));
+			done(true);
+		}
     }
 
     grunt.registerMultiTask('build', 'Build', function() {
