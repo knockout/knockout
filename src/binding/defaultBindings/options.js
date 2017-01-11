@@ -25,6 +25,7 @@ ko.bindingHandlers['options'] = {
             includeDestroyed = allBindings.get('optionsIncludeDestroyed'),
             arrayToDomNodeChildrenOptions = {},
             captionValue,
+            defaultValue = allBindings.get('optionsDefault'),
             filteredArray,
             previousSelectedValues = [];
 
@@ -80,7 +81,7 @@ ko.bindingHandlers['options'] = {
             var option = element.ownerDocument.createElement("option");
             if (arrayEntry === captionPlaceholder) {
                 ko.utils.setTextContent(option, allBindings.get('optionsCaption'));
-                ko.selectExtensions.writeValue(option, undefined);
+                ko.selectExtensions.writeValue(option, defaultValue);
             } else {
                 // Apply a value to the option element
                 var optionValue = applyToObject(arrayEntry, allBindings.get('optionsValue'), arrayEntry);
