@@ -7,7 +7,7 @@ describe('Binding preprocessing', function() {
                 return value || "false";
             }
         };
-        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, b");
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b'");
         var parsedRewritten = eval("({" + rewritten + "})");
         expect(parsedRewritten.a).toEqual(1);
         expect(parsedRewritten.b).toEqual(false);
