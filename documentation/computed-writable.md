@@ -116,12 +116,12 @@ Sometimes you might want to represent a data point on the screen in a different 
     ko.applyBindings(new MyViewModel());
 {% endcapture %}
 {% capture live_example_view %}
-    <div>Enter bid price: <input data-bind="textInput: formattedPrice"/></div>
+    <div>Enter bid price: <input data-bind="value: formattedPrice"/></div>
     <div>(Raw value: <span data-bind="text: price"></span>)</div>
 {% endcapture %}
 {% include live-example-minimal.html %}
 
-Now, whenever the user enters a new price, the text box immediately updates to show it formatted with the currency symbol and two decimal places, no matter what format they entered the value in. This gives a great user experience, because the user sees how the software has understood their data entry as a price. They know they can't enter more than two decimal places, because if they try to, the additional decimal places are immediately removed. Similarly, they can't enter negative values, because the `write` callback strips off any minus sign.
+Now, whenever the user enters a new price, the text box updates to show it formatted with the currency symbol and two decimal places, no matter what format they entered the value in. This gives a great user experience, because the user sees how the software has understood their data entry as a price. They know they can't enter more than two decimal places, because if they try to, the additional decimal places are removed. Similarly, they can't enter negative values, because the `write` callback strips off any minus sign.
 
 ### Example 4: Filtering and validating user input
 
