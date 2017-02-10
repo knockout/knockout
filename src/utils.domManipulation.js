@@ -94,12 +94,28 @@
         }
     }
 
+    /**
+     * parseHtmlFragment uses its jQuery's parseHTML function,
+     * otherwise it uses simple HTML parse
+     * 
+     * @param {String} html String of HTML to be parsed
+     * @param {Object} documentContext Object that owns the currently executing code
+     * @returns {DOMNode} Parsed DOM nodes
+     */
     ko.utils.parseHtmlFragment = function(html, documentContext) {
         return jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
 
+    /**
+     * setHtml empties the node's contents, unwraps the HTML, and
+     * sets the node's HTML using jQuery.html or parseHtmlFragment
+     *
+     * @param {DOMNode} node Node in which HTML needs to be set
+     * @param {DOMNode} html HTML to be inserted in node
+     * @returns undefined
+     */
     ko.utils.setHtml = function(node, html) {
         ko.utils.emptyDomNode(node);
 
