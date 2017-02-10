@@ -62,7 +62,7 @@
         };
 
         this['contentType'] = "text/jquery-tmpl";
-        
+
         if (jQueryTmplVersion > 0) {
             jQueryInstance['tmpl']['tag']['ko_code'] = {
                 open: "__.push($1 || '');"
