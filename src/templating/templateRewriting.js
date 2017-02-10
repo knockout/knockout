@@ -1,6 +1,6 @@
 
 ko.templateRewriting = (function () {
-    
+
     var bindingAttrName = ko.bindingProvider.bindingAttributeName;
 	
     var memoizeDataBindingAttributeSyntaxRegex = new RegExp("(<([a-z]+\d*)(?:\s+(?!" + bindingAttrName + "\s*=\s*)[a-z0-9\-]+(?:=(?:\"[^\"]*\"|\'[^\']*\'|[^>]*))?)*\s+)" + bindingAttrName + "\s*=\s*([\"'])([\s\S]*?)\3", "gi");
