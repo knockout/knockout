@@ -1,6 +1,6 @@
 (function() {
     var defaultBindingAttributeName = "data-bind";
-    
+
     ko.bindingProvider = function(bindingAttributeName) {
         this.bindingCache = {};
         this.bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
@@ -51,11 +51,11 @@
                 throw ex;
             }
         },
-        
+
         'setBindingAttributeName': function(attrName) {
         	this.bindingAttributeName = attrName;
         }
-        
+
     });
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
