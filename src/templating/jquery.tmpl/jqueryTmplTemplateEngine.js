@@ -61,6 +61,8 @@
             document.write("<script type='text/html' id='" + templateName + "'>" + templateMarkup + "<" + "/script>");
         };
 
+        this['contentType'] = "text/jquery-tmpl";
+        
         if (jQueryTmplVersion > 0) {
             jQueryInstance['tmpl']['tag']['ko_code'] = {
                 open: "__.push($1 || '');"
@@ -77,8 +79,11 @@
 
     // Use this one by default *only if jquery.tmpl is referenced*
     var jqueryTmplTemplateEngineInstance = new ko.jqueryTmplTemplateEngine();
-    if (jqueryTmplTemplateEngineInstance.jQueryTmplVersion > 0)
+    if (jqueryTmplTemplateEngineInstance.jQueryTmplVersion > 0) {
         ko.setTemplateEngine(jqueryTmplTemplateEngineInstance);
+        ko.setTemplateEngineContentType(jqueryTmplTemplateEngineInstance.contentType, jqueryTmplTemplateEngineInstance);
+        ko.jqueryTmplTemplateEngine.instance = jqueryTmplTemplateEngineInstance;
+    }
 
     ko.exportSymbol('jqueryTmplTemplateEngine', ko.jqueryTmplTemplateEngine);
 })();
