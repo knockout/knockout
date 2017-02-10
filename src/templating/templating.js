@@ -1,11 +1,27 @@
 (function () {
     var _templateEngine;
+    var _templateEngineContentTypes = {};
+    
+    ko.setTemplateEngineContentType = function(contentType, templateEngine) {
+    	if(!contentType) {
+    		throw new Error("contentType is not set");
+    	}
+    	if(_templateEngineContentTypes[contentType]) {
+    		throw new Error("a templateEngine is already set for this contentType + '" + contentType + "'");
+    	}
+    	_templateEngineContentTypes[contentType] = templateEngine;
+    }
+    
+    ko.getTemplateEngineFromContentType = function(contentType) {
+    	return _templateEngineContentTypes[contentType];
+    }
+    
     ko.setTemplateEngine = function (templateEngine) {
         if ((templateEngine != undefined) && !(templateEngine instanceof ko.templateEngine))
             throw new Error("templateEngine must inherit from ko.templateEngine");
         _templateEngine = templateEngine;
     }
-
+    
     function invokeForEachNodeInContinuousRange(firstNode, lastNode, action) {
         var node, nextInQueue = firstNode, firstOutOfRangeNode = ko.virtualElements.nextSibling(lastNode);
         while (nextInQueue && ((node = nextInQueue) !== firstOutOfRangeNode)) {
@@ -77,11 +93,37 @@
                                         : null;
     }
 
+    function resolveTemplateEngineToUse(template, options) {
+    	
+    	var templateEngine;
+        // Option setting is prior
+        if(options['templateEngine']) {
+        	templateEngine = options['templateEngine'];
+        } else {
+	        // Check type attribute of script tag
+	        if(typeof(template) == "string") {
+	            var domElement = document.getElementById(template);        
+	            if(domElement) {
+	                if(domElement.nodeType == 1 && domElement.type) { // script
+	                	templateEngine = domElement.type;
+	                }
+	            }
+	        }
+        }
+        
+        if(templateEngine && typeof(templateEngine) == "string") {
+        	templateEngine = ko.getTemplateEngineFromContentType(templateEngine);
+        }
+        
+        // Return default template engine
+        return templateEngine || _templateEngine;
+    }
+
     function executeTemplate(targetNodeOrNodeArray, renderMode, template, bindingContext, options) {
         options = options || {};
         var firstTargetNode = targetNodeOrNodeArray && getFirstNodeFromPossibleArray(targetNodeOrNodeArray);
         var templateDocument = (firstTargetNode || template || {}).ownerDocument;
-        var templateEngineToUse = (options['templateEngine'] || _templateEngine);
+        var templateEngineToUse = resolveTemplateEngineToUse(template, options);
         ko.templateRewriting.ensureTemplateIsRewritten(template, templateEngineToUse, templateDocument);
         var renderedNodesArray = templateEngineToUse['renderTemplate'](template, bindingContext, options, templateDocument);
 
@@ -298,4 +340,6 @@
 })();
 
 ko.exportSymbol('setTemplateEngine', ko.setTemplateEngine);
+ko.exportSymbol('setTemplateEngineContentType', ko.setTemplateEngineContentType);
+ko.exportSymbol('getTemplateEngineContentType', ko.getTemplateEngineContentType);
 ko.exportSymbol('renderTemplate', ko.renderTemplate);
