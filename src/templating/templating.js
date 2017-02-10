@@ -1,7 +1,7 @@
 (function () {
     var _templateEngine;
     var _templateEngineContentTypes = {};
-    
+
     ko.setTemplateEngineContentType = function(contentType, templateEngine) {
     	if(!contentType) {
     		throw new Error("contentType is not set");
@@ -11,17 +11,17 @@
     	}
     	_templateEngineContentTypes[contentType] = templateEngine;
     }
-    
+
     ko.getTemplateEngineFromContentType = function(contentType) {
     	return _templateEngineContentTypes[contentType];
     }
-    
+
     ko.setTemplateEngine = function (templateEngine) {
         if ((templateEngine != undefined) && !(templateEngine instanceof ko.templateEngine))
             throw new Error("templateEngine must inherit from ko.templateEngine");
         _templateEngine = templateEngine;
     }
-    
+
     function invokeForEachNodeInContinuousRange(firstNode, lastNode, action) {
         var node, nextInQueue = firstNode, firstOutOfRangeNode = ko.virtualElements.nextSibling(lastNode);
         while (nextInQueue && ((node = nextInQueue) !== firstOutOfRangeNode)) {
@@ -102,7 +102,7 @@
         } else {
 	        // Check type attribute of script tag
 	        if(typeof(template) == "string") {
-	            var domElement = document.getElementById(template);        
+	            var domElement = document.getElementById(template);
 	            if(domElement) {
 	                if(domElement.nodeType == 1 && domElement.type) { // script
 	                	templateEngine = domElement.type;
@@ -110,11 +110,11 @@
 	            }
 	        }
         }
-        
+
         if(templateEngine && typeof(templateEngine) == "string") {
         	templateEngine = ko.getTemplateEngineFromContentType(templateEngine);
         }
-        
+
         // Return default template engine
         return templateEngine || _templateEngine;
     }
