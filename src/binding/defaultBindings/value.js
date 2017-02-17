@@ -94,10 +94,15 @@ ko.bindingHandlers['value'] = {
                 if (valueHasChanged) {
                     if (tagName === "select") {
                         var allowUnset = allBindings.get('valueAllowUnset');
+                        var delaySync = true; //allBindings.get('valueDelaySync');
                         var applyValueAction = function () {
                             ko.selectExtensions.writeValue(element, newValue, allowUnset);
                         };
-                        applyValueAction();
+                        if (!delaySync) {
+                            applyValueAction();
+                        } else {
+                            ko.delaySync.run(applyValueAction);
+                        }
 
                         if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
                             // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
