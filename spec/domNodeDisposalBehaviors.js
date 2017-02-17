@@ -48,6 +48,44 @@ describe('DOM node disposal', function() {
         expect(didRun).toEqual(false); // Didn't run only because we removed it
     });
 
+    it('Should not clean descendant nodes that are removed by a parent dispose handler', function() {
+        var childNode = document.createElement("DIV");
+        var grandChildNode = document.createElement("DIV");
+        var childSpy = jasmine.createSpy('childSpy')
+            .andCallFake(function() {
+                childNode.removeChild(grandChildNode);
+            });
+        var grandChildSpy = jasmine.createSpy('grandChildSpy');
+
+        testNode.appendChild(childNode);
+        childNode.appendChild(grandChildNode);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, childSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(grandChildNode, grandChildSpy);
+
+        ko.cleanNode(testNode);
+        expect(childSpy).toHaveBeenCalledWith(childNode);
+        expect(grandChildSpy).not.toHaveBeenCalled();
+    });
+
+    it('Should throw an error if a cleaned node is removed in a handler', function() {
+        // Test by removing the node itself
+        var childNode = document.createElement("DIV");
+        testNode.appendChild(childNode);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, function() {
+            testNode.removeChild(childNode);
+        });
+        expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
+
+        // Test by removing a previous node
+        var childNode2 = document.createElement("DIV");
+        testNode.appendChild(childNode);
+        testNode.appendChild(childNode2);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, function() {
+            testNode.removeChild(childNode);
+        });
+        expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
+    });
+
     it('Should be able to attach disposal callback to a node that has been cloned', function() {
         // This represents bug https://github.com/SteveSanderson/knockout/issues/324
         // IE < 9 copies expando properties when cloning nodes, so if the node already has some DOM data associated with it,

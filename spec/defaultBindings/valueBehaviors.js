@@ -304,6 +304,15 @@ describe('Binding: Value', function() {
         }
     });
 
+    it('Should bind to file inputs but not allow setting an non-empty value', function() {
+        var observable = ko.observable('zzz');
+        var vm = { prop: observable };
+
+        testNode.innerHTML = "<input type='file' data-bind='value: prop' />";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0].value).toEqual("");
+    });
+
     describe('For select boxes', function() {
         it('Should update selectedIndex when the model changes (options specified before value)', function() {
             var observable = new ko.observable('B');
@@ -631,6 +640,19 @@ describe('Binding: Value', function() {
                 people[0].name("Amelia");
                 expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
                 expect(selected()).toEqual("B");
+            });
+
+            it('Should select no options if model value is null and option value is 0', function() {
+                var observable = ko.observable(null);
+                var options = [
+                    { name: 'B', id: 1 },
+                    { name: 'A', id: 0 }
+                ];
+                testNode.innerHTML = "<select data-bind='options:options, optionsValue:\"id\", optionsText:\"name\", value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable, options: options }, testNode);
+
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual(undefined);
             });
         });
     });

@@ -15,6 +15,7 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
         cachedDiff = null,
         arrayChangeSubscription,
         pendingNotifications = 0,
+        underlyingNotifySubscribersFunction,
         underlyingBeforeSubscriptionAddFunction = target.beforeSubscriptionAdd,
         underlyingAfterSubscriptionRemoveFunction = target.afterSubscriptionRemove;
 
@@ -31,6 +32,10 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
         if (underlyingAfterSubscriptionRemoveFunction)
             underlyingAfterSubscriptionRemoveFunction.call(target, event);
         if (event === arrayChangeEventName && !target.hasSubscriptionsForEvent(arrayChangeEventName)) {
+            if (underlyingNotifySubscribersFunction) {
+                target['notifySubscribers'] = underlyingNotifySubscribersFunction;
+                underlyingNotifySubscribersFunction = undefined;
+            }
             arrayChangeSubscription.dispose();
             trackingChanges = false;
         }
@@ -45,7 +50,7 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
         trackingChanges = true;
 
         // Intercept "notifySubscribers" to track how many times it was called.
-        var underlyingNotifySubscribersFunction = target['notifySubscribers'];
+        underlyingNotifySubscribersFunction = target['notifySubscribers'];
         target['notifySubscribers'] = function(valueToNotify, event) {
             if (!event || event === defaultEvent) {
                 ++pendingNotifications;

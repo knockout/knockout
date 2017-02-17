@@ -81,6 +81,36 @@ describe('Pure Computed', function() {
         expect(timesEvaluated).toEqual(3);
     });
 
+    it('Should notify "spectator" subscribers whenever the value changes', function () {
+        var observable = new ko.observable('A');
+        var computed = ko.pureComputed(observable);
+        var computed2 = ko.pureComputed(computed);
+        var notifiedValues = [];
+        computed.subscribe(function (value) {
+            notifiedValues.push(value);
+            expect(computed()).toBe(value);
+            expect(computed2()).toBe(value);
+        }, null, "spectate");
+
+        expect(notifiedValues).toEqual([]);
+
+        // Reading the computed for the first time causes a notification
+        expect(computed()).toEqual('A');
+        expect(computed2()).toEqual('A');
+        expect(notifiedValues).toEqual(['A']);
+
+        // Reading it a second time doesn't
+        expect(computed()).toEqual('A');
+        expect(computed2()).toEqual('A');
+        expect(notifiedValues).toEqual(['A']);
+
+        // Changing the dependency doesn't, but reading the computed again does
+        observable('B');
+        expect(notifiedValues).toEqual(['A']);
+        expect(computed()).toEqual('B');
+        expect(notifiedValues).toEqual(['A', 'B']);
+    });
+
     it('Should not subscribe to dependencies while sleeping', function() {
         var data = ko.observable('A'),
             computed = ko.pureComputed(data);
@@ -320,6 +350,29 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(2);
         expect(computed.getDependenciesCount()).toEqual(0);
+    });
+
+    it('Should reevaluate if dependency was changed during awakening, but not otherwise', function() {
+        // See https://github.com/knockout/knockout/issues/1975
+        var data = ko.observable(0),
+            isEven = ko.pureComputed(function() { return !(data() % 2); }),
+            timesEvaluated = 0,
+            pureComputed = ko.pureComputed(function () { ++timesEvaluated; return isEven(); }),
+            subscription;
+
+        expect(pureComputed()).toEqual(true);
+        expect(timesEvaluated).toEqual(1);
+
+        data(1);
+        subscription = isEven.subscribe(function() {});
+        expect(pureComputed()).toEqual(false);
+        expect(timesEvaluated).toEqual(2);
+        subscription.dispose();
+
+        data(3);
+        subscription = isEven.subscribe(function() {});
+        expect(pureComputed()).toEqual(false);
+        expect(timesEvaluated).toEqual(2);
     });
 
     describe('Should maintain order of subscriptions', function () {

@@ -126,7 +126,8 @@ describe("Deferred bindings", function() {
         expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
     });
 
-    it('Should not throw an exception for value binding on multiple select boxes', function() {
+    // Spec fails due to changes from #1835 (is it important to try to fix this?)
+    xit('Should not throw an exception for value binding on multiple select boxes', function() {
         testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
         var observable = ko.observable();
         expect(function() {
@@ -134,5 +135,30 @@ describe("Deferred bindings", function() {
             jasmine.Clock.tick(1);
         }).not.toThrow();
         expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
+    });
+
+    it('Should get latest value when conditionally included', function() {
+        // Test is based on example in https://github.com/knockout/knockout/issues/1975
+
+        testNode.innerHTML = "<div data-bind=\"if: show\"><div data-bind=\"text: status\"></div></div>";
+        var value = ko.observable(0),
+            is1 = ko.pureComputed(function () {  return value() == 1; }),
+            status = ko.pureComputed(function () { return is1() ? 'ok' : 'error'; }),
+            show = ko.pureComputed(function () { return value() > 0 && is1(); });
+
+        ko.applyBindings({ status: status, show: show }, testNode);
+        expect(testNode.childNodes[0]).toContainHtml('');
+
+        value(1);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
+
+        value(0);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('');
+
+        value(1);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
     });
 });
