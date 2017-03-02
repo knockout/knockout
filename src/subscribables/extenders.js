@@ -50,16 +50,19 @@ ko.extenders = {
                 var handle,
                     ignoreUpdates = false;
                 return function () {
-                    if (!ignoreUpdates) {
-                        ko.tasks.cancel(handle);
-                        handle = ko.tasks.schedule(callback);
+                    if (scheduleStack.indexOf(handle) >= 0 || ignoreUpdates)
+                        return;
 
-                        try {
-                            ignoreUpdates = true;
-                            target['notifySubscribers'](undefined, 'dirty');
-                        } finally {
-                            ignoreUpdates = false;
-                        }
+                    ko.tasks.cancel(handle);
+                    handle = ko.tasks.schedule(callback);
+
+                    try {
+                       ignoreUpdates = true;
+                       scheduleStack.push(handle);
+                       target['notifySubscribers'](undefined, 'dirty');
+                    } finally {
+                       ignoreUpdates = false;
+                       scheduleStack.pop();
                     }
                 };
             });
@@ -72,6 +75,8 @@ ko.extenders = {
             valuesArePrimitiveAndEqual;
     }
 };
+
+var scheduleStack = [];
 
 var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
 function valuesArePrimitiveAndEqual(a, b) {
