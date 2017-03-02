@@ -94,27 +94,23 @@ ko.bindingHandlers['value'] = {
                 if (valueHasChanged) {
                     if (tagName === "select") {
                         var allowUnset = allBindings.get('valueAllowUnset');
-                        var delaySync = true; //allBindings.get('valueDelaySync');
                         var applyValueAction = function () {
                             ko.selectExtensions.writeValue(element, newValue, allowUnset);
                         };
-                        if (!delaySync) {
+						ko.delaySync.run(function () {
                             applyValueAction();
-                        } else {
-                            ko.delaySync.run(applyValueAction);
-                        }
-
-                        if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
-                            // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
-                            // because you're not allowed to have a model value that disagrees with a visible UI selection.
-                            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
-                        } else {
-                            // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
-                            // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
-                            // to apply the value as well.
-                            ko.utils.setTimeout(applyValueAction, 0);
-                        }
-                    } else {
+                            if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
+                                // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+                                // because you're not allowed to have a model value that disagrees with a visible UI selection.
+                                ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
+                            } else {
+                                // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
+                                // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
+                                // to apply the value as well.
+                                ko.utils.setTimeout(applyValueAction, 0);
+                            }
+                        });
+					} else {
                         ko.selectExtensions.writeValue(element, newValue);
                     }
                 }
