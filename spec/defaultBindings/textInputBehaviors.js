@@ -207,6 +207,19 @@ describe('Binding: TextInput', function() {
         }
     });
 
+    it('Should update observable on blur event', function () {
+        var myobservable = new ko.observable(123);
+        testNode.innerHTML = "<input data-bind='textInput: someProp' /><input />";
+        ko.applyBindings({ someProp: myobservable }, testNode);
+        expect(testNode.childNodes[0].value).toEqual("123");
+
+        testNode.childNodes[0].focus();
+        testNode.childNodes[0].value = "some user-entered value";
+        testNode.childNodes[1].focus(); // focus on a different input to blur the previous one
+        ko.utils.triggerEvent(testNode.childNodes[0], "blur");      // make sure it actually gets an event
+        expect(myobservable()).toEqual("some user-entered value");
+    });
+
     it('Should write only changed values to observable', function () {
         var model = { writtenValue: '' };
 

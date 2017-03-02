@@ -178,7 +178,7 @@
             });
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
-            return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
+            return executeTemplate(targetNode, "ignoreTargetNode", templateName, arrayItemContext, options);
         }
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode

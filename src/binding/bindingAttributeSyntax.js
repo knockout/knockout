@@ -441,9 +441,15 @@
             jQueryInstance = window['jQuery'];
         }
 
-        if (rootNode && (rootNode.nodeType !== 1) && (rootNode.nodeType !== 8))
-            throw new Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
-        rootNode = rootNode || window.document.body; // Make "rootNode" parameter optional
+        // rootNode is optional
+        if (!rootNode) {
+            rootNode = window.document.body;
+            if (!rootNode) {
+                throw Error("ko.applyBindings: could not find window.document.body; has the document been loaded?");
+            }
+        } else if (rootNode.nodeType !== 1 && rootNode.nodeType !== 8) {
+            throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
+        }
 
         applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
     };
