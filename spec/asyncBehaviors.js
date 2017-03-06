@@ -1147,6 +1147,10 @@ describe('Deferred', function() {
             source({ key: 'value' });
             jasmine.Clock.tick(1);
             expect(countEval).toEqual(1);
+
+            // Reading it again shouldn't cause an update
+            expect(c2()).toEqual(c1());
+            expect(countEval).toEqual(1);
         });
 
         it('Should ignore recursive dirty events', function() {
