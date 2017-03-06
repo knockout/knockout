@@ -346,6 +346,8 @@ var computedFn = {
         this._evalIfChanged = function () {
             if (this[computedState].isStale) {
                 this.evaluateImmediate();
+            } else {
+                this[computedState].isDirty = false;
             }
             return this[computedState].latestValue;
         };
