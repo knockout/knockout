@@ -28,7 +28,7 @@
         if (!canHaveProperties)
             return rootObject;
 
-        var outputProperties = rootObject instanceof Array ? [] : {};
+        var outputProperties = toString.call(rootObject) === "[object Array]" ? [] : {};
         visitedObjects.save(rootObject, outputProperties);
 
         visitPropertiesOrArrayEntries(rootObject, function(indexer) {
