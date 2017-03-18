@@ -86,6 +86,10 @@ ko.observableArray['fn'] = {
             this.peek()[index] = newItem;
             this.valueHasMutated();
         }
+    },
+
+    'pushArray': function(arrayOfValues) {
+        this.push.apply(this, arrayOfValues);
     }
 };
 
