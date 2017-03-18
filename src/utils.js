@@ -314,6 +314,11 @@ ko.utils = (function () {
                 return false;
             return string.substring(0, startsWith.length) === startsWith;
         },
+        
+        stringContains: function (string, contains) {
+            string = string || "";
+            return string.indexOf(contains) != -1;
+        },
 
         domNodeIsContainedBy: function (node, containedByNode) {
             if (node === containedByNode)
