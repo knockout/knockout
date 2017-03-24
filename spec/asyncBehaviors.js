@@ -1177,5 +1177,36 @@ describe('Deferred', function() {
 
             jasmine.Clock.tick(1);
         });
+
+        it('Should not cause loss of updates when an intermediate value is read by a dependent computed observable', function() {
+            // From https://github.com/knockout/knockout/issues/1835
+            var one = ko.observable(false).extend({deferred: true}),
+                onePointOne = ko.computed(one).extend({deferred: true}),
+                two = ko.observable(false),
+                three = ko.computed(function() { return onePointOne() || two(); }),
+                threeNotifications = [];
+
+            three.subscribe(function(val) {
+                threeNotifications.push(val);
+            });
+
+            // The loop shows that the same steps work continuously
+            for (var i = 0; i < 3; i++) {
+                expect(onePointOne() || two() || three()).toEqual(false);
+                threeNotifications = [];
+
+                one(true);
+                expect(threeNotifications).toEqual([]);
+                two(true);
+                expect(threeNotifications).toEqual([true]);
+                two(false);
+                expect(threeNotifications).toEqual([true]);
+                one(false);
+                expect(threeNotifications).toEqual([true]);
+
+                jasmine.Clock.tick(1);
+                expect(threeNotifications).toEqual([true, false]);
+            }
+        });
     });
 });
