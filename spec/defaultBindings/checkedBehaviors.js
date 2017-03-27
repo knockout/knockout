@@ -27,9 +27,19 @@ describe('Binding: Checked', function() {
 
         ko.applyBindings({ someProp: myobservable }, testNode);
         expect(testNode.childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].indeterminate).toEqual(false);
 
         myobservable(false);
         expect(testNode.childNodes[0].checked).toEqual(false);
+        expect(testNode.childNodes[0].indeterminate).toEqual(false);
+
+        myobservable('mixed');
+        expect(testNode.childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].indeterminate).toEqual(true);
+
+        myobservable(true);
+        expect(testNode.childNodes[0].checked).toEqual(true);
+        expect(testNode.childNodes[0].indeterminate).toEqual(false);
     });
 
     it('Should update observable properties on the underlying model when the checkbox click event fires', function () {
