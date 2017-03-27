@@ -226,6 +226,21 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].checked).toEqual(true);
     });
 
+    it('Should be able to write to a writeable computed observable backed with an array', function () {
+    	var array = ko.observableArray([]);
+    	var myComputed = ko.computed({
+    		read: function () {return array();},
+    		write: function (value) { array(array().push(value));}
+    	});
+    	var model = { array: array, myComputed: myComputed};
+    	testNode.innerHTML = "<input value='2' type='checkbox' data-bind='checked: myComputed' />";
+    	ko.applyBindings(model, testNode);
+
+    	// Checking the checkbox triggers a write to the computed observable
+    	ko.utils.triggerEvent(testNode.childNodes[0], "click");
+    	expect(model.array()).toEqual([2]);
+    });
+
     describe("With \'checkedValue\'", function() {
         it('When a \'checkedValue\' is specified, should use that as the checkbox value in the array', function() {
             var model = { myArray: ko.observableArray([1,3]) };
