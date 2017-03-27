@@ -66,8 +66,8 @@ ko.bindingHandlers['checked'] = {
                 // When a checkbox is bound to an array, being checked represents its value being present in that array
                 element.checked = ko.utils.arrayIndexOf(modelValue, checkedValue()) >= 0;
             } else if (isCheckbox) {
-                // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish
-                element.checked = modelValue;
+                // When a checkbox is bound to any other value (not an array), being checked represents the value being trueish or equal to checkedValue()
+                element.checked = useCheckedValue ? checkedValue() === modelValue : modelValue;
             } else {
                 // For radio buttons, being checked means that the radio button's value corresponds to the model value
                 element.checked = (checkedValue() === modelValue);
@@ -86,7 +86,7 @@ ko.bindingHandlers['checked'] = {
             valueIsArray = isCheckbox && (ko.utils.unwrapObservable(rawValue) instanceof Array),
             rawValueIsNonArrayObservable = !(valueIsArray && rawValue.push && rawValue.splice),
             oldElemValue = valueIsArray ? checkedValue() : undefined,
-            useCheckedValue = isRadio || valueIsArray;
+            useCheckedValue = isRadio || valueIsArray || allBindings['has']('checkedValue');
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
         if (isRadio && !element.name)
