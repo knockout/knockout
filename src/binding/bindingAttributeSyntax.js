@@ -472,6 +472,7 @@
         return context ? context['$data'] : undefined;
     };
 
+    ko.exportSymbol('bindingContext', ko.bindingContext);
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
