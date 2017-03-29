@@ -107,6 +107,11 @@ ko.bindingHandlers['checked'] = {
 ko.expressionRewriting.twoWayBindings['checked'] = true;
 
 ko.bindingHandlers['checkedValue'] = {
+    'disallow-value-and-checkedValue': false,
+    'init': function(element) {
+        if(ko.bindingHandlers['checkedValue']['disallow-value-and-checkedValue'] && element.hasAttribute('value'))
+            throw Error("The checkedValue binding will always overwrite the value binding. You should avoid using both.");
+    },
     'update': function (element, valueAccessor) {
         element.value = ko.utils.unwrapObservable(valueAccessor());
     }
