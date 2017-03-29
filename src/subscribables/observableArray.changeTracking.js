@@ -37,6 +37,7 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
                 underlyingNotifySubscribersFunction = undefined;
             }
             arrayChangeSubscription.dispose();
+            arrayChangeSubscription = null;
             trackingChanges = false;
         }
     };
