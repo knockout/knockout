@@ -36,8 +36,9 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
                 target['notifySubscribers'] = underlyingNotifySubscribersFunction;
                 underlyingNotifySubscribersFunction = undefined;
             }
-            if (arrayChangeSubscription)
-	        arrayChangeSubscription.dispose();
+            if (arrayChangeSubscription) {
+                arrayChangeSubscription.dispose();
+            }
             arrayChangeSubscription = null;
             trackingChanges = false;
         }
