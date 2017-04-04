@@ -105,15 +105,16 @@ ko.utils = (function () {
             for (var i = 0, j = array.length; i < j; i++)
                 action(array[i], i);
         },
-
-        arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
+        
+        arrayIndexOf: 
+            (typeof Array.prototype.indexOf == "function") ? function(array, item) {
                 return Array.prototype.indexOf.call(array, item);
-            for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] === item)
-                    return i;
-            return -1;
-        },
+            } : function (array, item) {
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (array[i] === item)
+                        return i;
+                return -1;
+            },
 
         arrayFirst: function (array, predicate, predicateOwner) {
             for (var i = 0, j = array.length; i < j; i++)
