@@ -6,9 +6,8 @@ ko.bindingHandlers['visible'] = {
             element.style.display = "";
             element.removeAttribute("aria-hidden");
         }
-        else if ((!value) && isCurrentlyVisible) {
+        else if ((!value) && isCurrentlyVisible)
             element.style.display = "none";
             element.setAttribute("aria-hidden","true");
-        }
     }
 };
