@@ -217,6 +217,7 @@
         ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
     }
 
+    var cleanContainerDomDataKey = ko.utils.domData.nextKey();
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
@@ -233,7 +234,15 @@
                 if (ko.isObservable(nodes)) {
                     throw new Error('The "nodes" option must be a plain, non-observable array.');
                 }
-                var container = ko.utils.moveCleanedNodesToContainerElement(nodes); // This also removes the nodes from their current parent
+
+                // If the nodes are already attached to a KO-generated container, we reuse that container without moving the
+                // elements to a new one (we check only the first node, as the nodes are always moved together)
+                var container = nodes[0] && nodes[0].parentNode;
+                if (!container || !ko.utils.domData.get(container, cleanContainerDomDataKey)) {
+                    container = ko.utils.moveCleanedNodesToContainerElement(nodes);
+                    ko.utils.domData.set(container, cleanContainerDomDataKey, true);
+                }
+
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
