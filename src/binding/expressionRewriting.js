@@ -122,7 +122,8 @@ ko.expressionRewriting = (function () {
                 if (twoWayBindings[key] && (writableVal = getWriteableValue(val))) {
                     // For two-way bindings, provide a write method in case the value
                     // isn't a writable observable.
-                    propertyAccessorResultStrings.push("'" + key + "':function(_z){" + writableVal + "=_z}");
+                    var writeKey = typeof twoWayBindings[key] == 'string' ? twoWayBindings[key] : key;
+                    propertyAccessorResultStrings.push("'" + writeKey + "':function(_z){" + writableVal + "=_z}");
                 }
             }
             // Values are wrapped in a function so that each value can be accessed independently
