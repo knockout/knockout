@@ -211,9 +211,18 @@ ko.utils = (function () {
             // Ensure it's a real array, as we're about to reparent the nodes and
             // we don't want the underlying collection to change while we're doing that.
             var nodesArray = ko.utils.makeArray(nodes);
-            var templateDocument = (nodesArray[0] && nodesArray[0].ownerDocument) || document;
+            var firstNode = nodesArray[0];
+
+            // if the nodes are already attached to a KO-generated container, we reuse that container without moving the elements to a new one (we check only the first node, as the nodes are moving always together)
+            if (firstNode && firstNode.parentNode && ko.utils.domData.get(firstNode.parentNode, 'ko-generated') === true) {
+              return firstNode.parentNode;
+            }
+
+            var templateDocument = (firstNode && firstNode.ownerDocument) || document;
 
             var container = templateDocument.createElement('div');
+            ko.utils.domData.set(container, 'ko-generated', true);
+
             for (var i = 0, j = nodesArray.length; i < j; i++) {
                 container.appendChild(ko.cleanNode(nodesArray[i]));
             }

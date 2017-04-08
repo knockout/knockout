@@ -518,6 +518,36 @@ describe('Templating', function() {
         expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
     });
 
+    it('Should accept a "nodes" option that gives the template nodes, and able to use the same nodes for multiple bindings', function () {
+      testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, data: testData1, bypassDomNodeWrap: true }'></div><div data-bind='template: { nodes: testNodes, data: testData2, bypassDomNodeWrap: true }'></div>";
+      var model = {
+        testNodes: [
+            document.createTextNode("begin"),
+            document.createElement("span"),
+            document.createTextNode("end")
+        ],
+        testData1: ko.observable({ name: ko.observable("alpha1") }),
+        testData2: ko.observable({ name: ko.observable("alpha2") })
+      };
+      model.testNodes[1].setAttribute("data-bind", "text: name"); // See that bindings are applied to the injected nodes
+
+      ko.applyBindings(model, testNode);
+      expect(testNode.childNodes[0]).toContainText("beginalpha1end");
+      expect(testNode.childNodes[1]).toContainText("beginalpha2end");
+
+      // The injected bindings update to match model changes as usual
+      model.testData1().name("beta1");
+      model.testData2().name("beta2");
+      expect(testNode.childNodes[0]).toContainText("beginbeta1end");
+      expect(testNode.childNodes[1]).toContainText("beginbeta2end");
+
+      // The template binding re-renders successfully if model changes
+      model.testData1({ name: ko.observable("gamma1") });
+      model.testData2({ name: ko.observable("gamma2") });
+      expect(testNode.childNodes[0]).toContainText("begingamma1end");
+      expect(testNode.childNodes[1]).toContainText("begingamma2end");
+    });
+
     it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {
         testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, foreach: testData, bypassDomNodeWrap: true }'></div>";
 
