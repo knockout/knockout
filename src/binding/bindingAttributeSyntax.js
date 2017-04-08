@@ -288,7 +288,13 @@
         var alreadyBound = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
             if (alreadyBound) {
-                throw Error("You cannot apply bindings multiple times to the same element.");
+                ko.onBindingError({
+                    during: 'apply',
+                    errorCaptured: Error("You cannot apply bindings multiple times to the same element."),
+                    element: node,
+                    bindingContext: bindingContext
+                });
+                return false;
             }
             ko.utils.domData.set(node, boundElementDomDataKey, true);
         }
@@ -365,6 +371,19 @@
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
                 }
 
+                function reportBindingError(during, ex) {
+                    ko.onBindingError({
+                        during: during,
+                        errorCaptured: ex,
+                        element: node,
+                        bindingKey: bindingKey,
+                        bindings: bindings,
+                        allBindings: allBindings,
+                        valueAccessor: getValueAccessor(bindingKey),
+                        bindingContext: bindingContext
+                    });
+                }
+
                 try {
                     // Run init, ignoring any dependencies
                     if (typeof handlerInitFn == "function") {
@@ -379,20 +398,27 @@
                             }
                         });
                     }
+                } catch (ex) {
+                    reportBindingError('init', ex);
+                }
 
+                try {
                     // Run update in its own computed wrapper
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                try {
+                                    handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                } catch (ex) {
+                                    reportBindingError('update', ex);
+                                }
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
                         );
                     }
                 } catch (ex) {
-                    ex.message = "Unable to process binding \"" + bindingKey + ": " + bindings[bindingKey] + "\"\nMessage: " + ex.message;
-                    throw ex;
+                    reportBindingError('update', ex);
                 }
             });
         }
@@ -472,6 +498,22 @@
         return context ? context['$data'] : undefined;
     };
 
+    // Error handler hook when a binding fails.
+    // Note: github.com/knockout/knockout/issues/1626
+    ko.onBindingError = function(spec) {
+        var error, bindingText;
+        if (spec.bindingKey) {
+            // During: 'init' or initial 'update'
+            error = spec.errorCaptured;
+            bindingText = ko.bindingProvider['instance']['getBindingsString'](spec.element);
+            error.message = "Unable to process binding \"" + spec.bindingKey + "\" in binding \"" + bindingText + "\"\nMessage: " + error.message;
+        } else {
+            // During: 'apply'
+            error = spec.errorCaptured;
+        }
+        throw error;
+    };
+
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
@@ -479,4 +521,5 @@
     ko.exportSymbol('applyBindingsToNode', ko.applyBindingsToNode);
     ko.exportSymbol('contextFor', ko.contextFor);
     ko.exportSymbol('dataFor', ko.dataFor);
+    ko.exportSymbol('onBindingError', ko.onBindingError);
 })();

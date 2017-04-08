@@ -93,7 +93,89 @@ describe('Binding attribute syntax', function() {
         testNode.innerHTML = "<div data-bind='test: nonexistentValue'></div>";
         expect(function () {
             ko.applyBindings(null, testNode);
-        }).toThrowContaining("Unable to process binding \"test: function");
+        }).toThrowContaining("Unable to process binding \"test\" in binding \"test: nonexistentValue");
+    });
+
+    it("Should call ko.onBindingError with relevant details of a bindingHandler init error", function () {
+        var saved_obe = ko.onBindingError,
+            obe_calls = 0;
+        this.after(function () {
+            ko.onBindingError = saved_obe;
+        })
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('init');
+            expect(spec.errorCaptured.message).toEqual('A moth!');
+            expect(spec.bindingKey).toEqual('test')
+            expect(spec.valueAccessor()).toEqual(64728)
+            expect(spec.element).toEqual(testNode.children[0])
+            expect(spec.bindings.test()).toEqual(64728)
+            expect(spec.bindingContext.$data).toEqual('0xe')
+            expect(spec.allBindings().test).toEqual(64728)
+        }
+        ko.bindingHandlers.test = {
+            init: function () { throw new Error("A moth!") }
+        }
+        testNode.innerHTML = "<div data-bind='test: 64728'></div>";
+        ko.applyBindings('0xe', testNode);
+        expect(obe_calls).toEqual(1);
+    });
+
+    it("Should call ko.onBindingError with relevant details of a bindingHandler update error", function () {
+        var saved_obe = ko.onBindingError,
+            obe_calls = 0;
+        this.after(function () {
+            ko.onBindingError = saved_obe;
+        })
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('update');
+            expect(spec.errorCaptured.message).toEqual('A beetle!');
+            expect(spec.bindingKey).toEqual('test')
+            expect(spec.valueAccessor()).toEqual(64729)
+            expect(spec.element).toEqual(testNode.children[0])
+            expect(spec.bindings.test()).toEqual(64729)
+            expect(spec.bindingContext.$data).toEqual('0xf')
+            expect(spec.allBindings().test).toEqual(64729)
+        }
+        ko.bindingHandlers.test = {
+            update: function () { throw new Error("A beetle!") }
+        }
+        testNode.innerHTML = "<div data-bind='test: 64729'></div>";
+        ko.applyBindings('0xf', testNode);
+        expect(obe_calls).toEqual(1);
+    });
+
+    it("Should call ko.onBindingError with relevant details when an update fails", function () {
+        var saved_obe = ko.onBindingError,
+            obe_calls = 0,
+            observable = ko.observable();
+        this.after(function () {
+            ko.onBindingError = saved_obe;
+        })
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('update');
+            expect(spec.errorCaptured.message).toEqual('Observable: 42');
+            expect(spec.bindingKey).toEqual('test')
+            expect(spec.valueAccessor()).toEqual(64725)
+            expect(spec.element).toEqual(testNode.children[0])
+            expect(spec.bindings.test()).toEqual(64725)
+            expect(spec.bindingContext.$data).toEqual('0xef')
+            expect(spec.allBindings().test).toEqual(64725)
+        }
+        ko.bindingHandlers.test = {
+            update: function () { if (observable() === 42) { throw new Error("Observable: " + observable()); }}
+        }
+        testNode.innerHTML = "<div data-bind='test: 64725'></div>";
+        ko.applyBindings('0xef', testNode);
+        expect(obe_calls).toEqual(0);
+        observable(42);
+        expect(obe_calls).toEqual(1);
+        observable(24);
+        expect(obe_calls).toEqual(1);
+        observable(42);
+        expect(obe_calls).toEqual(2);
     });
 
     it('Should invoke registered handlers\'s init() then update() methods passing binding data', function () {
@@ -388,6 +470,19 @@ describe('Binding attribute syntax', function() {
         expect(function () {
             ko.applyBindings({}, testNode);
         }).toThrow("You cannot apply bindings multiple times to the same element.");
+    });
+
+    it("Should call ko.onBindingError when applyBindings is called multiple times for the same element", function () {
+        var obe_calls = 0;
+        this.restoreAfter(ko, 'onBindingError');
+        testNode.innerHTML = "<div data-bind='text: \"Some Text\"'></div>";
+        ko.applyBindings({}, testNode);
+        ko.onBindingError = function (spec) {
+            obe_calls++;
+            expect(spec.during).toEqual('apply');
+        };
+        ko.applyBindings({}, testNode);
+        expect(obe_calls).toEqual(1);
     });
 
     it('Should allow multiple applyBindings calls for the same element if cleanNode is used', function() {
