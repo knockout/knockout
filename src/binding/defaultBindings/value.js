@@ -89,9 +89,9 @@ ko.bindingHandlers['value'] = {
                     return;
                 }
 
-                var valueHasChanged = (newValue !== elementValue);
+                var valueHasChanged = newValue !== elementValue;
 
-                if (valueHasChanged) {
+                if (valueHasChanged || elementValue === undefined) {
                     if (tagName === "select") {
                         var allowUnset = allBindings.get('valueAllowUnset');
                         ko.selectExtensions.writeValue(element, newValue, allowUnset);

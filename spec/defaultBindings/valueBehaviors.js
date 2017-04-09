@@ -572,6 +572,17 @@ describe('Binding: Value', function() {
                 expect(select.selectedIndex).toEqual(0);
             });
 
+            it('Should display the caption when the model value changes to undefined after having no selection', function() {
+                var observable = ko.observable('B');
+                testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+                var select = testNode.childNodes[0];
+
+                select.selectedIndex = -1;
+                observable(undefined);
+                expect(select.selectedIndex).toEqual(0);
+            });
+
             it('Should select no option value if no option value matches the current model property value', function() {
                 var observable = ko.observable();
                 testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], value:myObservable, valueAllowUnset:true'></select>";
