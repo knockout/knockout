@@ -101,9 +101,9 @@ ko.utils = (function () {
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
-        arrayForEach: function (array, action) {
+        arrayForEach: function (array, action, actionOwner) {
             for (var i = 0, j = array.length; i < j; i++)
-                action(array[i], i);
+                action.call(actionOwner, array[i], i);
         },
 
         arrayIndexOf: function (array, item) {
@@ -142,19 +142,19 @@ ko.utils = (function () {
             return result;
         },
 
-        arrayMap: function (array, mapping) {
+        arrayMap: function (array, mapping, mappingOwner) {
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping(array[i], i));
+                result.push(mapping.call(mappingOwner, array[i], i));
             return result;
         },
 
-        arrayFilter: function (array, predicate) {
+        arrayFilter: function (array, predicate, predicateOwner) {
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate(array[i], i))
+                if (predicate.call(predicateOwner, array[i], i))
                     result.push(array[i]);
             return result;
         },
