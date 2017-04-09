@@ -55,6 +55,14 @@
                     }
                     if (allowUnset || selection >= 0 || (value === undefined && element.size > 1)) {
                         element.selectedIndex = selection;
+                        if (ko.utils.ieVersion === 6) {
+                            // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
+                            // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
+                            // to apply the value as well.
+                            ko.utils.setTimeout(function () {
+                                element.selectedIndex = selection;
+                            }, 0);
+                        }
                     }
                     break;
                 default:

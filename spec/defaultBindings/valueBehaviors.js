@@ -360,6 +360,11 @@ describe('Binding: Value', function() {
             observable("");
             expect(testNode.childNodes[0].selectedIndex).toEqual(0);
 
+            // Also check that the selection doesn't change later (see https://github.com/knockout/knockout/issues/2218)
+            waits(10);
+            runs(function() {
+                expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            });
         });
 
         it('Should display the caption when the model value changes to undefined, null, or \"\" when options specified directly', function() {
