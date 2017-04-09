@@ -107,8 +107,6 @@ ko.utils = (function () {
         },
 
         arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
