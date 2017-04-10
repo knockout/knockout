@@ -116,9 +116,25 @@ ko.utils = (function () {
         },
 
         arrayFirst: function (array, predicate, predicateOwner) {
-            for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i], i))
-                    return array[i];
+            if (typeof predicate === 'function') {
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (predicate.call(predicateOwner, array[i], i))
+                        return array[i];
+            } else if (typeof predicate === 'object') {
+                for (var i = 0, j = array.length; i < j; i++) {
+                    if (typeof array[i] === 'object') {
+                        var allTrue = true;
+                        var key;
+                        for (key in predicate) {
+                            if (predicate.hasOwnProperty(key))
+                                allTrue = allTrue && predicate[key] === ko['unwrap'](array[i][key]);
+                            if (!allTrue) break;
+                        }
+
+                        if (allTrue) return array[i];
+                    }
+                }
+            }
             return null;
         },
 
