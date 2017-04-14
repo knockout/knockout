@@ -1,7 +1,9 @@
 ko.utils = (function () {
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
     function objectForEach(obj, action) {
         for (var prop in obj) {
-            if (obj.hasOwnProperty(prop)) {
+            if (hasOwnProperty.call(obj, prop)) {
                 action(prop, obj[prop]);
             }
         }
@@ -10,7 +12,7 @@ ko.utils = (function () {
     function extend(target, source) {
         if (source) {
             for(var prop in source) {
-                if(source.hasOwnProperty(prop)) {
+                if(hasOwnProperty.call(source, prop)) {
                     target[prop] = source[prop];
                 }
             }
@@ -66,6 +68,8 @@ ko.utils = (function () {
     // For details on the pattern for changing node classes
     // see: https://github.com/knockout/knockout/issues/1597
     var cssClassNameRegex = /\S+/g;
+
+    var jQueryEventAttachName;
 
     function toggleDomNodeCssClass(node, classNames, shouldHaveClass) {
         var addOrRemoveFn;
@@ -190,7 +194,7 @@ ko.utils = (function () {
                 return source;
             var target = {};
             for (var prop in source) {
-                if (source.hasOwnProperty(prop)) {
+                if (hasOwnProperty.call(source, prop)) {
                     target[prop] = mapping(source[prop], prop, source);
                 }
             }
@@ -317,7 +321,7 @@ ko.utils = (function () {
             if (node.nodeType === 11)
                 return false; // Fixes issue #1162 - can't use node.contains for document fragments on IE8
             if (containedByNode.contains)
-                return containedByNode.contains(node.nodeType === 3 ? node.parentNode : node);
+                return containedByNode.contains(node.nodeType !== 1 ? node.parentNode : node);
             if (containedByNode.compareDocumentPosition)
                 return (containedByNode.compareDocumentPosition(node) & 16) == 16;
             while (node && node != containedByNode) {
@@ -366,9 +370,12 @@ ko.utils = (function () {
         registerEventHandler: function (element, eventType, handler) {
             var wrappedHandler = ko.utils.catchFunctionErrors(handler);
 
-            var mustUseAttachEvent = ieVersion && eventsThatMustBeRegisteredUsingAttachEvent[eventType];
+            var mustUseAttachEvent = eventsThatMustBeRegisteredUsingAttachEvent[eventType];
             if (!ko.options['useOnlyNativeEvents'] && !mustUseAttachEvent && jQueryInstance) {
-                jQueryInstance(element)['bind'](eventType, wrappedHandler);
+                if (!jQueryEventAttachName) {
+                    jQueryEventAttachName = (typeof jQueryInstance(element)['on'] == 'function') ? 'on' : 'bind';
+                }
+                jQueryInstance(element)[jQueryEventAttachName](eventType, wrappedHandler);
             } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
                 element.addEventListener(eventType, wrappedHandler, false);
             else if (typeof element.attachEvent != "undefined") {

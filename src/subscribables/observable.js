@@ -43,7 +43,10 @@ ko.observable = function (initialValue) {
 var observableFn = {
     'equalityComparer': valuesArePrimitiveAndEqual,
     peek: function() { return this[observableLatestValue]; },
-    valueHasMutated: function () { this['notifySubscribers'](this[observableLatestValue]); },
+    valueHasMutated: function () {
+        this['notifySubscribers'](this[observableLatestValue], 'spectate');
+        this['notifySubscribers'](this[observableLatestValue]);
+    },
     valueWillMutate: function () { this['notifySubscribers'](this[observableLatestValue], 'beforeChange'); }
 };
 
@@ -56,25 +59,19 @@ if (ko.utils.canSetPrototype) {
 var protoProperty = ko.observable.protoProperty = '__ko_proto__';
 observableFn[protoProperty] = ko.observable;
 
-ko.hasPrototype = function(instance, prototype) {
-    if ((instance === null) || (instance === undefined) || (instance[protoProperty] === undefined)) return false;
-    if (instance[protoProperty] === prototype) return true;
-    return ko.hasPrototype(instance[protoProperty], prototype); // Walk the prototype chain
+ko.isObservable = function (instance) {
+    var proto = typeof instance == 'function' && instance[protoProperty];
+    if (proto && proto !== ko.observable && proto !== ko.computed) {
+        throw Error("Invalid object that looks like an observable; possibly from another Knockout instance");
+    }
+    return !!proto;
 };
 
-ko.isObservable = function (instance) {
-    return ko.hasPrototype(instance, ko.observable);
-}
 ko.isWriteableObservable = function (instance) {
-    // Observable
-    if ((typeof instance == 'function') && instance[protoProperty] === ko.observable)
-        return true;
-    // Writeable dependent observable
-    if ((typeof instance == 'function') && (instance[protoProperty] === ko.dependentObservable) && (instance.hasWriteFunction))
-        return true;
-    // Anything else
-    return false;
-}
+    return (typeof instance == 'function' && (
+        (instance[protoProperty] === ko.observable) ||  // Observable
+        (instance[protoProperty] === ko.computed && instance.hasWriteFunction)));   // Writable computed observable
+};
 
 ko.exportSymbol('observable', ko.observable);
 ko.exportSymbol('isObservable', ko.isObservable);

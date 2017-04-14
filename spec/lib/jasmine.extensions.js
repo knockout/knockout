@@ -82,6 +82,12 @@ jasmine.Matchers.prototype.toHaveValues = function (expectedValues) {
     return this.env.equals_(values, expectedValues);
 };
 
+jasmine.Matchers.prototype.toHaveCheckedStates = function (expectedValues) {
+    var values = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.checked; });
+    this.actual = values;   // Fix explanatory message
+    return this.env.equals_(values, expectedValues);
+};
+
 jasmine.Matchers.prototype.toHaveSelectedValues = function (expectedValues) {
     var selectedNodes = ko.utils.arrayFilter(this.actual.childNodes, function (node) { return node.selected; }),
         selectedValues = ko.utils.arrayMap(selectedNodes, function (node) { return ko.selectExtensions.readValue(node); });

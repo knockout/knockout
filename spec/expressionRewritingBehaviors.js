@@ -22,12 +22,12 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should be able to parse object literals containing string literals', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\\' brace} bracket] quot\"'");
-        expect(result.length).toEqual(2);
-        expect(result[0].key).toEqual("a");
-        expect(result[0].value).toEqual("\"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"");
-        expect(result[1].key).toEqual("b");
-        expect(result[1].value).toEqual("'escapedApos\\\' brace} bracket] quot\"'");
+        var result = ko.expressionRewriting.parseObjectLiteral("a: \"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\", b: 'escapedApos\\' brace} bracket] quot\"', c: `escapedTick\\` and more`");
+        expect(result).toEqual([
+                { key: 'a', value: "\"comma, colon: brace{ bracket[ apos' escapedQuot\\\" end\"" },
+                { key: 'b', value: "'escapedApos\\' brace} bracket] quot\"'" },
+                { key: 'c', value: "`escapedTick\\` and more`" }
+            ]);
     });
 
     it('Should be able to parse object literals containing child objects, arrays, function literals, and newlines', function() {
@@ -44,6 +44,16 @@ describe('Expression Rewriting', function() {
         expect(result[1].value).toEqual("function(a,b,c){var regex=/{/;var str='/})({';return{};}");
         expect(result[2].key).toEqual("myArray");
         expect(result[2].value).toEqual("[{},function(){},\"my'Str\",'my\"Str']");
+    });
+
+    it('Should correctly parse object literals containing property access using bracket notation', function() {
+        // We can verify that strings are parsed correctly by including important characters in them (like commas)
+        var result = ko.expressionRewriting.parseObjectLiteral("a: x[\" , \"], b: x[' , '], c: x[` , `]");
+        expect(result).toEqual([
+                { key: 'a', value: "x[\" , \"]" },
+                { key: 'b', value: "x[' , ']" },
+                { key: 'c', value: "x[` , `]" }
+            ]);
     });
 
     it('Should be able to parse object literals containing division and regular expressions', function() {
@@ -172,5 +182,41 @@ describe('Expression Rewriting', function() {
         expect(evaluated.b()).toEqual(2);
         expect(evaluated.c()).toEqual(3);
         expect(evaluated.d()).toEqual(1);
+    });
+
+    it('Should return an empty array for an empty string', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("");
+        expect(result).toEqual([]);
+    });
+
+    it('Should be able to parse object literals containing C++ style comments', function() {
+        // From https://github.com/knockout/knockout/issues/1524
+        var result = ko.expressionRewriting.parseObjectLiteral(
+            "model: router.activeItem, //wiring the router\n" +
+            "afterCompose: router.afterCompose, //wiring the router\n" +
+            "//transition:'entrance', //use the 'entrance' transition when switching views\n" +
+            "skipTransitionOnSameViewId: true,//Transition entrance is disabled for better perfomance\n" +
+            "cacheViews:true //telling composition to keep views in the dom, and reuse them (only a good idea with singleton view models)\n");
+        expect(result).toEqual([
+                { key: 'model', value: 'router.activeItem' },
+                { key: 'afterCompose', value: 'router.afterCompose' },
+                { key: 'skipTransitionOnSameViewId', value: 'true' },
+                { key: 'cacheViews', value: 'true' }
+            ]);
+    });
+
+    it('Should be able to parse object literals containing C style comments', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral(
+            "a: xxx, /* First comment */\n" +
+            "b: yyy, /* Multi-line comment that comments-out the next whole line\n" +
+            "x: 'nothing', //this is also skipped */\n" +
+            "c: zzz, /***Comment with extra * at various parts****/\n" +
+            "d: /**/'empty comment'");
+        expect(result).toEqual([
+                { key: 'a', value: 'xxx' },
+                { key: 'b', value: 'yyy' },
+                { key: 'c', value: 'zzz' },
+                { key: 'd', value: "'empty comment'" }
+            ]);
     });
 });

@@ -20,6 +20,9 @@ ko.observableArray['fn'] = {
                 if (removedValues.length === 0) {
                     this.valueWillMutate();
                 }
+                if (underlyingArray[i] !== value) {
+                    throw Error("Array modified during remove; cannot remove item");
+                }
                 removedValues.push(value);
                 underlyingArray.splice(i, 1);
                 i--;
@@ -56,7 +59,7 @@ ko.observableArray['fn'] = {
         for (var i = underlyingArray.length - 1; i >= 0; i--) {
             var value = underlyingArray[i];
             if (predicate(value))
-                underlyingArray[i]["_destroy"] = true;
+                value["_destroy"] = true;
         }
         this.valueHasMutated();
     },
@@ -86,6 +89,14 @@ ko.observableArray['fn'] = {
             this.peek()[index] = newItem;
             this.valueHasMutated();
         }
+    },
+
+    'sorted': function (compareFunction) {
+        return this().slice(0).sort(compareFunction);
+    },
+
+    'reversed': function () {
+        return this().slice(0).reverse();
     }
 };
 
