@@ -399,10 +399,10 @@
         return bindingInfo && bindingInfo.context;
     }
 
-    function getBindingContext(viewModelOrBindingContext) {
+    function getBindingContext(viewModelOrBindingContext, extendContextCallback) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
             ? viewModelOrBindingContext
-            : new ko.bindingContext(viewModelOrBindingContext);
+            : new ko.bindingContext(viewModelOrBindingContext, undefined, undefined, extendContextCallback);
     }
 
     ko.applyBindingAccessorsToNode = function (node, bindings, viewModelOrBindingContext) {
@@ -421,7 +421,7 @@
             applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
     };
 
-    ko.applyBindings = function (viewModelOrBindingContext, rootNode) {
+    ko.applyBindings = function (viewModelOrBindingContext, rootNode, extendContextCallback) {
         // If jQuery is loaded after Knockout, we won't initially have access to it. So save it here.
         if (!jQueryInstance && window['jQuery']) {
             jQueryInstance = window['jQuery'];
@@ -437,7 +437,7 @@
             throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         }
 
-        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
+        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode, true);
     };
 
     // Retrieving binding context from arbitrary nodes
