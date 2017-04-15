@@ -123,18 +123,7 @@ describe("Deferred bindings", function() {
 
         jasmine.Clock.tick(1);
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">moving child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
-        expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
-    });
-
-    // Spec fails due to changes from #1835 (is it important to try to fix this?)
-    xit('Should not throw an exception for value binding on multiple select boxes', function() {
-        testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
-        var observable = ko.observable();
-        expect(function() {
-            ko.applyBindings({ x: observable }, testNode);
-            jasmine.Clock.tick(1);
-        }).not.toThrow();
-        expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
+        expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was created anew so it's not the same
     });
 
     it('Should get latest value when conditionally included', function() {
@@ -160,5 +149,26 @@ describe("Deferred bindings", function() {
         value(1);
         jasmine.Clock.tick(1);
         expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
+    });
+
+    it('Should update "if" binding before descendant bindings', function() {
+        // Based on example at http://stackoverflow.com/q/43341484/1287183
+        testNode.innerHTML = '<div data-bind="if: hasAddress()"><div data-bind="text: address().street"></div></div>';
+        var vm = {
+            address: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.address() != null; })
+        };
+
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('');
+
+        vm.address({street: '123 my street'});
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: address().street">123 my street</div>');
+
+        vm.address(null);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('');
     });
 });

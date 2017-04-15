@@ -187,7 +187,7 @@ var computedFn = {
         }
     },
     subscribeToDependency: function (target) {
-        if (target._deferUpdates && !this[computedState].disposeWhenNodeIsRemoved) {
+        if (target._deferUpdates) {
             var dirtySub = target.subscribe(this.markDirty, this, 'dirty'),
                 changeSub = target.subscribe(this.respondToChange, this);
             return {
