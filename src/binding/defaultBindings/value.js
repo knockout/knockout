@@ -76,7 +76,7 @@ ko.bindingHandlers['value'] = {
                 if (newValue === null || newValue === undefined || newValue === "") {
                     element.value = "";
                 } else {
-                    valueUpdateHandler();   // reset the model to match the element
+                    ko.dependencyDetection.ignore(valueUpdateHandler);  // reset the model to match the element
                 }
             }
         } else {
@@ -98,7 +98,7 @@ ko.bindingHandlers['value'] = {
                         if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
                             // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
                             // because you're not allowed to have a model value that disagrees with a visible UI selection.
-                            ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
+                            ko.dependencyDetection.ignore(valueUpdateHandler);
                         }
                     } else {
                         ko.selectExtensions.writeValue(element, newValue);
