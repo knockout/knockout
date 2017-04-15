@@ -613,6 +613,7 @@ ko.exportSymbol('utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('utils.extend', ko.utils.extend);
 ko.exportSymbol('utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('utils.objectMap', ko.utils.objectMap);
 ko.exportSymbol('utils.peekObservable', ko.utils.peekObservable);
 ko.exportSymbol('utils.postJson', ko.utils.postJson);
 ko.exportSymbol('utils.parseJson', ko.utils.parseJson);
