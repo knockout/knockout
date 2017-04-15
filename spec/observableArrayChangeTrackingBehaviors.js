@@ -96,16 +96,16 @@ describe('Observable Array change tracking', function() {
             // return values from getChanges are the same array instances
             expect(callLog.length).toBe(1);
             expect(changelist1).toEqual([
-                { status: 'deleted', value: 'hello', index: 0 },
-                { status: 'added', value: 1, index: 0 }
+                { status: 'added', value: 1, index: 0 },
+                { status: 'deleted', value: 'hello', index: 0 }
             ]);
 
             // Objects get converted to Array
             myArray({a: 1});
             expect(callLog.length).toBe(2);
             expect(changelist1).toEqual([
-                { status: 'deleted', value: 1, index: 0 },
-                { status: 'added', value: {a: 1}, index: 0 }
+                { status: 'added', value: {a: 1}, index: 0 },
+                { status: 'deleted', value: 1, index: 0 }
             ]);
         });
     });

@@ -106,7 +106,7 @@ ko.utils = (function () {
                 array.forEach(action, actionOwner);
             } else {
                 for (var i = 0, j = array.length; i < j; i++) {
-                    action.call(actionOwner, array[i], i);
+                    action.call(actionOwner, array[i], i, array);
                 }
             }
         },
@@ -126,9 +126,9 @@ ko.utils = (function () {
                 return array.find(predicate, predicateOwner);
             }
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i], i))
+                if (predicate.call(predicateOwner, array[i], i, array))
                     return array[i];
-            return null;
+            return undefined;
         },
 
         arrayRemoveItem: function (array, itemToRemove) {
