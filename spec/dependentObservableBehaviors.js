@@ -353,13 +353,26 @@ describe('Dependent Observable', function() {
     it('Should describe itself as inactive if subsequent runs of the evaluator result in there being no dependencies', function() {
         var someObservable = ko.observable('initial'),
             shouldHaveDependency = true,
-            computed = ko.computed(function () { return shouldHaveDependency && someObservable(); });
+            computed = ko.computed(function () { shouldHaveDependency && someObservable(); });
         expect(computed.isActive()).toEqual(true);
 
         // Trigger a refresh
         shouldHaveDependency = false;
         someObservable('modified');
         expect(computed.isActive()).toEqual(false);
+    });
+
+    it('Should be inactive if it depends on an inactive computed', function() {
+        var someObservable = ko.observable('initial'),
+            shouldHaveDependency = true,
+            computed1 = ko.computed(function () { shouldHaveDependency && someObservable(); }),
+            computed2 = ko.computed(computed1);
+        expect(computed2.isActive()).toEqual(true);
+
+        // Trigger a refresh
+        shouldHaveDependency = false;
+        someObservable('modified');
+        expect(computed2.isActive()).toEqual(false);
     });
 
     it('Should advertise that instances *can* have values written to them if you supply a "write" callback', function() {
