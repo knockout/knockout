@@ -56,9 +56,11 @@
                     // Note that notifySubscribers ignores any dependencies read within the callback.
                     // See comment in loaderRegistryBehaviors.js for reasoning
                     subscribable['notifySubscribers'](definition);
+                    if(config['afterRender']) config['afterRender']();
                 } else {
                     ko.tasks.schedule(function() {
                         subscribable['notifySubscribers'](definition);
+                        if(config['afterRender']) config['afterRender']();
                     });
                 }
             });
