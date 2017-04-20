@@ -148,6 +148,15 @@ var computedFn = {
     getDependenciesCount: function () {
         return this[computedState].dependenciesCount;
     },
+    getDependencies: function () {
+        var dependencyTracking = this[computedState].dependencyTracking, dependentObservables = [];
+
+        ko.utils.objectForEach(dependencyTracking, function (id, dependency) {
+            dependentObservables[dependency._order] = dependency._target;
+        });
+
+        return dependentObservables;
+    },
     addDependencyTracking: function (id, target, trackingObj) {
         if (this[computedState].pure && target === this) {
             throw Error("A 'pure' computed must not be called recursively");
@@ -187,7 +196,7 @@ var computedFn = {
         }
     },
     subscribeToDependency: function (target) {
-        if (target._deferUpdates && !this[computedState].disposeWhenNodeIsRemoved) {
+        if (target._deferUpdates) {
             var dirtySub = target.subscribe(this.markDirty, this, 'dirty'),
                 changeSub = target.subscribe(this.respondToChange, this);
             return {
@@ -491,6 +500,7 @@ ko.exportProperty(computedFn, 'peek', computedFn.peek);
 ko.exportProperty(computedFn, 'dispose', computedFn.dispose);
 ko.exportProperty(computedFn, 'isActive', computedFn.isActive);
 ko.exportProperty(computedFn, 'getDependenciesCount', computedFn.getDependenciesCount);
+ko.exportProperty(computedFn, 'getDependencies', computedFn.getDependencies);
 
 ko.pureComputed = function (evaluatorFunctionOrOptions, evaluatorFunctionTarget) {
     if (typeof evaluatorFunctionOrOptions === 'function') {

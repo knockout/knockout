@@ -650,6 +650,7 @@ describe('Rate-limited', function() {
             expect(computed()).toEqual(1);
             // The computed should not be dependent on the second observable
             expect(computed.getDependenciesCount()).toEqual(1);
+            expect(computed.getDependencies()).toEqual([observableSwitch]);
 
             // Updating the second observable shouldn't re-evaluate computed
             observableValue(2);

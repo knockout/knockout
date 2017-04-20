@@ -159,6 +159,7 @@ var ko_subscribable_fn = {
     extend: applyExtenders
 };
 
+ko.exportProperty(ko_subscribable_fn, 'init', ko_subscribable_fn.init);
 ko.exportProperty(ko_subscribable_fn, 'subscribe', ko_subscribable_fn.subscribe);
 ko.exportProperty(ko_subscribable_fn, 'extend', ko_subscribable_fn.extend);
 ko.exportProperty(ko_subscribable_fn, 'getSubscriptionsCount', ko_subscribable_fn.getSubscriptionsCount);

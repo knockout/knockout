@@ -92,7 +92,8 @@ ko.observableArray['fn'] = {
     },
 
     'sorted': function (compareFunction) {
-        return this().slice(0).sort(compareFunction);
+        var arrayCopy = this().slice(0);
+        return compareFunction ? arrayCopy.sort(compareFunction) : arrayCopy.sort();
     },
 
     'reversed': function () {

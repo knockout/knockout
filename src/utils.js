@@ -101,14 +101,20 @@ ko.utils = (function () {
     return {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
-        arrayForEach: function (array, action) {
-            for (var i = 0, j = array.length; i < j; i++)
-                action(array[i], i);
+        arrayForEach: function (array, action, actionOwner) {
+            if (array && typeof array.forEach == 'function') {
+                array.forEach(action, actionOwner);
+            } else {
+                for (var i = 0, j = array.length; i < j; i++) {
+                    action.call(actionOwner, array[i], i, array);
+                }
+            }
         },
 
         arrayIndexOf: function (array, item) {
-            if (typeof Array.prototype.indexOf == "function")
-                return Array.prototype.indexOf.call(array, item);
+            if (array && typeof array.indexOf == 'function') {
+                return array.indexOf(item);
+            }
             for (var i = 0, j = array.length; i < j; i++)
                 if (array[i] === item)
                     return i;
@@ -116,10 +122,13 @@ ko.utils = (function () {
         },
 
         arrayFirst: function (array, predicate, predicateOwner) {
+            if (array && typeof array.find == 'function') {
+                return array.find(predicate, predicateOwner);
+            }
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i], i))
+                if (predicate.call(predicateOwner, array[i], i, array))
                     return array[i];
-            return null;
+            return undefined;
         },
 
         arrayRemoveItem: function (array, itemToRemove) {
@@ -135,26 +144,33 @@ ko.utils = (function () {
         arrayGetDistinctValues: function (array) {
             array = array || [];
             var result = [];
-            for (var i = 0, j = array.length; i < j; i++) {
-                if (ko.utils.arrayIndexOf(result, array[i]) < 0)
-                    result.push(array[i]);
+            ko.utils.arrayForEach(array, function(item) {
+                if (ko.utils.arrayIndexOf(result, item) < 0)
+                    result.push(item);
+            });
+
+            return result;
+        },
+
+        arrayMap: function (array, mapping, mappingOwner) {
+            if (array && typeof array.map == 'function') {
+                return array.map(mapping, mappingOwner);
             }
-            return result;
-        },
-
-        arrayMap: function (array, mapping) {
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping(array[i], i));
+                result.push(mapping.call(mappingOwner, array[i], i));
             return result;
         },
 
-        arrayFilter: function (array, predicate) {
+        arrayFilter: function (array, predicate, predicateOwner) {
+            if (array && typeof array.filter == 'function') {
+                return array.filter(predicate, predicateOwner);
+            }
             array = array || [];
             var result = [];
             for (var i = 0, j = array.length; i < j; i++)
-                if (predicate(array[i], i))
+                if (predicate.call(predicateOwner, array[i], i))
                     result.push(array[i]);
             return result;
         },
@@ -189,13 +205,13 @@ ko.utils = (function () {
 
         objectForEach: objectForEach,
 
-        objectMap: function(source, mapping) {
+        objectMap: function(source, mapping, mappingOwner) {
             if (!source)
                 return source;
             var target = {};
             for (var prop in source) {
                 if (hasOwnProperty.call(source, prop)) {
-                    target[prop] = mapping(source[prop], prop, source);
+                    target[prop] = mapping.call(mappingOwner, source[prop], prop, source);
                 }
             }
             return target;
@@ -597,6 +613,7 @@ ko.exportSymbol('utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('utils.extend', ko.utils.extend);
 ko.exportSymbol('utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('utils.getFormFields', ko.utils.getFormFields);
+ko.exportSymbol('utils.objectMap', ko.utils.objectMap);
 ko.exportSymbol('utils.peekObservable', ko.utils.peekObservable);
 ko.exportSymbol('utils.postJson', ko.utils.postJson);
 ko.exportSymbol('utils.parseJson', ko.utils.parseJson);

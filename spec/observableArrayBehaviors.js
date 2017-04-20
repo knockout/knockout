@@ -308,6 +308,13 @@ describe('Observable Array', function() {
         expect(newArray).toEqual([ 1, 3, 5, 7 ]);
         expect(newArray).not.toBe(testObservableArray());
 
+        var newArray2 = testObservableArray.sorted(function(a, b) {
+            return b - a;
+        });
+        expect(newArray2).toEqual([ 7, 5, 3, 1 ]);
+        expect(newArray2).not.toBe(testObservableArray());
+        expect(newArray2).not.toBe(newArray);
+
         expect(notifiedValues).toEqual([]);
     });
 
