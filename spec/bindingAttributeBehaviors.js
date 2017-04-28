@@ -29,7 +29,7 @@ describe('Binding attribute syntax', function() {
                 didInit = true;
             }
         };
-        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
         ko.applyBindings(suppliedViewModel);
         expect(didInit).toEqual(true);
     });
@@ -44,14 +44,29 @@ describe('Binding attribute syntax', function() {
                 didInit = true;
             }
         };
-        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
 
         var shouldNotMatchNode = document.createElement("DIV");
-        shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test:123'></div>";
+        shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test'></div>";
         document.body.appendChild(shouldNotMatchNode);
         this.after(function () { document.body.removeChild(shouldNotMatchNode); });
 
         ko.applyBindings(suppliedViewModel, testNode);
+        expect(didInit).toEqual(true);
+    });
+
+    it('applyBindings should accept three parameters and use the third parameter as a callback for modifying the root context', function() {
+        var didInit = false;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                expect(bindingContext.extraValue).toEqual("extra");
+                didInit = true;
+            }
+        };
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
+        ko.applyBindings(null, testNode, function(context) {
+            context.extraValue = "extra";
+        });
         expect(didInit).toEqual(true);
     });
 
