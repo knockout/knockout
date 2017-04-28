@@ -45,7 +45,9 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
             return this; // Permits chained assignments
         } else {
             // Reading the value
-            ko.dependencyDetection.registerDependency(computedObservable);
+            if (!state.isDisposed) {
+                ko.dependencyDetection.registerDependency(computedObservable);
+            }
             if (state.isDirty || (state.isSleeping && computedObservable.haveDependenciesChanged())) {
                 computedObservable.evaluateImmediate();
             }
@@ -261,10 +263,6 @@ var computedFn = {
             state.isBeingEvaluated = false;
         }
 
-        if (!state.dependenciesCount) {
-            computedObservable.dispose();
-        }
-
         return changed;
     },
     evaluateImmediate_CallReadWithDependencyDetection: function (notifyChange) {
@@ -297,7 +295,14 @@ var computedFn = {
 
         var newValue = this.evaluateImmediate_CallReadThenEndDependencyDetection(state, dependencyDetectionContext);
 
-        if (computedObservable.isDifferent(state.latestValue, newValue)) {
+        if (!state.dependenciesCount) {
+            computedObservable.dispose();
+            changed = true; // When evaluation causes a disposal, make sure all dependent computeds get notified so they'll see the new state
+        } else {
+            changed = computedObservable.isDifferent(state.latestValue, newValue);
+        }
+
+        if (changed) {
             if (!state.isSleeping) {
                 computedObservable["notifySubscribers"](state.latestValue, "beforeChange");
             } else {
@@ -312,8 +317,6 @@ var computedFn = {
             if (!state.isSleeping && notifyChange) {
                 computedObservable["notifySubscribers"](state.latestValue);
             }
-
-            changed = true;
         }
 
         if (isInitial) {
