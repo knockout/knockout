@@ -152,23 +152,50 @@ describe("Deferred bindings", function() {
     });
 
     it('Should update "if" binding before descendant bindings', function() {
-        // Based on example at http://stackoverflow.com/q/43341484/1287183
-        testNode.innerHTML = '<div data-bind="if: hasAddress()"><div data-bind="text: address().street"></div></div>';
+        // Based on example at https://github.com/knockout/knockout/pull/2226
+        testNode.innerHTML = '<div data-bind="if: hasAddress()"><span data-bind="text: streetNumber().toLowerCase()"></span> <span data-bind="text: street().toLowerCase()"></span></div>';
         var vm = {
-            address: ko.observable(),
-            hasAddress: ko.pureComputed(function () { return vm.address() != null; })
+            street: ko.observable(),
+            streetNumber: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.streetNumber() && vm.street(); })
         };
 
         ko.applyBindings(vm, testNode);
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainHtml('');
+        expect(testNode.childNodes[0]).toContainText('');
 
-        vm.address({street: '123 my street'});
+        vm.street('my street');
+        vm.streetNumber('123');
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: address().street">123 my street</div>');
+        expect(testNode.childNodes[0]).toContainText('123 my street');
 
-        vm.address(null);
+        vm.street(null);
+        vm.streetNumber(null);
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainHtml('');
+        expect(testNode.childNodes[0]).toContainText('');
+    });
+
+    it('Should update "with" binding before descendant bindings', function() {
+        // Based on example at https://github.com/knockout/knockout/pull/2226
+        testNode.innerHTML = '<div data-bind="with: hasAddress()"><span data-bind="text: $parent.streetNumber().toLowerCase()"></span> <span data-bind="text: $parent.street().toLowerCase()"></span></div>';
+        var vm = {
+            street: ko.observable(),
+            streetNumber: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.streetNumber() && vm.street(); })
+        };
+
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        vm.street('my street');
+        vm.streetNumber('123');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('123 my street');
+
+        vm.street(null);
+        vm.streetNumber(null);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
     });
 });

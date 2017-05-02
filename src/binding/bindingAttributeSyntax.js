@@ -18,6 +18,8 @@
         return ko.bindingHandlers[bindingKey];
     };
 
+    var inheritParentVm = {};
+
     // The ko.bindingContext constructor is only called directly to create the root context. For child
     // contexts, use bindingContext.createChildContext or bindingContext.extend.
     ko.bindingContext = function(dataItemOrAccessor, parentContext, dataItemAlias, extendCallback, options) {
@@ -30,7 +32,7 @@
             // we call the function to retrieve the view model. If the function accesses any observables or returns
             // an observable, the dependency is tracked, and those observables can later cause the binding
             // context to be updated.
-            var dataItemOrObservable = isFunc ? dataItemOrAccessor() : dataItemOrAccessor,
+            var dataItemOrObservable = isFunc ? realDataItemOrAccessor() : realDataItemOrAccessor,
                 dataItem = ko.utils.unwrapObservable(dataItemOrObservable);
 
             if (parentContext) {
@@ -53,8 +55,14 @@
                 // See https://github.com/SteveSanderson/knockout/issues/490
                 self['ko'] = ko;
             }
-            self['$rawData'] = dataItemOrObservable;
-            self['$data'] = dataItem;
+
+            if (shouldInheritData) {
+                dataItem = self['$data'];
+            } else {
+                self['$rawData'] = dataItemOrObservable;
+                self['$data'] = dataItem;
+            }
+
             if (dataItemAlias)
                 self[dataItemAlias] = dataItem;
 
@@ -71,7 +79,9 @@
         }
 
         var self = this,
-            isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor),
+            shouldInheritData = dataItemOrAccessor === inheritParentVm,
+            realDataItemOrAccessor = shouldInheritData ? undefined : dataItemOrAccessor,
+            isFunc = typeof(realDataItemOrAccessor) == "function" && !ko.isObservable(realDataItemOrAccessor),
             nodes,
             subscribable;
 
@@ -112,6 +122,7 @@
             }
         }
     }
+    ko.bindingContext.inheritParentVm = inheritParentVm;
 
     // Extend the binding context hierarchy with a new view model object. If the parent context is watching
     // any observables, the new child context will automatically get a dependency on the parent context.
@@ -136,10 +147,7 @@
     ko.bindingContext.prototype['extend'] = function(properties) {
         // If the parent context references an observable view model, "_subscribable" will always be the
         // latest view model object. If not, "_subscribable" isn't set, and we can use the static "$data" value.
-        return new ko.bindingContext(this._subscribable || this['$data'], this, null, function(self, parentContext) {
-            // This "child" context doesn't directly track a parent observable view model,
-            // so we need to manually set the $rawData value to match the parent.
-            self['$rawData'] = parentContext['$rawData'];
+        return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
         });
     };
