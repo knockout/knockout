@@ -15,8 +15,9 @@ ko.bindingHandlers['checked'] = {
         });
 
         function updateModel() {
+
             // This updates the model value from the view value.
-            // It runs in response to DOM events (click) and changes in checkedValue.
+            // It runs in response to DOM events (change) and changes in checkedValue.
             var isChecked = element.checked,
                 elemValue = checkedValue();
 
@@ -109,7 +110,8 @@ ko.bindingHandlers['checked'] = {
 
         // The first responds to changes in the checkedValue value and to element clicks
         ko.computed(updateModel, null, { disposeWhenNodeIsRemoved: element });
-        ko.utils.registerEventHandler(element, "click", updateModel);
+        // IE has different order of event firing. So we have to bind to 'change' instead of 'click'
+        ko.utils.registerEventHandler(element, "change", updateModel);
 
         // The second responds to changes in the model value (the one associated with the checked binding)
         ko.computed(updateView, null, { disposeWhenNodeIsRemoved: element });
