@@ -1,0 +1,6 @@
+{
+	"name": "knockout",
+	"version": "v2.1.0",
+	"main": "./build/output/knockout-latest.js",
+	"dependencies": {}
+}
