@@ -21,13 +21,14 @@
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
-                    componentName, componentParams;
+                    componentName, componentParams, componentViewModelParam;
 
                 if (typeof value === 'string') {
                     componentName = value;
                 } else {
                     componentName = ko.utils.unwrapObservable(value['name']);
                     componentParams = ko.utils.unwrapObservable(value['params']);
+                    componentViewModelParam = ko.utils.unwrapObservable(value['viewModel']);
                 }
 
                 if (!componentName) {
@@ -49,7 +50,7 @@
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
-                    var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
+                    var componentViewModel = componentViewModelParam || createViewModel(componentDefinition, element, originalChildNodes, componentParams),
                         childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
