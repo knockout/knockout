@@ -24,11 +24,13 @@ ko.bindingHandlers['value'] = {
         }
 
         var valueUpdateHandler = function() {
-            elementValueBeforeEvent = null;
-            propertyChangedFired = false;
-            var modelValue = valueAccessor();
-            var elementValue = ko.selectExtensions.readValue(element);
-            ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'value', elementValue);
+			ko.delaySync.run(function () {
+				elementValueBeforeEvent = null;
+				propertyChangedFired = false;
+				var modelValue = valueAccessor();
+				var elementValue = ko.selectExtensions.readValue(element);
+				ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'value', elementValue);
+			});
         }
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122
