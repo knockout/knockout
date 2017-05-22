@@ -23,30 +23,30 @@ For Node.js developers, Knockout is also available from [npm](https://npmjs.org/
 
 If you prefer to build the library yourself:
 
-  1. **Clone the repo from GitHub**
+1. **Clone the repo from GitHub**
 
-  ```sh
-  git clone https://github.com/knockout/knockout.git
-  cd knockout
-  ```
+   ```sh
+   git clone https://github.com/knockout/knockout.git
+   cd knockout
+   ```
 
-  2. **Acquire build dependencies.**
+2. **Acquire build dependencies.**
 
-  Make sure you have [Node.js](http://nodejs.org/) installed on your workstation. This is only needed to _build_ Knockout from sources. Knockout itself has no dependency on Node.js once it is built (it works with any server technology or none). Now run:
+   Make sure you have [Node.js](http://nodejs.org/) installed on your workstation. This is only needed to _build_ Knockout from sources. Knockout itself has no dependency on Node.js once it is built (it works with any server technology or none). Now run:
 
-  ```sh
-  npm install -g grunt-cli
-  npm install
-  ```
+   ```sh
+   npm install -g grunt-cli
+   npm install
+   ```
 
-  The first `npm` command sets up the popular [Grunt](http://gruntjs.com/) build tool. You might need to run this command with `sudo` if you're on Linux or Mac OS X, or in an Administrator command prompt on Windows. The second `npm` command fetches the remaining build dependencies.
+   The first `npm` command sets up the popular [Grunt](http://gruntjs.com/) build tool. You might need to run this command with `sudo` if you're on Linux or Mac OS X, or in an Administrator command prompt on Windows. The second `npm` command fetches the remaining build dependencies.
 
-  3. **Run the build tool**
+3. **Run the build tool**
 
-  ```sh
-  grunt
-  ```
-  Now you'll find the built files in `build/output/`.
+   ```sh
+   grunt
+   ```
+   Now you'll find the built files in `build/output/`.
 
 ## Running the tests
 
