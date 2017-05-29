@@ -92,7 +92,8 @@ var ko_subscribable_fn = {
 
     limit: function(limitFunction) {
         var self = this, selfIsObservable = ko.isObservable(self),
-            ignoreBeforeChange, notifyNextChange, previousValue, pendingValue, beforeChange = 'beforeChange';
+            ignoreBeforeChange, notifyNextChange, previousValue, pendingValue, didUpdate,
+            beforeChange = 'beforeChange';
 
         if (!self._origNotifySubscribers) {
             self._origNotifySubscribers = self["notifySubscribers"];
@@ -107,16 +108,19 @@ var ko_subscribable_fn = {
             if (selfIsObservable && pendingValue === self) {
                 pendingValue = self._evalIfChanged ? self._evalIfChanged() : self();
             }
-            var shouldNotify = notifyNextChange || self.isDifferent(previousValue, pendingValue);
+            var shouldNotify = notifyNextChange || (didUpdate && self.isDifferent(previousValue, pendingValue));
 
-            notifyNextChange = ignoreBeforeChange = false;
+            didUpdate = notifyNextChange = ignoreBeforeChange = false;
 
             if (shouldNotify) {
                 self._origNotifySubscribers(previousValue = pendingValue);
             }
         });
 
-        self._limitChange = function(value) {
+        self._limitChange = function(value, isDirty) {
+            if (!isDirty || !self._notificationIsPending) {
+                didUpdate = !isDirty;
+            }
             self._changeSubscriptions = self._subscriptions[defaultEvent].slice(0);
             self._notificationIsPending = ignoreBeforeChange = true;
             pendingValue = value;
@@ -127,6 +131,9 @@ var ko_subscribable_fn = {
                 previousValue = value;
                 self._origNotifySubscribers(value, beforeChange);
             }
+        };
+        self._recordUpdate = function() {
+            didUpdate = true;
         };
         self._notifyNextChangeIfValueIsDifferent = function() {
             if (self.isDifferent(previousValue, self.peek(true /*evaluate*/))) {
