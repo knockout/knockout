@@ -43,6 +43,15 @@ describe('Mapping helpers', function() {
         expect(result.b.b2[1]).toEqual('X');
     });
 
+    it('ko.toJS should unwrap symbol primitives', function() {
+        var symbol = Symbol();
+        var result = ko.toJS({
+            symbol: ko.observable(symbol)
+        });
+
+        expect(result.symbol).toEqual(symbol);
+    });
+
     it('ko.toJS should unwrap observable arrays and things inside them', function() {
         var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);
         var result = ko.toJS(data);
