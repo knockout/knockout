@@ -1,7 +1,25 @@
 ko.bindingHandlers['selectedOptions'] = {
     'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
+        // Fix for the broken <select> tag in iOS7
+        // More info here: https://github.com/knockout/knockout/issues/1280
+        var listenToChangeEvent = true;
+        if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
+            listenToChangeEvent = false;
+            ko.utils.registerEventHandler(element, "focus", function () {
+                listenToChangeEvent = true;
+            });
+            ko.utils.registerEventHandler(element, "blur", function () {
+                listenToChangeEvent = false;
+                // Fix the <select> tag itself
+                setTimeout(function() {
+                    ko.bindingHandlers['selectedOptions']['update'](element, valueAccessor);
+                }, 600);
+            });
+        }
         ko.utils.registerEventHandler(element, "change", function () {
+            if (!listenToChangeEvent)
+                return;
             var value = valueAccessor(), valueToWrite = [];
             ko.utils.arrayForEach(element.getElementsByTagName("option"), function(node) {
                 if (node.selected)
