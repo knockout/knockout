@@ -198,4 +198,24 @@ describe("Deferred bindings", function() {
         jasmine.Clock.tick(1);
         expect(testNode.childNodes[0]).toContainText('');
     });
+
+    it('Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed', function() {
+        var someItem = ko.observable(true);
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: (++counter)'></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ someItem: someItem, counter: 0 }, testNode);
+        expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
+        expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
+
+        // Change the value to a different truthy value; see the previous SPAN remains
+        someItem('different truthy value');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
+        expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
+    });
+
 });
