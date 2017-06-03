@@ -1209,5 +1209,33 @@ describe('Deferred', function() {
                 expect(threeNotifications).toEqual([true, false]);
             }
         });
+
+        it('Should only notify changes if computed was evaluated', function() {
+            // See https://github.com/knockout/knockout/issues/2240
+            // Set up a scenario where a computed will be marked as dirty but won't get marked as
+            // stale and so won't be re-evaluated
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+
+            var obs = ko.observable('somevalue'),
+                isTruthy = ko.pureComputed(function() { return !!obs(); }),
+                objIfTruthy = ko.pureComputed(function() { return isTruthy(); }).extend({ notify: 'always' }),
+                notifySpy = jasmine.createSpy('callback'),
+                subscription = objIfTruthy.subscribe(notifySpy);
+
+            obs('someothervalue');
+            jasmine.Clock.tick(1);
+            expect(notifySpy).not.toHaveBeenCalled();
+
+            obs('');
+            jasmine.Clock.tick(1);
+            expect(notifySpy).toHaveBeenCalled();
+            expect(notifySpy.argsForCall).toEqual([[false]]);
+            notifySpy.reset();
+
+            obs(undefined);
+            jasmine.Clock.tick(1);
+            expect(notifySpy).not.toHaveBeenCalled();
+        });
     });
 });
