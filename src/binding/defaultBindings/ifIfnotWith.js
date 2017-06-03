@@ -24,7 +24,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                         isWith ?
                             bindingContext['createChildContext'](valueAccessor) :
                             ifCondition.isActive() ?
-                                new ko.bindingContext(ko.bindingContext.inheritParentVm, bindingContext, null, function() { ifCondition(); }) :
+                                bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext,
                         element);
                 } else {

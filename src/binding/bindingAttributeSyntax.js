@@ -122,7 +122,6 @@
             }
         }
     }
-    ko.bindingContext.inheritParentVm = inheritParentVm;
 
     // Extend the binding context hierarchy with a new view model object. If the parent context is watching
     // any observables, the new child context will automatically get a dependency on the parent context.
