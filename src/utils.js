@@ -545,7 +545,6 @@ ko.utils = (function () {
                 if (jsonString) {
                     if (JSON && JSON.parse) // Use native parsing where available
                         return JSON.parse(jsonString);
-                    return (new Function("return " + jsonString))(); // Fallback on less safe parsing for older browsers
                 }
             }
             return null;
