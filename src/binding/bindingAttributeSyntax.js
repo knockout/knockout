@@ -342,6 +342,10 @@
                 return key in bindings;
             };
 
+            allBindings['getAll'] = function(key) {
+                return bindings;
+            };
+
             // First put the bindings into the right order
             var orderedBindings = topologicalSortBindings(bindings);
 
