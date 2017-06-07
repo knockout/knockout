@@ -313,7 +313,7 @@ ko.utils = (function () {
             // IE6 sometimes throws "unknown error" if you try to write to .selected directly, whereas Firefox struggles with setAttribute. Pick one based on browser.
             if (ieVersion < 7)
                 optionNode.setAttribute("selected", isSelected);
-            else
+            else if (optionNode.selected != isSelected)
                 optionNode.selected = isSelected;
         },
 
