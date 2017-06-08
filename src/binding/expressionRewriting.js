@@ -128,7 +128,7 @@ ko.expressionRewriting = (function () {
             }
             // Values are wrapped in a function so that each value can be accessed independently
             if (makeValueAccessors) {
-                val = 'function(){return ' + val + ' }';
+                 val = 'function(){try{return ' + val + ' }catch(e){console.warn(\''+val.replace(/'/g,"\"")+' - undefined property in path\');}}';
             }
             resultStrings.push("'" + key + "':" + val);
         }
