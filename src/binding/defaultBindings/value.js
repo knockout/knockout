@@ -96,6 +96,7 @@ ko.bindingHandlers['value'] = {
                         var allowUnset = allBindings.get('valueAllowUnset');
                         var applyValueAction = function () {
                             ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                            ko.expressionRewriting.writeValueToProperty(valueAccessor(), allBindings, 'value', newValue);
                         };
 						ko.delaySync.run(function () {
                             applyValueAction();
