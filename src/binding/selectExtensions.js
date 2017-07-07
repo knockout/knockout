@@ -71,6 +71,16 @@
                     element.value = value;
                     break;
             }
+        },
+
+        // Add read text for asign model text property.
+        readText: function (element) {
+            switch (ko.utils.tagNameLower(element)) {
+                case 'option':
+                    return element.text;
+                case 'select':
+                    return element.selectedIndex >= 0 ? ko.selectExtensions.readText(element.options[element.selectedIndex]) : undefined;
+            }
         }
     };
 })();
@@ -78,3 +88,4 @@
 ko.exportSymbol('selectExtensions', ko.selectExtensions);
 ko.exportSymbol('selectExtensions.readValue', ko.selectExtensions.readValue);
 ko.exportSymbol('selectExtensions.writeValue', ko.selectExtensions.writeValue);
+ko.exportSymbol('selectExtensions.readText', ko.selectExtensions.readText);
