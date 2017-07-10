@@ -38,7 +38,7 @@ Technically you can use any of the native JavaScript array functions to operate 
 
  1. They work on all targeted browsers. (For example, the native JavaScript `indexOf` function doesn't work on IE 8 or earlier, but KO's `indexOf` works everywhere.)
  1. For functions that modify the contents of the array, such as `push` and `splice`, KO's methods automatically trigger the dependency tracking mechanism so that all registered listeners are notified of the change, and your UI is automatically updated.
- 1. The syntax is more convenient. To call KO's `push` method, just write `myObservableArray.push(...)`. This is slightly nicer than calling the underlying array's `push` method by writing `myObservableArray().push(...)`.
+ 1. `myObservableArray.push(...)` and `myObservableArray().push(...)` are not equivalent. When you use KO's `push` method to add items to the array, all its subscribers are notified about an update of the array contents. It's an important difference comparing to use of JavaScript's native array `push` method where no notification is sent to subscribers when new items are added to the array because the underlying native array is returned first which is the further context of `push` method.
 
 The rest of this page describes `observableArray`'s functions for reading and writing array information.
 
