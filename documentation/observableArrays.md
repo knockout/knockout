@@ -37,8 +37,7 @@ Behind the scenes, an `observableArray` is actually an [observable](observables.
 Technically you can use any of the native JavaScript array functions to operate on that underlying array, but normally there's a better alternative. KO's `observableArray` has equivalent functions of its own, and they're more useful because:
 
  1. They work on all targeted browsers. (For example, the native JavaScript `indexOf` function doesn't work on IE 8 or earlier, but KO's `indexOf` works everywhere.)
- 1. For functions that modify the contents of the array, such as `push` and `splice`, KO's methods automatically trigger the dependency tracking mechanism so that all registered listeners are notified of the change, and your UI is automatically updated.
- 1. `myObservableArray.push(...)` and `myObservableArray().push(...)` are not equivalent. When you use KO's `push` method to add items to the array, all its subscribers are notified about an update of the array contents. It's an important difference comparing to use of JavaScript's native array `push` method where no notification is sent to subscribers when new items are added to the array because the underlying native array is returned first which is the further context of `push` method.
+ 1. For functions that modify the contents of the array, such as `push` and `splice`, KO's methods automatically trigger the dependency tracking mechanism so that all registered listeners are notified of the change, and your UI is automatically updated which means there is a significant difference between using KO's methods (i.e., `observableArray.push(...)` ) and JavaScript native array methods (i.e., `observableArray().push(...)`) as the latter don't send any notification to the array's subscribers that its content has changed.
 
 The rest of this page describes `observableArray`'s functions for reading and writing array information.
 
