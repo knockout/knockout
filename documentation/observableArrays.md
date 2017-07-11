@@ -69,10 +69,11 @@ All of these functions are equivalent to running the native JavaScript array fun
 
 For more details about these `observableArray` functions, see the equivalent documentation of the [standard JavaScript array functions](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array#Methods_2).
 
-### remove and removeAll
+### replace, remove and removeAll
 
 `observableArray` adds some more useful methods that aren't found on JavaScript arrays by default:
 
+ * `replace( oldItem, newItem )` --- Replaces the first value that equals `oldItem` with `newItem`.
  * `remove( someItem )` --- Removes all values that equal `someItem` and returns them as an array.
  * `remove( function (item) { return item.age < 18; } )` --- Removes all values whose `age` property is less than 18, and returns them as an array.
  * `removeAll( ['Chad', 132, undefined] )` --- Removes all values that equal `'Chad'`, `123`, or `undefined` and returns them as an array.
