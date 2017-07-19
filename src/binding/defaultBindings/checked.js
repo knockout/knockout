@@ -7,11 +7,13 @@ ko.bindingHandlers['checked'] = {
             // Treat "value" like "checkedValue" when it is included with "checked" binding
             if (allBindings['has']('checkedValue')) {
                 return ko.utils.unwrapObservable(allBindings.get('checkedValue'));
-            } else if (allBindings['has']('value')) {
-                return ko.utils.unwrapObservable(allBindings.get('value'));
+            } else if (useElementValue) {
+                if (allBindings['has']('value')) {
+                    return ko.utils.unwrapObservable(allBindings.get('value'));
+                } else {
+                    return element.value;
+                }
             }
-
-            return useElementValue ? element.value : undefined;
         });
 
         function updateModel() {
