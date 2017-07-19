@@ -392,69 +392,74 @@ describe('Binding: Checked', function() {
                 expect(testNode.childNodes[0]).toHaveCheckedStates([false, true]);
             });
 
-            it('Should use that value as the checkbox\'s value when not bound to an array', function () {
-                var myobservable = ko.observable('random value');
-                testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp, " + binding + ":true' />" +
-                    "<input type='checkbox' data-bind='checked:someProp, " + binding + ":false' />";
-                ko.applyBindings({ someProp: myobservable }, testNode);
+            if (binding == "checkedValue") {
+                // When bound to a checkbox, the "checkedValue" binding will affect a non-array
+                // "checked" binding, but "value" won't.
 
-                expect(myobservable()).toEqual('random value');
+                it('Should use that value as the checkbox\'s value when not bound to an array', function () {
+                    var myobservable = ko.observable('random value');
+                    testNode.innerHTML = "<input type='checkbox' data-bind='checked:someProp, " + binding + ":true' />" +
+                        "<input type='checkbox' data-bind='checked:someProp, " + binding + ":false' />";
+                    ko.applyBindings({ someProp: myobservable }, testNode);
 
-                // Check initial state: both are unchecked because neither has a matching value
-                expect(testNode).toHaveCheckedStates([false, false]);
+                    expect(myobservable()).toEqual('random value');
 
-                // Update observable; verify element states
-                myobservable(false);
-                expect(testNode).toHaveCheckedStates([false, true]);
-                myobservable(true);
-                expect(testNode).toHaveCheckedStates([true, false]);
+                    // Check initial state: both are unchecked because neither has a matching value
+                    expect(testNode).toHaveCheckedStates([false, false]);
 
-                // "check" a box; verify observable and elements
-                testNode.childNodes[1].click();
-                expect(myobservable()).toEqual(false);
-                expect(testNode).toHaveCheckedStates([false, true]);
+                    // Update observable; verify element states
+                    myobservable(false);
+                    expect(testNode).toHaveCheckedStates([false, true]);
+                    myobservable(true);
+                    expect(testNode).toHaveCheckedStates([true, false]);
 
-                // "uncheck" a box; verify observable and elements
-                testNode.childNodes[1].click();
-                expect(myobservable()).toEqual(undefined);
-                expect(testNode).toHaveCheckedStates([false, false]);
-            });
+                    // "check" a box; verify observable and elements
+                    testNode.childNodes[1].click();
+                    expect(myobservable()).toEqual(false);
+                    expect(testNode).toHaveCheckedStates([false, true]);
 
-            it('Should be able to use observables as value of checkboxes when not bound to an array', function() {
-                var object1 = {id:ko.observable(1)},
-                    object2 = {id:ko.observable(2)},
-                    model = { value: ko.observable(1), choices: [object1, object2] };
-                testNode.innerHTML = "<div data-bind='foreach: choices'><input type='checkbox' data-bind='" + binding + ":id, checked:$parent.value' /></div>";
-                ko.applyBindings(model, testNode);
+                    // "uncheck" a box; verify observable and elements
+                    testNode.childNodes[1].click();
+                    expect(myobservable()).toEqual(undefined);
+                    expect(testNode).toHaveCheckedStates([false, false]);
+                });
 
-                expect(model.value()).toEqual(1);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
+                it('Should be able to use observables as value of checkboxes when not bound to an array', function() {
+                    var object1 = {id:ko.observable(1)},
+                        object2 = {id:ko.observable(2)},
+                        model = { value: ko.observable(1), choices: [object1, object2] };
+                    testNode.innerHTML = "<div data-bind='foreach: choices'><input type='checkbox' data-bind='" + binding + ":id, checked:$parent.value' /></div>";
+                    ko.applyBindings(model, testNode);
 
-                // Update the value observable of the checked item; should update the selected values and leave checked values unchanged
-                object1.id(3);
-                expect(model.value()).toEqual(3);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
+                    expect(model.value()).toEqual(1);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
 
-                // Update the value observable of the unchecked item; should do nothing
-                object2.id(4);
-                expect(model.value()).toEqual(3);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
+                    // Update the value observable of the checked item; should update the selected values and leave checked values unchanged
+                    object1.id(3);
+                    expect(model.value()).toEqual(3);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
 
-                // Update the value observable of the unchecked item to the current model value; should set to checked
-                object2.id(3);
-                expect(model.value()).toEqual(3);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([true, true]);
+                    // Update the value observable of the unchecked item; should do nothing
+                    object2.id(4);
+                    expect(model.value()).toEqual(3);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([true, false]);
 
-                // Update the value again; should leave checked and replace selected value (other button should be unchecked)
-                object2.id(4);
-                expect(model.value()).toEqual(4);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([false, true]);
+                    // Update the value observable of the unchecked item to the current model value; should set to checked
+                    object2.id(3);
+                    expect(model.value()).toEqual(3);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([true, true]);
 
-                // Revert to original value; should update selected value
-                object2.id(2);
-                expect(model.value()).toEqual(2);
-                expect(testNode.childNodes[0]).toHaveCheckedStates([false, true]);
-            });
+                    // Update the value again; should leave checked and replace selected value (other button should be unchecked)
+                    object2.id(4);
+                    expect(model.value()).toEqual(4);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([false, true]);
+
+                    // Revert to original value; should update selected value
+                    object2.id(2);
+                    expect(model.value()).toEqual(2);
+                    expect(testNode.childNodes[0]).toHaveCheckedStates([false, true]);
+                });
+            }
 
             it('Should ignore \'undefined\' value for checkbox', function () {
                 var myobservable = new ko.observable(true);
