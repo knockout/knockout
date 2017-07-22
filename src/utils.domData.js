@@ -6,6 +6,9 @@ ko.utils.domData = new (function () {
 
     var getDataForNode, clear;
     if (!ko.utils.ieVersion) {
+        // We considered using WeakMap, but it has a problem in IE 11 and Edge that prevents using
+        // it cross-window, so instead we just store the data directly on the node.
+        // See https://github.com/knockout/knockout/issues/2141
         getDataForNode = function (node, createIfNotFound) {
             var dataForNode = node[dataStoreKeyExpandoPropertyName];
             if (!dataForNode && createIfNotFound) {
@@ -16,11 +19,13 @@ ko.utils.domData = new (function () {
         clear = function (node) {
             if (node[dataStoreKeyExpandoPropertyName]) {
                 delete node[dataStoreKeyExpandoPropertyName];
-                return true;
+                return true; // Exposing "did clean" flag purely so specs can infer whether things have been cleaned up as intended
             }
             return false;
         };
     } else {
+        // Old IE versions have memory issues if you store objects on the node, so we use a
+        // separate data storage and link to it from the node using a string key.
         getDataForNode = function (node, createIfNotFound) {
             var dataStoreKey = node[dataStoreKeyExpandoPropertyName];
             var hasExistingDataStore = dataStoreKey && (dataStoreKey !== "null") && dataStore[dataStoreKey];
