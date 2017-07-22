@@ -5,22 +5,20 @@ ko.utils.domData = new (function () {
     var dataStore = {};
 
     var getDataForNode, clear;
-    if (window['WeakMap']) {
+    if (!ko.utils.ieVersion) {
         getDataForNode = function (node, createIfNotFound) {
-            var ownerDoc = node.ownerDocument,
-                dataStore = ownerDoc[dataStoreKeyExpandoPropertyName] || (ownerDoc[dataStoreKeyExpandoPropertyName] = new ownerDoc.defaultView['WeakMap']());
-            if (dataStore['has'](node)) {
-                return dataStore.get(node);
+            var dataForNode = node[dataStoreKeyExpandoPropertyName];
+            if (!dataForNode && createIfNotFound) {
+                dataForNode = node[dataStoreKeyExpandoPropertyName] = {};
             }
-            if (createIfNotFound) {
-                var dataForNode = {};
-                dataStore.set(node, dataForNode);
-                return dataForNode;
-            }
+            return dataForNode;
         };
         clear = function (node) {
-            var dataStore = node.ownerDocument[dataStoreKeyExpandoPropertyName];
-            return dataStore ? dataStore['delete'](node) : false;
+            if (node[dataStoreKeyExpandoPropertyName]) {
+                delete node[dataStoreKeyExpandoPropertyName];
+                return true;
+            }
+            return false;
         };
     } else {
         getDataForNode = function (node, createIfNotFound) {
