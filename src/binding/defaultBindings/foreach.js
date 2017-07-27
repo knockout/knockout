@@ -16,6 +16,7 @@ ko.bindingHandlers['foreach'] = {
             ko.utils.unwrapObservable(modelValue);
             return {
                 'foreach': unwrappedValue['data'],
+                'separatorTemplate': unwrappedValue['separatorTemplate'],
                 'as': unwrappedValue['as'],
                 'includeDestroyed': unwrappedValue['includeDestroyed'],
                 'afterAdd': unwrappedValue['afterAdd'],
