@@ -436,6 +436,16 @@ var pureComputedOverrides = {
                     state.dependencyTracking[id] = subscription;
                 });
             }
+
+            // Repeat check since waking dependencies may have triggered effects
+            if (computedObservable.haveDependenciesChanged()) {
+                state.dependencyTracking = null;
+                state.dependenciesCount = 0;
+                if (computedObservable.evaluateImmediate()) {
+                    computedObservable.updateVersion();
+                }
+            }
+
             if (!state.isDisposed) {     // test since evaluating could trigger disposal
                 computedObservable["notifySubscribers"](state.latestValue, "awake");
             }
