@@ -1,11 +1,50 @@
 (function(undefined) {
+    var componentLoadingOperationUniqueId = 0,
+        supportsPromise = (typeof Promise === "function");
 
-    var componentLoadingOperationUniqueId = 0;
+    function ComponentDisplayDeferred(element, parentComponentDeferred, replacedDeferred) {
+        if (supportsPromise) {
+            var promiseResolve;
+            this.promise = new Promise(function(resolve, reject) {
+                promiseResolve = resolve;
+            });
+
+            this._componentsToComplete = 1;
+
+            this.componentComplete = function () {
+                if (promiseResolve && !--this._componentsToComplete) {
+                    promiseResolve(element);
+                    promiseResolve = undefined;
+                    if (parentComponentDeferred) {
+                        parentComponentDeferred.componentComplete();
+                    }
+                }
+            };
+            this.dispose = function (shouldReject) {
+                if (promiseResolve) {
+                    this._componentsToComplete = 0;
+                    promiseResolve = undefined;
+                    if (parentComponentDeferred) {
+                        parentComponentDeferred.componentComplete();
+                    }
+                }
+            };
+
+            if (parentComponentDeferred) {
+                ++parentComponentDeferred._componentsToComplete;
+            }
+
+            if (replacedDeferred) {
+                replacedDeferred.dispose();
+            }
+        }
+    }
 
     ko.bindingHandlers['component'] = {
         'init': function(element, valueAccessor, ignored1, ignored2, bindingContext) {
             var currentViewModel,
                 currentLoadingOperationId,
+                displayedDeferred,
                 disposeAssociatedComponentViewModel = function () {
                     var currentViewModelDispose = currentViewModel && currentViewModel['dispose'];
                     if (typeof currentViewModelDispose === 'function') {
@@ -17,7 +56,13 @@
                 },
                 originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
-            ko.utils.domNodeDisposal.addDisposeCallback(element, disposeAssociatedComponentViewModel);
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                disposeAssociatedComponentViewModel();
+                if (displayedDeferred) {
+                    displayedDeferred.dispose();
+                    displayedDeferred = null;
+                }
+            });
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
@@ -32,6 +77,10 @@
 
                 if (!componentName) {
                     throw new Error('No component name specified');
+                }
+
+                if (supportsPromise) {
+                    displayedDeferred = new ComponentDisplayDeferred(element, bindingContext._componentDisplayDeferred, displayedDeferred);
                 }
 
                 var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
@@ -49,13 +98,27 @@
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
-                    var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
+
+                    var componentInfo = {
+                        'element': element,
+                        'templateNodes': originalChildNodes
+                    };
+                    if (displayedDeferred) {
+                        componentInfo['componentDisplayed'] = displayedDeferred.promise;
+                    }
+
+                    var componentViewModel = createViewModel(componentDefinition, componentParams, componentInfo),
                         childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
+                            ctx._componentDisplayDeferred = displayedDeferred;
                         });
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
+
+                    if (displayedDeferred) {
+                        displayedDeferred.componentComplete();
+                    }
                 });
             }, null, { disposeWhenNodeIsRemoved: element });
 
@@ -75,10 +138,10 @@
         ko.virtualElements.setDomNodeChildren(element, clonedNodesArray);
     }
 
-    function createViewModel(componentDefinition, element, originalChildNodes, componentParams) {
+    function createViewModel(componentDefinition, componentParams, componentInfo) {
         var componentViewModelFactory = componentDefinition['createViewModel'];
         return componentViewModelFactory
-            ? componentViewModelFactory.call(componentDefinition, componentParams, { 'element': element, 'templateNodes': originalChildNodes })
+            ? componentViewModelFactory.call(componentDefinition, componentParams, componentInfo)
             : componentParams; // Template-only component
     }
 
