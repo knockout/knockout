@@ -1,0 +1,25 @@
+{
+  "name": "knockout/knockout",
+  "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
+  "type": "component",
+  "homepage": "http://knockoutjs.com/",
+  "authors": [
+    {
+      "name": "Knockout.js",
+      "url": "http://knockoutjs.com"
+    }
+  ],
+  "require": {
+    "robloach/component-installer": "*"
+  },
+  "extra": {
+    "component": {
+      "scripts": [
+        "dist/knockout.js"
+      ],
+      "files": [
+        "dist/knockout.debug.js"
+      ]
+    }
+  }
+}
