@@ -384,7 +384,7 @@ var computedFn = {
     },
     dispose: function () {
         var state = this[computedState];
-		if (typeof(state) === "undefined") {
+	    if (typeof(state) === "undefined") {
             return;
         }
         if (!state.isSleeping && state.dependencyTracking) {
