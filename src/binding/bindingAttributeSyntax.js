@@ -1,4 +1,7 @@
 (function () {
+    // Hide or don't minify context properties, see https://github.com/knockout/knockout/issues/2294
+    var contextSubscribable = ko.utils.createSymbolOrString('_subscribable');
+
     ko.bindingHandlers = {};
 
     // The following element types will not be recursed into during binding.
@@ -38,14 +41,14 @@
             if (parentContext) {
                 // When a "parent" context is given, register a dependency on the parent context. Thus whenever the
                 // parent context is updated, this context will also be updated.
-                if (parentContext._subscribable)
-                    parentContext._subscribable();
+                if (parentContext[contextSubscribable])
+                    parentContext[contextSubscribable]();
 
                 // Copy $root and any custom properties from the parent context
                 ko.utils.extend(self, parentContext);
 
                 // Because the above copy overwrites our own properties, we need to reset them.
-                self._subscribable = subscribable;
+                self[contextSubscribable] = subscribable;
             } else {
                 self['$parents'] = [];
                 self['$root'] = dataItem;
@@ -97,7 +100,7 @@
             // computed will be inactive, and we can safely throw it away. If it's active, the computed is stored in
             // the context object.
             if (subscribable.isActive()) {
-                self._subscribable = subscribable;
+                self[contextSubscribable] = subscribable;
 
                 // Always notify because even if the model ($data) hasn't changed, other context properties might have changed
                 subscribable['equalityComparer'] = null;
@@ -115,7 +118,7 @@
                         ko.utils.arrayRemoveItem(nodes, node);
                         if (!nodes.length) {
                             subscribable.dispose();
-                            self._subscribable = subscribable = undefined;
+                            self[contextSubscribable] = subscribable = undefined;
                         }
                     });
                 };
@@ -144,8 +147,8 @@
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties) {
-        // If the parent context references an observable view model, "_subscribable" will always be the
-        // latest view model object. If not, "_subscribable" isn't set, and we can use the static "$data" value.
+        // If the parent context references an observable view model, "contextSubscribable" will always be the
+        // latest view model object. If not, "contextSubscribable" isn't set, and we can use the static "$data" value.
         return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
         });
@@ -294,8 +297,8 @@
             }
 
             ko.utils.domData.set(node, boundElementDomDataKey, {context: bindingContext});
-            if (bindingContext._subscribable)
-                bindingContext._subscribable._addNode(node);
+            if (bindingContext[contextSubscribable])
+                bindingContext[contextSubscribable]._addNode(node);
         }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
@@ -312,8 +315,8 @@
                 function() {
                     bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
                     // Register a dependency on the binding context to support observable view models.
-                    if (bindings && bindingContext._subscribable)
-                        bindingContext._subscribable();
+                    if (bindings && bindingContext[contextSubscribable])
+                        bindingContext[contextSubscribable]();
                     return bindings;
                 },
                 null, { disposeWhenNodeIsRemoved: node }

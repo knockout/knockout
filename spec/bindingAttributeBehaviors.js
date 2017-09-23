@@ -229,6 +229,19 @@ describe('Binding attribute syntax', function() {
         expect(testNode).toContainText("my value");
     });
 
+    it('Binding context should hide or not minify extra internal properties', function () {
+        testNode.innerHTML = "<div data-bind='with: $data'><div></div></div>";
+        ko.applyBindings({}, testNode);
+
+        var allowedProperties = ['$parents', '$root', 'ko', '$rawData', '$data', '$parentContext', '$parent'];
+        if (ko.utils.createSymbolOrString('') === '') {
+            allowedProperties.push('_subscribable');
+        }
+        ko.utils.objectForEach(ko.contextFor(testNode.childNodes[0].childNodes[0]), function (prop) {
+            expect(allowedProperties).toContain(prop);
+        });
+    });
+
     it('Should be able to retrieve the binding context associated with any node', function() {
         testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
         ko.applyBindings({ name: 'Bert' }, testNode.childNodes[0]);
