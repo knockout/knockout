@@ -195,7 +195,7 @@ describe('Expression Rewriting', function() {
             "model: router.activeItem, //wiring the router\n" +
             "afterCompose: router.afterCompose, //wiring the router\n" +
             "//transition:'entrance', //use the 'entrance' transition when switching views\n" +
-            "skipTransitionOnSameViewId: true,//Transition entrance is disabled for better perfomance\n" +
+            "skipTransitionOnSameViewId: true,//Transition entrance is disabled for better performance\n" +
             "cacheViews:true //telling composition to keep views in the dom, and reuse them (only a good idea with singleton view models)\n");
         expect(result).toEqual([
                 { key: 'model', value: 'router.activeItem' },
