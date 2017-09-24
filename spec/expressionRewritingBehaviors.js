@@ -100,7 +100,7 @@ describe('Expression Rewriting', function() {
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
-            'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
+            'g: getAssistant(), h: getAssistant().firstName, i: getAssistant("[dummy]")[ "lastName" ], ' +
             'j: boss.firstName + boss.lastName'
         );
 
@@ -111,7 +111,7 @@ describe('Expression Rewriting', function() {
         var model = {
             firstName: "bob", lastName: "smith",
             boss: { firstName: "rick", lastName: "martin" },
-            getAssitant: function() { return assistant }
+            getAssistant: function() { return assistant }
         };
         with (model) {
             var parsed = eval("({" + rewritten + "})");
