@@ -158,7 +158,7 @@
         return this['createChildContext'](dataItemOrAccessor, dataItemAlias, null, { "exportDependencies": true });
     };
 
-    // Returns the valueAccesor function for a binding value
+    // Returns the valueAccessor function for a binding value
     function makeValueAccessor(value) {
         return function() {
             return value;
