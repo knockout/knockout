@@ -9,7 +9,7 @@ describe('Node preprocessing', function() {
         ko.bindingProvider.instance = new preprocessingBindingProvider();
     });
 
-    it('Can leave the nodes unchanged by returning a falsey value', function() {
+    it('Can leave the nodes unchanged by returning a falsy value', function() {
         ko.bindingProvider.instance.preprocessNode = function(node) { return null; };
         testNode.innerHTML = "<p data-bind='text: someValue'></p>";
         ko.applyBindings({ someValue: 'hello' }, testNode);
