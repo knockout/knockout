@@ -14,6 +14,25 @@ describe('Expression Rewriting', function() {
         expect(result[3].value).toEqual("4");
     });
 
+    it('Should be able to parse ES2015 style shorthand property names', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("someKeyValue");
+        var mixedResult = ko.expressionRewriting.parseObjectLiteral("normal: 1, someKeyValue, secondNormal: 3, thirdNormal: thirdValue");
+
+        expect(result.length).toEqual(1);
+        expect(result[0].key).toEqual("someKeyValue");
+        expect(result[0].value).toEqual("someKeyValue");
+
+        expect(mixedResult.length).toEqual(4);
+        expect(mixedResult[0].key).toEqual("normal");
+        expect(mixedResult[0].value).toEqual("1");
+        expect(mixedResult[1].key).toEqual("someKeyValue");
+        expect(mixedResult[1].value).toEqual("someKeyValue");
+        expect(mixedResult[2].key).toEqual("secondNormal");
+        expect(mixedResult[2].value).toEqual("3");
+        expect(mixedResult[3].key).toEqual("thirdNormal");
+        expect(mixedResult[3].value).toEqual("thirdValue");
+    });
+
     it('Should ignore any outer braces', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("{a: 1}");
         expect(result.length).toEqual(1);
@@ -73,21 +92,20 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should be able to cope with malformed syntax (things that aren\'t key-value pairs)', function() {
-        var result = ko.expressionRewriting.parseObjectLiteral("malformed1, 'mal:formed2', good:3, {malformed:4}, good5:5, keyonly:");
-        expect(result.length).toEqual(6);
-        expect(result[0].unknown).toEqual("malformed1");
-        expect(result[1].unknown).toEqual("mal:formed2");
-        expect(result[2].key).toEqual("good");
-        expect(result[2].value).toEqual("3");
-        expect(result[3].unknown).toEqual("{malformed:4}");
-        expect(result[4].key).toEqual("good5");
-        expect(result[4].value).toEqual("5");
-        expect(result[5].unknown).toEqual("keyonly");
+        var result = ko.expressionRewriting.parseObjectLiteral("'mal:formed2', good:3, {malformed:4}, good5:5, keyonly:");
+        expect(result.length).toEqual(5);
+        expect(result[0].unknown).toEqual("mal:formed2");
+        expect(result[1].key).toEqual("good");
+        expect(result[1].value).toEqual("3");
+        expect(result[2].unknown).toEqual("{malformed:4}");
+        expect(result[3].key).toEqual("good5");
+        expect(result[3].value).toEqual("5");
+        expect(result[4].unknown).toEqual("keyonly");
     });
 
     it('Should ensure all keys are wrapped in quotes', function() {
-        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b': 2, \"c\": 3");
-        expect(rewritten).toEqual("'a':1,'b':2,'c':3");
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b': 2, \"c\": 3, es2015KeyValue");
+        expect(rewritten).toEqual("'a':1,'b':2,'c':3,'es2015KeyValue':es2015KeyValue");
     });
 
     it('(Private API) Should convert writable values to property accessors', function () {
@@ -95,13 +113,14 @@ describe('Expression Rewriting', function() {
         // We reserve the right to remove or change either or both of these, especially if we
         // create an official public property writers API.
         var w = ko.expressionRewriting._twoWayBindings;
-        w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = true;
+        w.a = w.b = w.c = w.d = w.e = w.f = w.g = w.h = w.i = w.j = w.firstName = true;
 
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
             'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
-            'j: boss.firstName + boss.lastName'
+            'j: boss.firstName + boss.lastName, ' +
+            'firstName, boss, getAssitant' // es2015 style object literal.
         );
 
         // Clear the two-way flag
@@ -125,10 +144,13 @@ describe('Expression Rewriting', function() {
             expect(parsed.g).toEqual(assistant);
             expect(parsed.h).toEqual("john");
             expect(parsed.i).toEqual("english");
+            expect(parsed.firstName).toEqual("bob");
+            expect(parsed.boss).toEqual(model.boss);
+            expect(parsed.getAssitant()).toEqual(assistant);
 
             // test that only writable expressions are set up for writing
             // 'j' matches due to the simple checking for trailing property accessor
-            expect(parsed._ko_property_writers).toHaveOwnProperties(['b','e','f','h','i','j']);
+            expect(parsed._ko_property_writers).toHaveOwnProperties(['b','e','f','h','i','j','firstName']);
 
             // make sure writing to them works
             parsed._ko_property_writers.b("bob2");
@@ -141,6 +163,9 @@ describe('Expression Rewriting', function() {
             expect(assistant.firstName).toEqual("john2");
             parsed._ko_property_writers.i("english2");
             expect(assistant.lastName).toEqual("english2");
+            parsed._ko_property_writers.firstName("bob3");
+            expect(model.firstName).toEqual("bob3");
+
 
             // make sure writing to 'j' doesn't error or actually change anything
             parsed._ko_property_writers.j("nothing at all");
@@ -157,7 +182,7 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should eval keys without a value as if the value is undefined', function() {
-        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, b");
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, 'b'");
         var parsedRewritten = eval("({" + rewritten + "})");
         expect(parsedRewritten.a).toEqual(1);
         expect('b' in parsedRewritten).toBeTruthy();
@@ -165,10 +190,16 @@ describe('Expression Rewriting', function() {
     });
 
     it('Should return accessor functions for each value when called with the valueAccessors option', function() {
-        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1", {valueAccessors:true});
-        expect(rewritten).toEqual("'a':function(){return 1 }");
-        var evaluated = eval("({" + rewritten + "})");
-        expect(evaluated['a']()).toEqual(1);
+        var rewritten = ko.expressionRewriting.preProcessBindings("a: 1, b", {valueAccessors:true});
+        expect(rewritten).toEqual("'a':function(){return 1 },'b':function(){return b }");
+
+        var model = {b: 'hello'};
+        with(model){
+            var evaluated = eval("({" + rewritten + "})");
+            expect(evaluated['a']()).toEqual(1);
+            expect(evaluated['b']()).toEqual('hello');
+        }
+
     });
 
     it('Should be able to parse and evaluate object literals containing division', function() {

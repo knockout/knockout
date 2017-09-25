@@ -146,6 +146,40 @@ describe('Components: Custom elements', function() {
         expect(suppliedParams).toEqual([{ nothing: null, num: 123, bool: true, obj: { abc: 123 }, str: 'mystr' }]);
     });
 
+    it('Is possible to pass es2015 object shorthand properties', function() {
+        var suppliedParams = [];
+        ko.components.register('test-component', {
+            template: 'Ignored',
+            viewModel: function(params) {
+                suppliedParams.push(params);
+
+                // The raw value for each param is a computed giving the literal value
+                ko.utils.objectForEach(params, function(key, value) {
+                    if (key !== '$raw') {
+                        expect(ko.isComputed(params.$raw[key])).toBe(true);
+                        expect(params.$raw[key]()).toBe(value);
+                    }
+                });
+            }
+        });
+
+        testNode.innerHTML = '<test-component params="myModelValue, anotherModelValue, oldWay: oldWay, literal: \'hello\'"></test-component>';
+        ko.applyBindings({
+            myModelValue: 'actual myModelValue',
+            anotherModelValue: 'actual anotherModelValue',
+            oldWay: 'actual oldWay'
+        }, testNode);
+        jasmine.Clock.tick(1);
+
+        delete suppliedParams[0].$raw; // Don't include '$raw' in the following assertion, as we only want to compare supplied values
+        expect(suppliedParams).toEqual([{
+            myModelValue: 'actual myModelValue',
+            anotherModelValue: 'actual anotherModelValue',
+            oldWay: 'actual oldWay',
+            literal: 'hello'
+        }]);
+    });
+
     it('Supplies an empty params object (with empty $raw) if a custom element has no params attribute', function() {
         var suppliedParams = [];
         ko.components.register('test-component', {

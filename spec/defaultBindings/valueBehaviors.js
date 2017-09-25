@@ -13,6 +13,12 @@ describe('Binding: Value', function() {
         expect(testNode.childNodes[0].value).toEqual("0");
     });
 
+    it('Should allow es2015 style data bind value', function () {
+        testNode.innerHTML = "<input data-bind='value' />";
+        ko.applyBindings({ value: ko.observable(0) }, testNode);
+        expect(testNode.childNodes[0].value).toEqual("0");
+    });
+
     it('Should assign an empty string as value if the model value is null', function () {
         testNode.innerHTML = "<input data-bind='value:(null)' />";
         ko.applyBindings(null, testNode);

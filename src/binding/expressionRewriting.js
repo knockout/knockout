@@ -55,7 +55,7 @@ ko.expressionRewriting = (function () {
         str += "\n,";
 
         // Split into tokens
-        var result = [], toks = str.match(bindingToken), key, values = [], depth = 0;
+        var result = [], toks = str.match(bindingToken), key, values = [], depth = 0, isStringKey = false;
 
         if (toks.length > 1) {
             for (var i = 0, tok; tok = toks[i]; ++i) {
@@ -63,13 +63,17 @@ ko.expressionRewriting = (function () {
                 // A comma signals the end of a key/value pair if depth is zero
                 if (c === 44) { // ","
                     if (depth <= 0) {
+                        if (!key && values.length === 1 && !isStringKey) { // es6 style object literal
+                            key = values [ 0 ];
+                        }
                         result.push((key && values.length) ? {key: key, value: values.join('')} : {'unknown': key || values.join('')});
                         key = depth = 0;
                         values = [];
+                        isStringKey = false;
                         continue;
                     }
                 // Simply skip the colon that separates the name and value
-                } else if (c === 58) { // ":"
+                } else if (c === 58 ) { // ":"
                     if (!depth && !key && values.length === 1) {
                         key = values.pop();
                         continue;
@@ -96,6 +100,7 @@ ko.expressionRewriting = (function () {
                     --depth;
                 // The key will be the first token; if it's a string, trim the quotes
                 } else if (!key && !values.length && (c === 34 || c === 39)) { // '"', "'"
+                    isStringKey = true;
                     tok = tok.slice(1, -1);
                 }
                 values.push(tok);
