@@ -611,6 +611,7 @@ ko.exportSymbol('utils.arrayMap', ko.utils.arrayMap);
 ko.exportSymbol('utils.arrayPushAll', ko.utils.arrayPushAll);
 ko.exportSymbol('utils.arrayRemoveItem', ko.utils.arrayRemoveItem);
 ko.exportSymbol('utils.cloneNodes', ko.utils.cloneNodes);
+ko.exportSymbol('utils.createSymbolOrString', ko.utils.createSymbolOrString);
 ko.exportSymbol('utils.extend', ko.utils.extend);
 ko.exportSymbol('utils.fieldsIncludedWithJsonPost', ko.utils.fieldsIncludedWithJsonPost);
 ko.exportSymbol('utils.getFormFields', ko.utils.getFormFields);
