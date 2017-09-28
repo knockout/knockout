@@ -489,7 +489,7 @@ describe('Binding dependencies', function() {
         });
 
         it('Should leave bindings without an "after" value where they are', function() {
-            // This test is set up to be unambiguous, because only test1 and test2 are reorderd
+            // This test is set up to be unambiguous, because only test1 and test2 are reordered
             // (they have the dependency between them) and test3 is left alone.
             ko.bindingHandlers.test2.after = ['test1'];
             testNode.innerHTML = "<div data-bind='test2, test1, test3'></div>";
