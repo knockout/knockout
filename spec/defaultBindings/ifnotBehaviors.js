@@ -8,7 +8,7 @@ describe('Binding: Ifnot', function() {
         expect(testNode.childNodes[0].childNodes.length).toEqual(0);
     });
 
-    it('Should leave descendant nodes in the document (and bind them) if the value is falsey, independently of the active template engine', function() {
+    it('Should leave descendant nodes in the document (and bind them) if the value is falsy, independently of the active template engine', function() {
         this.after(function() { ko.setTemplateEngine(new ko.nativeTemplateEngine()); });
 
         ko.setTemplateEngine(new ko.templateEngine()); // This template engine will just throw errors if you try to use it
@@ -19,7 +19,7 @@ describe('Binding: Ifnot', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
     });
 
-    it('Should leave descendant nodes unchanged if the value is falsey and remains falsey when changed', function() {
+    it('Should leave descendant nodes unchanged if the value is falsy and remains falsy when changed', function() {
         var someItem = ko.observable(false);
         testNode.innerHTML = "<div data-bind='ifnot: someItem'><span data-bind='text: someItem()'></span></div>";
         var originalNode = testNode.childNodes[0].childNodes[0];
@@ -29,7 +29,7 @@ describe('Binding: Ifnot', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("false");
         expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
 
-        // Change the value to a different falsey value
+        // Change the value to a different falsy value
         someItem(0);
         expect(testNode.childNodes[0].childNodes[0]).toContainText("0");
         expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);

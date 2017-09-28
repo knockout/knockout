@@ -196,14 +196,14 @@ describe('Rate-limited', function() {
             expect(notifySpy).toHaveBeenCalledWith('a');
         });
 
-        it('Uses latest settings for future notification and previous settings for pending notificaiton', function() {
+        it('Uses latest settings for future notification and previous settings for pending notification', function() {
             // This test describes the current behavior for the given scenario but is not a contract for that
             // behavior, which could change in the future if convenient.
             var subscribable = new ko.subscribable().extend({rateLimit:250});
             var notifySpy = jasmine.createSpy('notifySpy');
             subscribable.subscribe(notifySpy);
 
-            subscribable.notifySubscribers('a');  // Pending notificaiton
+            subscribable.notifySubscribers('a');  // Pending notification
 
             // Apply new setting and schedule new notification
             subscribable = subscribable.extend({rateLimit:500});
@@ -636,7 +636,7 @@ describe('Rate-limited', function() {
                     }
                 }).extend({rateLimit:500});
 
-            // Initially the computed evaluated sucessfully
+            // Initially the computed evaluated successfully
             expect(computed()).toEqual(1);
 
             expect(function () {

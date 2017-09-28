@@ -64,7 +64,7 @@ describe('Mapping helpers', function() {
         var date = new Date();
         var string = new String();
         var number = new Number();
-        var booleanValue = new Boolean(); // 'boolean' is a resever word in Javascript
+        var booleanValue = new Boolean(); // 'boolean' is a resever word in JavaScript
 
         var result = ko.toJS({
             regExp: ko.observable(regExp),

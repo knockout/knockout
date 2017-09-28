@@ -118,7 +118,7 @@ describe('Pure Computed', function() {
         // Accessing the computed evaluates it
         expect(computed()).toEqual('A');
 
-        // No subscription is registered on the depenedent observable
+        // No subscription is registered on the dependent observable
         expect(data.getSubscriptionsCount()).toEqual(0);
 
         // getDependenciesCount returns the correct number
@@ -162,7 +162,7 @@ describe('Pure Computed', function() {
         expect(notifiedValues).toEqual(['B']);
     });
 
-    it('Should go back to sleep when all subcriptions are disposed', function() {
+    it('Should go back to sleep when all subscriptions are disposed', function() {
         var data = ko.observable('A'),
             computed = ko.pureComputed(data),
             subscription = computed.subscribe(function () {});

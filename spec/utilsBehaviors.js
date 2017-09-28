@@ -314,7 +314,7 @@ describe('Function.bind', function() {
         expect(bound('a')).toEqual([object, 'a']);
     });
 
-    it('should accept a falsey `thisArg` argument', function () {
+    it('should accept a falsy `thisArg` argument', function () {
         ko.utils.arrayForEach(['', 0, false, NaN], function (value) {
             var bound = fn.bind(value);
             expect(bound()[0].constructor).toEqual(Object(value).constructor);

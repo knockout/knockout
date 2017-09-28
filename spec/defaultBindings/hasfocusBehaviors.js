@@ -74,7 +74,7 @@ ko.utils.arrayForEach(['hasfocus', 'hasFocus'], function(binding) {
             expect(didFocusAgain).toEqual(false);
 
             // Similarly, when the elem is already blurred, changing the model value to a different
-            // falsey value shouldn't cause any additional blur events
+            // falsy value shouldn't cause any additional blur events
             model.isFocused(false);
             var didBlurAgain = false;
             ko.utils.registerEventHandler(testNode.childNodes[0], "focusout", function() { didBlurAgain = true });
