@@ -245,7 +245,7 @@ describe('Binding dependencies', function() {
         expect(testNode).toContainText('substitute');
         expect(observable.getSubscriptionsCount()).toEqual(1);
 
-        // uptdate observable to update binding
+        // update observable to update binding
         observable('new value');
         expect(testNode).toContainText('new value');
     });
