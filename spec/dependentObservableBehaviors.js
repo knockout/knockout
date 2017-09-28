@@ -512,7 +512,7 @@ describe('Dependent Observable', function() {
                 }
             });
 
-        // Initially the computed evaluated sucessfully
+        // Initially the computed evaluated successfully
         expect(computed()).toEqual(1);
 
         expect(function () {
