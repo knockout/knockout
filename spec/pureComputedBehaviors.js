@@ -162,7 +162,7 @@ describe('Pure Computed', function() {
         expect(notifiedValues).toEqual(['B']);
     });
 
-    it('Should go back to sleep when all subcriptions are disposed', function() {
+    it('Should go back to sleep when all subscriptions are disposed', function() {
         var data = ko.observable('A'),
             computed = ko.pureComputed(data),
             subscription = computed.subscribe(function () {});
