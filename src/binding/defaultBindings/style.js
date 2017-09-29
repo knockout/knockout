@@ -9,7 +9,19 @@ ko.bindingHandlers['style'] = {
                 styleValue = "";
             }
 
-            element.style[styleName] = styleValue;
+            if (jQueryInstance) {
+                jQueryInstance(element)['css'](styleName, styleValue);
+            } else {
+                styleName = styleName.replace(/-(\w)/g, function (all, letter) {
+                    return letter.toUpperCase();
+                });
+
+                element.style[styleName] = styleValue;
+
+                if (styleValue !== '' && element.style[styleName] == '' && !isNaN(styleValue)) {
+                    element.style[styleName] = styleValue + "px";
+                }
+            }
         });
     }
 };
