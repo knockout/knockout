@@ -145,6 +145,8 @@
                     throw new Error("Found end comment without opening comment, as first child of " + node);
                 }
                 return node.firstChild;
+            } else if (!node.nextSibling || isEndComment(node.nextSibling)) {
+                return null;
             } else {
                 return node.nextSibling;
             }
