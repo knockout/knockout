@@ -141,8 +141,8 @@
 
         firstChild: function(node) {
             if (!isStartComment(node)) {
-                if (node.firstChild && isUnmatchedEndComment(node.firstChild)) {
-                    throw new Error("Found end comment without opening comment, as first child of " + node);
+                if (node.firstChild && isEndComment(node.firstChild)) {
+                    throw new Error("Found invalid end comment, as the first child of " + node);
                 }
                 return node.firstChild;
             } else if (!node.nextSibling || isEndComment(node.nextSibling)) {
