@@ -266,15 +266,22 @@ describe('Binding attribute syntax', function() {
         expect(testNode).toContainText('Hello Bert, Goodbye');
     });
 
-    it('Should reject closing virtual bindings, when found as first child', function() {
-        testNode.innerHTML = "<!-- /ko -->";
+    it('Should reject closing virtual bindings without matching open, when found as a sibling', function() {
+        testNode.innerHTML = "<div></div><!-- /ko -->";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
-    it('Should reject closing virtual bindings without matching open, when found as a sibling', function() {
-        testNode.innerHTML = "<div></div><!-- /ko -->";
+    it('Should reject closing virtual bindings without matching open, when found as a a first child', function() {
+        testNode.innerHTML = "<div><!-- /ko --></div>";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject closing virtual bindings, when found as first child at the top level', function() {
+        testNode.innerHTML = "<!-- /ko -->";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
@@ -286,7 +293,6 @@ describe('Binding attribute syntax', function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
-
 
     it('Should reject opening virtual bindings that are not closed', function() {
         testNode.innerHTML = "<!-- ko if: true -->";
