@@ -199,4 +199,29 @@ describe('Binding: With', function() {
         // subscription count is stable
         expect(item.getSubscriptionsCount('change')).toEqual(3);
     });
+
+    it('Should update if given a function', function () {
+        // See knockout/knockout#2285
+        testNode.innerHTML = '<div data-bind="with: getTotal">Total: <div data-bind="text: $data"></div>';
+
+        function ViewModel() {
+            var self = this;
+            self.items = ko.observableArray([{ x: ko.observable(4) }])
+            self.getTotal = function() {
+                var total = 0;
+                ko.utils.arrayForEach(self.items(), function(item) { total += item.x();});
+                return total;
+            }
+        }
+
+        var model = new ViewModel();
+        ko.applyBindings(model, testNode);
+        expect(testNode).toContainText("Total: 4");
+
+        model.items.push({ x: ko.observable(15) });
+        expect(testNode).toContainText("Total: 19");
+
+        model.items()[0].x(10);
+        expect(testNode).toContainText("Total: 25");
+    });
 });

@@ -8,7 +8,8 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
             }, null, { disposeWhenNodeIsRemoved: element });
 
             ko.computed(function() {
-                var shouldDisplay = isWith ? !!ko.utils.unwrapObservable(valueAccessor()) : ifCondition(),
+                var rawWithValue = isWith && ko.utils.unwrapObservable(valueAccessor()),
+                    shouldDisplay = isWith ? !!rawWithValue : ifCondition(),
                     isFirstRender = !savedNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
@@ -22,7 +23,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                     }
                     ko.applyBindingsToDescendants(
                         isWith ?
-                            bindingContext['createChildContext'](valueAccessor) :
+                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext,
