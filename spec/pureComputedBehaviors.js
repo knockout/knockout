@@ -383,7 +383,6 @@ describe('Pure Computed', function() {
     });
 
     it('Should wake with the correct value when a chained pure computed has side effects for its awake event', function () {
-
         var observableToUpdateOnAwake = ko.observable(null),
             computed1 = ko.pureComputed(observableToUpdateOnAwake),
             computed2 = ko.pureComputed(computed1);
@@ -396,11 +395,8 @@ describe('Pure Computed', function() {
         // ignore side-effects from the awake callback of chained pure computeds
         computed2();
 
-        computed2.subscribe(function () {
-        });
-
+        computed2.subscribe(function () {});
         expect(computed2()).toEqual('foo');
-
     });
 
     describe('Should maintain order of subscriptions', function () {

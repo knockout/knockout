@@ -435,14 +435,11 @@ var pureComputedOverrides = {
                     subscription._version = dependency._version;
                     state.dependencyTracking[id] = subscription;
                 });
-            }
-
-            // Repeat check since waking dependencies may have triggered effects
-            if (computedObservable.haveDependenciesChanged()) {
-                state.dependencyTracking = null;
-                state.dependenciesCount = 0;
-                if (computedObservable.evaluateImmediate()) {
-                    computedObservable.updateVersion();
+                // Waking dependencies may have triggered effects
+                if (computedObservable.haveDependenciesChanged()) {
+                    if (computedObservable.evaluateImmediate()) {
+                        computedObservable.updateVersion();
+                    }
                 }
             }
 
