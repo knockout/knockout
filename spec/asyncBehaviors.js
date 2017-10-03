@@ -218,6 +218,11 @@ describe('Rate-limited', function() {
             jasmine.Clock.tick(250);
             expect(notifySpy).toHaveBeenCalledWith('b');
         });
+
+        it('Should return "[object Object]" with .toString', function() {
+          // Issue #2252: make sure .toString method does not throw error
+          expect(new ko.subscribable().toString()).toBe('[object Object]')
+        });
     });
 
     describe('Observable', function() {
