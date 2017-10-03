@@ -98,6 +98,7 @@ ko.bindingHandlers['textInput'] = {
             if (element.value !== modelValue) {
                 previousElementValue = modelValue;  // Make sure we ignore events (propertychange) that result from updating the value
                 element.value = modelValue;
+                previousElementValue = element.value; // In case the browser changes the value (see #2281)
             }
         };
 

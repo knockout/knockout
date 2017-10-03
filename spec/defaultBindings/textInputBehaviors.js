@@ -220,7 +220,7 @@ describe('Binding: TextInput', function() {
         expect(myobservable()).toEqual("some user-entered value");
     });
 
-    it('Should write only changed values to observable', function () {
+    it('Should write only changed values to model', function () {
         var model = { writtenValue: '' };
 
         testNode.innerHTML = "<input data-bind='textInput: writtenValue' />";
@@ -234,6 +234,30 @@ describe('Binding: TextInput', function() {
         model.writtenValue = undefined;
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         expect(model.writtenValue).toBeUndefined();
+    });
+
+    it('Should not write to model other than for user input', function () {
+        // In html5, the value returned by element.value is normalized and CR characters are transformed,
+        // See http://www.w3.org/TR/html5/forms.html#the-textarea-element, https://github.com/knockout/knockout/issues/2281
+        var originalValue = '12345\r\n67890',
+            model = { writtenValue: ko.observable(originalValue) };
+
+        testNode.innerHTML = "<textarea data-bind='textInput: writtenValue'></textarea>";
+        ko.applyBindings(model, testNode);
+
+        // No user change; verify that model isn't changed (note that the view's value may be different)
+        ko.utils.triggerEvent(testNode.childNodes[0], "blur");
+        expect(model.writtenValue()).toEqual(originalValue);
+
+        // A change by the user is written to the model
+        testNode.childNodes[0].value = "1234";
+        ko.utils.triggerEvent(testNode.childNodes[0], "change");
+        expect(model.writtenValue()).toEqual("1234");
+
+        // A change from the model; the model isn't updated even if the view's value is different
+        model.writtenValue(originalValue);
+        ko.utils.triggerEvent(testNode.childNodes[0], "blur");
+        expect(model.writtenValue()).toEqual(originalValue);
     });
 
     if (typeof DEBUG != 'undefined' && DEBUG) {
