@@ -21,13 +21,15 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                     if (!isFirstRender) {
                         ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
                     }
-                    ko.applyBindingsToDescendants(
-                        isWith ?
+                    var newContext = isWith ?
                             bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
-                                bindingContext,
-                        element);
+                                bindingContext;
+                    ko.applyBindingsToDescendants(newContext, element);
+                    if (element.childNodes.length && allBindings.has('afterRender')) {
+                        ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [element.childNodes, newContext['$data']]);
+                    }
                 } else {
                     ko.virtualElements.emptyNode(element);
                 }
