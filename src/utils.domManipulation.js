@@ -95,9 +95,17 @@
     }
 
     ko.utils.parseHtmlFragment = function(html, documentContext) {
-        return jQueryInstance ?
-            jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
-            simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
+        var result;
+        try {
+            if (jQueryInstance) {
+                result = jQueryHtmlParse(html, documentContext);   // As below, benefit from jQuery's optimisations where possible
+            } else {
+                result = simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
+            }
+        } catch(e) {
+            result = simpleHtmlParse(html, documentContext);
+        }
+        return result;
     };
 
     ko.utils.parseHtmlForTemplateNodes = function(html, documentContext) {

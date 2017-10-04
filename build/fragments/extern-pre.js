@@ -4,5 +4,4 @@
     var window = this || (0, eval)('this'),
         document = window['document'],
         navigator = window['navigator'],
-        jQueryInstance = window["jQuery"],
         JSON = window["JSON"];
