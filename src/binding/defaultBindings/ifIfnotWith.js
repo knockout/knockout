@@ -10,16 +10,17 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
             ko.computed(function() {
                 var rawWithValue = isWith && ko.utils.unwrapObservable(valueAccessor()),
                     shouldDisplay = isWith ? !!rawWithValue : ifCondition(),
-                    isFirstRender = !savedNodes;
+                    isFirstRender = !savedNodes,
+                    renderNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
                 if (isFirstRender && ko.computedContext.getDependenciesCount()) {
-                    savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
+                    savedNodes = ko.utils.cloneNodes(renderNodes = ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
                 }
 
                 if (shouldDisplay) {
                     if (!isFirstRender) {
-                        ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
+                        ko.virtualElements.setDomNodeChildren(element, renderNodes = ko.utils.cloneNodes(savedNodes));
                     }
                     var newContext = isWith ?
                             bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
@@ -27,8 +28,8 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext;
                     ko.applyBindingsToDescendants(newContext, element);
-                    if (element.childNodes.length && allBindings.has('afterRender')) {
-                        ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [element.childNodes, newContext['$data']]);
+                    if (allBindings.has('afterRender')) {
+                        ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [renderNodes || ko.virtualElements.childNodes(element), newContext['$data']]);
                     }
                 } else {
                     ko.virtualElements.emptyNode(element);

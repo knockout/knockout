@@ -224,7 +224,6 @@ describe('Binding: With', function() {
         model.items()[0].x(10);
         expect(testNode).toContainText("Total: 25");
     });
-});
 
     it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
         testNode.innerHTML = "<div data-bind='with: someItem, afterRender: callback'><span data-bind='text: childprop'></span></div>";
@@ -240,9 +239,28 @@ describe('Binding: With', function() {
         // Update callback observable and check that the binding wasn't updated
         callbackObservable(2);
         expect(testNode.childNodes[0]).toContainText('child');
-        // Update the observableArray and verify that the binding is now updated
+        // Update the observable and verify that the binding is now updated
         someItem({ childprop: 'new child' });
         expect(testNode.childNodes[0]).toContainText('new child');
+        expect(callbacks).toEqual(2);
+    });
+
+    it('Should call an afterRender callback function when bound to a virtual element', function () {
+        testNode.innerHTML = "<!-- ko with: someItem, afterRender: callback --><span data-bind='text: childprop'></span><!-- /ko -->";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var callback = function (nodes, data) {
+            expect(nodes.length).toEqual(1);
+            expect(nodes[0]).toEqual(testNode.childNodes[1]);
+            expect(data.childprop).toEqual(someItem().childprop);
+            callbacks++;
+        };
+        ko.applyBindings({ someItem: someItem, callback: callback }, testNode);
+        expect(callbacks).toEqual(1);
+
+        // Update the observable and verify that the binding is now updated
+        someItem({ childprop: 'new child' });
+        expect(testNode.childNodes[1]).toContainText('new child');
         expect(callbacks).toEqual(2);
     });
 
