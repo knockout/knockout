@@ -163,6 +163,10 @@ var ko_subscribable_fn = {
         return !this['equalityComparer'] || !this['equalityComparer'](oldValue, newValue);
     },
 
+    toString: function() {
+      return '[object Object]'
+    },
+
     extend: applyExtenders
 };
 
