@@ -384,6 +384,9 @@ var computedFn = {
     },
     dispose: function () {
         var state = this[computedState];
+        if (typeof(state) === "undefined") {
+            return;
+        }
         if (!state.isSleeping && state.dependencyTracking) {
             ko.utils.objectForEach(state.dependencyTracking, function (id, dependency) {
                 if (dependency.dispose)
