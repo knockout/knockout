@@ -143,6 +143,48 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
     });
 
+    // Verify that callback data are as expected
+    function checkCallbackData(data, items, index, isFirstExecution, shouldBeInserted) {
+        expect(data.index).toEqual(index);
+        expect(data.value).toEqual(items()[index]);
+        expect(data.isFirstExecution).toEqual(isFirstExecution);
+        if (!shouldBeInserted) {
+            // The element's parent should be an anonymous template
+            expect(data.currentParentClone.parentNode).toEqual(undefined);
+        }
+    }
+
+    it('Should call a beforeAdd callback', function () {
+        var someItems = ko.observableArray([{ childprop: 'first child' }]);
+        var beforeAddCallbackData = [];
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, beforeAdd: myBeforeAdd }'><span data-bind='text: childprop'></span></div>";
+
+        ko.applyBindings({
+            someItems: someItems,
+            myBeforeAdd: function(node, index, value, isFirstExecution) {
+                beforeAddCallbackData.push({
+                    node: node,
+                    index: index,
+                    value: value,
+                    isFirstExecution: isFirstExecution,
+                    currentParentClone: node.parentNode.cloneNode(true)
+                });
+            },
+        }, testNode);
+
+        expect(beforeAddCallbackData.length).toEqual(1);
+        checkCallbackData(beforeAddCallbackData[0], someItems, 0, true, false);
+        expect(testNode.childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span>');
+
+        someItems.push({ childprop: 'second child' });
+
+        checkCallbackData(beforeAddCallbackData[1], someItems, 1, false, false);
+        expect(beforeAddCallbackData.length).toEqual(2);
+        expect(testNode.childNodes.length).toEqual(1);
+        expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    });
+
     it('Should be able to supply afterAdd and beforeRemove callbacks', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, afterAdd: myAfterAdd, beforeRemove: myBeforeRemove }'><span data-bind='text: $data'></span></div>";
         var someItems = ko.observableArray(['first child']);
