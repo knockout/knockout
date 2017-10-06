@@ -1,33 +1,67 @@
 (function(undefined) {
-
     var componentLoadingOperationUniqueId = 0;
+
+    function ComponentDisplayDeferred(element, parentComponentDeferred, replacedDeferred) {
+        var subscribable = new ko.subscribable();
+        this.subscribable = subscribable;
+
+        this._componentsToComplete = 1;
+
+        this.componentComplete = function () {
+            if (subscribable && !--this._componentsToComplete) {
+                subscribable['notifySubscribers'](element);
+                subscribable = undefined;
+                if (parentComponentDeferred) {
+                    parentComponentDeferred.componentComplete();
+                }
+            }
+        };
+        this.dispose = function (shouldReject) {
+            if (subscribable) {
+                this._componentsToComplete = 0;
+                subscribable = undefined;
+                if (parentComponentDeferred) {
+                    parentComponentDeferred.componentComplete();
+                }
+            }
+        };
+
+        if (parentComponentDeferred) {
+            ++parentComponentDeferred._componentsToComplete;
+        }
+
+        if (replacedDeferred) {
+            replacedDeferred.dispose();
+        }
+    }
 
     ko.bindingHandlers['component'] = {
         'init': function(element, valueAccessor, ignored1, ignored2, bindingContext) {
             var currentViewModel,
                 currentLoadingOperationId,
-                currentAfterRenderWatcher,
+                displayedDeferred,
                 disposeAssociatedComponentViewModel = function () {
                     var currentViewModelDispose = currentViewModel && currentViewModel['dispose'];
                     if (typeof currentViewModelDispose === 'function') {
                         currentViewModelDispose.call(currentViewModel);
                     }
-                    if (currentAfterRenderWatcher) {
-                        currentAfterRenderWatcher.dispose();
-                    }
-                    currentAfterRenderWatcher = null;
                     currentViewModel = null;
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
                 },
                 originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
-            ko.utils.domNodeDisposal.addDisposeCallback(element, disposeAssociatedComponentViewModel);
+            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                disposeAssociatedComponentViewModel();
+                if (displayedDeferred) {
+                    displayedDeferred.dispose();
+                    displayedDeferred = null;
+                }
+            });
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
-                    componentName, componentParams,
-                    completedAsync;
+                    componentName, componentParams;
 
                 if (typeof value === 'string') {
                     componentName = value;
@@ -40,9 +74,7 @@
                     throw new Error('No component name specified');
                 }
 
-                if (ko.isObservable(bindingContext._componentActiveChildrenCount)) {
-                    bindingContext._componentActiveChildrenCount(bindingContext._componentActiveChildrenCount.peek() + 1);
-                }
+                displayedDeferred = new ComponentDisplayDeferred(element, bindingContext._componentDisplayDeferred, displayedDeferred);
 
                 var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
                 ko.components.get(componentName, function(componentDefinition) {
@@ -59,37 +91,28 @@
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
                     cloneTemplateIntoElement(componentName, componentDefinition, element);
-                    var componentViewModel = createViewModel(componentDefinition, element, originalChildNodes, componentParams),
+
+                    var componentInfo = {
+                        'element': element,
+                        'templateNodes': originalChildNodes
+                    };
+
+                    var componentViewModel = createViewModel(componentDefinition, componentParams, componentInfo),
                         childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
+                            ctx._componentDisplayDeferred = displayedDeferred;
                         });
+
+                    if (componentViewModel && componentViewModel['afterRender']) {
+                        displayedDeferred.subscribable.subscribe(componentViewModel['afterRender']);
+                    }
+
                     currentViewModel = componentViewModel;
-                    childBindingContext._componentActiveChildrenCount = ko.observable(0);
                     ko.applyBindingsToDescendants(childBindingContext, element);
 
-                    var callAfterRenderWhenChildrenDone = function(activeChildren) {
-                        if (!activeChildren) {
-                            if (currentAfterRenderWatcher) {
-                                currentAfterRenderWatcher.dispose();
-                            }
-                            var currentViewModelAfterRender = currentViewModel && currentViewModel['afterRender'];
-                            if (typeof currentViewModelAfterRender === 'function') {
-                                currentViewModelAfterRender.call(currentViewModel, element);
-                            }
-                            if (ko.isObservable(bindingContext._componentActiveChildrenCount)) {
-                                bindingContext._componentActiveChildrenCount(bindingContext._componentActiveChildrenCount.peek() - 1);
-                            }
-                        }
-                    };
-                    if (!completedAsync || childBindingContext._componentActiveChildrenCount.peek() === 0) {
-                        callAfterRenderWhenChildrenDone();
-                    } else {
-                        currentAfterRenderWatcher = childBindingContext._componentActiveChildrenCount.subscribe(callAfterRenderWhenChildrenDone);
-                    }
+                    displayedDeferred.componentComplete();
                 });
-
-                completedAsync = true;
             }, null, { disposeWhenNodeIsRemoved: element });
 
             return { 'controlsDescendantBindings': true };
@@ -108,10 +131,10 @@
         ko.virtualElements.setDomNodeChildren(element, clonedNodesArray);
     }
 
-    function createViewModel(componentDefinition, element, originalChildNodes, componentParams) {
+    function createViewModel(componentDefinition, componentParams, componentInfo) {
         var componentViewModelFactory = componentDefinition['createViewModel'];
         return componentViewModelFactory
-            ? componentViewModelFactory.call(componentDefinition, componentParams, { 'element': element, 'templateNodes': originalChildNodes })
+            ? componentViewModelFactory.call(componentDefinition, componentParams, componentInfo)
             : componentParams; // Template-only component
     }
 

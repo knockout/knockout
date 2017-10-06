@@ -265,7 +265,7 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
     });
 
-    it('When components are rendered synchronously, afterRender is also synchronous even if inner components are not', function() {
+    it('afterRender occurs after all inner components even if outer component is rendered synchronously', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -277,7 +277,7 @@ describe('Components: Component binding', function() {
             viewModel: function() {
                 this.afterRender = function (element) {
                     expect(element).toBe(testNode.childNodes[0]);
-                    expect(element).toContainText('xx', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
+                    expect(element).toContainText('x12x', /* ignoreSpaces */ true);
                     renderedComponents.push(testComponentName);
                 };
             }
@@ -292,11 +292,11 @@ describe('Components: Component binding', function() {
         });
 
         ko.applyBindings(outerViewModel, testNode);
-        expect(renderedComponents).toEqual([ 'test-component' ]);
+        expect(renderedComponents).toEqual([]);
         expect(testNode.childNodes[0]).toContainText('xx', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
 
         jasmine.Clock.tick(1);
-        expect(renderedComponents).toEqual([ 'test-component', 'sub-component1', 'sub-component2' ]);
+        expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
         expect(testNode.childNodes[0]).toContainText('x12x', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
