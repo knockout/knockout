@@ -204,6 +204,8 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
+    var afterRenderCallbackDomDataKey = ko.utils.domData.nextKey();
+
     function applyBindingsToDescendantsInternal(bindingContext, elementOrVirtualElement) {
         var nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
 
@@ -230,6 +232,16 @@
                 nextInQueue = ko.virtualElements.nextSibling(currentChild);
                 applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
             }
+
+            var afterRender = ko.utils.domData.get(elementOrVirtualElement, afterRenderCallbackDomDataKey);
+            if (afterRender) {
+                var nodes = ko.virtualElements.childNodes(elementOrVirtualElement);
+                if (nodes.length) {
+                    ko.dependencyDetection.ignore(function () {
+                        evaluateValueAccessor(afterRender)(nodes, ko.dataFor(nodes[0]));
+                    });
+                }
+            }
         }
     }
 
@@ -253,7 +265,6 @@
     }
 
     var boundElementDomDataKey = ko.utils.domData.nextKey();
-
 
     function topologicalSortBindings(bindings) {
         // Depth-first sort
@@ -351,6 +362,10 @@
             allBindings['has'] = function(key) {
                 return key in bindings;
             };
+
+            if ("afterRender" in bindings) {
+                ko.utils.domData.set(node, afterRenderCallbackDomDataKey, getValueAccessor("afterRender"));
+            }
 
             // First put the bindings into the right order
             var orderedBindings = topologicalSortBindings(bindings);
