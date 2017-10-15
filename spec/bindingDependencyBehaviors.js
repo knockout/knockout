@@ -250,6 +250,45 @@ describe('Binding dependencies', function() {
         expect(testNode).toContainText('new value');
     });
 
+    it('Should not cause updates if an observable accessed in an afterRender callback is changed', function () {
+        ko.bindingHandlers.test = {
+            init: function() {
+                return { controlsDescendantBindings: true };
+            },
+            update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+                ko.utils.unwrapObservable(valueAccessor());
+                element.innerHTML = "<span data-bind='text: childprop'></span>";
+                ko.applyBindingsToDescendants(bindingContext, element);
+            }
+        };
+
+        var callbackObservable = ko.observable(1),
+            bindingObservable = ko.observable(1),
+            callbacks = 0,
+            vm = {
+                childprop: 'child',
+                bindingObservable: bindingObservable,
+                callback: function () { callbackObservable(); callbacks++; }
+            };
+
+        testNode.innerHTML = "<div data-bind='test: bindingObservable, afterRender: callback'></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+
+        // Change the childprop which is not an observable so should not change the bound element
+        vm.childprop = 'new child';
+        expect(testNode.childNodes[0]).toContainText('child');
+
+        // Update callback observable and check that the binding wasn't updated
+        callbackObservable(2);
+        expect(testNode.childNodes[0]).toContainText('child');
+
+        // Update the bound observable and verify that the binding is now updated
+        bindingObservable(2);
+        expect(testNode.childNodes[0]).toContainText('new child');
+        expect(callbacks).toEqual(2);
+    });
+
     describe('Observable view models', function() {
         it('Should update bindings (including callbacks)', function() {
             var vm = ko.observable(), clickedVM;
