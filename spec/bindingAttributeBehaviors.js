@@ -621,4 +621,9 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
         expect(callbacks).toEqual(0);
     });
+
+    it('Should ignore (and not throw an error) for a null afterRender callback', function () {
+        testNode.innerHTML = "<div data-bind='afterRender: null'><span data-bind='text: \"Some Text\"'></span></div>";
+        ko.applyBindings({}, testNode);
+    });
 });

@@ -235,12 +235,15 @@
 
             var afterRender = ko.utils.domData.get(elementOrVirtualElement, afterRenderCallbackDomDataKey);
             if (afterRender) {
-                var nodes = ko.virtualElements.childNodes(elementOrVirtualElement);
-                if (nodes.length) {
-                    ko.dependencyDetection.ignore(function () {
-                        evaluateValueAccessor(afterRender)(nodes, ko.dataFor(nodes[0]));
-                    });
-                }
+                ko.dependencyDetection.ignore(function () {
+                    afterRender = evaluateValueAccessor(afterRender);
+                    if (afterRender) {
+                        var nodes = ko.virtualElements.childNodes(elementOrVirtualElement);
+                        if (nodes.length) {
+                            afterRender(nodes, ko.dataFor(nodes[0]));
+                        }
+                    }
+                });
             }
         }
     }

@@ -289,6 +289,38 @@ describe('Binding dependencies', function() {
         expect(callbacks).toEqual(2);
     });
 
+    it('Should always use the latest value of an afterRender callback', function () {
+        ko.bindingHandlers.test = {
+            init: function() {
+                return { controlsDescendantBindings: true };
+            },
+            update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+                var innerContext = bindingContext.createChildContext({childprop: ko.utils.unwrapObservable(valueAccessor())});
+                element.innerHTML = "<span data-bind='text: childprop'></span>";
+                ko.applyBindingsToDescendants(innerContext, element);
+            }
+        };
+
+        var callbackSpy1 = jasmine.createSpy('callbackSpy1'),
+            callbackSpy2 = jasmine.createSpy('callbackSpy2'),
+            vm = {
+                observable: ko.observable('value'),
+                callback: callbackSpy1
+            };
+
+        testNode.innerHTML = "<div data-bind='test: observable, afterRender: callback'></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbackSpy1).toHaveBeenCalled();
+
+        callbackSpy1.reset();
+        vm.callback = callbackSpy2;
+
+        vm.observable('new value');
+        expect(testNode.childNodes[0]).toContainText('new value');
+        expect(callbackSpy1).not.toHaveBeenCalled();
+        expect(callbackSpy2).toHaveBeenCalled();
+    });
+
     describe('Observable view models', function() {
         it('Should update bindings (including callbacks)', function() {
             var vm = ko.observable(), clickedVM;
