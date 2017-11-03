@@ -1,7 +1,7 @@
 describe('Binding: Foreach', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    it('Should remove descendant nodes from the document (and not bind them) if the value is falsey', function() {
+    it('Should remove descendant nodes from the document (and not bind them) if the value is falsy', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
         expect(testNode.childNodes[0].childNodes.length).toEqual(1);
         ko.applyBindings({ someItem: null }, testNode);
@@ -261,7 +261,7 @@ describe('Binding: Foreach', function() {
         var someItems = ko.observableArray([ 'A', 'B', 'C' ]),
             callback = function(element, index, data) { if (data === 'D') throw "Exception"; };
 
-        ko.applyBindings({someItems: someItems, callback: callback });
+        ko.applyBindings({someItems: someItems, callback: callback }, testNode);
         expect(testNode.childNodes[0]).toContainText('ABC');
 
         expect(function() { someItems.push('D'); }).toThrow("Exception");
@@ -652,7 +652,7 @@ describe('Binding: Foreach', function() {
                 ko.removeNode(elem);
             }
         };
-        ko.applyBindings({ planets: planets, beforeRemove, beforeRemove }, testNode);
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove }, testNode);
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Moon++--Ceres++');
 
         // Remove an item; the surrounding text nodes are removed immediately, but not the element node

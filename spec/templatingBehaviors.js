@@ -385,6 +385,25 @@ describe('Templating', function() {
         expect(testNode.childNodes[0]).toContainText("true");
     });
 
+    it('Data binding syntax should be able to use $rawData in binding value to refer to a top level template\'s view model observable', function() {
+        var data = ko.observable('value');
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: ko.isObservable($rawData)'></div>" }));
+        ko.renderTemplate("someTemplate", data, null, testNode);
+        expect(testNode.childNodes[0]).toContainText("true");
+        expect(data.getSubscriptionsCount('change')).toEqual(1);    // only subscription is from the templating code
+    });
+
+    it('Data binding syntax should be able to use $rawData in binding value to refer to a data-bound template\'s view model observable', function() {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "<div data-bind='text: ko.isObservable($rawData)'></div>" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someProp }'></div>";
+
+        var viewModel = { someProp: ko.observable('value') };
+        ko.applyBindings(viewModel, testNode);
+
+        expect(testNode.childNodes[0].childNodes[0]).toContainText("true");
+        expect(viewModel.someProp.getSubscriptionsCount('change')).toEqual(1);    // only subscription is from the templating code
+    });
+
     it('Data binding syntax should defer evaluation of variables until the end of template rendering (so bindings can take independent subscriptions to them)', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({
             someTemplate: "<input data-bind='value:message' />[js: message = 'goodbye'; undefined; ]"
@@ -497,6 +516,36 @@ describe('Templating', function() {
         // The injected bindings update to match model changes as usual
         model.testData.name("beta");
         expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
+    });
+
+    it('Should accept a "nodes" option that gives the template nodes, and able to use the same nodes for multiple bindings', function () {
+        testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, data: testData1, bypassDomNodeWrap: true }'></div><div data-bind='template: { nodes: testNodes, data: testData2, bypassDomNodeWrap: true }'></div>";
+        var model = {
+            testNodes: [
+                document.createTextNode("begin"),
+                document.createElement("span"),
+                document.createTextNode("end")
+            ],
+            testData1: ko.observable({ name: ko.observable("alpha1") }),
+            testData2: ko.observable({ name: ko.observable("alpha2") })
+        };
+        model.testNodes[1].setAttribute("data-bind", "text: name"); // See that bindings are applied to the injected nodes
+
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0]).toContainText("beginalpha1end");
+        expect(testNode.childNodes[1]).toContainText("beginalpha2end");
+
+        // The injected bindings update to match model changes as usual
+        model.testData1().name("beta1");
+        model.testData2().name("beta2");
+        expect(testNode.childNodes[0]).toContainText("beginbeta1end");
+        expect(testNode.childNodes[1]).toContainText("beginbeta2end");
+
+        // The template binding re-renders successfully if model changes
+        model.testData1({ name: ko.observable("gamma1") });
+        model.testData2({ name: ko.observable("gamma2") });
+        expect(testNode.childNodes[0]).toContainText("begingamma1end");
+        expect(testNode.childNodes[1]).toContainText("begingamma2end");
     });
 
     it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {

@@ -144,7 +144,7 @@
                     // Ensure we've got a proper binding context to work with
                     var bindingContext = (dataOrBindingContext && (dataOrBindingContext instanceof ko.bindingContext))
                         ? dataOrBindingContext
-                        : new ko.bindingContext(ko.utils.unwrapObservable(dataOrBindingContext));
+                        : new ko.bindingContext(dataOrBindingContext, null, null, null, { "exportDependencies": true });
 
                     var templateName = resolveTemplateName(template, bindingContext['$data'], bindingContext),
                         renderedNodesArray = executeTemplate(targetNodeOrNodeArray, renderMode, templateName, bindingContext, options);
@@ -178,7 +178,7 @@
             });
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
-            return executeTemplate(null, "ignoreTargetNode", templateName, arrayItemContext, options);
+            return executeTemplate(targetNode, "ignoreTargetNode", templateName, arrayItemContext, options);
         }
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
@@ -217,6 +217,7 @@
         ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
     }
 
+    var cleanContainerDomDataKey = ko.utils.domData.nextKey();
     ko.bindingHandlers['template'] = {
         'init': function(element, valueAccessor) {
             // Support anonymous templates
@@ -233,7 +234,15 @@
                 if (ko.isObservable(nodes)) {
                     throw new Error('The "nodes" option must be a plain, non-observable array.');
                 }
-                var container = ko.utils.moveCleanedNodesToContainerElement(nodes); // This also removes the nodes from their current parent
+
+                // If the nodes are already attached to a KO-generated container, we reuse that container without moving the
+                // elements to a new one (we check only the first node, as the nodes are always moved together)
+                var container = nodes[0] && nodes[0].parentNode;
+                if (!container || !ko.utils.domData.get(container, cleanContainerDomDataKey)) {
+                    container = ko.utils.moveCleanedNodesToContainerElement(nodes);
+                    ko.utils.domData.set(container, cleanContainerDomDataKey, true);
+                }
+
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
@@ -245,7 +254,6 @@
         },
         'update': function (element, valueAccessor, allBindings, viewModel, bindingContext) {
             var value = valueAccessor(),
-                dataValue,
                 options = ko.utils.unwrapObservable(value),
                 shouldDisplay = true,
                 templateComputed = null,
@@ -262,8 +270,6 @@
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
-
-                dataValue = ko.utils.unwrapObservable(options['data']);
             }
 
             if ('foreach' in options) {
@@ -275,7 +281,7 @@
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
                 var innerBindingContext = ('data' in options) ?
-                    bindingContext['createChildContext'](dataValue, options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
+                    bindingContext.createStaticChildContext(options['data'], options['as']) :  // Given an explicit 'data' value, we create a child binding context for it
                     bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
                 templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }

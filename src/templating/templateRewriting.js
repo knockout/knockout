@@ -7,7 +7,7 @@ ko.templateRewriting = (function () {
         var allValidators = ko.expressionRewriting.bindingRewriteValidators;
         for (var i = 0; i < keyValueArray.length; i++) {
             var key = keyValueArray[i]['key'];
-            if (allValidators.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(allValidators, key)) {
                 var validator = allValidators[key];
 
                 if (typeof validator === "function") {

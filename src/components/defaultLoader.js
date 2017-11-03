@@ -25,7 +25,7 @@
     };
 
     ko.components.isRegistered = function(componentName) {
-        return defaultConfigRegistry.hasOwnProperty(componentName);
+        return Object.prototype.hasOwnProperty.call(defaultConfigRegistry, componentName);
     };
 
     ko.components.unregister = function(componentName) {
@@ -35,7 +35,7 @@
 
     ko.components.defaultLoader = {
         'getConfig': function(componentName, callback) {
-            var result = defaultConfigRegistry.hasOwnProperty(componentName)
+            var result = ko.components.isRegistered(componentName)
                 ? defaultConfigRegistry[componentName]
                 : null;
             callback(result);

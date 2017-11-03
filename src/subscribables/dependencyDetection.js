@@ -50,6 +50,11 @@ ko.computedContext = ko.dependencyDetection = (function () {
                 return currentFrame.computed.getDependenciesCount();
         },
 
+        getDependencies: function () {
+            if (currentFrame)
+                return currentFrame.computed.getDependencies();
+        },
+
         isInitial: function() {
             if (currentFrame)
                 return currentFrame.isInitial;
@@ -59,6 +64,8 @@ ko.computedContext = ko.dependencyDetection = (function () {
 
 ko.exportSymbol('computedContext', ko.computedContext);
 ko.exportSymbol('computedContext.getDependenciesCount', ko.computedContext.getDependenciesCount);
+ko.exportSymbol('computedContext.getDependencies', ko.computedContext.getDependencies);
 ko.exportSymbol('computedContext.isInitial', ko.computedContext.isInitial);
+ko.exportSymbol('computedContext.registerDependency', ko.computedContext.registerDependency);
 
 ko.exportSymbol('ignoreDependencies', ko.ignoreDependencies = ko.dependencyDetection.ignore);

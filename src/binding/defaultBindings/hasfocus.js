@@ -57,4 +57,4 @@ ko.bindingHandlers['hasfocus'] = {
 ko.expressionRewriting.twoWayBindings['hasfocus'] = true;
 
 ko.bindingHandlers['hasFocus'] = ko.bindingHandlers['hasfocus']; // Make "hasFocus" an alias
-ko.expressionRewriting.twoWayBindings['hasFocus'] = true;
+ko.expressionRewriting.twoWayBindings['hasFocus'] = 'hasfocus';

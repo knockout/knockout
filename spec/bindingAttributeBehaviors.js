@@ -2,13 +2,13 @@ describe('Binding attribute syntax', function() {
     beforeEach(jasmine.prepareTestNode);
 
     it('applyBindings should accept no parameters and then act on document.body with undefined model', function() {
-        this.after(function () { ko.utils.domData.clear(document.body); });     // Just to avoid interfering with other specs
+        this.after(function () { ko.cleanNode(document.body); });     // Just to avoid interfering with other specs
 
         var didInit = false;
         ko.bindingHandlers.test = {
             init: function (element, valueAccessor, allBindings, viewModel) {
                 expect(element.id).toEqual("testElement");
-                expect(viewModel).toEqual(undefined);
+                expect(viewModel).toBeUndefined();
                 didInit = true;
             }
         };
@@ -18,7 +18,7 @@ describe('Binding attribute syntax', function() {
     });
 
     it('applyBindings should accept one parameter and then act on document.body with parameter as model', function() {
-        this.after(function () { ko.utils.domData.clear(document.body); });     // Just to avoid interfering with other specs
+        this.after(function () { ko.cleanNode(document.body); });     // Just to avoid interfering with other specs
 
         var didInit = false;
         var suppliedViewModel = {};
@@ -29,7 +29,7 @@ describe('Binding attribute syntax', function() {
                 didInit = true;
             }
         };
-        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
         ko.applyBindings(suppliedViewModel);
         expect(didInit).toEqual(true);
     });
@@ -44,14 +44,29 @@ describe('Binding attribute syntax', function() {
                 didInit = true;
             }
         };
-        testNode.innerHTML = "<div id='testElement' data-bind='test:123'></div>";
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
 
         var shouldNotMatchNode = document.createElement("DIV");
-        shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test:123'></div>";
+        shouldNotMatchNode.innerHTML = "<div id='shouldNotMatchThisElement' data-bind='test'></div>";
         document.body.appendChild(shouldNotMatchNode);
         this.after(function () { document.body.removeChild(shouldNotMatchNode); });
 
         ko.applyBindings(suppliedViewModel, testNode);
+        expect(didInit).toEqual(true);
+    });
+
+    it('applyBindings should accept three parameters and use the third parameter as a callback for modifying the root context', function() {
+        var didInit = false;
+        ko.bindingHandlers.test = {
+            init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                expect(bindingContext.extraValue).toEqual("extra");
+                didInit = true;
+            }
+        };
+        testNode.innerHTML = "<div id='testElement' data-bind='test'></div>";
+        ko.applyBindings(null, testNode, function(context) {
+            context.extraValue = "extra";
+        });
         expect(didInit).toEqual(true);
     });
 
@@ -171,7 +186,7 @@ describe('Binding attribute syntax', function() {
             init: function() { return { controlsDescendantBindings : true } }
         };
         ko.bindingHandlers.test2 = ko.bindingHandlers.test1;
-        testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>"
+        testNode.innerHTML = "<div data-bind='test1: true, test2: true'></div>";
         expect(function () {
             ko.applyBindings(null, testNode);
         }).toThrowContaining("Multiple bindings (test1 and test2) are trying to control descendant bindings of the same element.");
@@ -195,7 +210,7 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(vm, testNode);
         expect(testNode).toContainText("my value");
         expect(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$customProp).toEqual("my value");
-        expect(ko.contextFor(testNode.childNodes[0].childNodes[0]).$customProp).toEqual(undefined); // Should not affect original binding context
+        expect(ko.contextFor(testNode.childNodes[0].childNodes[0]).$customProp).toBeUndefined(); // Should not affect original binding context
 
         // vale of $data and $parent should be unchanged in extended context
         expect(ko.contextFor(testNode.childNodes[0].childNodes[0].childNodes[0]).$data).toEqual(vm.sub);
@@ -214,6 +229,19 @@ describe('Binding attribute syntax', function() {
         expect(testNode).toContainText("my value");
     });
 
+    it('Binding context should hide or not minify extra internal properties', function () {
+        testNode.innerHTML = "<div data-bind='with: $data'><div></div></div>";
+        ko.applyBindings({}, testNode);
+
+        var allowedProperties = ['$parents', '$root', 'ko', '$rawData', '$data', '$parentContext', '$parent'];
+        if (ko.utils.createSymbolOrString('') === '') {
+            allowedProperties.push('_subscribable');
+        }
+        ko.utils.objectForEach(ko.contextFor(testNode.childNodes[0].childNodes[0]), function (prop) {
+            expect(allowedProperties).toContain(prop);
+        });
+    });
+
     it('Should be able to retrieve the binding context associated with any node', function() {
         testNode.innerHTML = "<div><div data-bind='text: name'></div></div>";
         ko.applyBindings({ name: 'Bert' }, testNode.childNodes[0]);
@@ -221,8 +249,8 @@ describe('Binding attribute syntax', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("Bert");
 
         // Can't get binding context for unbound nodes
-        expect(ko.dataFor(testNode)).toEqual(undefined);
-        expect(ko.contextFor(testNode)).toEqual(undefined);
+        expect(ko.dataFor(testNode)).toBeUndefined();
+        expect(ko.contextFor(testNode)).toBeUndefined();
 
         // Can get binding context for directly bound nodes
         expect(ko.dataFor(testNode.childNodes[0]).name).toEqual("Bert");
@@ -231,10 +259,39 @@ describe('Binding attribute syntax', function() {
         // Can get binding context for descendants of directly bound nodes
         expect(ko.dataFor(testNode.childNodes[0].childNodes[0]).name).toEqual("Bert");
         expect(ko.contextFor(testNode.childNodes[0].childNodes[0]).$data.name).toEqual("Bert");
+
+        // Also test that a non-node object returns nothing and doesn't crash
+        expect(ko.dataFor({})).toBeUndefined();
+        expect(ko.contextFor({})).toBeUndefined();
+    });
+
+    it('Should not return a context object for unbound elements that are descendants of bound elements', function() {
+        // From https://github.com/knockout/knockout/issues/2148
+        testNode.innerHTML = '<div data-bind="visible: isVisible"><span>Some text</span><div data-bind="allowBindings: false"><input data-bind="value: someValue"></div></div>';
+
+        ko.bindingHandlers.allowBindings = {
+            init: function(elem, valueAccessor) {
+                // Let bindings proceed as normal *only if* my value is false
+                var shouldAllowBindings = ko.unwrap(valueAccessor());
+                return { controlsDescendantBindings: !shouldAllowBindings };
+            }
+        };
+        var vm = {isVisible: true};
+        ko.applyBindings(vm, testNode);
+
+        // All of the bound nodes return the viewmodel
+        expect(ko.dataFor(testNode.childNodes[0])).toBe(vm);
+        expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toBe(vm);
+        expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toBe(vm);
+        expect(ko.contextFor(testNode.childNodes[0].childNodes[1]).$data).toBe(vm);
+
+        // The unbound child node returns undefined
+        expect(ko.dataFor(testNode.childNodes[0].childNodes[1].childNodes[0])).toBeUndefined();
+        expect(ko.contextFor(testNode.childNodes[0].childNodes[1].childNodes[0])).toBeUndefined();
     });
 
     it('Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones', function() {
-        testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye";
         expect(function () {
             ko.applyBindings(null, testNode);
         }).toThrow("The binding 'visible' cannot be used with virtual elements");
@@ -253,7 +310,7 @@ describe('Binding attribute syntax', function() {
     });
 
     it('Should be allowed to express containerless bindings with arbitrary internal whitespace and newlines', function() {
-            testNode.innerHTML = "Hello <!-- ko\n" +
+        testNode.innerHTML = "Hello <!-- ko\n" +
                              "    with\n" +
                              "      : \n "+
                              "        { \n" +
@@ -264,6 +321,48 @@ describe('Binding attribute syntax', function() {
                              "-->, Goodbye";
         ko.applyBindings(null, testNode);
         expect(testNode).toContainText('Hello Bert, Goodbye');
+    });
+
+    it('Should reject closing virtual bindings without matching open, when found as a sibling', function() {
+        testNode.innerHTML = "<div></div><!-- /ko -->";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject closing virtual bindings without matching open, when found as a a first child', function() {
+        testNode.innerHTML = "<div><!-- /ko --></div>";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject closing virtual bindings, when found as first child at the top level', function() {
+        testNode.innerHTML = "<!-- /ko -->";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject duplicated closing virtual bindings', function() {
+        testNode.innerHTML = "<!-- ko if: true --><div></div><!-- /ko --><!-- /ko -->";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject opening virtual bindings that are not closed', function() {
+        testNode.innerHTML = "<!-- ko if: true -->";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
+    });
+
+    it('Should reject virtual bindings that are nested incorrectly', function() {
+        testNode.innerHTML = "<!-- ko if: true --><div><!-- /ko --></div>";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).toThrow();
     });
 
     it('Should be able to access virtual children in custom containerless binding', function() {
@@ -280,7 +379,7 @@ describe('Binding attribute syntax', function() {
         };
         ko.virtualElements.allowedBindings['test'] = true;
 
-        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko test: false -->Some text<!-- /ko --> Goodbye";
         ko.applyBindings(null, testNode);
 
         expect(countNodes).toEqual(1);
@@ -292,7 +391,7 @@ describe('Binding attribute syntax', function() {
         ko.bindingHandlers.test = { init: function () { initCalls++ } };
         ko.virtualElements.allowedBindings['test'] = true;
 
-        testNode.innerHTML = "Hello <!-- ko if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko if: true --><!-- ko test: false -->Some text<!-- /ko --><!-- /ko --> Goodbye";
         ko.applyBindings(null, testNode);
 
         expect(initCalls).toEqual(1);
@@ -309,9 +408,9 @@ describe('Binding attribute syntax', function() {
     });
 
     it('Should automatically bind virtual descendants of containerless markers if no binding controlsDescendantBindings', function() {
-          testNode.innerHTML = "Hello <!-- ko dummy: false --><span data-bind='text: \"WasBound\"'>Some text</span><!-- /ko --> Goodbye";
-          ko.applyBindings(null, testNode);
-          expect(testNode).toContainText("Hello WasBound Goodbye");
+        testNode.innerHTML = "Hello <!-- ko dummy: false --><span data-bind='text: \"WasBound\"'>Some text</span><!-- /ko --> Goodbye";
+        ko.applyBindings(null, testNode);
+        expect(testNode).toContainText("Hello WasBound Goodbye");
     });
 
     it('Should be able to set and access correct context in custom containerless binding', function() {
@@ -324,7 +423,7 @@ describe('Binding attribute syntax', function() {
         };
         ko.virtualElements.allowedBindings['bindChildrenWithCustomContext'] = true;
 
-        testNode.innerHTML = "Hello <!-- ko bindChildrenWithCustomContext: true --><div>Some text</div><!-- /ko --> Goodbye"
+        testNode.innerHTML = "Hello <!-- ko bindChildrenWithCustomContext: true --><div>Some text</div><!-- /ko --> Goodbye";
         ko.applyBindings(null, testNode);
 
         expect(ko.dataFor(testNode.childNodes[2]).myCustomData).toEqual(123);
@@ -340,7 +439,7 @@ describe('Binding attribute syntax', function() {
             }
         };
 
-        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko nonexistentHandler: 123 --><div>Some text</div><!-- /ko --></div> Goodbye"
+        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko nonexistentHandler: 123 --><div>Some text</div><!-- /ko --></div> Goodbye";
         ko.applyBindings(null, testNode);
 
         expect(ko.dataFor(testNode.childNodes[1].childNodes[0]).myCustomData).toEqual(123);
@@ -357,7 +456,7 @@ describe('Binding attribute syntax', function() {
             }
         };
 
-        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko with: myCustomData --><div>Some text</div><!-- /ko --></div> Goodbye"
+        testNode.innerHTML = "Hello <div data-bind='bindChildrenWithCustomContext: true'><!-- ko with: myCustomData --><div>Some text</div><!-- /ko --></div> Goodbye";
         ko.applyBindings(null, testNode);
 
         expect(ko.contextFor(testNode.childNodes[1].childNodes[0]).customValue).toEqual('xyz');
