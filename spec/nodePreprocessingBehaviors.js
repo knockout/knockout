@@ -104,7 +104,7 @@ describe('Node preprocessing', function() {
         expect(testNode).toContainText('BetaBetaGammaGamma');
     });
 
-    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function () {
+    it('Should call a childrenComplete callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function () {
         // Set up a binding provider that converts text nodes to expressions
         ko.bindingProvider.instance.preprocessNode = function (node) {
             if (node.nodeType === 3 && node.data.charAt(0) === "$") {
@@ -120,7 +120,7 @@ describe('Node preprocessing', function() {
             }
         };
 
-        // Now perform bindings, and see that afterRender gets the output from the preprocessor and bindings
+        // Now perform bindings, and see that childrenComplete gets the output from the preprocessor and bindings
         var callbacks = 0,
             vm = {
                 childprop: 'child property',
@@ -136,7 +136,7 @@ describe('Node preprocessing', function() {
                 }
             };
 
-        testNode.innerHTML = "<div data-bind='afterRender: callback'><span>[</span>$data.childprop<span>]</span></div>";
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'><span>[</span>$data.childprop<span>]</span></div>";
         ko.applyBindings(vm, testNode);
         expect(testNode.childNodes[0]).toContainText('[child property]');
         expect(callbacks).toBe(1);

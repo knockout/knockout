@@ -225,8 +225,8 @@ describe('Binding: With', function() {
         expect(testNode).toContainText("Total: 25");
     });
 
-    it('Should call an afterRender callback function', function () {
-        testNode.innerHTML = "<div data-bind='with: someItem, afterRender: callback'><span data-bind='text: childprop'></span></div>";
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='with: someItem, childrenComplete: callback'><span data-bind='text: childprop'></span></div>";
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);

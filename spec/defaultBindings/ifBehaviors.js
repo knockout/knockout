@@ -97,8 +97,8 @@ describe('Binding: If', function() {
         expect(testNode).toContainHtml("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
     });
 
-    it('Should call an afterRender callback function', function () {
-        testNode.innerHTML = "<div data-bind='if: condition, afterRender: callback'><span data-bind='text: someText'></span></div>";
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='if: condition, childrenComplete: callback'><span data-bind='text: someText'></span></div>";
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         var viewModel = { condition: ko.observable(true), someText: "hello", callback: function () { callbacks++; } };

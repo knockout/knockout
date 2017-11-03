@@ -238,6 +238,20 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("result = 456");
     });
 
+    it('Should call a generic childrenComplete callback function', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someItem }, childrenComplete: callback'></div>";
+        var someItem = ko.observable({ childProp: 'child' }),
+            callbacks = 0;
+        ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('result = child');
+
+        someItem({ childProp: "new child" });
+        expect(callbacks).toEqual(2);
+        expect(testNode.childNodes[0]).toContainText('result = new child');
+    });
+
     it('Should stop tracking inner observables immediately when the container node is removed from the document', function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));

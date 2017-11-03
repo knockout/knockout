@@ -63,8 +63,8 @@ describe('Binding: Ifnot', function() {
         expect(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).toEqual(0);
     });
 
-    it('Should call an afterRender callback function', function () {
-        testNode.innerHTML = "<div data-bind='ifnot: condition, afterRender: callback'><span data-bind='text: someText'></span></div>";
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='ifnot: condition, childrenComplete: callback'><span data-bind='text: someText'></span></div>";
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         var viewModel = { condition: ko.observable(false), someText: "hello", callback: function () { callbacks++; } };

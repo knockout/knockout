@@ -651,8 +651,8 @@ describe('Components: Component binding', function() {
         expect(testNode).toContainText('Hello! Your param is 456 Goodbye.');
     });
 
-    it('Should call an afterRender callback function', function () {
-        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue, afterRender: callback"></div>';
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue, childrenComplete: callback"></div>';
         ko.components.register(testComponentName, { template: '<div data-bind="text: myvalue"></div>' });
         testComponentParams.myvalue = 'some parameter value';
 

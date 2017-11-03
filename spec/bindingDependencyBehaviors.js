@@ -250,7 +250,7 @@ describe('Binding dependencies', function() {
         expect(testNode).toContainText('new value');
     });
 
-    it('Should not cause updates if an observable accessed in an afterRender callback is changed', function () {
+    it('Should not cause updates if an observable accessed in a childrenComplete callback is changed', function () {
         ko.bindingHandlers.test = {
             init: function() {
                 return { controlsDescendantBindings: true };
@@ -271,7 +271,7 @@ describe('Binding dependencies', function() {
                 callback: function () { callbackObservable(); callbacks++; }
             };
 
-        testNode.innerHTML = "<div data-bind='test: bindingObservable, afterRender: callback'></div>";
+        testNode.innerHTML = "<div data-bind='test: bindingObservable, childrenComplete: callback'></div>";
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
 
@@ -289,7 +289,7 @@ describe('Binding dependencies', function() {
         expect(callbacks).toEqual(2);
     });
 
-    it('Should always use the latest value of an afterRender callback', function () {
+    it('Should always use the latest value of a childrenComplete callback', function () {
         ko.bindingHandlers.test = {
             init: function() {
                 return { controlsDescendantBindings: true };
@@ -308,7 +308,7 @@ describe('Binding dependencies', function() {
                 callback: callbackSpy1
             };
 
-        testNode.innerHTML = "<div data-bind='test: observable, afterRender: callback'></div>";
+        testNode.innerHTML = "<div data-bind='test: observable, childrenComplete: callback'></div>";
         ko.applyBindings(vm, testNode);
         expect(callbackSpy1).toHaveBeenCalled();
 

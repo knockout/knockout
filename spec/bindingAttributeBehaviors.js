@@ -584,7 +584,7 @@ describe('Binding attribute syntax', function() {
         });
     });
 
-    it('Should call an afterRender callback function after descendent elements are bound', function () {
+    it('Should call a childrenComplete callback function after descendent elements are bound', function () {
         var callbacks = 0,
             callback = function (nodes, data) {
                 expect(nodes.length).toEqual(1);
@@ -594,12 +594,12 @@ describe('Binding attribute syntax', function() {
             },
             vm = { callback: callback };
 
-        testNode.innerHTML = "<div data-bind='afterRender: callback'><span data-bind='text: \"Some Text\"'></span></div>";
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'><span data-bind='text: \"Some Text\"'></span></div>";
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });
 
-    it('Should call an afterRender callback function when bound to a virtual element', function () {
+    it('Should call a childrenComplete callback function when bound to a virtual element', function () {
         var callbacks = 0,
             callback = function (nodes, data) {
                 expect(nodes.length).toEqual(1);
@@ -609,21 +609,36 @@ describe('Binding attribute syntax', function() {
             },
             vm = { callback: callback };
 
-        testNode.innerHTML = "<!-- ko afterRender: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko -->";
+        testNode.innerHTML = "<!-- ko childrenComplete: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko -->";
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });
 
-    it('Should not call an afterRender callback function when there are no descendant nodes', function () {
+    it('Should not call a childrenComplete callback function when there are no descendant nodes', function () {
         var callbacks = 0;
 
-        testNode.innerHTML = "<div data-bind='afterRender: callback'></span></div>";
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'></div>";
         ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
         expect(callbacks).toEqual(0);
     });
 
-    it('Should ignore (and not throw an error) for a null afterRender callback', function () {
-        testNode.innerHTML = "<div data-bind='afterRender: null'><span data-bind='text: \"Some Text\"'></span></div>";
+    it('Should ignore (and not throw an error) for a null childrenComplete callback', function () {
+        testNode.innerHTML = "<div data-bind='childrenComplete: null'><span data-bind='text: \"Some Text\"'></span></div>";
         ko.applyBindings({}, testNode);
+    });
+
+    it('Should call childrenComplete callback registered with ko.subscribeToBindingEvent', function () {
+        var callbacks = 0,
+            vm = {};
+
+        ko.subscribeToBindingEvent(testNode, "childrenComplete", function (node) {
+            callbacks++;
+            expect(node).toEqual(testNode);
+            expect(ko.dataFor(node)).toEqual(vm);
+        });
+
+        testNode.innerHTML = "<div></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
     });
 });

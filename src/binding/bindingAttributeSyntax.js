@@ -158,6 +158,28 @@
         return this['createChildContext'](dataItemOrAccessor, dataItemAlias, null, { "exportDependencies": true });
     };
 
+    var bindingEventsDomDataKey = ko.utils.domData.nextKey();
+
+    ko.subscribeToBindingEvent = function (node, event, callback) {
+        var eventSubscribable = ko.utils.domData.get(node, bindingEventsDomDataKey);
+        if (!eventSubscribable) {
+            ko.utils.domData.set(node, bindingEventsDomDataKey, eventSubscribable = new ko.subscribable);
+        }
+        return eventSubscribable.subscribe(callback, null, event);
+    };
+
+    ko.notifyBindingEvent = function (node, event) {
+        var eventSubscribable = ko.utils.domData.get(node, bindingEventsDomDataKey);
+        if (eventSubscribable) {
+            eventSubscribable['notifySubscribers'](node, event);
+        }
+    };
+
+    ko.bindingEvent = {
+        childrenComplete: "childrenComplete",
+        descendentsComplete : "descendentsComplete"
+    };
+
     // Returns the valueAccessor function for a binding value
     function makeValueAccessor(value) {
         return function() {
@@ -204,8 +226,6 @@
             throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
     }
 
-    var afterRenderCallbackDomDataKey = ko.utils.domData.nextKey();
-
     function applyBindingsToDescendantsInternal(bindingContext, elementOrVirtualElement) {
         var nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
 
@@ -227,23 +247,16 @@
                 nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
             }
 
+            var bindingApplied = false;
             while (currentChild = nextInQueue) {
                 // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
                 nextInQueue = ko.virtualElements.nextSibling(currentChild);
                 applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
+                bindingApplied = true;
             }
 
-            var afterRender = ko.utils.domData.get(elementOrVirtualElement, afterRenderCallbackDomDataKey);
-            if (afterRender) {
-                ko.dependencyDetection.ignore(function () {
-                    afterRender = evaluateValueAccessor(afterRender);
-                    if (afterRender) {
-                        var nodes = ko.virtualElements.childNodes(elementOrVirtualElement);
-                        if (nodes.length) {
-                            afterRender(nodes, ko.dataFor(nodes[0]));
-                        }
-                    }
-                });
+            if (bindingApplied) {
+                ko.notifyBindingEvent(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
             }
         }
     }
@@ -366,8 +379,16 @@
                 return key in bindings;
             };
 
-            if ("afterRender" in bindings) {
-                ko.utils.domData.set(node, afterRenderCallbackDomDataKey, getValueAccessor("afterRender"));
+            if (ko.bindingEvent.childrenComplete in bindings) {
+                ko.subscribeToBindingEvent(node, ko.bindingEvent.childrenComplete, function () {
+                    var callback = evaluateValueAccessor(bindings[ko.bindingEvent.childrenComplete]);
+                    if (callback) {
+                        var nodes = ko.virtualElements.childNodes(node);
+                        if (nodes.length) {
+                            callback(nodes, ko.dataFor(nodes[0]));
+                        }
+                    }
+                });
             }
 
             // First put the bindings into the right order
@@ -482,6 +503,8 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('subscribeToBindingEvent', ko.subscribeToBindingEvent);
+    ko.exportSymbol('notifyBindingEvent', ko.notifyBindingEvent);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);
