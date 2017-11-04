@@ -123,17 +123,7 @@ describe("Deferred bindings", function() {
 
         jasmine.Clock.tick(1);
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">moving child</span><span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
-        expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was create anew so it's not the same
-    });
-
-    it('Should not throw an exception for value binding on multiple select boxes', function() {
-        testNode.innerHTML = "<select data-bind=\"options: ['abc','def','ghi'], value: x\"></select><select data-bind=\"options: ['xyz','uvw'], value: x\"></select>";
-        var observable = ko.observable();
-        expect(function() {
-            ko.applyBindings({ x: observable }, testNode);
-            jasmine.Clock.tick(1);
-        }).not.toThrow();
-        expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
+        expect(testNode.childNodes[0].childNodes[targetIndex]).not.toBe(itemNode);    // node was created anew so it's not the same
     });
 
     it('Should get latest value when conditionally included', function() {
@@ -160,4 +150,72 @@ describe("Deferred bindings", function() {
         jasmine.Clock.tick(1);
         expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: status">ok</div>');
     });
+
+    it('Should update "if" binding before descendant bindings', function() {
+        // Based on example at https://github.com/knockout/knockout/pull/2226
+        testNode.innerHTML = '<div data-bind="if: hasAddress()"><span data-bind="text: streetNumber().toLowerCase()"></span> <span data-bind="text: street().toLowerCase()"></span></div>';
+        var vm = {
+            street: ko.observable(),
+            streetNumber: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.streetNumber() && vm.street(); })
+        };
+
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        vm.street('my street');
+        vm.streetNumber('123');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('123 my street');
+
+        vm.street(null);
+        vm.streetNumber(null);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+    });
+
+    it('Should update "with" binding before descendant bindings', function() {
+        // Based on example at https://github.com/knockout/knockout/pull/2226
+        testNode.innerHTML = '<div data-bind="with: hasAddress()"><span data-bind="text: $parent.streetNumber().toLowerCase()"></span> <span data-bind="text: $parent.street().toLowerCase()"></span></div>';
+        var vm = {
+            street: ko.observable(),
+            streetNumber: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.streetNumber() && vm.street(); })
+        };
+
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        vm.street('my street');
+        vm.streetNumber('123');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('123 my street');
+
+        vm.street(null);
+        vm.streetNumber(null);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+    });
+
+    it('Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed', function() {
+        var someItem = ko.observable(true);
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: (++counter)'></span></div>";
+        var originalNode = testNode.childNodes[0].childNodes[0];
+
+        // Value is initially true, so nodes are retained
+        ko.applyBindings({ someItem: someItem, counter: 0 }, testNode);
+        expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
+        expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
+
+        // Change the value to a different truthy value; see the previous SPAN remains
+        someItem('different truthy value');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
+        expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
+    });
+
 });

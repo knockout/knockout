@@ -31,6 +31,7 @@
 //THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var system = require('system');
+var fs = require('fs');
 
 /**
  * Wait until the test condition is true or a timeout occurs. Useful for waiting
@@ -78,7 +79,7 @@ page.onConsoleMessage = function(msg) {
 };
 
 // Run the specs against the latest minified build
-page.open(system.args[1] || 'spec/runner.html?src=build/output/knockout-latest.js', function(status){
+page.open('file:///' + fs.absolute('./' + (system.args[1] || 'spec/runner.html?src=build/output/knockout-latest.js')), function(status){
     if (status !== "success") {
         console.log("Unable to access network");
         phantom.exit();

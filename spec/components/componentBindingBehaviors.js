@@ -130,7 +130,7 @@ describe('Components: Component binding', function() {
     });
 
     it('Injects and binds the component synchronously if it is flagged as synchronous and already cached, even if it previously loaded asynchronously', function() {
-        // Set up a component that loads asynchonously, but is flagged as being injectable synchronously
+        // Set up a component that loads asynchronously, but is flagged as being injectable synchronously
         this.restoreAfter(window, 'require');
         var requireCallbacks = {};
         window.require = function(moduleNames, callback) {
@@ -810,6 +810,27 @@ describe('Components: Component binding', function() {
 
         testComponentParams.someData(456);
         expect(testNode).toContainText('Hello! Your param is 456 Goodbye.');
+    });
+
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue, childrenComplete: callback"></div>';
+        ko.components.register(testComponentName, { template: '<div data-bind="text: myvalue"></div>' });
+        testComponentParams.myvalue = 'some parameter value';
+
+        var callbacks = 0;
+        outerViewModel.callback = function (nodes, data) {
+            expect(nodes.length).toEqual(1);
+            expect(nodes[0]).toEqual(testNode.childNodes[0].childNodes[0]);
+            expect(data).toEqual(testComponentParams);
+            callbacks++;
+        };
+
+        ko.applyBindings(outerViewModel, testNode);
+        expect(callbacks).toEqual(0);
+
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: myvalue">some parameter value</div>');
+        expect(callbacks).toEqual(1);
     });
 
     it('Does not call outer component\'s afterRender function if an inner component is re-rendered', function() {

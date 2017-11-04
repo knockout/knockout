@@ -24,12 +24,19 @@
         return (node.nodeType == 8) && endCommentRegex.test(commentNodesHaveTextProperty ? node.text : node.nodeValue);
     }
 
+    function isUnmatchedEndComment(node) {
+        return isEndComment(node) && !(ko.utils.domData.get(node, matchedEndCommentDataKey));
+    }
+
+    var matchedEndCommentDataKey = "__ko_matchedEndComment__"
+
     function getVirtualChildren(startComment, allowUnbalanced) {
         var currentNode = startComment;
         var depth = 1;
         var children = [];
         while (currentNode = currentNode.nextSibling) {
             if (isEndComment(currentNode)) {
+                ko.utils.domData.set(currentNode, matchedEndCommentDataKey, true);
                 depth--;
                 if (depth === 0)
                     return children;
@@ -133,19 +140,32 @@
         },
 
         firstChild: function(node) {
-            if (!isStartComment(node))
+            if (!isStartComment(node)) {
+                if (node.firstChild && isEndComment(node.firstChild)) {
+                    throw new Error("Found invalid end comment, as the first child of " + node);
+                }
                 return node.firstChild;
-            if (!node.nextSibling || isEndComment(node.nextSibling))
+            } else if (!node.nextSibling || isEndComment(node.nextSibling)) {
                 return null;
-            return node.nextSibling;
+            } else {
+                return node.nextSibling;
+            }
         },
 
         nextSibling: function(node) {
-            if (isStartComment(node))
+            if (isStartComment(node)) {
                 node = getMatchingEndComment(node);
-            if (node.nextSibling && isEndComment(node.nextSibling))
-                return null;
-            return node.nextSibling;
+            }
+
+            if (node.nextSibling && isEndComment(node.nextSibling)) {
+                if (isUnmatchedEndComment(node.nextSibling)) {
+                    throw Error("Found end comment without a matching opening comment, as child of " + node);
+                } else {
+                    return null;
+                }
+            } else {
+                return node.nextSibling;
+            }
         },
 
         hasBindingValue: isStartComment,

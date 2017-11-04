@@ -1,7 +1,7 @@
 describe('Binding: With', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    it('Should remove descendant nodes from the document (and not bind them) if the value is falsey', function() {
+    it('Should remove descendant nodes from the document (and not bind them) if the value is falsy', function() {
         testNode.innerHTML = "<div data-bind='with: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
         expect(testNode.childNodes[0].childNodes.length).toEqual(1);
         ko.applyBindings({ someItem: null }, testNode);
@@ -178,19 +178,67 @@ describe('Binding: With', function() {
     });
 
     it('Should provide access to an observable viewModel through $rawData', function() {
-        testNode.innerHTML = "<div data-bind='with: item'><input data-bind='value: $rawData'/></div>";
+        testNode.innerHTML = "<div data-bind='with: item'><input data-bind='value: $rawData'/><div data-bind='text: $data'></div></div>";
         var item = ko.observable('one');
         ko.applyBindings({ item: item }, testNode);
-        expect(item.getSubscriptionsCount('change')).toEqual(2);    // only subscriptions are the with and value bindings
+        expect(item.getSubscriptionsCount('change')).toEqual(3);    // subscriptions are the with and value bindings, and the binding context
         expect(testNode.childNodes[0]).toHaveValues(['one']);
+        expect(testNode.childNodes[0]).toContainText('one');
 
         // Should update observable when input is changed
         testNode.childNodes[0].childNodes[0].value = 'two';
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
         expect(item()).toEqual('two');
+        expect(testNode.childNodes[0]).toContainText('two');
 
         // Should update the input when the observable changes
         item('three');
         expect(testNode.childNodes[0]).toHaveValues(['three']);
+        expect(testNode.childNodes[0]).toContainText('three');
+
+        // subscription count is stable
+        expect(item.getSubscriptionsCount('change')).toEqual(3);
+    });
+
+    it('Should update if given a function', function () {
+        // See knockout/knockout#2285
+        testNode.innerHTML = '<div data-bind="with: getTotal">Total: <div data-bind="text: $data"></div>';
+
+        function ViewModel() {
+            var self = this;
+            self.items = ko.observableArray([{ x: ko.observable(4) }])
+            self.getTotal = function() {
+                var total = 0;
+                ko.utils.arrayForEach(self.items(), function(item) { total += item.x();});
+                return total;
+            }
+        }
+
+        var model = new ViewModel();
+        ko.applyBindings(model, testNode);
+        expect(testNode).toContainText("Total: 4");
+
+        model.items.push({ x: ko.observable(15) });
+        expect(testNode).toContainText("Total: 19");
+
+        model.items()[0].x(10);
+        expect(testNode).toContainText("Total: 25");
+    });
+
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='with: someItem, childrenComplete: callback'><span data-bind='text: childprop'></span></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('child');
+
+        someItem(null);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+
+        someItem({ childprop: "new child" });
+        expect(callbacks).toEqual(2);
+        expect(testNode.childNodes[0]).toContainText('new child');
     });
 });

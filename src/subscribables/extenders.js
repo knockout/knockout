@@ -47,11 +47,20 @@ ko.extenders = {
         if (!target._deferUpdates) {
             target._deferUpdates = true;
             target.limit(function (callback) {
-                var handle;
+                var handle,
+                    ignoreUpdates = false;
                 return function () {
-                    ko.tasks.cancel(handle);
-                    handle = ko.tasks.schedule(callback);
-                    target['notifySubscribers'](undefined, 'dirty');
+                    if (!ignoreUpdates) {
+                        ko.tasks.cancel(handle);
+                        handle = ko.tasks.schedule(callback);
+
+                        try {
+                            ignoreUpdates = true;
+                            target['notifySubscribers'](undefined, 'dirty');
+                        } finally {
+                            ignoreUpdates = false;
+                        }
+                    }
                 };
             });
         }

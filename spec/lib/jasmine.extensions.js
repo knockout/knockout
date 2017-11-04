@@ -77,7 +77,13 @@ jasmine.Matchers.prototype.toHaveTexts = function (expectedTexts) {
 };
 
 jasmine.Matchers.prototype.toHaveValues = function (expectedValues) {
-    var values = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.value; });
+    var values = ko.utils.arrayFilter(ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.value; }), function (value) { return value !== undefined; });
+    this.actual = values;   // Fix explanatory message
+    return this.env.equals_(values, expectedValues);
+};
+
+jasmine.Matchers.prototype.toHaveCheckedStates = function (expectedValues) {
+    var values = ko.utils.arrayMap(this.actual.childNodes, function (node) { return node.checked; });
     this.actual = values;   // Fix explanatory message
     return this.env.equals_(values, expectedValues);
 };

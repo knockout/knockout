@@ -508,4 +508,24 @@ describe('Components: Custom elements', function() {
           + '</li>'
         );
     });
+
+    it('Should call an afterRender callback function', function () {
+        ko.components.register('test-component', { template: 'custom element'});
+        testNode.innerHTML = '<test-component data-bind="afterRender: callback"></test-component>';
+
+        var callbacks = 0,
+            viewModel = {
+                callback: function (nodes, data) {
+                    expect(nodes.length).toEqual(1);
+                    expect(nodes[0]).toEqual(testNode.childNodes[0].childNodes[0]);
+                    expect(data).toEqual(undefined);
+                    callbacks++;
+                }
+            };
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+
+        jasmine.Clock.tick(1);
+        expect(testNode).toContainHtml('<test-component data-bind="afterrender: callback">custom element</test-component>');
+    });
 });

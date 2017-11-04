@@ -50,7 +50,7 @@ describe('Native template engine', function() {
 
         it('can fetch template from <textarea> elements and data-bind on results', function () {
             var testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea"),
-                prop = (typeof testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
+                prop = "value";
             testRenderTemplate(testTextAreaTemplate, "testTextAreaTemplate", prop);
         });
 

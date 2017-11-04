@@ -69,11 +69,14 @@ ko.utils.domNodeDisposal = new (function () {
 
                 // ... then its descendants, where applicable
                 if (cleanableNodeTypesWithDescendants[node.nodeType]) {
-                    // Clone the descendants list in case it changes during iteration
-                    var descendants = [];
-                    ko.utils.arrayPushAll(descendants, node.getElementsByTagName("*"));
-                    for (var i = 0, j = descendants.length; i < j; i++)
-                        cleanSingleNode(descendants[i]);
+                    var descendants = node.getElementsByTagName("*");
+                    var cleanedNode;
+                    for (var i = 0; i < descendants.length; i++) {
+                        cleanSingleNode(cleanedNode = descendants[i]);
+                        if (descendants[i] !== cleanedNode) {
+                            throw Error("ko.cleanNode: An already cleaned node was removed from the document");
+                        }
+                    }
                 }
             }
             return node;

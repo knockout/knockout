@@ -1,7 +1,7 @@
 describe('Binding: If', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    it('Should remove descendant nodes from the document (and not bind them) if the value is falsey', function() {
+    it('Should remove descendant nodes from the document (and not bind them) if the value is falsy', function() {
         testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
         expect(testNode.childNodes[0].childNodes.length).toEqual(1);
         ko.applyBindings({ someItem: null }, testNode);
@@ -21,18 +21,20 @@ describe('Binding: If', function() {
 
     it('Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed', function() {
         var someItem = ko.observable(true);
-        testNode.innerHTML = "<div data-bind='if: someItem'><span></span></div>";
+        testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: (++counter)'></span></div>";
         var originalNode = testNode.childNodes[0].childNodes[0];
 
         // Value is initially true, so nodes are retained
-        ko.applyBindings({ someItem: someItem }, testNode);
+        ko.applyBindings({ someItem: someItem, counter: 0 }, testNode);
         expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
         expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
 
         // Change the value to a different truthy value; see the previous SPAN remains
         someItem('different truthy value');
         expect(testNode.childNodes[0].childNodes[0].tagName.toLowerCase()).toEqual("span");
         expect(testNode.childNodes[0].childNodes[0]).toEqual(originalNode);
+        expect(testNode).toContainText("1");
     });
 
     it('Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value', function() {
@@ -93,5 +95,23 @@ describe('Binding: If', function() {
         // Make inner appear
         condition2(true);
         expect(testNode).toContainHtml("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
+    });
+
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='if: condition, childrenComplete: callback'><span data-bind='text: someText'></span></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var viewModel = { condition: ko.observable(true), someText: "hello", callback: function () { callbacks++; } };
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('hello');
+
+        viewModel.condition(false);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+
+        viewModel.condition(true);
+        expect(callbacks).toEqual(2);
+        expect(testNode.childNodes[0]).toContainText('hello');
     });
 });

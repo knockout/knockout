@@ -37,7 +37,7 @@ describe('Components: Default loader', function() {
         }).toThrow();
     });
 
-    it('Throws if you try to register a falsey value', function() {
+    it('Throws if you try to register a falsy value', function() {
         expect(function() {
             ko.components.register(testComponentName, null);
         }).toThrow();

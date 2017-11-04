@@ -1,8 +1,11 @@
 ko.bindingHandlers['value'] = {
     'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
+        var tagName = ko.utils.tagNameLower(element),
+            isInputElement = tagName == "input";
+
         // If the value binding is placed on a radio/checkbox, then just pass through to checkedValue and quit
-        if (element.tagName.toLowerCase() == "input" && (element.type == "checkbox" || element.type == "radio")) {
+        if (isInputElement && (element.type == "checkbox" || element.type == "radio")) {
             ko.applyBindingAccessorsToNode(element, { 'checkedValue': valueAccessor });
             return;
         }
@@ -30,7 +33,7 @@ ko.bindingHandlers['value'] = {
 
         // Workaround for https://github.com/SteveSanderson/knockout/issues/122
         // IE doesn't fire "change" events on textboxes if the user selects a value from its autocomplete list
-        var ieAutoCompleteHackNeeded = ko.utils.ieVersion && element.tagName.toLowerCase() == "input" && element.type == "text"
+        var ieAutoCompleteHackNeeded = ko.utils.ieVersion && isInputElement && element.type == "text"
                                        && element.autocomplete != "off" && (!element.form || element.form.autocomplete != "off");
         if (ieAutoCompleteHackNeeded && ko.utils.arrayIndexOf(eventsToCatch, "propertychange") == -1) {
             ko.utils.registerEventHandler(element, "propertychange", function () { propertyChangedFired = true });
@@ -64,40 +67,45 @@ ko.bindingHandlers['value'] = {
             ko.utils.registerEventHandler(element, eventName, handler);
         });
 
-        var updateFromModel = function () {
-            var newValue = ko.utils.unwrapObservable(valueAccessor());
-            var elementValue = ko.selectExtensions.readValue(element);
+        var updateFromModel;
 
-            if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
-                ko.utils.setTimeout(updateFromModel, 0);
-                return;
-            }
-
-            var valueHasChanged = (newValue !== elementValue);
-
-            if (valueHasChanged) {
-                if (ko.utils.tagNameLower(element) === "select") {
-                    var allowUnset = allBindings.get('valueAllowUnset');
-                    var applyValueAction = function () {
-                        ko.selectExtensions.writeValue(element, newValue, allowUnset);
-                    };
-                    applyValueAction();
-
-                    if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
-                        // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
-                        // because you're not allowed to have a model value that disagrees with a visible UI selection.
-                        ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
-                    } else {
-                        // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
-                        // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
-                        // to apply the value as well.
-                        ko.utils.setTimeout(applyValueAction, 0);
-                    }
+        if (isInputElement && element.type == "file") {
+            // For file input elements, can only write the empty string
+            updateFromModel = function () {
+                var newValue = ko.utils.unwrapObservable(valueAccessor());
+                if (newValue === null || newValue === undefined || newValue === "") {
+                    element.value = "";
                 } else {
-                    ko.selectExtensions.writeValue(element, newValue);
+                    ko.dependencyDetection.ignore(valueUpdateHandler);  // reset the model to match the element
                 }
             }
-        };
+        } else {
+            updateFromModel = function () {
+                var newValue = ko.utils.unwrapObservable(valueAccessor());
+                var elementValue = ko.selectExtensions.readValue(element);
+
+                if (elementValueBeforeEvent !== null && newValue === elementValueBeforeEvent) {
+                    ko.utils.setTimeout(updateFromModel, 0);
+                    return;
+                }
+
+                var valueHasChanged = newValue !== elementValue;
+
+                if (valueHasChanged || elementValue === undefined) {
+                    if (tagName === "select") {
+                        var allowUnset = allBindings.get('valueAllowUnset');
+                        ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                        if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
+                            // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
+                            // because you're not allowed to have a model value that disagrees with a visible UI selection.
+                            ko.dependencyDetection.ignore(valueUpdateHandler);
+                        }
+                    } else {
+                        ko.selectExtensions.writeValue(element, newValue);
+                    }
+                }
+            };
+        }
 
         ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
     },

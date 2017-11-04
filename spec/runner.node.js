@@ -39,6 +39,7 @@ require('./mappingHelperBehaviors');
 require('./observableArrayBehaviors');
 require('./observableArrayChangeTrackingBehaviors');
 require('./observableBehaviors');
+require('./observableUtilsBehaviors');
 require('./subscribableBehaviors');
 require('./taskBehaviors');
 require('./utilsBehaviors');

@@ -100,6 +100,11 @@
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
     };
 
+    ko.utils.parseHtmlForTemplateNodes = function(html, documentContext) {
+        var nodes = ko.utils.parseHtmlFragment(html, documentContext);
+        return (nodes.length && nodes[0].parentElement) || ko.utils.moveCleanedNodesToContainerElement(nodes);
+    };
+
     ko.utils.setHtml = function(node, html) {
         ko.utils.emptyDomNode(node);
 
