@@ -583,4 +583,62 @@ describe('Binding attribute syntax', function() {
             expect(testNode).toContainHtml('<p>replaced</p><template>test</template><p>replaced</p>');
         });
     });
+
+    it('Should call a childrenComplete callback function after descendent elements are bound', function () {
+        var callbacks = 0,
+            callback = function (nodes, data) {
+                expect(nodes.length).toEqual(1);
+                expect(nodes[0]).toEqual(testNode.childNodes[0].childNodes[0]);
+                expect(data).toEqual(vm);
+                callbacks++;
+            },
+            vm = { callback: callback };
+
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'><span data-bind='text: \"Some Text\"'></span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
+    it('Should call a childrenComplete callback function when bound to a virtual element', function () {
+        var callbacks = 0,
+            callback = function (nodes, data) {
+                expect(nodes.length).toEqual(1);
+                expect(nodes[0]).toEqual(testNode.childNodes[1]);
+                expect(data).toEqual(vm);
+                callbacks++;
+            },
+            vm = { callback: callback };
+
+        testNode.innerHTML = "<!-- ko childrenComplete: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko -->";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
+    it('Should not call a childrenComplete callback function when there are no descendant nodes', function () {
+        var callbacks = 0;
+
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'></div>";
+        ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(0);
+    });
+
+    it('Should ignore (and not throw an error) for a null childrenComplete callback', function () {
+        testNode.innerHTML = "<div data-bind='childrenComplete: null'><span data-bind='text: \"Some Text\"'></span></div>";
+        ko.applyBindings({}, testNode);
+    });
+
+    it('Should call childrenComplete callback registered with ko.subscribeToBindingEvent', function () {
+        var callbacks = 0,
+            vm = {};
+
+        ko.subscribeToBindingEvent(testNode, "childrenComplete", function (node) {
+            callbacks++;
+            expect(node).toEqual(testNode);
+            expect(ko.dataFor(node)).toEqual(vm);
+        });
+
+        testNode.innerHTML = "<div></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
 });

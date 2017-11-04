@@ -651,6 +651,27 @@ describe('Components: Component binding', function() {
         expect(testNode).toContainText('Hello! Your param is 456 Goodbye.');
     });
 
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = '<div data-bind="component: testComponentBindingValue, childrenComplete: callback"></div>';
+        ko.components.register(testComponentName, { template: '<div data-bind="text: myvalue"></div>' });
+        testComponentParams.myvalue = 'some parameter value';
+
+        var callbacks = 0;
+        outerViewModel.callback = function (nodes, data) {
+            expect(nodes.length).toEqual(1);
+            expect(nodes[0]).toEqual(testNode.childNodes[0].childNodes[0]);
+            expect(data).toEqual(testComponentParams);
+            callbacks++;
+        };
+
+        ko.applyBindings(outerViewModel, testNode);
+        expect(callbacks).toEqual(0);
+
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainHtml('<div data-bind="text: myvalue">some parameter value</div>');
+        expect(callbacks).toEqual(1);
+    });
+
     describe('Does not automatically subscribe to any observables you evaluate during createViewModel or a viewmodel constructor', function() {
         // This clarifies that, if a developer wants to react when some observable parameter
         // changes, then it's their responsibility to subscribe to it or use a computed.

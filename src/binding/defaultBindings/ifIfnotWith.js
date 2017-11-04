@@ -10,27 +10,24 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
             ko.computed(function() {
                 var rawWithValue = isWith && ko.utils.unwrapObservable(valueAccessor()),
                     shouldDisplay = isWith ? !!rawWithValue : ifCondition(),
-                    isFirstRender = !savedNodes,
-                    renderNodes;
+                    isFirstRender = !savedNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
                 if (isFirstRender && ko.computedContext.getDependenciesCount()) {
-                    savedNodes = ko.utils.cloneNodes(renderNodes = ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
+                    savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
                 }
 
                 if (shouldDisplay) {
                     if (!isFirstRender) {
-                        ko.virtualElements.setDomNodeChildren(element, renderNodes = ko.utils.cloneNodes(savedNodes));
+                        ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
                     }
-                    var newContext = isWith ?
+                    ko.applyBindingsToDescendants(
+                        isWith ?
                             bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
-                                bindingContext;
-                    ko.applyBindingsToDescendants(newContext, element);
-                    if (allBindings.has('afterRender')) {
-                        ko.dependencyDetection.ignore(allBindings.get('afterRender'), null, [renderNodes || ko.virtualElements.childNodes(element), newContext['$data']]);
-                    }
+                                bindingContext,
+                        element);
                 } else {
                     ko.virtualElements.emptyNode(element);
                 }
