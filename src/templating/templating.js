@@ -110,7 +110,7 @@
                 ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
             }
             if (renderMode == "replaceChildren") {
-                ko.notifyBindingEvent(targetNodeOrNodeArray, ko.bindingEvent.childrenComplete);
+                ko.bindingEvent.notify(targetNodeOrNodeArray, ko.bindingEvent.childrenComplete);
             }
         }
 
@@ -209,7 +209,7 @@
             // Call setDomNodeChildrenFromArrayMapping, ignoring any observables unwrapped within (most likely from a callback function).
             // If the array items are observables, though, they will be unwrapped in executeTemplateForArrayItem and managed within setDomNodeChildrenFromArrayMapping.
             ko.dependencyDetection.ignore(ko.utils.setDomNodeChildrenFromArrayMapping, null, [targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback]);
-            ko.notifyBindingEvent(targetNode, ko.bindingEvent.childrenComplete);
+            ko.bindingEvent.notify(targetNode, ko.bindingEvent.childrenComplete);
         }, null, { disposeWhenNodeIsRemoved: targetNode });
     };
 

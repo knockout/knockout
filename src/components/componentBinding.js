@@ -1,63 +1,28 @@
 (function(undefined) {
     var componentLoadingOperationUniqueId = 0;
 
-    function ComponentDisplayDeferred(element, parentComponentDeferred, replacedDeferred) {
-        var subscribable = new ko.subscribable();
-        this.subscribable = subscribable;
-
-        this._componentsToComplete = 1;
-
-        this.componentComplete = function () {
-            if (subscribable && !--this._componentsToComplete) {
-                subscribable['notifySubscribers'](element);
-                subscribable = undefined;
-                if (parentComponentDeferred) {
-                    parentComponentDeferred.componentComplete();
-                }
-            }
-        };
-        this.dispose = function (shouldReject) {
-            if (subscribable) {
-                this._componentsToComplete = 0;
-                subscribable = undefined;
-                if (parentComponentDeferred) {
-                    parentComponentDeferred.componentComplete();
-                }
-            }
-        };
-
-        if (parentComponentDeferred) {
-            ++parentComponentDeferred._componentsToComplete;
-        }
-
-        if (replacedDeferred) {
-            replacedDeferred.dispose();
-        }
-    }
-
     ko.bindingHandlers['component'] = {
         'init': function(element, valueAccessor, ignored1, ignored2, bindingContext) {
             var currentViewModel,
                 currentLoadingOperationId,
-                displayedDeferred,
+                afterRenderSub,
                 disposeAssociatedComponentViewModel = function () {
                     var currentViewModelDispose = currentViewModel && currentViewModel['dispose'];
                     if (typeof currentViewModelDispose === 'function') {
                         currentViewModelDispose.call(currentViewModel);
                     }
+                    if (afterRenderSub) {
+                        afterRenderSub.dispose();
+                    }
+                    afterRenderSub = null;
                     currentViewModel = null;
                     // Any in-flight loading operation is no longer relevant, so make sure we ignore its completion
                     currentLoadingOperationId = null;
                 },
                 originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
-                disposeAssociatedComponentViewModel();
-                if (displayedDeferred) {
-                    displayedDeferred.dispose();
-                    displayedDeferred = null;
-                }
-            });
+            ko.virtualElements.emptyNode(element);
+            ko.utils.domNodeDisposal.addDisposeCallback(element, disposeAssociatedComponentViewModel);
 
             ko.computed(function () {
                 var value = ko.utils.unwrapObservable(valueAccessor()),
@@ -74,7 +39,7 @@
                     throw new Error('No component name specified');
                 }
 
-                displayedDeferred = new ComponentDisplayDeferred(element, bindingContext._componentDisplayDeferred, displayedDeferred);
+                var asyncContext = ko.bindingEvent.startPossiblyAsyncContentBinding(element);
 
                 var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
                 ko.components.get(componentName, function(componentDefinition) {
@@ -98,20 +63,17 @@
                     };
 
                     var componentViewModel = createViewModel(componentDefinition, componentParams, componentInfo),
-                        childBindingContext = bindingContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
+                        childBindingContext = asyncContext.createChildContext(componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
-                            ctx._componentDisplayDeferred = displayedDeferred;
                         });
 
                     if (componentViewModel && componentViewModel['afterRender']) {
-                        displayedDeferred.subscribable.subscribe(componentViewModel['afterRender']);
+                        afterRenderSub = ko.bindingEvent.subscribe(element, "descendantsComplete", componentViewModel['afterRender'], componentViewModel);
                     }
 
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
-
-                    displayedDeferred.componentComplete();
                 });
             }, null, { disposeWhenNodeIsRemoved: element });
 

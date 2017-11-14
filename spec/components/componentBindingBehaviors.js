@@ -322,6 +322,32 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
     });
 
+    it('afterRender waits for inner component to complete even if it is several layers down', function() {
+        this.after(function() {
+            ko.components.unregister('sub-component');
+        });
+
+        var renderedComponents = [];
+        ko.components.register(testComponentName, {
+            template: '<div data-bind="with: {}"><div data-bind="component: { name: \'sub-component\', params: 1 }"></div></div>',
+            viewModel: function() {
+                this.afterRender = function (element) { renderedComponents.push(testComponentName); };
+            }
+        });
+
+        ko.components.register('sub-component', {
+            template: '<span data-bind="text: myvalue"></span>',
+            viewModel: function(params) {
+                this.myvalue = params;
+                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+            }
+        });
+
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+        expect(renderedComponents).toEqual([ 'sub-component1', 'test-component' ]);
+    });
+
     it('afterRender waits for inner components that are not yet loaded', function() {
         this.restoreAfter(window, 'require');
         this.after(function() {

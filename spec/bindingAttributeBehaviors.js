@@ -236,6 +236,7 @@ describe('Binding attribute syntax', function() {
         var allowedProperties = ['$parents', '$root', 'ko', '$rawData', '$data', '$parentContext', '$parent'];
         if (ko.utils.createSymbolOrString('') === '') {
             allowedProperties.push('_subscribable');
+            allowedProperties.push('_ancestorAsyncContext');
         }
         ko.utils.objectForEach(ko.contextFor(testNode.childNodes[0].childNodes[0]), function (prop) {
             expect(allowedProperties).toContain(prop);
@@ -584,7 +585,7 @@ describe('Binding attribute syntax', function() {
         });
     });
 
-    it('Should call a childrenComplete callback function after descendent elements are bound', function () {
+    it('Should call a childrenComplete callback function after descendant elements are bound', function () {
         var callbacks = 0,
             callback = function (nodes, data) {
                 expect(nodes.length).toEqual(1);
@@ -627,11 +628,11 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings({}, testNode);
     });
 
-    it('Should call childrenComplete callback registered with ko.subscribeToBindingEvent', function () {
+    it('Should call childrenComplete callback registered with ko.bindingEvent.subscribe', function () {
         var callbacks = 0,
             vm = {};
 
-        ko.subscribeToBindingEvent(testNode, "childrenComplete", function (node) {
+        ko.bindingEvent.subscribe(testNode, "childrenComplete", function (node) {
             callbacks++;
             expect(node).toEqual(testNode);
             expect(ko.dataFor(node)).toEqual(vm);
