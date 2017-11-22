@@ -213,13 +213,13 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
-    it('Calls an afterRender function on the component viewmodel after the component is rendered', function() {
+    it('Calls an koDescendantsComplete function on the component viewmodel after the component is rendered', function() {
         var renderedCount = 0;
         ko.components.register(testComponentName, {
             template: '<div data-bind="text: myvalue"></div>',
             viewModel: function() {
                 this.myvalue = 123;
-                this.afterRender = function (element) {
+                this.koDescendantsComplete = function (element) {
                     expect(element).toBe(testNode.childNodes[0]);
                     expect(element).toContainHtml('<div data-bind="text: myvalue">123</div>');
                     renderedCount++;
@@ -234,7 +234,7 @@ describe('Components: Component binding', function() {
         expect(renderedCount).toBe(1);
     });
 
-    it('Inner components\' afterRender occurs before the outer component\'s', function() {
+    it('Inner components\' koDescendantsComplete occurs before the outer component\'s', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -243,7 +243,7 @@ describe('Components: Component binding', function() {
         ko.components.register(testComponentName, {
             template: 'x<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>x',
             viewModel: function() {
-                this.afterRender = function (element) {
+                this.koDescendantsComplete = function (element) {
                     expect(element).toContainText('x12x', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
                     renderedComponents.push(testComponentName);
                 };
@@ -254,7 +254,7 @@ describe('Components: Component binding', function() {
             template: '<span data-bind="text: myvalue"></span>',
             viewModel: function(params) {
                 this.myvalue = params;
-                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+                this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); };
             }
         });
 
@@ -265,7 +265,7 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
     });
 
-    it('afterRender occurs after all inner components even if outer component is rendered synchronously', function() {
+    it('koDescendantsComplete occurs after all inner components even if outer component is rendered synchronously', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -275,7 +275,7 @@ describe('Components: Component binding', function() {
             synchronous: true,
             template: 'x<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>x',
             viewModel: function() {
-                this.afterRender = function (element) {
+                this.koDescendantsComplete = function (element) {
                     expect(element).toBe(testNode.childNodes[0]);
                     expect(element).toContainText('x12x', /* ignoreSpaces */ true);
                     renderedComponents.push(testComponentName);
@@ -287,7 +287,7 @@ describe('Components: Component binding', function() {
             template: '<span data-bind="text: myvalue"></span>',
             viewModel: function(params) {
                 this.myvalue = params;
-                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+                this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); };
             }
         });
 
@@ -300,7 +300,7 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainText('x12x', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
-    it('When all components are rendered synchronously, inner components\' afterRender occurs before the outer component\'s', function() {
+    it('When all components are rendered synchronously, inner components\' koDescendantsComplete occurs before the outer component\'s', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -309,20 +309,20 @@ describe('Components: Component binding', function() {
         ko.components.register(testComponentName, {
             synchronous: true,
             template: '<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>',
-            viewModel: function() { this.afterRender = function () { renderedComponents.push(testComponentName); }; }
+            viewModel: function() { this.koDescendantsComplete = function () { renderedComponents.push(testComponentName); }; }
         });
 
         ko.components.register('sub-component', {
             synchronous: true,
             template: '<span></span>',
-            viewModel: function(params) { this.afterRender = function () { renderedComponents.push('sub-component' + params); }; }
+            viewModel: function(params) { this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); }; }
         });
 
         ko.applyBindings(outerViewModel, testNode);
         expect(renderedComponents).toEqual([ 'sub-component1', 'sub-component2', 'test-component' ]);
     });
 
-    it('afterRender waits for inner component to complete even if it is several layers down', function() {
+    it('koDescendantsComplete waits for inner component to complete even if it is several layers down', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -331,7 +331,7 @@ describe('Components: Component binding', function() {
         ko.components.register(testComponentName, {
             template: '<div data-bind="with: {}"><div data-bind="component: { name: \'sub-component\', params: 1 }"></div></div>',
             viewModel: function() {
-                this.afterRender = function (element) { renderedComponents.push(testComponentName); };
+                this.koDescendantsComplete = function (element) { renderedComponents.push(testComponentName); };
             }
         });
 
@@ -339,7 +339,7 @@ describe('Components: Component binding', function() {
             template: '<span data-bind="text: myvalue"></span>',
             viewModel: function(params) {
                 this.myvalue = params;
-                this.afterRender = function () { renderedComponents.push('sub-component' + params); };
+                this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); };
             }
         });
 
@@ -348,7 +348,7 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'test-component' ]);
     });
 
-    it('afterRender waits for inner components that are not yet loaded', function() {
+    it('koDescendantsComplete waits for inner components that are not yet loaded', function() {
         this.restoreAfter(window, 'require');
         this.after(function() {
             ko.components.unregister('sub-component');
@@ -369,12 +369,12 @@ describe('Components: Component binding', function() {
 
         ko.components.register(testComponentName, {
             template: '<div data-bind="component: { name: \'sub-component\', params: 1 }"></div><div data-bind="component: { name: \'sub-component\', params: 2 }"></div>',
-            viewModel: function() { this.afterRender = function () { renderedComponents.push(testComponentName); }; }
+            viewModel: function() { this.koDescendantsComplete = function () { renderedComponents.push(testComponentName); }; }
         });
 
         ko.components.register('sub-component', {
             template: { require: templateRequirePath },
-            viewModel: function(params) { this.afterRender = function () { renderedComponents.push('sub-component' + params); }; }
+            viewModel: function(params) { this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); }; }
         });
 
         ko.applyBindings(outerViewModel, testNode);
@@ -439,8 +439,8 @@ describe('Components: Component binding', function() {
         });
 
         var renderedComponents = [];
-        function alphaViewModel(params) { this.alphaValue = params.suppliedValue; this.afterRender = function () { renderedComponents.push('alpha'); }; }
-        function betaViewModel(params)  { this.betaValue  = params.suppliedValue; this.afterRender = function () { renderedComponents.push('beta'); }; }
+        function alphaViewModel(params) { this.alphaValue = params.suppliedValue; this.koDescendantsComplete = function () { renderedComponents.push('alpha'); }; }
+        function betaViewModel(params)  { this.betaValue  = params.suppliedValue; this.koDescendantsComplete = function () { renderedComponents.push('beta'); }; }
 
         alphaViewModel.prototype.dispose = function() {
             expect(arguments.length).toBe(0);
@@ -588,7 +588,7 @@ describe('Components: Component binding', function() {
             this.wasDisposed = true;
         }
         var renderedCount = 0;
-        testViewModel.prototype.afterRender = function () {
+        testViewModel.prototype.koDescendantsComplete = function () {
             renderedCount++;
         }
 
@@ -859,7 +859,7 @@ describe('Components: Component binding', function() {
         expect(callbacks).toEqual(1);
     });
 
-    it('Does not call outer component\'s afterRender function if an inner component is re-rendered', function() {
+    it('Does not call outer component\'s koDescendantsComplete function if an inner component is re-rendered', function() {
         this.after(function() {
             ko.components.unregister('sub-component');
         });
@@ -868,12 +868,12 @@ describe('Components: Component binding', function() {
         var observable = ko.observable(1);
         ko.components.register(testComponentName, {
             template: '<div data-bind="component: { name: \'sub-component\', params: $root.observable }"></div>',
-            viewModel: function() { this.afterRender = function () { renderedComponents.push(testComponentName); }; }
+            viewModel: function() { this.koDescendantsComplete = function () { renderedComponents.push(testComponentName); }; }
         });
 
         ko.components.register('sub-component', {
             template: '<span></span>',
-            viewModel: function(params) { this.afterRender = function () { renderedComponents.push('sub-component' + params); }; }
+            viewModel: function(params) { this.koDescendantsComplete = function () { renderedComponents.push('sub-component' + params); }; }
         });
 
         outerViewModel.observable = observable;

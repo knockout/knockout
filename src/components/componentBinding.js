@@ -68,8 +68,8 @@
                             ctx['$componentTemplateNodes'] = originalChildNodes;
                         });
 
-                    if (componentViewModel && componentViewModel['afterRender']) {
-                        afterRenderSub = ko.bindingEvent.subscribe(element, "descendantsComplete", componentViewModel['afterRender'], componentViewModel);
+                    if (componentViewModel && componentViewModel['koDescendantsComplete']) {
+                        afterRenderSub = ko.bindingEvent.subscribe(element, "descendantsComplete", componentViewModel['koDescendantsComplete'], componentViewModel);
                     }
 
                     currentViewModel = componentViewModel;

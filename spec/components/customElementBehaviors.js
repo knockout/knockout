@@ -509,9 +509,9 @@ describe('Components: Custom elements', function() {
         );
     });
 
-    it('Should call an afterRender callback function', function () {
+    it('Should call an childrenComplete callback function', function () {
         ko.components.register('test-component', { template: 'custom element'});
-        testNode.innerHTML = '<test-component data-bind="afterRender: callback"></test-component>';
+        testNode.innerHTML = '<test-component data-bind="childrenComplete: callback"></test-component>';
 
         var callbacks = 0,
             viewModel = {
@@ -526,6 +526,7 @@ describe('Components: Custom elements', function() {
         expect(callbacks).toEqual(0);
 
         jasmine.Clock.tick(1);
-        expect(testNode).toContainHtml('<test-component data-bind="afterrender: callback">custom element</test-component>');
+        expect(callbacks).toEqual(1);
+        expect(testNode).toContainHtml('<test-component data-bind="childrencomplete: callback">custom element</test-component>');
     });
 });
