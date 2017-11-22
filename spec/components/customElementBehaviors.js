@@ -509,7 +509,7 @@ describe('Components: Custom elements', function() {
         );
     });
 
-    it('Should call an childrenComplete callback function', function () {
+    it('Should call a childrenComplete callback function', function () {
         ko.components.register('test-component', { template: 'custom element'});
         testNode.innerHTML = '<test-component data-bind="childrenComplete: callback"></test-component>';
 

@@ -239,7 +239,7 @@
                     if (bindingInfo.asyncContext) {
                         bindingInfo.asyncContext.completeChildren();
                     } else if (bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
-                        throw new Error("descendantsComplete event not supported for this node");
+                        throw new Error("descendantsComplete event not supported for bindings on this node");
                     }
                 }
             }

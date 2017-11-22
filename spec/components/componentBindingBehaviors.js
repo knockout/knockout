@@ -213,7 +213,7 @@ describe('Components: Component binding', function() {
         expect(testNode.childNodes[0]).toContainText('In child context 123, inside component with property 456. Now in sub-component with property 789.', /* ignoreSpaces */ true); // Ignore spaces because old-IE is inconsistent
     });
 
-    it('Calls an koDescendantsComplete function on the component viewmodel after the component is rendered', function() {
+    it('Calls a koDescendantsComplete function on the component viewmodel after the component is rendered', function() {
         var renderedCount = 0;
         ko.components.register(testComponentName, {
             template: '<div data-bind="text: myvalue"></div>',
