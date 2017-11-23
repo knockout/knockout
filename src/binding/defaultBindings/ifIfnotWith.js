@@ -23,7 +23,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                     }
                     ko.applyBindingsToDescendants(
                         isWith ?
-                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor) :
+                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, allBindings.get('as')) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext,
