@@ -1,6 +1,7 @@
 (function () {
     // Hide or don't minify context properties, see https://github.com/knockout/knockout/issues/2294
     var contextSubscribable = ko.utils.createSymbolOrString('_subscribable');
+    var contextAncestorBindingInfo = ko.utils.createSymbolOrString('_ancestorBindingInfo');
 
     ko.bindingHandlers = {};
 
@@ -16,7 +17,7 @@
         'template': true
     };
 
-    // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
+    // Use an overridable method for retrieving binding handlers so that plugins may support dynamically created handlers
     ko['getBindingHandler'] = function(bindingKey) {
         return ko.bindingHandlers[bindingKey];
     };
@@ -46,6 +47,11 @@
 
                 // Copy $root and any custom properties from the parent context
                 ko.utils.extend(self, parentContext);
+
+                // Copy Symbol properties
+                if (contextAncestorBindingInfo in parentContext) {
+                    self[contextAncestorBindingInfo] = parentContext[contextAncestorBindingInfo];
+                }
 
                 // Because the above copy overwrites our own properties, we need to reset them.
                 self[contextSubscribable] = subscribable;
@@ -158,26 +164,93 @@
         return this['createChildContext'](dataItemOrAccessor, dataItemAlias, null, { "exportDependencies": true });
     };
 
-    var bindingEventsDomDataKey = ko.utils.domData.nextKey();
+    var boundElementDomDataKey = ko.utils.domData.nextKey();
 
-    ko.subscribeToBindingEvent = function (node, event, callback) {
-        var eventSubscribable = ko.utils.domData.get(node, bindingEventsDomDataKey);
-        if (!eventSubscribable) {
-            ko.utils.domData.set(node, bindingEventsDomDataKey, eventSubscribable = new ko.subscribable);
+    function asyncContextDispose(node) {
+        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey),
+            asyncContext = bindingInfo && bindingInfo.asyncContext;
+        if (asyncContext) {
+            bindingInfo.asyncContext = undefined;
+            asyncContext.notifyAncestor();
         }
-        return eventSubscribable.subscribe(callback, null, event);
+    }
+    function AsyncCompleteContext(node, bindingInfo, ancestorBindingInfo) {
+        this.node = node;
+        this.bindingInfo = bindingInfo;
+        this.asyncDescendants = [];
+        this.childrenComplete = false;
+
+        if (!bindingInfo.asyncContext) {
+            ko.utils.domNodeDisposal.addDisposeCallback(node, asyncContextDispose);
+        }
+
+        if (ancestorBindingInfo && ancestorBindingInfo.asyncContext) {
+            ancestorBindingInfo.asyncContext.asyncDescendants.push(node);
+            this.ancestorBindingInfo = ancestorBindingInfo;
+        }
+    }
+    AsyncCompleteContext.prototype.notifyAncestor = function () {
+        if (this.ancestorBindingInfo && this.ancestorBindingInfo.asyncContext) {
+            this.ancestorBindingInfo.asyncContext.descendantComplete(this.node);
+        }
     };
-
-    ko.notifyBindingEvent = function (node, event) {
-        var eventSubscribable = ko.utils.domData.get(node, bindingEventsDomDataKey);
-        if (eventSubscribable) {
-            eventSubscribable['notifySubscribers'](node, event);
+    AsyncCompleteContext.prototype.descendantComplete = function (node) {
+        ko.utils.arrayRemoveItem(this.asyncDescendants, node);
+        if (!this.asyncDescendants.length && this.childrenComplete) {
+            this.completeChildren();
         }
+    };
+    AsyncCompleteContext.prototype.completeChildren = function () {
+        this.childrenComplete = true;
+        if (this.bindingInfo.asyncContext && !this.asyncDescendants.length) {
+            this.bindingInfo.asyncContext = undefined;
+            ko.utils.domNodeDisposal.removeDisposeCallback(this.node, asyncContextDispose);
+            ko.bindingEvent.notify(this.node, ko.bindingEvent.descendantsComplete);
+            this.notifyAncestor();
+        }
+    };
+    AsyncCompleteContext.prototype.createChildContext = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
+        var self = this;
+        return this.bindingInfo.context['createChildContext'](dataItemOrAccessor, dataItemAlias, function (ctx) {
+            extendCallback(ctx);
+            ctx[contextAncestorBindingInfo] = self.bindingInfo;
+        }, options);
     };
 
     ko.bindingEvent = {
         childrenComplete: "childrenComplete",
-        descendentsComplete : "descendentsComplete"
+        descendantsComplete : "descendantsComplete",
+
+        subscribe: function (node, event, callback, context) {
+            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+            if (!bindingInfo.eventSubscribable) {
+                bindingInfo.eventSubscribable = new ko.subscribable;
+            }
+            return bindingInfo.eventSubscribable.subscribe(callback, context, event);
+        },
+
+        notify: function (node, event) {
+            var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
+            if (bindingInfo) {
+                if (bindingInfo.eventSubscribable) {
+                    bindingInfo.eventSubscribable['notifySubscribers'](node, event);
+                }
+                if (event == ko.bindingEvent.childrenComplete) {
+                    if (bindingInfo.asyncContext) {
+                        bindingInfo.asyncContext.completeChildren();
+                    } else if (bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
+                        throw new Error("descendantsComplete event not supported for bindings on this node");
+                    }
+                }
+            }
+        },
+
+        startPossiblyAsyncContentBinding: function (node) {
+            var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
+            if (bindingInfo) {
+                return bindingInfo.asyncContext || (bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingInfo.context[contextAncestorBindingInfo]));
+            }
+        }
     };
 
     // Returns the valueAccessor function for a binding value
@@ -255,9 +328,7 @@
                 bindingApplied = true;
             }
 
-            if (bindingApplied) {
-                ko.notifyBindingEvent(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
-            }
+            ko.bindingEvent.notify(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
         }
     }
 
@@ -279,8 +350,6 @@
             applyBindingsToDescendantsInternal(bindingContext, nodeVerified);
         }
     }
-
-    var boundElementDomDataKey = ko.utils.domData.nextKey();
 
     function topologicalSortBindings(bindings) {
         // Depth-first sort
@@ -317,15 +386,16 @@
 
     function applyBindingsToNodeInternal(node, sourceBindings, bindingContext) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
-        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
-            if (bindingInfo) {
+            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+            if (bindingInfo.context) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
 
-            ko.utils.domData.set(node, boundElementDomDataKey, {context: bindingContext});
-            if (bindingContext[contextSubscribable])
+            bindingInfo.context = bindingContext;
+            if (bindingContext[contextSubscribable]) {
                 bindingContext[contextSubscribable]._addNode(node);
+            }
         }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
@@ -380,7 +450,7 @@
             };
 
             if (ko.bindingEvent.childrenComplete in bindings) {
-                ko.subscribeToBindingEvent(node, ko.bindingEvent.childrenComplete, function () {
+                ko.bindingEvent.subscribe(node, ko.bindingEvent.childrenComplete, function () {
                     var callback = evaluateValueAccessor(bindings[ko.bindingEvent.childrenComplete]);
                     if (callback) {
                         var nodes = ko.virtualElements.childNodes(node);
@@ -503,8 +573,8 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
-    ko.exportSymbol('subscribeToBindingEvent', ko.subscribeToBindingEvent);
-    ko.exportSymbol('notifyBindingEvent', ko.notifyBindingEvent);
+    ko.exportSymbol('bindingEvent', ko.bindingEvent);
+    ko.exportSymbol('bindingEvent.subscribe', ko.bindingEvent.subscribe);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);

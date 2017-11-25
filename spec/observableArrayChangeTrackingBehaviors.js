@@ -373,7 +373,7 @@ describe('Observable Array change tracking', function() {
         };
         var list = ko.observableArray([]);
 
-        // This adds all descendent nodes to the list when a node is added
+        // This adds all descendant nodes to the list when a node is added
         list.subscribe(function (events) {
             events = events.slice(0);
             for (var i = 0; i < events.length; i++) {
@@ -388,7 +388,7 @@ describe('Observable Array change tracking', function() {
 
         // Add the top-level node
         list.push(toAdd);
-        // See that descendent nodes are also added
+        // See that descendant nodes are also added
         expect(list()).toEqual([ toAdd, toAdd.nodes[0], toAdd.nodes[1], toAdd.nodes[2], toAdd.nodes[0].nodes[0] ]);
     });
 
