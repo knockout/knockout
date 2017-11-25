@@ -540,7 +540,7 @@ describe('Binding: Foreach', function() {
 
     it('Should be able to give an alias to $data using \"as\", and use it within a nested loop', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<span data-bind='foreach: sub'>"
+                           +    "<span data-bind='foreach: item.sub'>"
                            +        "<span data-bind='text: item.name+\":\"+$data'></span>,"
                            +    "</span>"
                            + "</div>";
@@ -551,7 +551,7 @@ describe('Binding: Foreach', function() {
 
     it('Should be able to set up multiple nested levels of aliases using \"as\"', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<span data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
+                           +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
                            +        "<span data-bind='text: item.name+\":\"+subvalue'></span>,"
                            +    "</span>"
                            + "</div>";
@@ -600,7 +600,7 @@ describe('Binding: Foreach', function() {
         }
     });
 
-    it('Should provide access to observable array items through $rawData', function() {
+    it('Should provide access to observable items through $rawData', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><input data-bind='value: $rawData'/></div>";
         var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -620,7 +620,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toHaveValues(['third']);
     });
 
-    it('Should not re-render the nodes when a observable array item changes', function() {
+    it('Should not re-render the nodes when an observable item changes', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
         var x = ko.observable('first'), someItems = [ x ];
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -676,5 +676,59 @@ describe('Binding: Foreach', function() {
         jasmine.Clock.tick(1);
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Mars++--Jupiter++--Saturn++');
 
+    });
+
+    describe('With \"noChildContextWithAs\" and \"as\"', function () {
+        beforeEach(function() {
+            this.restoreAfter(ko.options, 'noChildContextWithAs');
+            ko.options.noChildContextWithAs = true;
+        });
+
+        it('Should not create a child context', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            var someItems = ['alpha', 'beta'];
+            ko.applyBindings({ someItems: someItems }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('alpha');
+            expect(testNode.childNodes[0].childNodes[1]).toContainText('beta');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(ko.dataFor(testNode));
+        });
+
+        it('Should provide access to observable items', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><input data-bind='value: item'/></div>";
+            var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['first', 'second']);
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(ko.dataFor(testNode));
+
+            // Should update observable when input is changed
+            testNode.childNodes[0].childNodes[0].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(x()).toEqual('third');
+
+            // Should update the input when the observable changes
+            y('fourth');
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'fourth']);
+
+            // Should update the inputs when the array changes
+            someItems([x]);
+            expect(testNode.childNodes[0]).toHaveValues(['third']);
+        });
+
+        it('Should not re-render the nodes when an observable item changes', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            var x = ko.observable('first'), someItems = [ x ];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            x('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
     });
 });
