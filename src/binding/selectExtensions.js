@@ -23,22 +23,20 @@
         writeValue: function(element, value, allowUnset) {
             switch (ko.utils.tagNameLower(element)) {
                 case 'option':
-                    switch(typeof value) {
-                        case "string":
-                            ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
-                            if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
-                                delete element[hasDomDataExpandoProperty];
-                            }
-                            element.value = value;
-                            break;
-                        default:
-                            // Store arbitrary object using DomData
-                            ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
-                            element[hasDomDataExpandoProperty] = true;
+                    if (typeof value === "string") {
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, undefined);
+                        if (hasDomDataExpandoProperty in element) { // IE <= 8 throws errors if you delete non-existent properties from a DOM node
+                            delete element[hasDomDataExpandoProperty];
+                        }
+                        element.value = value;
+                    }
+                    else {
+                        // Store arbitrary object using DomData
+                        ko.utils.domData.set(element, ko.bindingHandlers.options.optionValueDomDataKey, value);
+                        element[hasDomDataExpandoProperty] = true;
 
-                            // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
-                            element.value = typeof value === "number" ? value : "";
-                            break;
+                        // Special treatment of numbers is just for backward compatibility. KO 1.2.1 wrote numerical values to element.value.
+                        element.value = typeof value === "number" ? value : "";
                     }
                     break;
                 case 'select':
