@@ -38,11 +38,15 @@ ko.utils.domNodeDisposal = new (function () {
     }
 
     function cleanImmediateCommentTypeChildren(nodeWithChildren) {
-        var child, nextChild = nodeWithChildren.firstChild;
-        while (child = nextChild) {
-            nextChild = child.nextSibling;
-            if (child.nodeType === 8)
-                cleanSingleNode(child);
+        var children = nodeWithChildren.childNodes;
+        var cleanedNode;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].nodeType === 8) {
+                cleanSingleNode(cleanedNode = children[i]);
+                if (children[i] !== cleanedNode) {
+                    throw Error("ko.cleanNode: An already cleaned node was removed from the document");
+                }
+            }
         }
     }
 

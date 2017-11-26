@@ -67,6 +67,30 @@ describe('DOM node disposal', function() {
         expect(grandChildSpy).not.toHaveBeenCalled();
     });
 
+    it('Should not clean nodes that are removed by a comment dispose handler', function() {
+        var childNode = document.createComment("ko comment");
+        var grandChildNode = document.createElement("DIV");
+        var childNode2 = document.createComment("ko comment");
+        var childSpy = jasmine.createSpy('childSpy')
+            .andCallFake(function() {
+                testNode.removeChild(grandChildNode);
+            });
+        var grandChildSpy = jasmine.createSpy('grandChildSpy');
+        var child2Spy = jasmine.createSpy('child2Spy');
+
+        testNode.appendChild(childNode);
+        testNode.appendChild(grandChildNode);
+        testNode.appendChild(childNode2);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, childSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(grandChildNode, grandChildSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, child2Spy);
+
+        ko.cleanNode(testNode);
+        expect(childSpy).toHaveBeenCalledWith(childNode);
+        expect(grandChildSpy).not.toHaveBeenCalled();
+        expect(child2Spy).toHaveBeenCalledWith(childNode2);
+    });
+
     it('Should throw an error if a cleaned node is removed in a handler', function() {
         // Test by removing the node itself
         var childNode = document.createElement("DIV");
@@ -81,6 +105,14 @@ describe('DOM node disposal', function() {
         testNode.appendChild(childNode);
         testNode.appendChild(childNode2);
         ko.utils.domNodeDisposal.addDisposeCallback(childNode2, function() {
+            testNode.removeChild(childNode);
+        });
+        expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
+
+        // Test by removing a comment node
+        var childNode = document.createComment("ko comment");
+        testNode.appendChild(childNode);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, function() {
             testNode.removeChild(childNode);
         });
         expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
