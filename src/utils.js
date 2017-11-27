@@ -102,32 +102,38 @@ ko.utils = (function () {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
         arrayForEach: function (array, action, actionOwner) {
-            if (array && typeof array.forEach == 'function') {
-                array.forEach(action, actionOwner);
-            } else {
-                for (var i = 0, j = array.length; i < j; i++) {
-                    action.call(actionOwner, array[i], i, array);
+            if (array) {
+                if (typeof array.forEach == 'function') {
+                    array.forEach(action, actionOwner);
+                } else {
+                    for (var i = 0, j = array.length; i < j; i++) {
+                        action.call(actionOwner, array[i], i, array);
+                    }
                 }
             }
         },
 
         arrayIndexOf: function (array, item) {
-            if (array && typeof array.indexOf == 'function') {
-                return array.indexOf(item);
+            if (array) {
+                if (typeof array.indexOf == 'function') {
+                    return array.indexOf(item);
+                }
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (array[i] === item)
+                        return i;
             }
-            for (var i = 0, j = array.length; i < j; i++)
-                if (array[i] === item)
-                    return i;
             return -1;
         },
 
         arrayFirst: function (array, predicate, predicateOwner) {
-            if (array && typeof array.find == 'function') {
-                return array.find(predicate, predicateOwner);
+            if (array) {
+                if (typeof array.find == 'function') {
+                    return array.find(predicate, predicateOwner);
+                }
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (predicate.call(predicateOwner, array[i], i, array))
+                        return array[i];
             }
-            for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i], i, array))
-                    return array[i];
             return undefined;
         },
 
@@ -142,13 +148,13 @@ ko.utils = (function () {
         },
 
         arrayGetDistinctValues: function (array) {
-            array = array || [];
             var result = [];
-            ko.utils.arrayForEach(array, function(item) {
-                if (ko.utils.arrayIndexOf(result, item) < 0)
-                    result.push(item);
-            });
-
+            if (array) {
+                ko.utils.arrayForEach(array, function(item) {
+                    if (ko.utils.arrayIndexOf(result, item) < 0)
+                        result.push(item);
+                });
+            }
             return result;
         },
 
@@ -156,10 +162,11 @@ ko.utils = (function () {
             if (array && typeof array.map == 'function') {
                 return array.map(mapping, mappingOwner);
             }
-            array = array || [];
             var result = [];
-            for (var i = 0, j = array.length; i < j; i++)
-                result.push(mapping.call(mappingOwner, array[i], i));
+            if (array) {
+                for (var i = 0, j = array.length; i < j; i++)
+                    result.push(mapping.call(mappingOwner, array[i], i));
+            }
             return result;
         },
 
@@ -167,11 +174,12 @@ ko.utils = (function () {
             if (array && typeof array.filter == 'function') {
                 return array.filter(predicate, predicateOwner);
             }
-            array = array || [];
             var result = [];
-            for (var i = 0, j = array.length; i < j; i++)
-                if (predicate.call(predicateOwner, array[i], i))
-                    result.push(array[i]);
+            if (array) {
+                for (var i = 0, j = array.length; i < j; i++)
+                    if (predicate.call(predicateOwner, array[i], i))
+                        result.push(array[i]);
+            }
             return result;
         },
 
