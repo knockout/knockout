@@ -88,7 +88,7 @@ describe('Native template engine', function() {
 
         it('with no content should be rejected', function () {
             testNode.innerHTML = "<div data-bind='template: { data: someItem }'></div>"
-    
+
             var viewModel = {
                 someItem: { val: 'abc' }
             };
@@ -96,7 +96,7 @@ describe('Native template engine', function() {
                 ko.applyBindings(viewModel, testNode);
             }).toThrowContaining("no template content");
         });
-    
+
         it('work in conjunction with foreach', function() {
             testNode.innerHTML = "<div data-bind='template: { foreach: myItems }'><b>Item: <span data-bind='text: itemProp'></span></b></div>";
             var myItems = ko.observableArray([{ itemProp: 'Alpha' }, { itemProp: 'Beta' }, { itemProp: 'Gamma' }]);
