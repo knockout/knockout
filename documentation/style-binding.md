@@ -30,24 +30,30 @@ This will set the element's `style.color` property to `red` whenever the `curren
  
     You can set multiple style values at once. For example, if your view model has a property called `isSevere`,
    
-    `<div data-bind="style: { color: currentProfit() < 0 ? 'red' : 'black', fontWeight: isSevere() ? 'bold' : '' }">...</div>`
+    `<div data-bind="style: { color: currentProfit() < 0 ? 'red' : 'black', 'font-weight': isSevere() ? 'bold' : '' }">...</div>`
    
     If your parameter references an observable value, the binding will update the styles whenever the observable value changes. If the parameter doesn't reference an observable value, it will only set the styles once and will not update them later.
    
-    As usual, you can use arbitrary JavaScript expressions or functions as parameter values. KO will evaluate them and use the resulting values to detemine the style values to apply.
+    As usual, you can use arbitrary JavaScript expressions or functions as parameter values. Knockout will evaluate them and use the resulting values to detemine the style values to apply.
    
   * Additional parameters 
 
       * None
 
-### Note: Applying styles whose names aren't legal JavaScript variable names
+### Note 1: Applying styles whose names aren't legal JavaScript variable names
 
-If you want to apply a `font-weight` or `text-decoration` style, or any other style whose name isn't a legal JavaScript identifier (e.g., because it contains a hyphen), you must use the *JavaScript name* for that style. For example,
+If you want to apply a style whose name isn't a legal JavaScript identifier (e.g., because it contains a hyphen), you can either put it in quotes or use the JavaScript name for that style. For example,
 
-* Don't write `{ font-weight: someValue }`; do write `{ fontWeight: someValue }`
-* Don't write `{ text-decoration: someValue }`; do write `{ textDecoration: someValue }`
+* Either `{ 'font-weight': someValue }` or `{ fontWeight: someValue }`
+* Either `{ 'text-decoration': someValue }` or `{ textDecoration: someValue }`
 
-See also: [a longer list of style names and their JavaScript equivalents](http://www.comptechdoc.org/independent/web/cgi/javamanual/javastyle.html)
+### Note 2: Setting styles which require a unit
+
+If you apply a simple numeric value to a style that requires a unit, Knockout will append `px` to the value before setting the style. For example, `style: { width: 100 }` will set the `width` to `100px`.
+
+### Note 3: Enhanced functionality when jQuery is present
+
+Knockout will use jQuery's [`css`](http://api.jquery.com/css/) function to set the styles, if available. This lets you take advantage of the extra compatibility features of jQuery, such as setting browser-specific prefixes.
 
 ### Dependencies
 
