@@ -115,7 +115,7 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 
     <td data-bind="text: $data.firstName"></td>
 
-... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway.
+... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway. If the items in the array are observables, `$data` will refer to the value of each observable. To refer to the observable itself, use `$rawData`.
 
 ### Note 2: Using $index, $parent, and other context properties
 
@@ -138,7 +138,7 @@ As described in Note 1, you can refer to each array entry using the `$data` [con
 
     <ul data-bind="foreach: { data: people, as: 'person' }"></ul>
 
-Now anywhere inside this `foreach` loop, bindings will be able to refer to `person` to access the current array item, from the `people` array, that is being rendered. This can be especially useful in scenarios where you have nested `foreach` blocks and you need to refer to an item declared at a higher level in the hierarchy. For example:
+Now anywhere inside this `foreach` loop, bindings will be able to refer to `person` to access the current array item that is being rendered from the `people` array. This can be especially useful in scenarios where you have nested `foreach` blocks and you need to refer to an item declared at a higher level in the hierarchy. For example:
 
     <ul data-bind="foreach: { data: categories, as: 'category' }">
         <li>
@@ -163,6 +163,24 @@ Now anywhere inside this `foreach` loop, bindings will be able to refer to `pers
 
 Tip: Remember to pass a *string literal value* to `as` (e.g., `as: 'category'`, *not* `as: category`), because you are giving a name for a new variable, not reading the value of a variable that already exists.
 
+#### Using "as" without creating a child context
+
+The default behavior of the `as` option is to add a name for the current item while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on in the current version, set the following option before binding:
+
+* `ko.options.noChildContextWithAs = true;`
+
+When this global option is turned on, all access to the array items when using `as` must be through the given name. For example:
+
+    <ul data-bind="foreach: { data: categories, as: 'category' }">
+        <li>
+            <ul data-bind="foreach: { data: category.items, as: 'item' }">
+                <li>
+                    <span data-bind="text: category.name"></span>:
+                    <span data-bind="text: item"></span>
+                </li>
+            </ul>
+        </li>
+    </ul>
 
 ### Note 4: Using foreach without a container element
 
