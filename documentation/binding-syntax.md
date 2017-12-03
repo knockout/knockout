@@ -28,8 +28,8 @@ The binding *value* can be a single [value, variable, or literal](https://develo
     <!-- variable (usually a property of the current view model -->
     <div data-bind="visible: shouldShowMessage">...</div>
 
-    <!-- comparison and conditional -->
-    The item is <span data-bind="text: price() > 50 ? 'expensive' : 'cheap'"></span>.
+    <!-- comparison and conditional, template literals -->
+    The item is <span data-bind="text: price() > 50 ? `expensive` : `cheap`"></span>.
 
     <!-- function call and comparison -->
     <button data-bind="enable: parseAreaCode(cellphoneNumber()) != '555'">...</button>
@@ -57,6 +57,17 @@ Bindings can include any amount of *whitespace* (spaces, tab, and newlines), so 
         options: availableCountries,
         optionsText: 'countryName',
         value: selectedCountry,
+        optionsCaption: 'Choose...'"></select>
+
+#### Comments
+
+Bindings can include JavaScript-style comments (`//...` and `/*...*/`). For example:
+
+    <select data-bind="
+        options: availableCountries,  // Only list countries that are available
+        optionsText: 'countryName',
+        /* optionsValue: 'countryId',
+        value: selectedCountry, */    // These two bindings are not processed
         optionsCaption: 'Choose...'"></select>
 
 #### Skipping the binding value
