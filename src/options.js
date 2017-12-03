@@ -2,7 +2,8 @@
 ko.options = {
     'deferUpdates': false,
     'useOnlyNativeEvents': false,
-    'noChildContextWithAs': false
+    'noChildContextWithAs': false,
+    'foreachHidesDestroyed': false
 };
 
 //ko.exportSymbol('options', ko.options);   // 'options' isn't minified
