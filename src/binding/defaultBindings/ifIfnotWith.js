@@ -2,14 +2,16 @@
 function makeWithIfBinding(bindingKey, isWith, isNot) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var savedNodes;
-            var ifCondition = !isWith && ko.computed(function() {
-                return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
-            }, null, { disposeWhenNodeIsRemoved: element });
+            var savedNodes,
+                asOption = allBindings.get('as'),
+                wrapCondition = !isWith || (asOption && ko.options['noChildContextWithAs']),
+                ifCondition = wrapCondition && ko.computed(function() {
+                    return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
+                }, null, { disposeWhenNodeIsRemoved: element });
 
             ko.computed(function() {
-                var rawWithValue = isWith && ko.utils.unwrapObservable(valueAccessor()),
-                    shouldDisplay = isWith ? !!rawWithValue : ifCondition(),
+                var rawWithValue = !wrapCondition && ko.utils.unwrapObservable(valueAccessor()),
+                    shouldDisplay = wrapCondition ? ifCondition() : !!rawWithValue,
                     isFirstRender = !savedNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
@@ -23,7 +25,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                     }
                     ko.applyBindingsToDescendants(
                         isWith ?
-                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, allBindings.get('as')) :
+                            bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, asOption) :
                             ifCondition.isActive() ?
                                 bindingContext['extend'](function() { ifCondition(); return null; }) :
                                 bindingContext,
