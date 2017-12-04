@@ -15,7 +15,7 @@ a { text-decoration: none; }
 }
 .content .syntaxhighlighter table, .content .syntaxhighlighter td { border-width: 0; }
 .content .syntaxhighlighter table { margin-bottom: 0; }
-.syntaxhighlighter { 
+.syntaxhighlighter {
 	overflow-x: auto; margin-bottom: 1.8em; margin-right: 35px;
 	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em;
 }
@@ -24,7 +24,7 @@ a { text-decoration: none; }
     line-height: 1.2em;
 }
 .syntaxhighlighter code {
-    white-space: pre !important;	
+    white-space: pre !important;
 }
 .syntaxhighlighter.ie {
 	overflow-y: hidden;
@@ -53,9 +53,9 @@ li ul, li ol  { margin-bottom: 1em !important ; }
 .inline { display: inline; }
 .cursor { cursor: pointer }
 
-ul.tickIcons li { list-style-type: none; 
+ul.tickIcons li { list-style-type: none;
 	background-image: url(../img/checkIcon.gif); background-repeat: no-repeat; background-position: 0px 6px;
-	margin-left: -0.5em; padding-left: 2em; line-height: 2em; margin-bottom: 0.3em; 
+	margin-left: -0.5em; padding-left: 2em; line-height: 2em; margin-bottom: 0.3em;
 }
 
 li p.smallprint { margin-top: -0.25em; line-height: 1.4em; font-size: 0.9em; margin-bottom: 0.9em; font-style: italic; color: #444; }
@@ -64,26 +64,26 @@ ul.stickerList li { margin: 0.5em 0 0.9em 0; }
 ul.stickerList li p.smallprint { margin-top: 0.1em; }
 
 /* Page */
-#wrapper {margin: 0 auto; width: 982px; }
+#wrapper {margin: 0 auto; min-width: 982px; max-width: 1665px; width: 70%; }
 html { background: #CF5300 url(../img/main-background.jpg) no-repeat top center; }
 body { font-family: arial; font-size: 14px; }
-.sticker { 
-	background-color: white; padding: 1.25em 1.45em 1.25em 1.55em; margin: 0.5em 0 3em 0; -moz-border-radius: 1em; -webkit-border-radius: 1em; border-radius: 1em; 
+.sticker {
+	background-color: white; padding: 1.25em 1.45em 1.25em 1.55em; margin: 0.5em 0 3em 0; -moz-border-radius: 1em; -webkit-border-radius: 1em; border-radius: 1em;
 	opacity:0.9; -moz-box-shadow: 0 0 1.1em #666; -webkit-box-shadow: 0 0 1.1em #666; box-shadow: 0 0 1.1em #666;
 }
 
 .documentation.sticker, .example.sticker { -webkit-box-shadow: none; } /* Avoid WebKit shadow-rendering perf issue by not having a shadow on parts of the doc that grow/shrink dynamically */
 
 .sticker .heading, .sticker h1 { color: #A71500; margin: 0.25em 0 0.25em 0; font-weight: bold; font-size: 1.2em; }
-.stickerHeading { 
+.stickerHeading {
 	background-color: rgb(229, 218, 214); height: 1.3em; margin: -2em -1.45em 1.25em -1.55em; padding: 0.7em 1em 1.1em 1.75em;
-	-moz-border-radius-topright: 1em; -moz-border-radius-topleft: 1em; 
-	-webkit-border-top-right-radius: 1em; -webkit-border-top-left-radius: 1em; 
-	border-top-right-radius: 1em; border-top-left-radius: 1em; 	
+	-moz-border-radius-topright: 1em; -moz-border-radius-topleft: 1em;
+	-webkit-border-top-right-radius: 1em; -webkit-border-top-left-radius: 1em;
+	border-top-right-radius: 1em; border-top-left-radius: 1em;
 }
 
-.engraved { 
-	color: #350808;	
+.engraved {
+	color: #350808;
 	text-shadow: rgba(253, 204, 197, 0.4) 1px 1px 0px;
 }
 
@@ -98,11 +98,12 @@ body { font-family: arial; font-size: 14px; }
 .liveExample h2 { margin-top: 0.4em; }
 
 /* Menu */
-.main-menu { display:table; float:right; margin: 1em 0 0.5em 0; font-size: 14px; font-weight: bold; }
-.main-menu ul li { display: inline; }
-.main-menu ul li a { 
-	display: inline-block; padding: 0.4em 1.5em; text-decoration: none; 
-	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em; 
+.main-menu { max-width: 982px; margin: 0 auto; }
+.main-menu ul { display:table; float:right; margin: 1em 0 0.5em 0; font-size: 14px; font-weight: bold; }
+.main-menu ul li { display: inline; margin-left:0.3em; }
+.main-menu ul li a {
+	display: inline-block; padding: 0.4em 1.5em; text-decoration: none;
+	-moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; border-radius: 0.5em;
 }
 .main-menu ul li a, .main-menu ul li a:visited { color: white; }
 .main-menu ul li a.active, .main-menu ul li a:hover { background-color: rgb(81, 29, 0); }
@@ -111,7 +112,7 @@ body { font-family: arial; font-size: 14px; }
 #introBadges li { width: 215px; float:left; text-align: center; padding: 0 0.5em 0 0.5em; color: #555; margin-bottom: 0.5em; }
 
 /* Homepage */
-#slogan { 
+#slogan {
 	float:right; width: 20em;
 	padding-left: 1.4em;
 	background: url(../img/vertical-bar.png) no-repeat;
@@ -153,16 +154,18 @@ body { font-family: arial; font-size: 14px; }
 .download-debug-panel { font-size: 0.85em; margin: 1em; line-height: 1.3em; color: gray; }
 
 /* Columns */
-div.leftCol { position: absolute; width: 16em; padding-top: 1em; }
-div.rightCol { margin-left: 16em; }
-div.rightCol .sticker { min-height: 150em;}
-div.leftColContents { width: 15em; padding: 1em; }
-div.leftColBackground { background-color: black; opacity:0.5; position: absolute; 
-	width: 16em; height:100%; z-index: -1; 
-	-moz-border-radius-topleft: 1em; -moz-border-radius-bottomleft: 1em; 
-	-webkit-border-top-left-radius: 1em; -webkit-border-bottom-left-radius: 1em; 
-	border-top-left-radius: 1em; border-bottom-left-radius: 1em; 	
+div.leftCol {
+    float: left;
+    width: 18em;
+    margin-top: 1em;
+    background-color: rgba(0,0,0,0.5);
+	-moz-border-radius-topleft: 1em; -moz-border-radius-bottomleft: 1em;
+	-webkit-border-top-left-radius: 1em; -webkit-border-bottom-left-radius: 1em;
+	border-top-left-radius: 1em; border-bottom-left-radius: 1em;
 }
+div.rightCol { margin-left: 18em; }
+div.leftColContents { width: 16em; padding: 1em; }
+div.leftColBackground { display: none; }
 
 div.leftCol h1 { font-size: 1.2em; margin: 1.5em 0 0.75em 0; }
 div.leftCol h1:first-child { margin-top: 0.5em;}
@@ -179,10 +182,6 @@ div.leftCol li.active, div.leftCol li.active a, div.leftCol li.active code, div.
 .homepageExample .liveExample { padding: 0.5em 1em 0.5em 1.3em; }
 .homepageExample .liveExample button { padding: 0.2em 0.6em; margin-left: 0.5em; }
 .homepageExample p { margin: 1.3em 0 0.8em 0; }
-
-/* Set a minimum height for the documentation content so the menu doesn't extend below the content */
-.documentation > .content { min-height: 1750px; }
-
 
 /* Footer */
 #page-footer { padding: 15px; text-align: right; }
