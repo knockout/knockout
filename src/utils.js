@@ -91,7 +91,7 @@ ko.utils = (function () {
 
     function removeAllDomNodeCssClasses(node) {
         if (node) {
-            node.className = '';
+            node.removeAttribute('class');
         }
     }
 
