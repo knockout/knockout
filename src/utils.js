@@ -89,6 +89,12 @@ ko.utils = (function () {
         }
     }
 
+    function removeAllDomNodeCssClasses(node) {
+        if (node) {
+            node.className = '';
+        }
+    }
+
     function toggleObjectClassPropertyString(obj, prop, classNames, shouldHaveClass) {
         // obj/prop is either a node/'className' or a SVGAnimatedString/'baseVal'.
         var currentClassNames = obj[prop].match(cssClassNameRegex) || [];
@@ -456,6 +462,8 @@ ko.utils = (function () {
 
         toggleDomNodeCssClass: toggleDomNodeCssClass,
 
+        removeAllDomNodeCssClasses: removeAllDomNodeCssClasses,
+
         setTextContent: function(element, textContent) {
             var value = ko.utils.unwrapObservable(textContent);
             if ((value === null) || (value === undefined))
@@ -631,6 +639,7 @@ ko.exportSymbol('utils.registerEventHandler', ko.utils.registerEventHandler);
 ko.exportSymbol('utils.stringifyJson', ko.utils.stringifyJson);
 ko.exportSymbol('utils.range', ko.utils.range);
 ko.exportSymbol('utils.toggleDomNodeCssClass', ko.utils.toggleDomNodeCssClass);
+ko.exportSymbol('utils.removeAllDomNodeCssClasses', ko.utils.removeAllDomNodeCssClasses);
 ko.exportSymbol('utils.triggerEvent', ko.utils.triggerEvent);
 ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
