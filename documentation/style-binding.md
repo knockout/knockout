@@ -6,7 +6,7 @@ title: The "style" binding
 ### Purpose
 The `style` binding adds or removes one or more style values to the associated DOM element. This is useful, for example, to highlight some value in red if it becomes negative, or to set the width of a bar to match a numerical value that changes.
 
-(Note: If you don't want to apply an explicit style value but instead want to assign a CSS class, see [the css binding](css-binding.html).)
+(Note: If you don't want to apply an explicit style value but instead want to assign a CSS class, see [the `class` or `css` binding](css-binding.html).)
 
 ### Example
     <div data-bind="style: { color: currentProfit() < 0 ? 'red' : 'black' }">

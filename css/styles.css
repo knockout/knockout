@@ -167,7 +167,7 @@ div.rightCol { margin-left: 18em; }
 div.leftColContents { width: 16em; padding: 1em; }
 div.leftColBackground { display: none; }
 
-div.leftCol h1 { font-size: 1.2em; margin: 1.5em 0 0.75em 0; }
+div.leftCol h1 { font-size: 1.2em; margin: 1.4em 0 0.6em 0; }
 div.leftCol h1:first-child { margin-top: 0.5em;}
 div.leftCol h2 { font-size: 1em; font-weight: bold; margin-bottom: 0.4em; margin-left: 0.25em; }
 div.leftCol, div.leftCol a, div.leftCol code { color: #FED; }
