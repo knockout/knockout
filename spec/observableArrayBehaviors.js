@@ -16,6 +16,23 @@ describe('Observable Array', function() {
         expect(ko.isObservable(testObservableArray)).toEqual(true);
     });
 
+    it('Should advertise as observable array', function () {
+        expect(ko.isObservableArray(ko.observableArray())).toEqual(true);
+    });
+
+    it('ko.isObservableArray should return false for non-observable array values', function () {
+        ko.utils.arrayForEach([
+            undefined,
+            null,
+            "x",
+            {},
+            function() {},
+            ko.observable([]),
+        ], function (value) {
+            expect(ko.isObservableArray(value)).toEqual(false);
+        });
+    });
+
     it('Should initialize to empty array if you pass no args to constructor', function() {
         var instance = new ko.observableArray();
         expect(instance().length).toEqual(0);

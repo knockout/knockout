@@ -61,7 +61,7 @@ describe('Binding: Foreach', function() {
 
 
     it('Should add and remove nodes to match changes in the bound array', function() {
-        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: false }'><span data-bind='text: childProp'></span></div>";
         var someItems = ko.observableArray([
             { childProp: 'first child' },
             { childProp: 'second child' }
@@ -156,8 +156,8 @@ describe('Binding: Foreach', function() {
         var afterAddCallbackData = [], beforeRemoveCallbackData = [];
         ko.applyBindings({
             someItems: someItems,
-            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
-            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
         }, testNode);
 
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span>');
@@ -167,6 +167,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[1]);
+        expect(afterAddCallbackData[0].index).toEqual(0);
         expect(afterAddCallbackData[0].value).toEqual("added child");
         expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
 
@@ -174,6 +175,7 @@ describe('Binding: Foreach', function() {
         someItems.shift();
         expect(beforeRemoveCallbackData.length).toEqual(1);
         expect(beforeRemoveCallbackData[0].elem).toContainText("first child");
+        expect(beforeRemoveCallbackData[0].index).toEqual(0);
         expect(beforeRemoveCallbackData[0].value).toEqual("first child");
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
         expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
@@ -184,6 +186,7 @@ describe('Binding: Foreach', function() {
         someItems.shift();
         expect(beforeRemoveCallbackData.length).toEqual(1);
         expect(beforeRemoveCallbackData[0].elem).toContainText("added child");
+        expect(beforeRemoveCallbackData[0].index).toEqual(0);
         expect(beforeRemoveCallbackData[0].value).toEqual("added child");
         // Neither item has yet been removed and both are still in their original locations
         expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
@@ -196,6 +199,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[0]);
+        expect(afterAddCallbackData[0].index).toEqual(0);
         expect(afterAddCallbackData[0].value).toEqual("added child");
         expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">added child</span>');
     });
