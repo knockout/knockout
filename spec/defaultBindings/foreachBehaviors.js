@@ -689,10 +689,10 @@ describe('Binding: Foreach', function() {
 
     });
 
-    describe('With \"noChildContextWithAs\" and \"as\"', function () {
+    describe('With "createChildContextWithAs = false" and "as"', function () {
         beforeEach(function() {
-            this.restoreAfter(ko.options, 'noChildContextWithAs');
-            ko.options.noChildContextWithAs = true;
+            this.restoreAfter(ko.options, 'createChildContextWithAs');
+            ko.options.createChildContextWithAs = false;
         });
 
         it('Should not create a child context', function () {
@@ -728,6 +728,62 @@ describe('Binding: Foreach', function() {
             // Should update the inputs when the array changes
             someItems([x]);
             expect(testNode.childNodes[0]).toHaveValues(['third']);
+        });
+
+        it('Should not re-render the nodes when an observable item changes', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            var x = ko.observable('first'), someItems = [ x ];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            x('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
+    });
+
+    describe('With "createChildContextWithAs = true" and "as"', function () {
+        beforeEach(function() {
+            this.restoreAfter(ko.options, 'createChildContextWithAs');
+            ko.options.createChildContextWithAs = true;
+        });
+
+        it('Should create a child context', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            var someItems = ['alpha', 'beta'];
+            ko.applyBindings({ someItems: someItems }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('alpha');
+            expect(testNode.childNodes[0].childNodes[1]).toContainText('beta');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(someItems[0]);
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(someItems[1]);
+        });
+
+        it('Should unwrap observable items', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['first', 'first', 'second', 'second']);
+
+            // Should not update observable when input bound to named item is changed
+            testNode.childNodes[0].childNodes[0].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(x()).toEqual('first');
+
+            // Should update observable when input bound to $rawData is changed
+            testNode.childNodes[0].childNodes[1].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[1], "change");
+            expect(x()).toEqual('third');
+
+            // Should update the input when the observable changes
+            y('fourth');
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'third', 'fourth', 'fourth']);
+
+            // Should update the inputs when the array changes
+            someItems([x]);
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'third']);
         });
 
         it('Should not re-render the nodes when an observable item changes', function() {

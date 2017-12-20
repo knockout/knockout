@@ -138,7 +138,7 @@
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
     ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
-        if (dataItemAlias && ko.options['noChildContextWithAs']) {
+        if (dataItemAlias && !ko.options['createChildContextWithAs']) {
             var isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor);
             return new ko.bindingContext(inheritParentVm, this, null, function (self) {
                 if (extendCallback)

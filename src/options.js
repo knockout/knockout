@@ -2,7 +2,7 @@
 ko.options = {
     'deferUpdates': false,
     'useOnlyNativeEvents': false,
-    'noChildContextWithAs': false,
+    'createChildContextWithAs': false,
     'foreachHidesDestroyed': false
 };
 

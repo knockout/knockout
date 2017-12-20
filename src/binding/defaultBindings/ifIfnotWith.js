@@ -4,7 +4,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             var savedNodes,
                 asOption = allBindings.get('as'),
-                wrapCondition = !isWith || (asOption && ko.options['noChildContextWithAs']),
+                wrapCondition = !isWith || (asOption && !ko.options['createChildContextWithAs']),
                 ifCondition = wrapCondition && ko.computed(function() {
                     return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
                 }, null, { disposeWhenNodeIsRemoved: element });
