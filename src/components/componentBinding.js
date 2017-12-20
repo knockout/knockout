@@ -74,6 +74,9 @@
 
                     currentViewModel = componentViewModel;
                     ko.applyBindingsToDescendants(childBindingContext, element);
+                    if(currentViewModel && typeof currentViewModel.activate === 'function' && currentViewModel.activate) {
+                        currentViewModel.activate.call(currentViewModel);
+                    }
                 });
             }, null, { disposeWhenNodeIsRemoved: element });
 
