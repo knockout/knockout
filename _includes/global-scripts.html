@@ -33,7 +33,9 @@
 
         // Highlight current top menu item
         var desiredMenuItem = '{{ page.mainmenukeyoverride }}' || '{{ page.mainmenukey }}';
-        $(".main-menu a[rel=" + desiredMenuItem + "]").addClass("active");
+        if (desiredMenuItem) {
+            $(".main-menu a[rel=" + desiredMenuItem + "]").addClass("active");
+        }
 
         // Highlight current left-hand-nav menu item
         var urlFilename = location.href.match(/\/([^\/]+)$/);
