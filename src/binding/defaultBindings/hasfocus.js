@@ -35,6 +35,9 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusin", handleElementFocusIn); // For IE
         ko.utils.registerEventHandler(element, "blur",  handleElementFocusOut);
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
+
+        // Assume element is not focused (prevents "blur" being called initially)
+        element[hasfocusLastValue] = false;
     },
     'update': function(element, valueAccessor) {
         var value = !!ko.utils.unwrapObservable(valueAccessor());

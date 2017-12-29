@@ -7,7 +7,7 @@ ko.bindingHandlers['attr'] = {
 
             // Find the namespace of this attribute, if any.
             var prefixLen = attrName.indexOf(':');
-            var namespace = prefixLen > 0 && element.lookupNamespaceURI( attrName.substr(0, prefixLen) );
+            var namespace = "lookupNamespaceURI" in element && prefixLen > 0 && element.lookupNamespaceURI(attrName.substr(0, prefixLen));
 
             // To cover cases like "attr: { checked:someProp }", we want to remove the attribute entirely
             // when someProp is a "no value"-like value (strictly null, false, or undefined)
