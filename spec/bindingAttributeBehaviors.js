@@ -325,42 +325,42 @@ describe('Binding attribute syntax', function() {
     });
 
     it('Should reject closing virtual bindings without matching open, when found as a sibling', function() {
-        testNode.innerHTML = "<div></div><!-- /ko -->";
+        testNode.innerHTML = "x<div></div><!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
     it('Should reject closing virtual bindings without matching open, when found as a a first child', function() {
-        testNode.innerHTML = "<div><!-- /ko --></div>";
+        testNode.innerHTML = "<div>x<!-- /ko -->x</div>";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
     it('Should reject closing virtual bindings, when found as first child at the top level', function() {
-        testNode.innerHTML = "<!-- /ko -->";
+        testNode.innerHTML = "x<!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
     it('Should reject duplicated closing virtual bindings', function() {
-        testNode.innerHTML = "<!-- ko if: true --><div></div><!-- /ko --><!-- /ko -->";
+        testNode.innerHTML = "x<!-- ko if: true --><div></div><!-- /ko --><!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
     it('Should reject opening virtual bindings that are not closed', function() {
-        testNode.innerHTML = "<!-- ko if: true -->";
+        testNode.innerHTML = "x<!-- ko if: true -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
     it('Should reject virtual bindings that are nested incorrectly', function() {
-        testNode.innerHTML = "<!-- ko if: true --><div><!-- /ko --></div>";
+        testNode.innerHTML = "x<!-- ko if: true --><div><!-- /ko --></div>x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
@@ -604,13 +604,13 @@ describe('Binding attribute syntax', function() {
         var callbacks = 0,
             callback = function (nodes, data) {
                 expect(nodes.length).toEqual(1);
-                expect(nodes[0]).toEqual(testNode.childNodes[1]);
+                expect(nodes[0]).toEqual(testNode.childNodes[2]);
                 expect(data).toEqual(vm);
                 callbacks++;
             },
             vm = { callback: callback };
 
-        testNode.innerHTML = "<!-- ko childrenComplete: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko -->";
+        testNode.innerHTML = "begin <!-- ko childrenComplete: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko --> end";
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });

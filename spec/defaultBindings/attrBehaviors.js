@@ -22,9 +22,15 @@ describe('Binding: Attr', function() {
         ].join('');
 
         ko.applyBindings(model, testNode);
-            var anchor = testNode.childNodes[0]/*svg*/.childNodes[0]/*g*/.childNodes[0]/*a*/;
-            expect( anchor.getAttributeNode('xlink:href').value ).toEqual( 'first value' );
-            expect( anchor.getAttributeNode('xlink:href').namespaceURI ).toEqual( 'http://www.w3.org/1999/xlink' );
+
+        var anchor = testNode.childNodes[0]/*svg*/.childNodes[0]/*g*/.childNodes[0]/*a*/;
+        if (anchor && "getAttributeNode" in anchor) {
+            var anchorAttribute = anchor.getAttributeNode('xlink:href');
+            expect(anchorAttribute.value).toEqual('first value');
+            if (anchorAttribute.namespaceURI) {
+                expect(anchorAttribute.namespaceURI).toEqual('http://www.w3.org/1999/xlink');
+            }
+        }
     });
 
     it('Should be able to set \"name\" attribute, even on IE6-7', function() {

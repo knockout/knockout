@@ -28,7 +28,7 @@ describe("Throttled observables", function() {
         // Wait until after timeout
         waitsFor(function() {
             return notifiedValues.length > 0;
-        }, 300);
+        }, 500);
         runs(function() {
             expect(notifiedValues.length).toEqual(1);
             expect(notifiedValues[0]).toEqual("F");

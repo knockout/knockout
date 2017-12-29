@@ -220,18 +220,18 @@ describe('Binding: With', function() {
         ko.applyBindings({ item: item }, testNode);
         expect(item.getSubscriptionsCount('change')).toEqual(3);    // subscriptions are the with and value bindings, and the binding context
         expect(testNode.childNodes[0]).toHaveValues(['one']);
-        expect(testNode.childNodes[0]).toContainText('one');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('one');
 
         // Should update observable when input is changed
         testNode.childNodes[0].childNodes[0].value = 'two';
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
         expect(item()).toEqual('two');
-        expect(testNode.childNodes[0]).toContainText('two');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('two');
 
         // Should update the input when the observable changes
         item('three');
         expect(testNode.childNodes[0]).toHaveValues(['three']);
-        expect(testNode.childNodes[0]).toContainText('three');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('three');
 
         // subscription count is stable
         expect(item.getSubscriptionsCount('change')).toEqual(3);
@@ -239,7 +239,7 @@ describe('Binding: With', function() {
 
     it('Should update if given a function', function () {
         // See knockout/knockout#2285
-        testNode.innerHTML = '<div data-bind="with: getTotal">Total: <div data-bind="text: $data"></div>';
+        testNode.innerHTML = '<div data-bind="with: getTotal"><div data-bind="text: $data"></div>';
 
         function ViewModel() {
             var self = this;
@@ -253,13 +253,13 @@ describe('Binding: With', function() {
 
         var model = new ViewModel();
         ko.applyBindings(model, testNode);
-        expect(testNode).toContainText("Total: 4");
+        expect(testNode).toContainText("4");
 
         model.items.push({ x: ko.observable(15) });
-        expect(testNode).toContainText("Total: 19");
+        expect(testNode).toContainText("19");
 
         model.items()[0].x(10);
-        expect(testNode).toContainText("Total: 25");
+        expect(testNode).toContainText("25");
     });
 
     it('Should call a childrenComplete callback function', function () {
