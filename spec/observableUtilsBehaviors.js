@@ -94,5 +94,5 @@ describe('ko.when', function() {
             expect(value).toEqual(2);
         }
         ko.when(ko.observable(2), myCallback);
-    });    
+    });
 });
