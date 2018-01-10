@@ -173,10 +173,31 @@
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
+            var hierarchyRole = options["hierarchyRole"];
+
             // Support selecting template as a function of the data being rendered
-            arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
-                context['$index'] = index;
-            });
+            if(hierarchyRole) {
+                var indexPath = [index];
+                var hierarchyLevel = 0;
+                var alias = "$" + (options["as"] || "item");
+                var contextProperties = {};
+
+                if(hierarchyRole === "Child") {
+                    indexPath = parentBindingContext.$indexPath.concat(indexPath);
+                    hierarchyLevel = parentBindingContext.$hierarchyLevel + 1;
+                }
+
+                contextProperties["$index"] = index;
+                contextProperties["$indexPath"] = indexPath;
+                contextProperties["$hierarchyLevel"] = hierarchyLevel;
+                contextProperties[alias] = arrayValue;
+
+                arrayItemContext = parentBindingContext['extend'](contextProperties);
+            } else {
+                arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
+                    context['$index'] = index;
+                });
+            }
 
             var nodes = [];
             var separatorTemplate = options['separatorTemplate'];

@@ -37,6 +37,6 @@
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.0",
-    "closure-compiler": "~0.2.1"
+    "closure-compiler": "~0.2.12"
   }
 }
