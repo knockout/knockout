@@ -165,7 +165,7 @@
         }
     };
 
-    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext, separatorTemplate) {
+    ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
         // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
         var arrayItemContext;
@@ -179,6 +179,7 @@
             });
 
             var nodes = [];
+            var separatorTemplate = options['separatorTemplate'];
             separatorElementsCount = undefined;
             if (separatorTemplate && ko.utils.peekObservable(index) > 0) {
                 nodes = nodes.concat(executeTemplate(targetNode, "ignoreTargetNode", separatorTemplate, parentBindingContext, options));
@@ -279,7 +280,7 @@
             if ('foreach' in options) {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && options['foreach']) || [];
-                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext, options['separatorTemplate']);
+                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
             } else if (!shouldDisplay) {
                 ko.virtualElements.emptyNode(element);
             } else {
