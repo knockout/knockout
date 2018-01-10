@@ -183,8 +183,8 @@
                 var contextProperties = {};
 
                 if(hierarchyRole === "Child") {
-                    indexPath = parentBindingContext.$indexPath.concat(indexPath);
-                    hierarchyLevel = parentBindingContext.$hierarchyLevel + 1;
+                    indexPath = parentBindingContext["$indexPath"].concat(indexPath);
+                    hierarchyLevel = parentBindingContext["$hierarchyLevel"] + 1;
                 }
 
                 contextProperties["$index"] = index;
