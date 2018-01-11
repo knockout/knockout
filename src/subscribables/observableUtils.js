@@ -3,7 +3,7 @@ ko.when = function(predicate, callback, context) {
     var subscription = observable.subscribe(function(value) {
         if (value) {
             subscription.dispose();
-            callback.call(context);
+            callback.call(context, value);
         }
     });
     // In case the initial value is true, process it right away

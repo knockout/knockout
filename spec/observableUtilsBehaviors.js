@@ -88,4 +88,11 @@ describe('ko.when', function() {
         };
         ko.when(ko.observable(true), model.myCallback, model);
     });
+
+    it('Returns the actual truthy predicate value as the callback first parameter', function () {
+        function myCallback (value) {
+            expect(value).toEqual(2);
+        }
+        ko.when(ko.observable(2), myCallback);
+    });
 });
