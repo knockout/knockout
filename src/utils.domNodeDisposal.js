@@ -33,18 +33,18 @@ ko.utils.domNodeDisposal = new (function () {
 
         // Clear any immediate-child comment nodes, as these wouldn't have been found by
         // node.getElementsByTagName("*") in cleanNode() (comment nodes aren't elements)
-        if (cleanableNodeTypesWithDescendants[node.nodeType])
-            cleanImmediateCommentTypeChildren(node);
+        if (cleanableNodeTypesWithDescendants[node.nodeType]) {
+            cleanNodesInList(node.childNodes, true/*onlyComments*/);
+        }
     }
 
-    function cleanImmediateCommentTypeChildren(nodeWithChildren) {
-        var children = nodeWithChildren.childNodes;
-        var cleanedNode;
-        for (var i = 0; i < children.length; i++) {
-            if (children[i].nodeType === 8) {
-                cleanSingleNode(cleanedNode = children[i]);
-                if (children[i] !== cleanedNode) {
-                    throw Error("ko.cleanNode: An already cleaned node was removed from the document");
+    function cleanNodesInList(nodeList, onlyComments) {
+        var cleanedNodes = [], lastCleanedNode;
+        for (var i = 0; i < nodeList.length; i++) {
+            if (!onlyComments || nodeList[i].nodeType === 8) {
+                cleanSingleNode(cleanedNodes[cleanedNodes.length] = lastCleanedNode = nodeList[i]);
+                if (nodeList[i] !== lastCleanedNode) {
+                    while (i-- && ko.utils.arrayIndexOf(cleanedNodes, nodeList[i]) == -1) {}
                 }
             }
         }
@@ -73,14 +73,7 @@ ko.utils.domNodeDisposal = new (function () {
 
                 // ... then its descendants, where applicable
                 if (cleanableNodeTypesWithDescendants[node.nodeType]) {
-                    var descendants = node.getElementsByTagName("*");
-                    var cleanedNode;
-                    for (var i = 0; i < descendants.length; i++) {
-                        cleanSingleNode(cleanedNode = descendants[i]);
-                        if (descendants[i] !== cleanedNode) {
-                            throw Error("ko.cleanNode: An already cleaned node was removed from the document");
-                        }
-                    }
+                    cleanNodesInList(node.getElementsByTagName("*"));
                 }
             }
             return node;
