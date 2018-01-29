@@ -1,5 +1,5 @@
 ko.when = function(predicate, callback, context) {
-    var observable = ko.pureComputed(predicate).extend({notify:'always'});
+    var observable = ko.pureComputed(predicate, context).extend({notify:'always'});
     var subscription = observable.subscribe(function(value) {
         if (value) {
             subscription.dispose();

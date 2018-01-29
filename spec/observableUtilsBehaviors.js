@@ -81,12 +81,22 @@ describe('ko.when', function() {
         expect(called).toBe(1);
     });
 
-    it('Should be able to specify a \'this\' pointer for the callback', function () {
+    it('Should be able to specify a \'this\' pointer for the predicate and callback', function () {
         var model = {
             someProperty: 123,
-            myCallback: function () { expect(this.someProperty).toEqual(123); }
+            observable: ko.observable(false),
+            myPredicate: function () {
+                return this.observable();
+            },
+            myCallback: function () {
+                expect(this.someProperty).toEqual(123);
+                this.someProperty = "done";
+            }
         };
-        ko.when(ko.observable(true), model.myCallback, model);
+        ko.when(model.myPredicate, model.myCallback, model);
+        expect(model.someProperty).toEqual(123);
+        model.observable(true);
+        expect(model.someProperty).toEqual("done");
     });
 
     it('Returns the actual truthy predicate value as the callback first parameter', function () {

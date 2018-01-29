@@ -47,6 +47,7 @@ knockoutDebugCallback([
     'src/binding/defaultBindings/using.js',
     'src/binding/defaultBindings/value.js',
     'src/binding/defaultBindings/visibleHidden.js',
+    'src/binding/defaultBindings/when.js',
     // click depends on event - The order matters for specs, which includes each file individually
     'src/binding/defaultBindings/click.js',
     'src/templating/templateEngine.js',
