@@ -8,7 +8,7 @@ ko.bindingHandlers['when'] = {
             if (value) {
                 ko.computedContext.computed().dispose();
                 if (template) {
-                    ko.virtualElements.setDomNodeChildren(element, template.childNodes);
+                    ko.virtualElements.setDomNodeChildren(element, ko.utils.makeArray(template.childNodes));
                 }
                 ko.applyBindingsToDescendants(asyncContext.extend(), element);
             } else if (!template) {

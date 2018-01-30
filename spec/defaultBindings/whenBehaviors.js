@@ -2,21 +2,21 @@ describe('Binding: When', function() {
     beforeEach(jasmine.prepareTestNode);
 
     it('Should bind content if given a true value', function () {
-        testNode.innerHTML = "<div data-bind='when: true'><div data-bind='text:\"bound value\"'></div></div>";
+        testNode.innerHTML = "<div data-bind='when: true'><span data-bind='text:\"x\"'></span><span data-bind='text:\"1\"'></span></div>";
         ko.applyBindings({}, testNode);
-        expect(testNode).toContainText("bound value");
+        expect(testNode).toContainText("x1");
     });
 
     it('Should clear content if given a false value, then set and bind content when true', function () {
         var observable = ko.observable(false);
-        testNode.innerHTML = "<div data-bind='when: condition'><div data-bind='text: \"bound value\"'></div></div>";
+        testNode.innerHTML = "<div data-bind='when: condition'><span data-bind='text:\"x\"'></span><span data-bind='text:\"1\"'></span></div>";
 
         ko.applyBindings({condition: observable}, testNode);
         expect(testNode.childNodes[0].childNodes.length).toBe(0);
 
         observable(true);
-        expect(testNode.childNodes[0].childNodes.length).toBe(1);
-        expect(testNode).toContainText("bound value");
+        expect(testNode.childNodes[0].childNodes.length).toBe(2);
+        expect(testNode).toContainText("x1");
     });
 
     it('Should ignore new values after given a true value', function () {
