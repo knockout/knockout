@@ -21,7 +21,7 @@ describe('Binding: When', function() {
 
     it('Should ignore new values after given a true value', function () {
         var observable = ko.observable(false);
-        testNode.innerHTML = "<div data-bind='when: condition'><div data-bind='text: \"bound value\"'></div></div>";
+        testNode.innerHTML = "<div data-bind='when: condition'><span data-bind='text: \"bound value\"'></span></div>";
 
         ko.applyBindings({condition: observable}, testNode);
         expect(testNode.childNodes[0].childNodes.length).toBe(0);
@@ -33,6 +33,20 @@ describe('Binding: When', function() {
         observable(false);
         expect(testNode).toContainText("bound value");
         expect(observable.getSubscriptionsCount()).toBe(0);  // no more subscriptions
+    });
+
+    it('Should not update if node is cleaned before value becomes true', function () {
+        var observable = ko.observable(false);
+        testNode.innerHTML = "<div data-bind='when: condition'><div data-bind='text: \"bound value\"'></div></div>";
+
+        ko.applyBindings({condition: observable}, testNode);
+        expect(testNode.childNodes[0].childNodes.length).toBe(0);
+        expect(observable.getSubscriptionsCount()).toBe(1);
+
+        ko.cleanNode(testNode);
+        expect(observable.getSubscriptionsCount()).toBe(0);  // no more subscriptions
+        observable(true);
+        expect(testNode.childNodes[0].childNodes.length).toBe(0);
     });
 
     it('Should call a childrenComplete callback function', function () {
@@ -134,19 +148,5 @@ describe('Binding: When', function() {
         ko.cleanNode(testNode.childNodes[0].childNodes[0]);
         expect(callbacks).toEqual(1);
         expect(testNode.childNodes[0]).toContainText('');
-    });
-
-    it('Should not update if node is cleaned before value becomes true', function () {
-        var observable = ko.observable(false);
-        testNode.innerHTML = "<div data-bind='when: condition'><div data-bind='text: \"bound value\"'></div></div>";
-
-        ko.applyBindings({condition: observable}, testNode);
-        expect(testNode.childNodes[0].childNodes.length).toBe(0);
-        expect(observable.getSubscriptionsCount()).toBe(1);
-
-        ko.cleanNode(testNode);
-        expect(observable.getSubscriptionsCount()).toBe(0);  // no more subscriptions
-        observable(true);
-        expect(testNode.childNodes[0].childNodes.length).toBe(0);
     });
 });
