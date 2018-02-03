@@ -105,4 +105,20 @@ describe('ko.when', function() {
         }
         ko.when(ko.observable(2), myCallback);
     });
+
+    if (typeof Promise === "function") {
+        describe('Returns a promise', function () {
+            it('That is resolved if the predicate value is truthy', function() {
+                var promise = ko.when(function () { return true; });
+                var resolvedSpy = jasmine.createSpy("resolvedSpy");
+                promise.then(resolvedSpy);
+                waitsFor(function() {
+                    return resolvedSpy.calls.length > 0;
+                }, 1);
+                runs(function() {
+                    expect(resolvedSpy.argsForCall).toEqual([ [true] ]);
+                });
+            });
+        });
+    }
 });
