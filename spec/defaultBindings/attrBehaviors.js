@@ -50,6 +50,14 @@ describe('Binding: Attr', function() {
             expect(testNode.childNodes[0].outerHTML).toNotMatch('name="?([^">]+)');
         }
         expect(testNode.childNodes[0].getAttribute("name")).toEqual("");
+
+        // Check that special characters are handled appropriately
+        myValue("<A name with special &'\" chars>");
+        expect(testNode.childNodes[0].name).toEqual("<A name with special &'\" chars>");
+        if (testNode.childNodes[0].outerHTML) { // Old Firefox doesn't support outerHTML
+            expect(testNode.childNodes[0].outerHTML).toMatch('name="?<A name with special &amp;\'&quot; chars>"?');
+        }
+        expect(testNode.childNodes[0].getAttribute("name")).toEqual("<A name with special &'\" chars>");
     });
 
     it('Should respond to changes in an observable value', function() {
