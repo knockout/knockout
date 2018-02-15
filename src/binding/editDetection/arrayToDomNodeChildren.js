@@ -33,14 +33,14 @@
     var lastMappingResultDomDataKey = ko.utils.domData.nextKey(),
         deletedItemDummyValue = ko.utils.domData.nextKey();
 
-    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes) {
-        // Compare the provided array against the previous one
+    ko.utils.setDomNodeChildrenFromArrayMapping = function (domNode, array, mapping, options, callbackAfterAddingNodes, editScript) {
         array = array || [];
+        if (typeof array.length == "undefined") // Coerce single value into array
+            array = [array];
+
         options = options || {};
-        var isFirstExecution = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) === undefined;
-        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey) || [];
-        var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; });
-        var editScript = ko.utils.compareArrays(lastArray, array, options['dontLimitMoves']);
+        var lastMappingResult = ko.utils.domData.get(domNode, lastMappingResultDomDataKey);
+        var isFirstExecution = !lastMappingResult;
 
         // Build the new mapping result
         var newMappingResult = [];
@@ -53,11 +53,21 @@
         var itemsForMoveCallbacks = [];
         var itemsForAfterAddCallbacks = [];
         var mapData;
+        var countWaitingForRemove = 0;
 
-        function itemMovedOrRetained(editScriptIndex, oldPosition) {
+        function itemAdded(value) {
+            mapData = { arrayEntry: value, indexObservable: ko.observable(newMappingResultIndex++) };
+            newMappingResult.push(mapData);
+            itemsToProcess.push(mapData);
+            if (!isFirstExecution) {
+                itemsForAfterAddCallbacks.push(mapData);
+            }
+        }
+
+        function itemMovedOrRetained(oldPosition) {
             mapData = lastMappingResult[oldPosition];
             if (newMappingResultIndex !== oldPosition)
-                itemsForMoveCallbacks[editScriptIndex] = mapData;
+                itemsForMoveCallbacks.push(mapData);
             // Since updating the index might change the nodes, do so before calling fixUpContinuousNodeArray
             mapData.indexObservable(newMappingResultIndex++);
             ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode);
@@ -68,63 +78,83 @@
         function callCallback(callback, items) {
             if (callback) {
                 for (var i = 0, n = items.length; i < n; i++) {
-                    if (items[i]) {
-                        ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
-                            callback(node, i, items[i].arrayEntry);
-                        });
-                    }
+                    ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
+                        callback(node, i, items[i].arrayEntry);
+                    });
                 }
             }
         }
 
-        for (var i = 0, editScriptItem, movedIndex; editScriptItem = editScript[i]; i++) {
-            movedIndex = editScriptItem['moved'];
-            switch (editScriptItem['status']) {
-                case "deleted":
-                    if (movedIndex === undefined) {
-                        mapData = lastMappingResult[lastMappingResultIndex];
+        if (isFirstExecution) {
+            ko.utils.arrayForEach(array, itemAdded);
+        } else {
+            if (!editScript || (lastMappingResult && lastMappingResult['_countWaitingForRemove'])) {
+                // Compare the provided array against the previous one
+                var lastArray = isFirstExecution ? [] : ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; }),
+                    compareOptions = {
+                        'dontLimitMoves': options['dontLimitMoves'],
+                        'sparse': true
+                    };
+                editScript = ko.utils.compareArrays(lastArray, array, compareOptions);
+            }
 
-                        // Stop tracking changes to the mapping for these nodes
-                        if (mapData.dependentObservable) {
-                            mapData.dependentObservable.dispose();
-                            mapData.dependentObservable = undefined;
+            for (var i = 0, editScriptItem, movedIndex, itemIndex; editScriptItem = editScript[i]; i++) {
+                movedIndex = editScriptItem['moved'];
+                itemIndex = editScriptItem['index'];
+                switch (editScriptItem['status']) {
+                    case "deleted":
+                        while (lastMappingResultIndex < itemIndex) {
+                            itemMovedOrRetained(lastMappingResultIndex++);
                         }
+                        if (movedIndex === undefined) {
+                            mapData = lastMappingResult[lastMappingResultIndex];
 
-                        // Queue these nodes for later removal
-                        if (ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode).length) {
-                            if (options['beforeRemove']) {
-                                newMappingResult.push(mapData);
-                                itemsToProcess.push(mapData);
-                                if (mapData.arrayEntry === deletedItemDummyValue) {
-                                    mapData = null;
-                                } else {
-                                    itemsForBeforeRemoveCallbacks[i] = mapData;
+                            // Stop tracking changes to the mapping for these nodes
+                            if (mapData.dependentObservable) {
+                                mapData.dependentObservable.dispose();
+                                mapData.dependentObservable = undefined;
+                            }
+
+                            // Queue these nodes for later removal
+                            if (ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode).length) {
+                                if (options['beforeRemove']) {
+                                    newMappingResult.push(mapData);
+                                    itemsToProcess.push(mapData);
+                                    countWaitingForRemove++;
+                                    if (mapData.arrayEntry === deletedItemDummyValue) {
+                                        mapData = null;
+                                    } else {
+                                        itemsForBeforeRemoveCallbacks.push(mapData);
+                                    }
+                                }
+                                if (mapData) {
+                                    nodesToDelete.push.apply(nodesToDelete, mapData.mappedNodes);
                                 }
                             }
-                            if (mapData) {
-                                nodesToDelete.push.apply(nodesToDelete, mapData.mappedNodes);
-                            }
                         }
-                    }
-                    lastMappingResultIndex++;
-                    break;
+                        lastMappingResultIndex++;
+                        break;
 
-                case "retained":
-                    itemMovedOrRetained(i, lastMappingResultIndex++);
-                    break;
-
-                case "added":
-                    if (movedIndex !== undefined) {
-                        itemMovedOrRetained(i, movedIndex);
-                    } else {
-                        mapData = { arrayEntry: editScriptItem['value'], indexObservable: ko.observable(newMappingResultIndex++) };
-                        newMappingResult.push(mapData);
-                        itemsToProcess.push(mapData);
-                        if (!isFirstExecution)
-                            itemsForAfterAddCallbacks[i] = mapData;
-                    }
-                    break;
+                    case "added":
+                        while (newMappingResultIndex < itemIndex) {
+                            itemMovedOrRetained(lastMappingResultIndex++);
+                        }
+                        if (movedIndex !== undefined) {
+                            itemMovedOrRetained(movedIndex);
+                        } else {
+                            itemAdded(editScriptItem['value']);
+                        }
+                        break;
+                }
             }
+
+            while (newMappingResultIndex < array.length) {
+                itemMovedOrRetained(lastMappingResultIndex++);
+            }
+
+            // Record that the current view may still contain deleted items
+            // because it means we won't be able to use a provided editScript.
+            newMappingResult['_countWaitingForRemove'] = countWaitingForRemove;
         }
 
         // Store a copy of the array items we just considered so we can difference it next time
@@ -166,9 +196,7 @@
         // as already "removed" so we won't call beforeRemove for it again, and it ensures that the item won't match up
         // with an actual item in the array and appear as "retained" or "moved".
         for (i = 0; i < itemsForBeforeRemoveCallbacks.length; ++i) {
-            if (itemsForBeforeRemoveCallbacks[i]) {
-                itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
-            }
+            itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
         }
 
         // Finally call afterMove and afterAdd callbacks

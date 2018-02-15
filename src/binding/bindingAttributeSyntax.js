@@ -1,6 +1,7 @@
 (function () {
     // Hide or don't minify context properties, see https://github.com/knockout/knockout/issues/2294
     var contextSubscribable = ko.utils.createSymbolOrString('_subscribable');
+    var contextAncestorBindingInfo = ko.utils.createSymbolOrString('_ancestorBindingInfo');
 
     ko.bindingHandlers = {};
 
@@ -16,7 +17,7 @@
         'template': true
     };
 
-    // Use an overridable method for retrieving binding handlers so that a plugins may support dynamically created handlers
+    // Use an overridable method for retrieving binding handlers so that plugins may support dynamically created handlers
     ko['getBindingHandler'] = function(bindingKey) {
         return ko.bindingHandlers[bindingKey];
     };
@@ -46,6 +47,11 @@
 
                 // Copy $root and any custom properties from the parent context
                 ko.utils.extend(self, parentContext);
+
+                // Copy Symbol properties
+                if (contextAncestorBindingInfo in parentContext) {
+                    self[contextAncestorBindingInfo] = parentContext[contextAncestorBindingInfo];
+                }
 
                 // Because the above copy overwrites our own properties, we need to reset them.
                 self[contextSubscribable] = subscribable;
@@ -132,7 +138,16 @@
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
     ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
-        return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function(self, parentContext) {
+        if (dataItemAlias && !ko.options['createChildContextWithAs']) {
+            var isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor);
+            return new ko.bindingContext(inheritParentVm, this, null, function (self) {
+                if (extendCallback)
+                    extendCallback(self);
+                self[dataItemAlias] = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
+            });
+        }
+
+        return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function (self, parentContext) {
             // Extend the context hierarchy by setting the appropriate pointers
             self['$parentContext'] = parentContext;
             self['$parent'] = parentContext['$data'];
@@ -156,6 +171,95 @@
 
     ko.bindingContext.prototype.createStaticChildContext = function (dataItemOrAccessor, dataItemAlias) {
         return this['createChildContext'](dataItemOrAccessor, dataItemAlias, null, { "exportDependencies": true });
+    };
+
+    var boundElementDomDataKey = ko.utils.domData.nextKey();
+
+    function asyncContextDispose(node) {
+        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey),
+            asyncContext = bindingInfo && bindingInfo.asyncContext;
+        if (asyncContext) {
+            bindingInfo.asyncContext = undefined;
+            asyncContext.notifyAncestor();
+        }
+    }
+    function AsyncCompleteContext(node, bindingInfo, ancestorBindingInfo) {
+        this.node = node;
+        this.bindingInfo = bindingInfo;
+        this.asyncDescendants = [];
+        this.childrenComplete = false;
+
+        if (!bindingInfo.asyncContext) {
+            ko.utils.domNodeDisposal.addDisposeCallback(node, asyncContextDispose);
+        }
+
+        if (ancestorBindingInfo && ancestorBindingInfo.asyncContext) {
+            ancestorBindingInfo.asyncContext.asyncDescendants.push(node);
+            this.ancestorBindingInfo = ancestorBindingInfo;
+        }
+    }
+    AsyncCompleteContext.prototype.notifyAncestor = function () {
+        if (this.ancestorBindingInfo && this.ancestorBindingInfo.asyncContext) {
+            this.ancestorBindingInfo.asyncContext.descendantComplete(this.node);
+        }
+    };
+    AsyncCompleteContext.prototype.descendantComplete = function (node) {
+        ko.utils.arrayRemoveItem(this.asyncDescendants, node);
+        if (!this.asyncDescendants.length && this.childrenComplete) {
+            this.completeChildren();
+        }
+    };
+    AsyncCompleteContext.prototype.completeChildren = function () {
+        this.childrenComplete = true;
+        if (this.bindingInfo.asyncContext && !this.asyncDescendants.length) {
+            this.bindingInfo.asyncContext = undefined;
+            ko.utils.domNodeDisposal.removeDisposeCallback(this.node, asyncContextDispose);
+            ko.bindingEvent.notify(this.node, ko.bindingEvent.descendantsComplete);
+            this.notifyAncestor();
+        }
+    };
+    AsyncCompleteContext.prototype.createChildContext = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
+        var self = this;
+        return this.bindingInfo.context['createChildContext'](dataItemOrAccessor, dataItemAlias, function (ctx) {
+            extendCallback(ctx);
+            ctx[contextAncestorBindingInfo] = self.bindingInfo;
+        }, options);
+    };
+
+    ko.bindingEvent = {
+        childrenComplete: "childrenComplete",
+        descendantsComplete : "descendantsComplete",
+
+        subscribe: function (node, event, callback, context) {
+            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+            if (!bindingInfo.eventSubscribable) {
+                bindingInfo.eventSubscribable = new ko.subscribable;
+            }
+            return bindingInfo.eventSubscribable.subscribe(callback, context, event);
+        },
+
+        notify: function (node, event) {
+            var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
+            if (bindingInfo) {
+                if (bindingInfo.eventSubscribable) {
+                    bindingInfo.eventSubscribable['notifySubscribers'](node, event);
+                }
+                if (event == ko.bindingEvent.childrenComplete) {
+                    if (bindingInfo.asyncContext) {
+                        bindingInfo.asyncContext.completeChildren();
+                    } else if (bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
+                        throw new Error("descendantsComplete event not supported for bindings on this node");
+                    }
+                }
+            }
+        },
+
+        startPossiblyAsyncContentBinding: function (node) {
+            var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
+            if (bindingInfo) {
+                return bindingInfo.asyncContext || (bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingInfo.context[contextAncestorBindingInfo]));
+            }
+        }
     };
 
     // Returns the valueAccessor function for a binding value
@@ -225,11 +329,15 @@
                 nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
             }
 
+            var bindingApplied = false;
             while (currentChild = nextInQueue) {
                 // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
                 nextInQueue = ko.virtualElements.nextSibling(currentChild);
                 applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
+                bindingApplied = true;
             }
+
+            ko.bindingEvent.notify(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
         }
     }
 
@@ -251,9 +359,6 @@
             applyBindingsToDescendantsInternal(bindingContext, nodeVerified);
         }
     }
-
-    var boundElementDomDataKey = ko.utils.domData.nextKey();
-
 
     function topologicalSortBindings(bindings) {
         // Depth-first sort
@@ -290,15 +395,16 @@
 
     function applyBindingsToNodeInternal(node, sourceBindings, bindingContext) {
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
-        var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
         if (!sourceBindings) {
-            if (bindingInfo) {
+            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+            if (bindingInfo.context) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
 
-            ko.utils.domData.set(node, boundElementDomDataKey, {context: bindingContext});
-            if (bindingContext[contextSubscribable])
+            bindingInfo.context = bindingContext;
+            if (bindingContext[contextSubscribable]) {
                 bindingContext[contextSubscribable]._addNode(node);
+            }
         }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
@@ -351,6 +457,18 @@
             allBindings['has'] = function(key) {
                 return key in bindings;
             };
+
+            if (ko.bindingEvent.childrenComplete in bindings) {
+                ko.bindingEvent.subscribe(node, ko.bindingEvent.childrenComplete, function () {
+                    var callback = evaluateValueAccessor(bindings[ko.bindingEvent.childrenComplete]);
+                    if (callback) {
+                        var nodes = ko.virtualElements.childNodes(node);
+                        if (nodes.length) {
+                            callback(nodes, ko.dataFor(nodes[0]));
+                        }
+                    }
+                });
+            }
 
             // First put the bindings into the right order
             var orderedBindings = topologicalSortBindings(bindings);
@@ -464,6 +582,8 @@
     };
 
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
+    ko.exportSymbol('bindingEvent', ko.bindingEvent);
+    ko.exportSymbol('bindingEvent.subscribe', ko.bindingEvent.subscribe);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);

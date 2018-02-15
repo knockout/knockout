@@ -52,7 +52,7 @@
             if (mayRequireCreateElementHack) {
                 // The document.createElement('my-element') trick to enable custom elements in IE6-8
                 // only works if we assign innerHTML on an element associated with that document.
-                documentContext.appendChild(div);
+                documentContext.body.appendChild(div);
             }
 
             div.innerHTML = markup;

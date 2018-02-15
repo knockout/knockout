@@ -97,23 +97,8 @@ describe('Binding: If', function() {
         expect(testNode).toContainHtml("hello <!-- ko if: condition1 -->first is true<!-- ko if: condition2 -->both are true<!-- /ko --><!-- /ko -->");
     });
 
-    it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
-        testNode.innerHTML = "<div data-bind='if: condition, afterRender: callback'><span data-bind='text: someText'></span></div>";
-        var callbackObservable = ko.observable(1),
-            callbacks = 0;
-        var viewModel = { condition: ko.observable(true), someText: "hello", callback: function() { callbackObservable(); callbacks++; } };
-        ko.applyBindings(viewModel, testNode);
-        expect(callbacks).toEqual(1);
-        expect(testNode.childNodes[0]).toContainText('hello');
-
-        viewModel.someText = "bello";
-        // Update callback observable and check that the binding wasn't updated
-        callbackObservable(2);
-        expect(testNode.childNodes[0]).toContainText('hello');
-    });
-
-    it('Should not call an afterRender callback function when data gets cleared', function () {
-        testNode.innerHTML = "<div data-bind='if: condition, afterRender: callback'><span data-bind='text: someText'></span></div>";
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='if: condition, childrenComplete: callback'><span data-bind='text: someText'></span></div>";
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         var viewModel = { condition: ko.observable(true), someText: "hello", callback: function () { callbacks++; } };
@@ -128,51 +113,5 @@ describe('Binding: If', function() {
         viewModel.condition(true);
         expect(callbacks).toEqual(2);
         expect(testNode.childNodes[0]).toContainText('hello');
-    });
-
-    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function () {
-        // Set up a binding provider that converts text nodes to expressions
-        var originalBindingProvider = ko.bindingProvider.instance,
-            preprocessingBindingProvider = function () { };
-        preprocessingBindingProvider.prototype = originalBindingProvider;
-        ko.bindingProvider.instance = new preprocessingBindingProvider();
-        ko.bindingProvider.instance.preprocessNode = function (node) {
-            if (node.nodeType === 3 && node.data.charAt(0) === "$") {
-                var newNodes = [
-                    document.createComment('ko text: ' + node.data),
-                    document.createComment('/ko')
-                ];
-                for (var i = 0; i < newNodes.length; i++) {
-                    node.parentNode.insertBefore(newNodes[i], node);
-                }
-                node.parentNode.removeChild(node);
-                return newNodes;
-            }
-        };
-
-        // Now perform a with binding, and see that afterRender gets the output from the preprocessor and bindings
-        testNode.innerHTML = "<div data-bind='if: condition, afterRender: callback'><span>[</span>$data.someText<span>]</span></div>";
-        var callbacks = 0;
-        var viewModel = {
-            condition: ko.observable(true),
-            someText: "hello",
-            callback: function (nodes, data) {
-                expect(nodes.length).toBe(5);
-                expect(nodes[0]).toContainText('[');    // <span>[</span>
-                expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data.childprop -->
-                expect(nodes[2].nodeType).toBe(3);      // text node inserted by text binding
-                expect(nodes[3].nodeType).toBe(8);      // <!-- /ko -->
-                expect(nodes[4]).toContainText(']');    // <span>]</span>
-                expect(data).toBe(viewModel);
-                callbacks++;
-            }
-        };
-
-        ko.applyBindings(viewModel, testNode);
-
-        expect(testNode.childNodes[0]).toContainText('[hello]');
-        expect(callbacks).toBe(1);
-
-        ko.bindingProvider.instance = originalBindingProvider;
     });
 });

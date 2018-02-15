@@ -106,8 +106,12 @@
 
         if (haveAddedNodesToParent) {
             activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
-            if (options['afterRender'])
+            if (options['afterRender']) {
                 ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
+            }
+            if (renderMode == "replaceChildren") {
+                ko.bindingEvent.notify(targetNodeOrNodeArray, ko.bindingEvent.childrenComplete);
+            }
         }
 
         return renderedNodesArray;
@@ -179,7 +183,7 @@
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);
             return executeTemplate(targetNode, "ignoreTargetNode", templateName, arrayItemContext, options);
-        }
+        };
 
         // This will be called whenever setDomNodeChildrenFromArrayMapping has added nodes to targetNode
         var activateBindingsCallback = function(arrayValue, addedNodesArray, index) {
@@ -192,21 +196,40 @@
             arrayItemContext = null;
         };
 
-        return ko.dependentObservable(function () {
-            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
-            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
-                unwrappedArray = [unwrappedArray];
-
-            // Filter out any entries marked as destroyed
-            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
-                return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
-            });
-
+        var setDomNodeChildrenFromArrayMapping = function (newArray, changeList) {
             // Call setDomNodeChildrenFromArrayMapping, ignoring any observables unwrapped within (most likely from a callback function).
             // If the array items are observables, though, they will be unwrapped in executeTemplateForArrayItem and managed within setDomNodeChildrenFromArrayMapping.
-            ko.dependencyDetection.ignore(ko.utils.setDomNodeChildrenFromArrayMapping, null, [targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback]);
+            ko.dependencyDetection.ignore(ko.utils.setDomNodeChildrenFromArrayMapping, null, [targetNode, newArray, executeTemplateForArrayItem, options, activateBindingsCallback, changeList]);
+            ko.bindingEvent.notify(targetNode, ko.bindingEvent.childrenComplete);
+        };
 
-        }, null, { disposeWhenNodeIsRemoved: targetNode });
+        var shouldHideDestroyed = (options['includeDestroyed'] === false) || (ko.options['foreachHidesDestroyed'] && !options['includeDestroyed']);
+
+        if (!shouldHideDestroyed && !options['beforeRemove'] && ko.isObservableArray(arrayOrObservableArray)) {
+            setDomNodeChildrenFromArrayMapping(arrayOrObservableArray.peek());
+
+            var subscription = arrayOrObservableArray.subscribe(function (changeList) {
+                setDomNodeChildrenFromArrayMapping(arrayOrObservableArray(), changeList);
+            }, null, "arrayChange");
+            subscription.disposeWhenNodeIsRemoved(targetNode);
+
+            return subscription;
+        } else {
+            return ko.dependentObservable(function () {
+                var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
+                if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+                    unwrappedArray = [unwrappedArray];
+
+                if (shouldHideDestroyed) {
+                    // Filter out any entries marked as destroyed
+                    unwrappedArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
+                        return item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
+                    });
+                }
+                setDomNodeChildrenFromArrayMapping(unwrappedArray);
+
+            }, null, { disposeWhenNodeIsRemoved: targetNode });
+        }
     };
 
     var templateComputedDomDataKey = ko.utils.domData.nextKey();
@@ -214,7 +237,7 @@
         var oldComputed = ko.utils.domData.get(element, templateComputedDomDataKey);
         if (oldComputed && (typeof(oldComputed.dispose) == 'function'))
             oldComputed.dispose();
-        ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
+        ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && (!newComputed.isActive || newComputed.isActive())) ? newComputed : undefined);
     }
 
     var cleanContainerDomDataKey = ko.utils.domData.nextKey();
@@ -246,9 +269,13 @@
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateNodes = ko.virtualElements.childNodes(element),
-                    container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
-                new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                var templateNodes = ko.virtualElements.childNodes(element);
+                if (templateNodes.length > 0) {
+                    var container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
+                    new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                } else {
+                    throw new Error("Anonymous template defined, but no template content was provided");
+                }
             }
             return { 'controlsDescendantBindings': true };
         },

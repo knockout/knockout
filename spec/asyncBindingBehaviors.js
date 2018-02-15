@@ -153,7 +153,7 @@ describe("Deferred bindings", function() {
 
     it('Should update "if" binding before descendant bindings', function() {
         // Based on example at https://github.com/knockout/knockout/pull/2226
-        testNode.innerHTML = '<div data-bind="if: hasAddress()"><span data-bind="text: streetNumber().toLowerCase()"></span> <span data-bind="text: street().toLowerCase()"></span></div>';
+        testNode.innerHTML = '<div data-bind="if: hasAddress()"><span data-bind="text: streetNumber().toLowerCase()"></span><span data-bind="text: street().toLowerCase()"></span></div>';
         var vm = {
             street: ko.observable(),
             streetNumber: ko.observable(),
@@ -167,7 +167,7 @@ describe("Deferred bindings", function() {
         vm.street('my street');
         vm.streetNumber('123');
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainText('123 my street');
+        expect(testNode.childNodes[0]).toContainText('123my street');
 
         vm.street(null);
         vm.streetNumber(null);
@@ -177,7 +177,7 @@ describe("Deferred bindings", function() {
 
     it('Should update "with" binding before descendant bindings', function() {
         // Based on example at https://github.com/knockout/knockout/pull/2226
-        testNode.innerHTML = '<div data-bind="with: hasAddress()"><span data-bind="text: $parent.streetNumber().toLowerCase()"></span> <span data-bind="text: $parent.street().toLowerCase()"></span></div>';
+        testNode.innerHTML = '<div data-bind="with: hasAddress()"><span data-bind="text: $parent.streetNumber().toLowerCase()"></span><span data-bind="text: $parent.street().toLowerCase()"></span></div>';
         var vm = {
             street: ko.observable(),
             streetNumber: ko.observable(),
@@ -191,7 +191,7 @@ describe("Deferred bindings", function() {
         vm.street('my street');
         vm.streetNumber('123');
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainText('123 my street');
+        expect(testNode.childNodes[0]).toContainText('123my street');
 
         vm.street(null);
         vm.streetNumber(null);

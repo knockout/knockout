@@ -36,7 +36,7 @@ describe('Binding: CSS style', function() {
         // Represents https://github.com/knockout/knockout/issues/972
         testNode.innerHTML = "<div data-bind='style: { width: 0 }'></div>";
         ko.applyBindings(null, testNode);
-        expect(testNode.childNodes[0].style.width).toBe("0px");
+        expect(testNode.childNodes[0].style.width).toEqualOneOf(["0px", "0pt"]);
     });
 
     it('Should be able to apply the numeric value to a style that doesn\'t accept pixels', function() {

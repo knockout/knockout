@@ -58,6 +58,10 @@ ko.utils.domData = new (function () {
             var dataForNode = getDataForNode(node, value !== undefined /* createIfNotFound */);
             dataForNode && (dataForNode[key] = value);
         },
+        getOrSet: function (node, key, value) {
+            var dataForNode = getDataForNode(node, true /* createIfNotFound */);
+            return dataForNode[key] || (dataForNode[key] = value);
+        },
         clear: clear,
 
         nextKey: function () {

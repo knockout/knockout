@@ -5,7 +5,7 @@
   "version": "3.5.0-pre",
   "license": "MIT",
   "author": "The Knockout.js team",
-  "main": "build/output/knockout-latest.debug.js",
+  "main": "build/output/knockout-latest.js",
   "scripts": {
     "prepublish": "grunt",
     "test": "node spec/runner.node.js"

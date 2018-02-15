@@ -132,4 +132,11 @@ ko.utils.arrayForEach(["slice"], function (methodName) {
     };
 });
 
+ko.isObservableArray = function (instance) {
+    return ko.isObservable(instance)
+        && typeof instance["remove"] == "function"
+        && typeof instance["push"] == "function";
+};
+
 ko.exportSymbol('observableArray', ko.observableArray);
+ko.exportSymbol('isObservableArray', ko.isObservableArray);

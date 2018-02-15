@@ -238,6 +238,20 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("result = 456");
     });
 
+    it('Should call a generic childrenComplete callback function', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someItem }, childrenComplete: callback'></div>";
+        var someItem = ko.observable({ childProp: 'child' }),
+            callbacks = 0;
+        ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('result = child');
+
+        someItem({ childProp: "new child" });
+        expect(callbacks).toEqual(2);
+        expect(testNode.childNodes[0]).toContainText('result = new child');
+    });
+
     it('Should stop tracking inner observables immediately when the container node is removed from the document', function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));
@@ -801,10 +815,10 @@ describe('Templating', function() {
             expect(innerObservable.getSubscriptionsCount()).toEqual(0);
         });
 
-        it('Should omit any items whose \'_destroy\' flag is set (unwrapping the flag if it is observable)', function() {
+        it('Should omit any items whose \'_destroy\' flag is set (unwrapping the flag if it is observable) if includeDestroyed is false', function() {
             var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }, { someProp: 4, _destroy: ko.observable(false) }]);
             ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>someProp=[js: someProp]</div>" }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: false }'></div>";
 
             ko.applyBindings({ myCollection: myArray }, testNode);
             expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=3</div><div>someprop=4</div>");
@@ -817,6 +831,18 @@ describe('Templating', function() {
 
             ko.applyBindings({ myCollection: myArray }, testNode);
             expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
+        });
+
+        it('Should omit any items whose \'_destroy\' flag is set if foreachHidesDestroyed is set', function() {
+            this.restoreAfter(ko.options, 'foreachHidesDestroyed');
+            ko.options.foreachHidesDestroyed = true;
+
+            var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }, { someProp: 4, _destroy: false }]);
+            ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>someProp=[js: someProp]</div>" }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+            ko.applyBindings({ myCollection: myArray }, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=3</div><div>someprop=4</div>");
         });
 
         it('Should be able to render a different template for each array entry by passing a function as template name, with the array entry\'s binding context available as a second parameter', function() {

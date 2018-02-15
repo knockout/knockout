@@ -134,6 +134,43 @@ describe('Binding: With', function() {
         expect(ko.contextFor(firstSpan).$parents[1].name).toEqual("top");
     });
 
+    it('Should be able to access all parent bindings when using "as" when "createChildContextWithAs" is set', function() {
+        this.restoreAfter(ko.options, 'createChildContextWithAs');
+        ko.options.createChildContextWithAs = true;
+
+        testNode.innerHTML = "<div data-bind='with: topItem'>" +
+                                "<div data-bind='with: middleItem, as: \"middle\"'>" +
+                                    "<div data-bind='with: bottomItem'>" +
+                                        "<span data-bind='text: name'></span>" +
+                                        "<span data-bind='text: $parent.name'></span>" +
+                                        "<span data-bind='text: middle.name'></span>" +
+                                        "<span data-bind='text: $parents[1].name'></span>" +
+                                        "<span data-bind='text: $parents[2].name'></span>" +
+                                        "<span data-bind='text: $root.name'></span>" +
+                                    "</div>" +
+                                "</div>" +
+                              "</div>";
+        ko.applyBindings({
+            name: 'outer',
+            topItem: {
+                name: 'top',
+                middleItem: {
+                    name: 'middle',
+                    bottomItem: {
+                        name: "bottom"
+                    }
+                }
+            }
+        }, testNode);
+        var finalContainer = testNode.childNodes[0].childNodes[0].childNodes[0];
+        expect(finalContainer.childNodes[0]).toContainText("bottom");
+        expect(finalContainer.childNodes[1]).toContainText("middle");
+        expect(finalContainer.childNodes[2]).toContainText("middle");
+        expect(finalContainer.childNodes[3]).toContainText("top");
+        expect(finalContainer.childNodes[4]).toContainText("outer");
+        expect(finalContainer.childNodes[5]).toContainText("outer");
+    });
+
     it('Should be able to define an \"with\" region using a containerless template', function() {
         var someitem = ko.observable(undefined);
         testNode.innerHTML = "hello <!-- ko with: someitem --><span data-bind=\"text: occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";
@@ -183,18 +220,18 @@ describe('Binding: With', function() {
         ko.applyBindings({ item: item }, testNode);
         expect(item.getSubscriptionsCount('change')).toEqual(3);    // subscriptions are the with and value bindings, and the binding context
         expect(testNode.childNodes[0]).toHaveValues(['one']);
-        expect(testNode.childNodes[0]).toContainText('one');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('one');
 
         // Should update observable when input is changed
         testNode.childNodes[0].childNodes[0].value = 'two';
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
         expect(item()).toEqual('two');
-        expect(testNode.childNodes[0]).toContainText('two');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('two');
 
         // Should update the input when the observable changes
         item('three');
         expect(testNode.childNodes[0]).toHaveValues(['three']);
-        expect(testNode.childNodes[0]).toContainText('three');
+        expect(testNode.childNodes[0].childNodes[1]).toContainText('three');
 
         // subscription count is stable
         expect(item.getSubscriptionsCount('change')).toEqual(3);
@@ -202,7 +239,7 @@ describe('Binding: With', function() {
 
     it('Should update if given a function', function () {
         // See knockout/knockout#2285
-        testNode.innerHTML = '<div data-bind="with: getTotal">Total: <div data-bind="text: $data"></div>';
+        testNode.innerHTML = '<div data-bind="with: getTotal"><div data-bind="text: $data"></div>';
 
         function ViewModel() {
             var self = this;
@@ -216,56 +253,17 @@ describe('Binding: With', function() {
 
         var model = new ViewModel();
         ko.applyBindings(model, testNode);
-        expect(testNode).toContainText("Total: 4");
+        expect(testNode).toContainText("4");
 
         model.items.push({ x: ko.observable(15) });
-        expect(testNode).toContainText("Total: 19");
+        expect(testNode).toContainText("19");
 
         model.items()[0].x(10);
-        expect(testNode).toContainText("Total: 25");
+        expect(testNode).toContainText("25");
     });
 
-    it('Should call an afterRender callback function and not cause updates if an observable accessed in the callback is changed', function () {
-        testNode.innerHTML = "<div data-bind='with: someItem, afterRender: callback'><span data-bind='text: childprop'></span></div>";
-        var callbackObservable = ko.observable(1),
-            someItem = ko.observable({ childprop: 'child' }),
-            callbacks = 0;
-        ko.applyBindings({ someItem: someItem, callback: function () { callbackObservable(); callbacks++; } }, testNode);
-        expect(callbacks).toEqual(1);
-
-        // Change the childprop which is not an observable so should not change the bound element
-        someItem().childprop = 'hidden child';
-        expect(testNode.childNodes[0]).toContainText('child');
-        // Update callback observable and check that the binding wasn't updated
-        callbackObservable(2);
-        expect(testNode.childNodes[0]).toContainText('child');
-        // Update the observable and verify that the binding is now updated
-        someItem({ childprop: 'new child' });
-        expect(testNode.childNodes[0]).toContainText('new child');
-        expect(callbacks).toEqual(2);
-    });
-
-    it('Should call an afterRender callback function when bound to a virtual element', function () {
-        testNode.innerHTML = "<!-- ko with: someItem, afterRender: callback --><span data-bind='text: childprop'></span><!-- /ko -->";
-        var someItem = ko.observable({ childprop: 'child' }),
-            callbacks = 0;
-        var callback = function (nodes, data) {
-            expect(nodes.length).toEqual(1);
-            expect(nodes[0]).toEqual(testNode.childNodes[1]);
-            expect(data.childprop).toEqual(someItem().childprop);
-            callbacks++;
-        };
-        ko.applyBindings({ someItem: someItem, callback: callback }, testNode);
-        expect(callbacks).toEqual(1);
-
-        // Update the observable and verify that the binding is now updated
-        someItem({ childprop: 'new child' });
-        expect(testNode.childNodes[1]).toContainText('new child');
-        expect(callbacks).toEqual(2);
-    });
-
-    it('Should not call an afterRender callback function when data gets cleared', function () {
-        testNode.innerHTML = "<div data-bind='with: someItem, afterRender: callback'><span data-bind='text: childprop'></span></div>";
+    it('Should call a childrenComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='with: someItem, childrenComplete: callback'><span data-bind='text: childprop'></span></div>";
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);
@@ -281,47 +279,134 @@ describe('Binding: With', function() {
         expect(testNode.childNodes[0]).toContainText('new child');
     });
 
-    it('Should call an afterRender callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function () {
-        // Set up a binding provider that converts text nodes to expressions
-        var originalBindingProvider = ko.bindingProvider.instance,
-            preprocessingBindingProvider = function () { };
-        preprocessingBindingProvider.prototype = originalBindingProvider;
-        ko.bindingProvider.instance = new preprocessingBindingProvider();
-        ko.bindingProvider.instance.preprocessNode = function (node) {
-            if (node.nodeType === 3 && node.data.charAt(0) === "$") {
-                var newNodes = [
-                    document.createComment('ko text: ' + node.data),
-                    document.createComment('/ko')
-                ];
-                for (var i = 0; i < newNodes.length; i++) {
-                    node.parentNode.insertBefore(newNodes[i], node);
-                }
-                node.parentNode.removeChild(node);
-                return newNodes;
-            }
-        };
+    describe('With "createChildContextWithAs = false" and "as"', function () {
+        beforeEach(function() {
+            this.restoreAfter(ko.options, 'createChildContextWithAs');
+            ko.options.createChildContextWithAs = false;
+        });
 
-        // Now perform a with binding, and see that afterRender gets the output from the preprocessor and bindings
-        testNode.innerHTML = "<div data-bind='with: someItem, afterRender: callback'><span>[</span>$data.childprop<span>]</span></div>";
-        var someItem = ko.observable({ childprop: 'child property' }),
-            callbacks = 0;
-        ko.applyBindings({
-            someItem: someItem,
-            callback: function (nodes, data) {
-                expect(nodes.length).toBe(5);
-                expect(nodes[0]).toContainText('[');    // <span>[</span>
-                expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data.childprop -->
-                expect(nodes[2].nodeType).toBe(3);      // text node inserted by text binding
-                expect(nodes[3].nodeType).toBe(8);      // <!-- /ko -->
-                expect(nodes[4]).toContainText(']');    // <span>]</span>
-                expect(data).toBe(someItem());
-                callbacks++;
-            }
-        }, testNode);
+        it('Should not create a child context', function () {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.childProp'></span></div>";
+            var someItem = { childProp: 'Hello' };
+            ko.applyBindings({ someItem: someItem }, testNode);
 
-        expect(testNode.childNodes[0]).toContainText('[child property]');
-        expect(callbacks).toBe(1);
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('Hello');
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+        });
 
-        ko.bindingProvider.instance = originalBindingProvider;
+        it('Should provide access to observable value', function() {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><input data-bind='value: item'/></div>";
+            var someItem = ko.observable('Hello');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+
+            // Should update observable when input is changed
+            testNode.childNodes[0].childNodes[0].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(someItem()).toEqual('Goodbye');
+
+            // Should update the input when the observable changes
+            someItem('Hello again');
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello again');
+        });
+
+        it('Should not re-render the nodes when an observable value changes', function() {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item'></span></div>";
+            var someItem = ko.observable('first');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            someItem('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
+
+        it('Should remove nodes when an observable value become falsy', function() {
+            var someItem = ko.observable(undefined);
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item().occasionallyExistentChildProp'></span></div>";
+            ko.applyBindings({ someItem: someItem }, testNode);
+
+            // First it's not there
+            expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+
+            // Then it's there
+            someItem({ occasionallyExistentChildProp: 'Child prop value' });
+            expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
+
+            // Then it's gone again
+            someItem(null);
+            expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+        });
+    });
+
+    describe('With "createChildContextWithAs = true" and "as"', function () {
+        beforeEach(function() {
+            this.restoreAfter(ko.options, 'createChildContextWithAs');
+            ko.options.createChildContextWithAs = true;
+        });
+
+        it('Should create a child context', function () {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.childProp'></span></div>";
+            var someItem = { childProp: 'Hello' };
+            ko.applyBindings({ someItem: someItem }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('Hello');
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(someItem);
+        });
+
+        it('Should unwrap observable value', function() {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            var someItem = ko.observable('Hello');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['Hello', 'Hello']);
+
+            // Should not update observable when input bound to named item is changed
+            testNode.childNodes[0].childNodes[0].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(someItem()).toEqual('Hello');
+
+            // Should update observable when input bound to $rawData is changed
+            testNode.childNodes[0].childNodes[1].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[1], "change");
+            expect(someItem()).toEqual('Goodbye');
+
+            // Should update the input when the observable changes
+            someItem('Hello again');
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello again');
+        });
+
+        it('Should re-render the nodes when an observable value changes', function() {
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item'></span></div>";
+            var someItem = ko.observable('first');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            someItem('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).not.toEqual(saveNode);
+        });
+
+        it('Should remove nodes when an observable value become falsy', function() {
+            var someItem = ko.observable(undefined);
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.occasionallyExistentChildProp'></span></div>";
+            ko.applyBindings({ someItem: someItem }, testNode);
+
+            // First it's not there
+            expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+
+            // Then it's there
+            someItem({ occasionallyExistentChildProp: 'Child prop value' });
+            expect(testNode.childNodes[0].childNodes.length).toEqual(1);
+            expect(testNode.childNodes[0].childNodes[0]).toContainText("Child prop value");
+
+            // Then it's gone again
+            someItem(null);
+            expect(testNode.childNodes[0].childNodes.length).toEqual(0);
+        });
     });
 });

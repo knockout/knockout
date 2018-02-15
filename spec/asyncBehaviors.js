@@ -28,7 +28,7 @@ describe("Throttled observables", function() {
         // Wait until after timeout
         waitsFor(function() {
             return notifiedValues.length > 0;
-        }, 300);
+        }, 500);
         runs(function() {
             expect(notifiedValues.length).toEqual(1);
             expect(notifiedValues[0]).toEqual("F");
@@ -1037,7 +1037,7 @@ describe('Deferred', function() {
         it('Should *not* delay update of dependent rate-limited computed observable', function() {
             var data = ko.observable('A'),
                 deferredComputed = ko.computed(data).extend({deferred:true}),
-                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500});
+                dependentComputed = ko.computed(deferredComputed).extend({rateLimit: 500}),
                 notifySpy = jasmine.createSpy('notifySpy'),
                 subscription = dependentComputed.subscribe(notifySpy);
 

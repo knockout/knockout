@@ -1,14 +1,24 @@
 
 ko.subscription = function (target, callback, disposeCallback) {
     this._target = target;
-    this.callback = callback;
-    this.disposeCallback = disposeCallback;
-    this.isDisposed = false;
+    this._callback = callback;
+    this._disposeCallback = disposeCallback;
+    this._isDisposed = false;
+    this._node = null;
+    this._domNodeDisposalCallback = null;
     ko.exportProperty(this, 'dispose', this.dispose);
+    ko.exportProperty(this, 'disposeWhenNodeIsRemoved', this.disposeWhenNodeIsRemoved);
 };
 ko.subscription.prototype.dispose = function () {
-    this.isDisposed = true;
-    this.disposeCallback();
+    if (this._domNodeDisposalCallback) {
+        ko.utils.domNodeDisposal.removeDisposeCallback(this._node, this._domNodeDisposalCallback);
+    }
+    this._isDisposed = true;
+    this._disposeCallback();
+};
+ko.subscription.prototype.disposeWhenNodeIsRemoved = function (node) {
+    this._node = node;
+    ko.utils.domNodeDisposal.addDisposeCallback(node, this._domNodeDisposalCallback = this.dispose.bind(this));
 };
 
 ko.subscribable = function () {
@@ -69,8 +79,8 @@ var ko_subscribable_fn = {
                 for (var i = 0, subscription; subscription = subs[i]; ++i) {
                     // In case a subscription was disposed during the arrayForEach cycle, check
                     // for isDisposed on each subscription before invoking its callback
-                    if (!subscription.isDisposed)
-                        subscription.callback(valueToNotify);
+                    if (!subscription._isDisposed)
+                        subscription._callback(valueToNotify);
                 }
             } finally {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
