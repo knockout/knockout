@@ -2,3 +2,4 @@
 *
 !build/output/knockout-latest.js
 !build/output/knockout-latest.debug.js
+!build/types/knockout.d.ts
