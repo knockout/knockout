@@ -9,26 +9,23 @@ export as namespace ko;
 export type SubscriptionCallback<T = any> = (val: T) => void;
 export type MaybeSubscribable<T = any> = T | Subscribable<T>;
 
-export class subscription<T = any> {
-    constructor(target: Subscribable<T>, callback: SubscriptionCallback<T>, disposeCallback: () => void);
-
+export interface Subscription {
     dispose(): void;
+    disposeWhenNodeIsRemoved(node: Node): void;
 }
 
 export interface SubscribableFunctions<T = any> extends Function {
-    notifySubscribers(): void;
-    notifySubscribers(valueToWrite: T): void;
-    notifySubscribers(valueToWrite: T, event: string): void;
+    init<S extends Subscribable<any>>(instance: S): void;
 
-    subscribe(callback: SubscriptionCallback<T>): subscription<T>;
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any): subscription<T>;
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any, event: string): subscription<T>;
+    notifySubscribers(valueToWrite?: T, event?: string): void;
 
-    extend(requestedExtenders: Object): this;
-    extend<T extends Subscribable<any>>(requestedExtenders: Object): T;
+    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any | null, event: "change" | "beforeChange" | "arrayChange" | "spectate" | "awake" | "asleep"): Subscription;
+    subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: string): Subscription;
 
-    getSubscriptionsCount(): number;
-    getSubscriptionsCount(event: string): number;
+    extend(requestedExtenders: object): this;
+    extend<S extends Subscribable<any>>(requestedExtenders: object): S;
+
+    getSubscriptionsCount(event?: string): number;
 }
 
 export interface Subscribable<T = any> extends SubscribableFunctions<T> { }
@@ -55,7 +52,7 @@ export interface ObservableFunctions<T = any> extends Subscribable<T> {
 
 export interface Observable<T = any> extends ObservableFunctions<T> {
     (): T;
-    (value: T): this;
+    (value: T): any;
 }
 
 export function observable<T = any>(): Observable<T>;
@@ -86,17 +83,20 @@ export interface ObservableArrayFunctions<T = any> extends ObservableFunctions<T
     splice(start: number, deleteCount: number, ...items: T[]): T[];
 
     pop(): T;
-    push(...items: T[]): void;
+    push(...items: T[]): number;
 
     shift(): T;
     unshift(...items: T[]): number;
 
-    reverse(): T[];
+    reverse(): this;
 
-    sort(): void;
-    sort(compareFunction: (left: T, right: T) => number): void;
+    sort(compareFunction?: (left: T, right: T) => number): this;
 
     // Ko specific
+    reversed(): T[];
+
+    sorted(compareFunction?: (left: T, right: T) => number): T[];
+
     replace(oldItem: T, newItem: T): void;
 
     remove(item: T): T[];
@@ -122,6 +122,8 @@ export module observableArray {
     export const fn: ObservableArrayFunctions;
 }
 
+export function isObservableArray<T = any>(instance: any): instance is ObservableArray<T>;
+
 //#endregion
 
 //#region subscribables/dependendObservable.js
@@ -136,6 +138,7 @@ export interface ComputedFunctions<T = any> extends Subscribable<T> {
     dispose(): void;
     isActive(): boolean;
     getDependenciesCount(): number;
+    getDependencies(): Subscribable[];
 }
 
 export interface Computed<T = any> extends ComputedFunctions<T> {
@@ -160,21 +163,12 @@ export function computed<T = any>(evaluator: ComputedReadFunction<T>): Computed<
 export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): Computed<T>;
 export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any, options: ComputedOptions<T>): Computed<T>;
 export module computed {
-    export const fn: ComputedFunctions<any>;
+    export const fn: ComputedFunctions;
 }
 
 export function pureComputed<T = any>(options: ComputedOptions<T>): PureComputed<T>;
 export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>): PureComputed<T>;
 export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): PureComputed<T>;
-export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any, options: ComputedOptions<T>): PureComputed<T>;
-
-export function dependentObservable<T = any>(options: ComputedOptions<T>): Computed<T>;
-export function dependentObservable<T = any>(evaluator: ComputedReadFunction<T>): Computed<T>;
-export function dependentObservable<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): Computed<T>;
-export function dependentObservable<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any, options: ComputedOptions<T>): Computed<T>;
-export module dependentObservable {
-    export const fn: ComputedFunctions;
-}
 
 export function isComputed<T = any>(instance: any): instance is Computed<T>;
 export function isPureComputed<T = any>(instance: any): instance is PureComputed<T>;
@@ -185,15 +179,14 @@ export function isPureComputed<T = any>(instance: any): instance is PureComputed
 
 export interface ComputedContext {
     getDependenciesCount(): number;
+    getDependencies(): Subscribable[];
     isInitial(): boolean;
+    registerDependency(subscribable: Subscribable): void; 
 }
 
 export const computedContext: ComputedContext;
-export const dependencyDetection: ComputedContext;
 
-export function ignoreDependencies(callback: Function): void;
-export function ignoreDependencies(callback: Function, callbackTarget: any): void;
-export function ignoreDependencies(callback: Function, callbackTarget: any, callbackArgs: any[]): void;
+export function ignoreDependencies(callback: Function, callbackTarget?: any, callbackArgs?: any[]): void;
 
 //#endregion
 
@@ -206,7 +199,7 @@ export interface Extender<T extends Subscribable = any> {
 export interface Extenders {
     [name: string]: Extender;
 
-    trackArrayChanges: Extender<ObservableArray>;
+    trackArrayChanges: Extender<Subscribable>;
     throttle: Extender<Observable>;
     rateLimit: Extender<Subscribable>;
     deferred: Extender<Subscribable>;
@@ -220,15 +213,21 @@ export const extenders: Extenders;
 //#region subscribables/mappingHelpers.js
 
 export function toJS(rootObject: any): any;
-export function toJSON(rootObject: any): any;
-export function toJSON(rootObject: any, replacer: Function): any;
-export function toJSON(rootObject: any, replacer: Function, space: number): any;
+export function toJSON(rootObject: any, replacer?: Function, space?: number): any;
+
+//#endregion
+
+//#region subscribables/observableUtils.js
+
+export function when<T>(predicate: () => T | Subscribable<T>, callback: (value: T) => void, context?: any): Subscription;
 
 //#endregion
 
 //#region binding/bindingAttributeSyntax.js
 
-interface AllBindingsAccessor {
+export type BindingAccessors = { [name: string]: Function; };
+
+interface AllBindings {
     (): any;
 
     get(name: string): any;
@@ -240,8 +239,8 @@ export type BindingHandlerControlsDescendant = { controlsDescendantBindings: boo
 export type BindingHandlerAddBinding = (name: string, value: any) => void;
 export interface BindingHandler {
     after?: string[];
-    init?: (element: any, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
-    update?: (element: any, valueAccessor: () => any, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>) => void;
+    init?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
+    update?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void;
     options?: any;
     preprocess?: (value: any, name: string, addBinding?: BindingHandlerAddBinding) => void;
 }
@@ -265,26 +264,17 @@ export interface BindingContext<T = any> {
 
     $component?: any;
 
-    extend(properties: any): any;
+    extend(properties: object): BindingContext<T>;
+    extend(properties: () => object): BindingContext<T>;
 
-    createChildContext<T>(dataItem: T): BindingContext<T>;
-    createChildContext<T>(dataItem: T, dataItemAlias: string): BindingContext<T>;
-    createChildContext<T>(dataItem: T, dataItemAlias: string, extendCallback: BindingContextExtendCallback<T>): BindingContext<T>;
-
-    createChildContext<T>(accessor: () => T): BindingContext<T>;
-    createChildContext<T>(dataItem: () => T, dataItemAlias: string): BindingContext<T>;
-    createChildContext<T>(dataItem: () => T, dataItemAlias: string, extendCallback: BindingContextExtendCallback<T>): BindingContext<T>;
+    createChildContext<T>(dataItem: T | Observable<T>, dataItemAlias?: string, extendCallback?: (self: BindingContext<T>) => void): BindingContext<T>;
+    createChildContext<T>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: (self: BindingContext<T>) => void): BindingContext<T>;
 }
 
-export function applyBindings<T = any>(bindingContext: T | BindingContext<T>): void;
-export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node | null): void;
-export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node | null, extendCallback: BindingContextExtendCallback<T>): void;
-
-export function applyBindingsToDescendants<T = any>(bindingContext: T | BindingContext<T>): void;
-export function applyBindingsToDescendants<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node): void;
-
-export function applyBindingsToNode<T = any>(node: Node, bindings: Object | (() => Object), viewModel: T | BindingContext<T>): void;
-export function applyBindingAccessorsToNode<T = any>(node: Node, bindings: Object | (() => Object), viewModel: T | BindingContext<T>): void;
+export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node | null, extendCallback?: BindingContextExtendCallback<T>): void;
+export function applyBindingsToDescendants<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node): void;
+export function applyBindingsToNode<T = any>(node: Node, bindings: object | (() => object), viewModel: T | BindingContext<T>): void;
+export function applyBindingAccessorsToNode<T = any>(node: Node, bindings: BindingAccessors | (() => BindingAccessors), viewModel: T | BindingContext<T>): void;
 
 export function dataFor<T = any>(node: Node): T;
 export function contextFor<T = any>(node: Node): BindingContext<T>;
@@ -294,11 +284,13 @@ export function getBindingHandler(handler: string): BindingHandler;
 
 export type BindingContextExtendCallback<T = any> = (self: BindingContext<T>, parentContext: BindingContext<T> | null, dataItem: T) => void;
 
+export module bindingEvent {
+    export function subscribe(node: Node, event: "childrenComplete" | "descendantsComplete", callback: (node: Node) => void, callbackContext?: any): Subscription;
+}
+
 //#endregion
 
 //#region binding/bindingProvider.js
-
-export type BindingAccessors = { [name: string]: Function; };
 
 export interface BindingOptions {
     valueAccessors?: boolean;
@@ -307,21 +299,20 @@ export interface BindingOptions {
 
 export interface IBindingProvider {
     nodeHasBindings(node: Node): boolean;
-    getBindings(node: Node, bindingContext: BindingContext<any>): Object;
+    getBindings(node: Node, bindingContext: BindingContext<any>): object;
     getBindingAccessors(node: Node, bindingContext: BindingContext<any>): BindingAccessors;
 }
 
 export class bindingProvider implements IBindingProvider {
     nodeHasBindings(node: Node): boolean;
 
-    getBindings(node: Node, bindingContext: BindingContext<any>): Object;
+    getBindings(node: Node, bindingContext: BindingContext<any>): object;
     getBindingAccessors(node: Node, bindingContext: BindingContext<any>): BindingAccessors;
 
-    getBindingsString(node: Node): string;
-    getBindingsString(node: Node, bindingContext: BindingContext<any>): string;
+    getBindingsString(node: Node, bindingContext?: BindingContext<any>): string;
 
-    parseBindingsString(bindingsString: string, bindingContext: BindingContext<any>, node: Node): Object;
-    parseBindingsString(bindingsString: string, bindingContext: BindingContext<any>, node: Node, options: BindingOptions): Object | BindingAccessors;
+    parseBindingsString(bindingsString: string, bindingContext: BindingContext<any>, node: Node): object;
+    parseBindingsString(bindingsString: string, bindingContext: BindingContext<any>, node: Node, options: BindingOptions): object | BindingAccessors;
 
     static instance: IBindingProvider;
 }
@@ -336,29 +327,18 @@ export module expressionRewriting {
         unknown?: string;
     }
 
+    export interface TwoWayBindings {
+        [name: string]: boolean | string;
+    }
+
     export const bindingRewriteValidators: any[];
 
     export function parseObjectLiteral(objectLiteralString: string): KeyValue[];
 
-    export function preProcessBindings(bindingsString: string): string;
-    export function preProcessBindings(bindingsString: string, bindingOptions: BindingOptions): string;
-    export function preProcessBindings(keyValueArray: KeyValue[]): string;
-    export function preProcessBindings(keyValueArray: KeyValue[], bindingOptions: BindingOptions): string;
+    export function preProcessBindings(bindingsString: string, bindingOptions?: BindingOptions): string;
+    export function preProcessBindings(keyValueArray: KeyValue[], bindingOptions?: BindingOptions): string;
 
-    export const _twoWayBindings: Object;
-}
-
-export module jsonExpressionRewriting {
-    export interface KeyValue {
-        key?: string;
-        value?: string;
-        unknown?: string;
-    }
-
-    export function insertPropertyAccessorsIntoJson(bindingsString: string): string;
-    export function insertPropertyAccessorsIntoJson(bindingsString: string, bindingOptions: BindingOptions): string;
-    export function insertPropertyAccessorsIntoJson(keyValueArray: KeyValue[]): string;
-    export function insertPropertyAccessorsIntoJson(keyValueArray: KeyValue[], bindingOptions: BindingOptions): string;
+    export const _twoWayBindings: TwoWayBindings;
 }
 
 //#endregion
@@ -367,10 +347,7 @@ export module jsonExpressionRewriting {
 
 export module selectExtensions {
     export function readValue(element: HTMLElement): any;
-
-    export function writeValue(element: HTMLElement): void;
-    export function writeValue(element: HTMLElement, value: any): void;
-    export function writeValue(element: HTMLElement, value: any, allowUnset: boolean): void;
+    export function writeValue(element: HTMLElement, value?: any, allowUnset?: boolean): void;
 }
 
 //#endregion
@@ -380,6 +357,9 @@ export module selectExtensions {
 export interface BindingHandlers {
     // Controlling text and appearance
     visible: {
+        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
+    };
+    hidden: {
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
     };
     text: {
@@ -394,42 +374,44 @@ export interface BindingHandlers {
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string>): void;
     };
     css: {
-        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string | Object>): void;
+        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string | object>): void;
     };
     style: {
-        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<Object>): void;
+        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<object>): void;
     };
     attr: {
-        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<Object>): void;
+        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<object>): void;
     };
 
     // Control Flow
     foreach: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<any[] | Object>): BindingHandlerControlsDescendant;
-        update(element: Node, valueAccessor: () => MaybeSubscribable<any[] | Object>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: Node, valueAccessor: () => MaybeSubscribable<any[] | any>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
     };
     if: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<any>): BindingHandlerControlsDescendant;
-        update(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
     };
     ifnot: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<any>): BindingHandlerControlsDescendant;
-        update(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
     };
     with: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<any>): BindingHandlerControlsDescendant;
-        update(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
+    };
+    let: {
+        init(element: Node, valueAccessor: () => MaybeSubscribable<object>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
+    };
+    using: {
+        init(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
     };
 
     // Working with form fields
     event: {
-        init(element: HTMLElement, valueAccessor: () => Object, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: HTMLElement, valueAccessor: () => object, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): void;
     };
     click: {
-        init(element: HTMLElement, valueAccessor: () => Function, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: HTMLElement, valueAccessor: () => Function, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): void;
     };
     submit: {
-        init(element: HTMLElement, valueAccessor: () => Function, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        init(element: HTMLElement, valueAccessor: () => Function, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): void;
     };
     enable: {
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
@@ -439,54 +421,52 @@ export interface BindingHandlers {
     };
     value: {
         after: string[];
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
         update(...args: any[]): void; // Keep for backwards compatibility with code that may have wrapped value binding
     };
     textInput: {
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string>, allBindings: AllBindings): void;
     };
     textinput: {
         preprocess(value: any, name: string, addBinding?: BindingHandlerAddBinding): void;
     };
     hasfocus: {
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
     };
     hasFocus: {
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
     };
     checked: {
         after: string[];
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
     };
     checkedValue: {
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
     };
     options: {
         init(element: HTMLElement): BindingHandlerControlsDescendant;
-        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
     };
     selectedOptions: {
         after: string[];
-        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor): void;
+        init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
         update(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>): void;
     };
     uniqueName: {
         init(element: HTMLElement, valueAccessor: () => boolean): void;
     };
-
-    let: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<any>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
-    };
 }
 
 export interface VirtualElementsAllowedBindings {
+    text: boolean;
     foreach: boolean;
     if: boolean;
     ifnot: boolean;
     with: boolean;
     let: boolean;
+    using: boolean;
 }
 
 //#endregion
@@ -495,7 +475,7 @@ export interface VirtualElementsAllowedBindings {
 
 export module utils {
     export interface ArrayChange<T = any> {
-        status: string;
+        status: "added" | "deleted" | "retained";
         value: T;
         index: number;
         moved?: number;
@@ -529,9 +509,7 @@ export module utils {
         afterRemove?: MappingHookFunction<T>;
     }
 
-    export function setDomNodeChildrenFromArrayMapping<T = any>(domNode: Node, array: T[], mapping: MappingFunction<T>): void;
-    export function setDomNodeChildrenFromArrayMapping<T = any>(domNode: Node, array: T[], mapping: MappingFunction<T>, options: MappingOptions<T>): void;
-    export function setDomNodeChildrenFromArrayMapping<T = any>(domNode: Node, array: T[], mapping: MappingFunction<T>, options: MappingOptions<T>, callbackAfterAddingNodes: MappingAfterAddFunction<T>): void;
+    export function setDomNodeChildrenFromArrayMapping<T = any>(domNode: Node, array: T[], mapping: MappingFunction<T>, options?: MappingOptions<T>, callbackAfterAddingNodes?: MappingAfterAddFunction<T>): void;
 }
 
 //#endregion
@@ -565,7 +543,7 @@ export interface BindingTemplateOptions extends TemplateOptions, utils.MappingOp
 export interface BindingHandlers {
     template: {
         init(element: Node, valueAccessor: () => MaybeSubscribable<string | BindingTemplateOptions>): BindingHandlerControlsDescendant;
-        update(element: Node, valueAccessor: () => MaybeSubscribable<string | BindingTemplateOptions>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): void;
+        update(element: Node, valueAccessor: () => MaybeSubscribable<string | BindingTemplateOptions>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): void;
     };
 }
 export interface VirtualElementsAllowedBindings {
@@ -573,13 +551,8 @@ export interface VirtualElementsAllowedBindings {
 }
 
 export function renderTemplate(template: string | Node | (() => string | Node)): string;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined): string;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined): string;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[]): Computed<void>;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[], renderMode: string): Computed<void>;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[], renderMode: "replaceChildren"): Computed<void>;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[], renderMode: "replaceNode"): Computed<void>;
-export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[], renderMode: "ignoreTargetNode"): Computed<void>;
+export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options?: TemplateOptions<T> | null | undefined): string;
+export function renderTemplate<T = any>(template: string | Node | (() => string | Node), dataOrBindingContext: T | BindingContext<T> | null | undefined, options: TemplateOptions<T> | null | undefined, targetNodeOrNodeArray: Node | Node[], renderMode?: "replaceChildren" | "replaceNode" | "ignoreTargetNode"): Computed<void>;
 
 export function setTemplateEngine(templateEngine: templateEngine | undefined): void;
 
@@ -622,8 +595,6 @@ export interface TemplateSource {
 
 export module templateSources {
     export class domElement implements TemplateSource {
-        domElement: Node;
-
         constructor(element: Node);
 
         text(): string;
@@ -648,8 +619,6 @@ export module templateSources {
 
 export class nativeTemplateEngine extends templateEngine {
     renderTemplateSource(templateSource: TemplateSource, bindingContext: BindingContext<any>, options: TemplateOptions<any>, templateDocument?: Document): Node[];
-
-    static instance: nativeTemplateEngine;
 }
 
 //#endregion
@@ -657,12 +626,9 @@ export class nativeTemplateEngine extends templateEngine {
 //#region templating/jquery.tmpl/jqueryTmplTemplateEngine.js
 
 export class jqueryTmplTemplateEngine extends templateEngine {
-    jQueryTmplVersion: number;
-
     renderTemplateSource(templateSource: TemplateSource, bindingContext: BindingContext<any>, options: TemplateOptions<any>, templateDocument?: Document): Node[];
+    createJavaScriptEvaluatorBlock(script: string): string;
     addTemplate(templateName: string, templateMarkup: string): void;
-
-    static instance: nativeTemplateEngine;
 }
 
 //#endregion
@@ -671,7 +637,7 @@ export class jqueryTmplTemplateEngine extends templateEngine {
 
 export interface BindingHandlers {
     component: {
-        init(element: Node, valueAccessor: () => MaybeSubscribable<{ name: any; params: any; }>, allBindingsAccessor: AllBindingsAccessor, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
+        init(element: Node, valueAccessor: () => MaybeSubscribable<{ name: any; params: any; }>, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>): BindingHandlerControlsDescendant;
     };
 }
 export interface VirtualElementsAllowedBindings {
@@ -691,6 +657,15 @@ export module components {
 //#region components/defaultLoader.js
 
 export module components {
+    export interface ViewModelConstructor {
+        new(params?: ViewModelParams): ViewModel;
+    }
+
+    export interface ViewModel {
+        dispose?: () => void;
+        koDescendantsComplete?: (node: Node) => void;
+    }
+
     export interface ViewModelParams {
         [name: string]: any;
     }
@@ -700,49 +675,54 @@ export module components {
         templateNodes: Node[];
     }
 
+    export type CreateViewModel = (params: ViewModelParams, componentInfo: ComponentInfo) => ViewModel;
+
     export interface Component {
-        viewModel: any;
         template: Node[];
+        createViewModel?: CreateViewModel;
     }
 
     export interface ViewModelStatic {
         instance: any;
     }
-    export interface ViewModelConstructor {
-        new(params?: ViewModelParams): any;
-    }
     export interface ViewModelFactory {
-        createViewModel(params: ViewModelParams, componentInfo: ComponentInfo): any;
+        createViewModel: CreateViewModel;
     }
     export interface TemplateElement {
         element: string | Node;
     }
 
-    export type ViewModelConfig = ViewModelStatic | ViewModelParams | ViewModelFactory;
+    export type ViewModelConfig = ViewModelConstructor | ViewModelStatic | ViewModelFactory;
     export type TemplateConfig = string | Node[] | DocumentFragment | TemplateElement;
     export interface RequireConfig {
         require: string;
     }
     export interface Config {
         require?: string;
-        viewModel?: RequireConfig | ViewModelConfig;
-        template?: RequireConfig | TemplateConfig;
+        viewModel?: RequireConfig | ViewModelConfig | any;
+        template?: RequireConfig | TemplateConfig | any;
         synchronous?: boolean;
     }
 
-    export function register(componentName: string, config: Config): void;
+    export function register(componentName: string, config: Config | object): void;
     export function unregister(componentName: string): void;
     export function isRegistered(componentName: string): boolean;
 
     export interface Loader {
-        getConfig(componentName: string, callback: (config: Config) => void): void;
-        loadComponent(componentName: string, config: Config, callback: (component: Component) => void): void;
-        loadTemplate(componentName: string, config: TemplateConfig, callback: (template: Node[]) => void): void;
-        loadViewModel(componentName: string, config: ViewModelConfig, callback: (viewModel: any) => void): void;
+        getConfig?(componentName: string, callback: (config: Config | object) => void): void;
+        loadComponent?(componentName: string, config: Config | object, callback: (component: Component | null) => void): void;
+        loadTemplate?(componentName: string, config: TemplateConfig | any, callback: (resolvedTemplate: Node[] | null) => void): void;
+        loadViewModel?(componentName: string, config: ViewModelConfig | any, callback: (resolvedViewModel: CreateViewModel | null) => void): void;
     }
 
-    export const defaultLoader: Loader;
     export const loaders: Loader[];
+
+    export class defaultLoader implements Loader {
+        getConfig(componentName: string, callback: (config: Config | object) => void): void;
+        loadComponent(componentName: string, config: Config, callback: (component: Component) => void): void;
+        loadTemplate(componentName: string, config: TemplateConfig, callback: (resolvedTemplate: Node[]) => void): void;
+        loadViewModel(componentName: string, config: ViewModelConfig, callback: (resolvedViewModel: CreateViewModel) => void): void;
+    }
 }
 
 //#endregion
@@ -792,6 +772,8 @@ export module memoization {
 export interface Options {
     deferUpdates: boolean;
     useOnlyNativeEvents: boolean;
+    createChildContextWithAs: boolean;
+    foreachHidesDestroyed: boolean;
 }
 
 export const options: Options;
@@ -815,20 +797,19 @@ export module tasks {
 
 export module utils {
     export interface PostJsonOptions {
-        params?: Object;
+        params?: object;
         includeFields?: string[];
         submitter?: (form: HTMLFormElement) => void;
     }
 
     export function addOrRemoveItem<T = any>(array: MaybeObservableArray<T>, value: T, included?: boolean): T[];
 
-    export function arrayForEach<T = any>(array: T[], action: (item: T, index: number) => void): void;
-    export function arrayFirst<T = any>(array: T[], predicate: (item: T, index: number) => boolean): T;
-    export function arrayFirst<T = any>(array: T[], predicate: (item: T, index: number) => boolean, predicateOwner: any): T;
-    export function arrayFilter<T = any>(array: T[], predicate: (item: T, index: number) => boolean): T[];
+    export function arrayForEach<T = any>(array: T[], action: (item: T, index: number) => void, actionOwner?: any): void;
+    export function arrayFirst<T = any>(array: T[], predicate: (item: T, index: number) => boolean, predicateOwner?: any): T;
+    export function arrayFilter<T = any>(array: T[], predicate: (item: T, index: number) => boolean, predicateOwner?: any): T[];
     export function arrayGetDistinctValues<T = any>(array: T[]): T[];
     export function arrayIndexOf<T = any>(array: MaybeObservableArray<T>, item: T): number;
-    export function arrayMap<T = any, U = any>(array: T[], mapping: (item: T, index: number) => U): U[];
+    export function arrayMap<T = any, U = any>(array: T[], mapping: (item: T, index: number) => U, mappingOwner?: any): U[];
     export function arrayPushAll<T = any>(array: MaybeObservableArray<T>, valuesToPush: T[]): T[];
     export function arrayRemoveItem<T = any>(array: MaybeObservableArray<T>, itemToRemove: T): void;
 
@@ -838,13 +819,12 @@ export module utils {
 
     export function getFormFields(form: HTMLFormElement, fieldName: string | RegExp): any[];
 
-    export function objectForEach(obj: Object, action: (key: string, value: any) => void): void;
+    export function objectForEach(obj: object, action: (key: string, value: any) => void): void;
     export function objectForEach<T = any>(obj: { [key: string]: T }, action: (key: string, value: T) => void): void;
 
     export function peekObservable<T = any>(value: MaybeSubscribable<T>): T;
 
-    export function postJson(urlOrForm: string | HTMLFormElement, data: MaybeSubscribable<Object>): void;
-    export function postJson(urlOrForm: string | HTMLFormElement, data: MaybeSubscribable<Object>, options: PostJsonOptions): void;
+    export function postJson(urlOrForm: string | HTMLFormElement, data: MaybeSubscribable<object>, options?: PostJsonOptions): void;
 
     export function parseJson(jsonString: string): any;
     export function parseJson<T = any>(jsonString: string): T;
@@ -855,9 +835,7 @@ export module utils {
 
     export function setTextContent(element: Node, textContent: MaybeSubscribable<string>): void;
 
-    export function stringifyJson(data: MaybeSubscribable<any>): string;
-    export function stringifyJson(data: MaybeSubscribable<any>, replacer: Function): string;
-    export function stringifyJson(data: MaybeSubscribable<any>, replacer: Function, space: string | number): string;
+    export function stringifyJson(data: MaybeSubscribable<any>, replacer?: Function, space?: string | number): string;
 
     export function toggleDomNodeCssClass(node: Element, className: string, shouldHaveClass?: boolean): void;
 

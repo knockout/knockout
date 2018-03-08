@@ -1,5 +1,5 @@
-/// <reference path="../../../build/types/knockout" />
-/// <reference path="_references" />
+/// <reference path="../../../build/types/knockout.d.ts" />
+/// <reference path="_references.d.ts" />
 
 declare var $: any;
 
@@ -111,12 +111,14 @@ function test_observableArrays() {
     myObservableArray.indexOf('Blah');
 
     myObservableArray.push('Some new value');
+    myObservableArray.push('v1', 'v2', 'v3');
     myObservableArray.pop();
 
     myObservableArray.unshift('Some new value');
     myObservableArray.shift();
 
     myObservableArray.reverse();
+    myObservableArray.sort();
     myObservableArray.sort((left, right) => left == right ? 0 : (left < right ? -1 : 1));
 
     myObservableArray.splice(1, 3);
@@ -282,7 +284,7 @@ function test_more() {
 
     const plainJs = ko.toJS(viewModel);
 
-    ko.extenders.logChange = function (target, option) {
+    ko.extenders.logChange = function (target: ko.Subscribable, option: string) {
         target.subscribe((newValue: string) => {
             console.log(option + ": " + newValue);
         });
@@ -290,7 +292,7 @@ function test_more() {
         return target;
     };
 
-    ko.extenders.numeric = function (target, precision) {
+    ko.extenders.numeric = function (target: ko.Subscribable, precision: number) {
         var result = ko.computed<any>({
             read: target,
             write: (newValue) => {
@@ -326,7 +328,7 @@ function test_more() {
 
     ko.applyBindings(new AppViewModel(221.2234, 123.4525));
 
-    ko.extenders.required = function (target: any, overrideMessage) {
+    ko.extenders.required = function (target: any, overrideMessage: string) {
 
         target.hasError = ko.observable();
         target.validationMessage = ko.observable();
@@ -412,7 +414,7 @@ function test_more() {
         });
     }
 
-    ko.observableArray.fn.filterByProperty = function (propName, matchValue) {
+    ko.observableArray.fn.filterByProperty = function (propName: string, matchValue: boolean) {
         return ko.pureComputed(() => {
             const allItems = this(), matchingItems = [];
             for (let current of allItems) {
@@ -473,7 +475,7 @@ function test_misc(this: any) {
 
     postbox.notifySubscribers(value, "mytopic");
 
-    ko.subscribable.fn.publishOn = function (topic) {
+    ko.subscribable.fn.publishOn = function (topic: string) {
         this.subscribe(function (newValue) {
             postbox.notifySubscribers(newValue, topic);
         });
@@ -508,7 +510,7 @@ function test_misc(this: any) {
         }
     };
 
-    ko.subscribable.fn.publishOn = function (topic) {
+    ko.subscribable.fn.publishOn = function (topic: string) {
         this.subscribe(function (newValue) {
             postbox.notifySubscribers(newValue, topic);
         });
@@ -533,6 +535,69 @@ function test_misc(this: any) {
         }
     }
 
+}
+
+function test_customObservable() {
+    // See https://github.com/knockout/knockout/issues/2072
+    var modelAttributeObservable = (model: any, attribute: any): ko.Observable => {
+        // Check the attribute exists
+        if (!(attribute in model)) {
+            throw new ReferenceError(attribute + ' is not an attribute of the supplied model');
+        }
+
+        // Set up the attribute observable cache
+        model._koObservables || (model._koObservables = {});
+
+        // If we already have a cached observable then just return it		
+        if (attribute in model._koObservables) {
+            return model._koObservables[attribute];
+        }
+
+        // Create our observable getter/setter function	
+        var observableAttribute = <ko.Observable>(function (this: any): any {
+            if (arguments.length > 0) {
+                observableAttribute.valueWillMutate();
+                model[attribute] = arguments[0];
+                return this;
+            } else {
+                // The caller only needs to be notified of changes if they did a "read" operation
+                ko.computedContext.registerDependency(observableAttribute);
+                return observableAttribute.peek();
+            }
+        });
+
+        // Create a function to fetch the attribute value that
+        // is in the correct context so it has access to the model.
+        observableAttribute.peek = function () {
+            return model[attribute];
+        }
+
+        // Register to listen to change events on the model attribute
+        model.on('change:' + attribute, function () {
+            observableAttribute.valueHasMutated();
+        });
+
+        // Initialise the observableAttribute as a subscribable
+        // Then override the prototype to make it a subclass
+        ko.subscribable.fn.init(observableAttribute);
+        (<any>observableAttribute).__proto__ = observableAttribute_fn;
+
+        // setup the deferred update extender if needed
+        ko.options['deferUpdates'] && ko.extenders['deferred'](observableAttribute, true);
+
+        // Cache the observableAttribute function and return it
+        return (model._koObservables[attribute] = observableAttribute);
+    };
+
+    // Setup the prototype for the observableAttribute as a subclass of subscribable
+    var observableAttribute_fn = {
+        __proto__: ko.subscribable['fn'],
+        valueHasMutated: function (this: ko.Observable) { this.notifySubscribers(this.peek()); },
+        valueWillMutate: function (this: ko.Observable) { this.notifySubscribers(this.peek(), 'beforeChange'); },
+
+        // Make KO treat the observableAttribute function as an observable
+        __ko_proto__: ko.observable
+    };
 }
 
 function test_allBindingsAccessor() {
