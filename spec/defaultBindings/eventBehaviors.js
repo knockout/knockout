@@ -13,9 +13,11 @@ describe('Binding: Event', function() {
 
         try {
             ko.utils.triggerEvent(testNode.childNodes[0], "click");
-            expect(lastError.message).toContain("The value for");
+        } catch (ex) {
+            lastError = e;
         } finally {
             ko.onError = koOnError;
+            expect(lastError.message).toContain("The value for");
         }
     });
 
