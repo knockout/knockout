@@ -225,7 +225,7 @@
             ctx[contextAncestorBindingInfo] = self.bindingInfo;
         }, options);
     };
-    AsyncCompleteContext.prototype.extend = function (properties) {
+    AsyncCompleteContext.prototype['extend'] = function (properties) {
         var self = this;
         return new ko.bindingContext(inheritParentVm, this.bindingInfo.context, null, function(ctx) {
             ko.utils.extend(ctx, typeof(properties) == "function" ? properties() : properties);

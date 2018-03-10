@@ -19,7 +19,7 @@ describe('Binding: When', function() {
         expect(testNode).toContainText("x1");
     });
 
-    it('Should ignore new values after given a true value', function () {
+    it('Should toggle the presence and bindedness of descendant nodes according to the truthiness of the value', function() {
         var observable = ko.observable(false);
         testNode.innerHTML = "<div data-bind='when: condition'><span data-bind='text: \"bound value\"'></span></div>";
 
@@ -31,8 +31,11 @@ describe('Binding: When', function() {
         expect(testNode).toContainText("bound value");
 
         observable(false);
+        expect(testNode.childNodes[0].childNodes.length).toBe(0);
+
+        observable(true);
+        expect(testNode.childNodes[0].childNodes.length).toBe(1);
         expect(testNode).toContainText("bound value");
-        expect(observable.getSubscriptionsCount()).toBe(0);  // no more subscriptions
     });
 
     it('Should not update if node is cleaned before value becomes true', function () {
