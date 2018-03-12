@@ -2,7 +2,7 @@ ko.delaySync = (function () {
     var isPaused = false;
     var queue = [];
 
-    return {
+    var delaySync = {
         pause: function () {
             isPaused = true;
         },
@@ -21,8 +21,17 @@ ko.delaySync = (function () {
             }
         }
     };
+
+    Object.defineProperty(delaySync, "isPaused", {
+        get: function() { return isPaused; },
+        enumerable: true,
+        configurable: true
+    });
+
+    return delaySync;
 })();
 ko.exportSymbol('delaySync', ko.delaySync);
 ko.exportSymbol('delaySync.pause', ko.delaySync.pause);
+ko.exportSymbol('delaySync.isPaused', ko.delaySync["isPaused"]);
 ko.exportSymbol('delaySync.resume', ko.delaySync.resume);
 ko.exportSymbol('delaySync.run', ko.delaySync.run);
