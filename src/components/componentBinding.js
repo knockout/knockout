@@ -69,7 +69,7 @@
                         });
 
                     if (componentViewModel && componentViewModel['koDescendantsComplete']) {
-                        afterRenderSub = ko.bindingEvent.subscribe(element, "descendantsComplete", componentViewModel['koDescendantsComplete'], componentViewModel);
+                        afterRenderSub = ko.bindingEvent.subscribe(element, ko.bindingEvent.descendantsComplete, componentViewModel['koDescendantsComplete'], componentViewModel);
                     }
 
                     currentViewModel = componentViewModel;
