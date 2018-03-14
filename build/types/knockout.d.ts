@@ -1,6 +1,6 @@
-// Type definitions for Knockout v3.4.0
+// Type definitions for Knockout v3.5.0
 // Project: http://knockoutjs.com
-// Definitions by: Maxime LUCE <https://github.com/SomaticIT>
+// Definitions by: Maxime LUCE <https://github.com/SomaticIT>, Michael Best <https://github.com/mbest>
 
 export as namespace ko;
 
@@ -19,8 +19,11 @@ export interface SubscribableFunctions<T = any> extends Function {
 
     notifySubscribers(valueToWrite?: T, event?: string): void;
 
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any | null, event: "change" | "beforeChange" | "arrayChange" | "spectate" | "awake" | "asleep"): Subscription;
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: string): Subscription;
+    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any, event: "beforeChange" | "spectate" | "awake"): Subscription;
+    subscribe(callback: SubscriptionCallback<Array<utils.ArrayChange<T>>>, callbackTarget: any, event: "arrayChange"): Subscription;
+    subscribe(callback: SubscriptionCallback<undefined>, callbackTarget: any, event: "asleep"): Subscription;
+    subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: "change"): Subscription;
+    subscribe<X>(callback: SubscriptionCallback<X>, callbackTarget: any, event: string): Subscription;
 
     extend(requestedExtenders: object): this;
     extend<S extends Subscribable<any>>(requestedExtenders: object): S;
@@ -845,6 +848,8 @@ export module utils {
 }
 
 export function unwrap<T = any>(value: MaybeSubscribable<T>): T;
+
+export function onError(error: Error): void;
 
 //#endregion
 
