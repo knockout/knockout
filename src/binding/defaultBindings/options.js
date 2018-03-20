@@ -89,6 +89,12 @@ ko.bindingHandlers['options'] = {
                 // Apply some text to the option element
                 var optionText = applyToObject(arrayEntry, allBindings.get('optionsText'), optionValue);
                 ko.utils.setTextContent(option, optionText);
+
+                // Apply some title to the option element
+                if(allBindings['has']('optionsTitle')) {
+                    var optionTitle = applyToObject(arrayEntry, allBindings.get('optionsTitle'));
+                    option.setAttribute('title', optionTitle);
+                }
             }
             return [option];
         }
