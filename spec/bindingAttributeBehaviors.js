@@ -642,4 +642,81 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });
+
+    it('Should call a descendantsComplete callback function after descendant elements are bound', function () {
+        var callbacks = 0,
+            callback = function (node) {
+                expect(node).toEqual(testNode.childNodes[0]);
+                callbacks++;
+            },
+            vm = { callback: callback };
+
+        testNode.innerHTML = "<div data-bind='descendantsComplete: callback'><span data-bind='text: \"Some Text\"'></span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
+    it('Should call a descendantsComplete callback function when bound to a virtual element', function () {
+        var callbacks = 0,
+            callback = function (node) {
+                expect(node).toEqual(testNode.childNodes[1]);
+                callbacks++;
+            },
+            vm = { callback: callback };
+
+        testNode.innerHTML = "begin <!-- ko descendantsComplete: callback --><span data-bind='text: \"Some Text\"'></span><!-- /ko --> end";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
+    it('Should not call a descendantsComplete callback function when there are no descendant nodes', function () {
+        var callbacks = 0;
+
+        testNode.innerHTML = "<div data-bind='descendantsComplete: callback'></div>";
+        ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(0);
+    });
+
+    it('Should ignore (and not throw an error) for a null descendantsComplete callback', function () {
+        testNode.innerHTML = "<div data-bind='descendantsComplete: null'><span data-bind='text: \"Some Text\"'></span></div>";
+        ko.applyBindings({}, testNode);
+    });
+
+    it('Should call descendantsComplete callback registered with ko.bindingEvent.subscribe, if descendantsComplete is also present in the binding', function () {
+        var callbacks = 0;
+
+        testNode.innerHTML = "<div data-bind='descendantsComplete'><div></div></div>";
+        ko.bindingEvent.subscribe(testNode.childNodes[0], "descendantsComplete", function (node) {
+            callbacks++;
+            expect(node).toEqual(testNode.childNodes[0]);
+        });
+
+        ko.applyBindings({}, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
+    it('Should throw an error if a descendantsComplete callback is registered when descendantsComplete is not present in the binding', function () {
+        var callbacks = 0;
+
+        testNode.innerHTML = "<div><div></div></div>";
+        ko.bindingEvent.subscribe(testNode.childNodes[0], "descendantsComplete", function (node) { callbacks++ });
+
+        expect(function () {
+            ko.applyBindings({}, testNode);
+        }).toThrowContaining("event not supported");
+        expect(callbacks).toEqual(0);
+    });
+
+    it('Should call a descendantsComplete callback function even if descendant element doesn\'t generate event', function () {
+        var callbacks = 0,
+            callback = function (node) {
+                expect(node).toEqual(testNode.childNodes[0]);
+                callbacks++;
+            },
+            vm = { callback: callback };
+
+        testNode.innerHTML = "<div data-bind='descendantsComplete: callback'><span data-bind='text: \"Some Text\"'></span><div data-bind='descendantsComplete'></div></div>";
+        ko.applyBindings(vm, testNode);
+        expect(callbacks).toEqual(1);
+    });
 });

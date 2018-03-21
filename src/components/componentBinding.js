@@ -39,7 +39,7 @@
                     throw new Error('No component name specified');
                 }
 
-                var asyncContext = ko.bindingEvent.startPossiblyAsyncContentBinding(element);
+                var asyncContext = ko.bindingEvent.startPossiblyAsyncContentBinding(element, bindingContext);
 
                 var loadingOperationId = currentLoadingOperationId = ++componentLoadingOperationUniqueId;
                 ko.components.get(componentName, function(componentDefinition) {
@@ -63,7 +63,7 @@
                     };
 
                     var componentViewModel = createViewModel(componentDefinition, componentParams, componentInfo),
-                        childBindingContext = asyncContext.createChildContext(componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
+                        childBindingContext = asyncContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
                             ctx['$component'] = componentViewModel;
                             ctx['$componentTemplateNodes'] = originalChildNodes;
                         });

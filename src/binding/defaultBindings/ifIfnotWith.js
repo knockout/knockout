@@ -1,7 +1,7 @@
 (function () {
 
 // Makes a binding like with or if
-function makeWithIfBinding(bindingKey, isWith, isNot, isWhen) {
+function makeWithIfBinding(bindingKey, isWith, isNot) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             var savedNodes, asOption, wrapCondition, ifCondition, contextToExtend;
@@ -17,12 +17,6 @@ function makeWithIfBinding(bindingKey, isWith, isNot, isWhen) {
                 ifCondition = ko.computed(function() {
                     return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
                 }, null, { disposeWhenNodeIsRemoved: element });
-            }
-
-            if (isWhen) {
-                contextToExtend = ko.bindingEvent.startPossiblyAsyncContentBinding(element);
-            } else {
-                contextToExtend = bindingContext;
             }
 
             ko.computed(function() {
@@ -49,7 +43,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot, isWhen) {
                     if (isWith) {
                         childContext = bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, asOption);
                     } else if (ifCondition.isActive()) {
-                        childContext = contextToExtend['extend'](function() { ifCondition(); return null; });
+                        childContext = bindingContext['extend'](function() { ifCondition(); return null; });
                     } else {
                         childContext = bindingContext;
                     }
@@ -71,6 +65,5 @@ function makeWithIfBinding(bindingKey, isWith, isNot, isWhen) {
 makeWithIfBinding('if');
 makeWithIfBinding('ifnot', false /* isWith */, true /* isNot */);
 makeWithIfBinding('with', true /* isWith */);
-makeWithIfBinding('when', false /* isWith */, false /* isNot */, true /* isWhen */);
 
 })();
