@@ -642,4 +642,19 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });
+
+    it('Should have "this" refer to the binding handler inside an init() or update() method', function () {
+        ko.bindingHandlers.testThisValue = {
+            init: function () {
+                expect(this.otherProperty).toBe("abc");
+            },
+            update: function () {
+                expect(this.otherProperty).toBe("abc");
+            },
+            otherProperty: "abc"
+        };
+
+        testNode.innerHTML = "<div data-bind='testThisValue: true'></div>";
+        ko.applyBindings({}, testNode);
+    });
 });

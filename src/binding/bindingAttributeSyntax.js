@@ -484,9 +484,8 @@
             ko.utils.arrayForEach(orderedBindings, function(bindingKeyAndHandler) {
                 // Note that topologicalSortBindings has already filtered out any nonexistent binding handlers,
                 // so bindingKeyAndHandler.handler will always be nonnull.
-                var handlerInitFn = bindingKeyAndHandler.handler["init"],
-                    handlerUpdateFn = bindingKeyAndHandler.handler["update"],
-                    bindingKey = bindingKeyAndHandler.key;
+                var bindingKey = bindingKeyAndHandler.key,
+                    bindingHandler = bindingKeyAndHandler.handler;
 
                 if (node.nodeType === 8) {
                     validateThatBindingIsAllowedForVirtualElements(bindingKey);
@@ -494,9 +493,9 @@
 
                 try {
                     // Run init, ignoring any dependencies
-                    if (typeof handlerInitFn == "function") {
+                    if (typeof bindingHandler["init"] == "function") {
                         ko.dependencyDetection.ignore(function() {
-                            var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                            var initResult = bindingHandler["init"](node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -508,10 +507,10 @@
                     }
 
                     // Run update in its own computed wrapper
-                    if (typeof handlerUpdateFn == "function") {
+                    if (typeof bindingHandler["update"] == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                bindingHandler["update"](node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
