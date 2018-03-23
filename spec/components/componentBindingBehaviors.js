@@ -888,6 +888,17 @@ describe('Components: Component binding', function() {
         expect(renderedComponents).toEqual([ 'sub-component1', 'test-component', 'sub-component2' ]);
     });
 
+    it('Works with applyBindingsToNode', function() {
+        ko.components.register(testComponentName, {
+            template: 'Parent is outer view model: <span data-bind="text: $parent.isOuterViewModel"></span>'
+        });
+        testNode.innerHTML = "<div></div>";
+        ko.applyBindingsToNode(testNode.childNodes[0], {component: {name: testComponentName}}, outerViewModel);
+        jasmine.Clock.tick(1);
+
+        expect(testNode.childNodes[0]).toContainText('Parent is outer view model: true');
+    });
+
     describe('Does not automatically subscribe to any observables you evaluate during createViewModel or a viewmodel constructor', function() {
         // This clarifies that, if a developer wants to react when some observable parameter
         // changes, then it's their responsibility to subscribe to it or use a computed.

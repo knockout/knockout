@@ -361,10 +361,12 @@ var computedFn = {
         // Override the limit function with one that delays evaluation as well
         ko.subscribable['fn'].limit.call(this, limitFunction);
         this._evalIfChanged = function () {
-            if (this[computedState].isStale) {
-                this.evaluateImmediate();
-            } else {
-                this[computedState].isDirty = false;
+            if (!this[computedState].isSleeping) {
+                if (this[computedState].isStale) {
+                    this.evaluateImmediate();
+                } else {
+                    this[computedState].isDirty = false;
+                }
             }
             return this[computedState].latestValue;
         };

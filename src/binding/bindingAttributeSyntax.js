@@ -52,9 +52,6 @@
                 if (contextAncestorBindingInfo in parentContext) {
                     self[contextAncestorBindingInfo] = parentContext[contextAncestorBindingInfo];
                 }
-
-                // Because the above copy overwrites our own properties, we need to reset them.
-                self[contextSubscribable] = subscribable;
             } else {
                 self['$parents'] = [];
                 self['$root'] = dataItem;
@@ -64,6 +61,8 @@
                 // See https://github.com/SteveSanderson/knockout/issues/490
                 self['ko'] = ko;
             }
+
+            self[contextSubscribable] = subscribable;
 
             if (shouldInheritData) {
                 dataItem = self['$data'];
@@ -83,9 +82,6 @@
 
             return self['$data'];
         }
-        function disposeWhen() {
-            return nodes && !ko.utils.anyDomNodeIsAttachedToDocument(nodes);
-        }
 
         var self = this,
             shouldInheritData = dataItemOrAccessor === inheritParentVm,
@@ -99,35 +95,18 @@
             // the binding context when they change.
             updateContext();
         } else {
-            subscribable = ko.dependentObservable(updateContext, null, { disposeWhen: disposeWhen, disposeWhenNodeIsRemoved: true });
+            subscribable = ko.pureComputed(updateContext);
+            subscribable.peek();
 
             // At this point, the binding context has been initialized, and the "subscribable" computed observable is
             // subscribed to any observables that were accessed in the process. If there is nothing to track, the
             // computed will be inactive, and we can safely throw it away. If it's active, the computed is stored in
             // the context object.
             if (subscribable.isActive()) {
-                self[contextSubscribable] = subscribable;
-
                 // Always notify because even if the model ($data) hasn't changed, other context properties might have changed
                 subscribable['equalityComparer'] = null;
-
-                // We need to be able to dispose of this computed observable when it's no longer needed. This would be
-                // easy if we had a single node to watch, but binding contexts can be used by many different nodes, and
-                // we cannot assume that those nodes have any relation to each other. So instead we track any node that
-                // the context is attached to, and dispose the computed when all of those nodes have been cleaned.
-
-                // Add properties to *subscribable* instead of *self* because any properties added to *self* may be overwritten on updates
-                nodes = [];
-                subscribable._addNode = function(node) {
-                    nodes.push(node);
-                    ko.utils.domNodeDisposal.addDisposeCallback(node, function(node) {
-                        ko.utils.arrayRemoveItem(nodes, node);
-                        if (!nodes.length) {
-                            subscribable.dispose();
-                            self[contextSubscribable] = subscribable = undefined;
-                        }
-                    });
-                };
+            } else {
+                self[contextSubscribable] = undefined;
             }
         }
     }
@@ -165,7 +144,7 @@
         // If the parent context references an observable view model, "contextSubscribable" will always be the
         // latest view model object. If not, "contextSubscribable" isn't set, and we can use the static "$data" value.
         return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
-            ko.utils.extend(self, typeof(properties) == "function" ? properties() : properties);
+            ko.utils.extend(self, typeof(properties) == "function" ? properties(self) : properties);
         });
     };
 
@@ -218,20 +197,6 @@
             this.notifyAncestor();
         }
     };
-    AsyncCompleteContext.prototype.createChildContext = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
-        var self = this;
-        return this.bindingInfo.context['createChildContext'](dataItemOrAccessor, dataItemAlias, function (ctx) {
-            extendCallback(ctx);
-            ctx[contextAncestorBindingInfo] = self.bindingInfo;
-        }, options);
-    };
-    AsyncCompleteContext.prototype['extend'] = function (properties) {
-        var self = this;
-        return new ko.bindingContext(inheritParentVm, this.bindingInfo.context, null, function(ctx) {
-            ko.utils.extend(ctx, typeof(properties) == "function" ? properties() : properties);
-            ctx[contextAncestorBindingInfo] = self.bindingInfo;
-        });
-    };
 
     ko.bindingEvent = {
         childrenComplete: "childrenComplete",
@@ -261,11 +226,19 @@
             }
         },
 
-        startPossiblyAsyncContentBinding: function (node) {
-            var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
-            if (bindingInfo) {
-                return bindingInfo.asyncContext || (bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingInfo.context[contextAncestorBindingInfo]));
+        startPossiblyAsyncContentBinding: function (node, bindingContext) {
+            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+
+            // If the context was already extended with this node's binding info, just return the extended context
+            if (bindingContext[contextAncestorBindingInfo] == bindingInfo) {
+                return bindingContext;
             }
+
+            // Create (or get the existing) async context object for this node, and return a new binding context with a pointer to this node
+            var asyncContext = bindingInfo.asyncContext || (bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingContext[contextAncestorBindingInfo]));
+            return bindingContext['extend'](function(ctx) {
+                ctx[contextAncestorBindingInfo] = bindingInfo;
+            });
         }
     };
 
@@ -343,13 +316,12 @@
                 applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
                 bindingApplied = true;
             }
-
-            ko.bindingEvent.notify(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
         }
+        ko.bindingEvent.notify(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
     }
 
     function applyBindingsToNodeAndDescendantsInternal(bindingContext, nodeVerified) {
-        var shouldBindDescendants = true;
+        var bindingContextForDescendants = bindingContext;
 
         var isElement = (nodeVerified.nodeType === 1);
         if (isElement) // Workaround IE <= 8 HTML parsing weirdness
@@ -360,10 +332,10 @@
         // (2) It might have bindings (e.g., it has a data-bind attribute, or it's a marker for a containerless template)
         var shouldApplyBindings = isElement || ko.bindingProvider['instance']['nodeHasBindings'](nodeVerified);
         if (shouldApplyBindings)
-            shouldBindDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext)['shouldBindDescendants'];
+            bindingContextForDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext)['bindingContextForDescendants'];
 
-        if (shouldBindDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
-            applyBindingsToDescendantsInternal(bindingContext, nodeVerified);
+        if (bindingContextForDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
+            applyBindingsToDescendantsInternal(bindingContextForDescendants, nodeVerified);
         }
     }
 
@@ -409,9 +381,6 @@
             }
 
             bindingInfo.context = bindingContext;
-            if (bindingContext[contextSubscribable]) {
-                bindingContext[contextSubscribable]._addNode(node);
-            }
         }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings
@@ -439,6 +408,7 @@
                 bindingsUpdater = null;
         }
 
+        var contextToExtend = bindingContext;
         var bindingHandlerThatControlsDescendantBindings;
         if (bindings) {
             // Return the value accessor for a given binding. When bindings are static (won't be updated because of a binding
@@ -477,6 +447,16 @@
                 });
             }
 
+            if (ko.bindingEvent.descendantsComplete in bindings) {
+                contextToExtend = ko.bindingEvent.startPossiblyAsyncContentBinding(node, bindingContext);
+                ko.bindingEvent.subscribe(node, ko.bindingEvent.descendantsComplete, function () {
+                    var callback = evaluateValueAccessor(bindings[ko.bindingEvent.descendantsComplete]);
+                    if (callback && ko.virtualElements.firstChild(node)) {
+                        callback(node);
+                    }
+                });
+            }
+
             // First put the bindings into the right order
             var orderedBindings = topologicalSortBindings(bindings);
 
@@ -496,7 +476,7 @@
                     // Run init, ignoring any dependencies
                     if (typeof handlerInitFn == "function") {
                         ko.dependencyDetection.ignore(function() {
-                            var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                            var initResult = handlerInitFn(node, getValueAccessor(bindingKey), allBindings, contextToExtend['$data'], contextToExtend);
 
                             // If this binding handler claims to control descendant bindings, make a note of this
                             if (initResult && initResult['controlsDescendantBindings']) {
@@ -511,7 +491,7 @@
                     if (typeof handlerUpdateFn == "function") {
                         ko.dependentObservable(
                             function() {
-                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, bindingContext['$data'], bindingContext);
+                                handlerUpdateFn(node, getValueAccessor(bindingKey), allBindings, contextToExtend['$data'], contextToExtend);
                             },
                             null,
                             { disposeWhenNodeIsRemoved: node }
@@ -524,8 +504,10 @@
             });
         }
 
+        var shouldBindDescendants = bindingHandlerThatControlsDescendantBindings === undefined;
         return {
-            'shouldBindDescendants': bindingHandlerThatControlsDescendantBindings === undefined
+            'shouldBindDescendants': shouldBindDescendants,
+            'bindingContextForDescendants': shouldBindDescendants && contextToExtend
         };
     };
 

@@ -102,6 +102,7 @@ describe('Binding: If', function() {
         var someItem = ko.observable({ childprop: 'child' }),
             callbacks = 0;
         var viewModel = { condition: ko.observable(true), someText: "hello", callback: function () { callbacks++; } };
+
         ko.applyBindings(viewModel, testNode);
         expect(callbacks).toEqual(1);
         expect(testNode.childNodes[0]).toContainText('hello');
@@ -113,5 +114,80 @@ describe('Binding: If', function() {
         viewModel.condition(true);
         expect(callbacks).toEqual(2);
         expect(testNode.childNodes[0]).toContainText('hello');
+    });
+
+    it('Should call a descendantsComplete callback function', function () {
+        testNode.innerHTML = "<div data-bind='if: condition, descendantsComplete: callback'><span data-bind='text: someText'></span></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var viewModel = { condition: ko.observable(false), someText: "hello", callback: function () { callbacks++; } };
+
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        viewModel.condition(true);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('hello');
+    });
+
+    it('Should call a descendantsComplete callback function after nested \"if\" bindings are complete', function () {
+        testNode.innerHTML = "<div data-bind='if: outerCondition, descendantsComplete: callback'><div data-bind='if: innerCondition, descendantsComplete'><span data-bind='text: someText'></span></div></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var viewModel = { outerCondition: ko.observable(false), innerCondition: ko.observable(false), someText: "hello", callback: function () { callbacks++; } };
+
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        // Complete the outer condition first and then the inner one
+        viewModel.outerCondition(true);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        viewModel.innerCondition(true);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('hello');
+    });
+
+    it('Should call descendantsComplete callback function when nested \"if\" bindings are complete', function () {
+        testNode.innerHTML = "<div data-bind='if: outerCondition, descendantsComplete: callback'><div data-bind='if: innerCondition, descendantsComplete'><span data-bind='text: someText'></span></div></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var viewModel = { outerCondition: ko.observable(false), innerCondition: ko.observable(false), someText: "hello", callback: function () { callbacks++; } };
+
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        // Complete the inner condition first and then the outer one (reverse order from previous test)
+        viewModel.innerCondition(true);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        viewModel.outerCondition(true);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('hello');
+    });
+
+    it('Should call descendantsComplete callback function if nested \"if\" bindings are disposed before completion', function () {
+        testNode.innerHTML = "<div data-bind='if: outerCondition, descendantsComplete: callback'><div data-bind='if: innerCondition, descendantsComplete'><span data-bind='text: someText'></span></div></div>";
+        var someItem = ko.observable({ childprop: 'child' }),
+            callbacks = 0;
+        var viewModel = { outerCondition: ko.observable(false), innerCondition: ko.observable(false), someText: "hello", callback: function () { callbacks++; } };
+
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        // Complete the outer condition and then dispose the inner one
+        viewModel.outerCondition(true);
+        expect(callbacks).toEqual(0);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        ko.cleanNode(testNode.childNodes[0].childNodes[0]);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('');
     });
 });
