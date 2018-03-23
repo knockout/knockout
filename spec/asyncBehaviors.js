@@ -1242,6 +1242,39 @@ describe('Deferred', function() {
             jasmine.Clock.tick(1);
             expect(notifySpy).not.toHaveBeenCalled();
         });
+
+        it('Should not re-evaluate if pure computed becomes asleep while a notification is pending', function() {
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+
+            var data = ko.observable('A'),
+                timesEvaluated = 0,
+                computed1 = ko.computed(function () {
+                    if (data() == 'B')
+                        subscription.dispose();
+                }),
+                computed2 = ko.pureComputed(function () {
+                    timesEvaluated++;
+                    return data() + '2';
+                }),
+                notifySpy = jasmine.createSpy('callback'),
+                subscription = computed2.subscribe(notifySpy);
+
+            // The computed is evaluated when awakened
+            expect(timesEvaluated).toEqual(1);
+
+            // When we update the observable, both computeds will be marked dirty and scheduled for notification
+            // But the first one will dispose the subscription to the second, putting it to sleep
+            data('B');
+            jasmine.Clock.tick(1);
+            expect(timesEvaluated).toEqual(1);
+
+            // When we read the computed it should be evaluated again because its dependencies have changed
+            expect(computed2()).toEqual('B2');
+            expect(timesEvaluated).toEqual(2);
+
+            expect(notifySpy).not.toHaveBeenCalled();
+        });
     });
 
     describe('ko.when', function() {

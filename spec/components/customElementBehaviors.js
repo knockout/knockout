@@ -189,18 +189,22 @@ describe('Components: Custom elements', function() {
 
     it('Should update component when observable view model changes', function() {
         ko.components.register('test-component', {
-            template: '<p>the value: <span data-bind="text: textToShow"></span></p>'
+            template: '<p>the component value: <span data-bind="text: textToShow"></span>, the root value: <span data-bind="text: $root.value"></span></p>'
         });
 
         testNode.innerHTML = '<test-component params="textToShow: value"></test-component>';
         var vm = ko.observable({ value: 'A' });
         ko.applyBindings(vm, testNode);
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText("the value: A");
+        expect(testNode).toContainText("the component value: A, the root value: A");
 
         vm({ value: 'Z' });
+        // The view-model change updates the old component contents before the new contents get rendered.
+        // This is the way it has always worked, but maybe this isn't the best experience
+        expect(testNode).toContainText("the component value: A, the root value: Z");
+
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText("the value: Z");
+        expect(testNode).toContainText("the component value: Z, the root value: Z");
     });
 
     it('Is possible to pass observable instances', function() {

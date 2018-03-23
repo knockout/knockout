@@ -252,6 +252,14 @@ describe('Templating', function() {
         expect(testNode.childNodes[0]).toContainText('result = new child');
     });
 
+    it('Should not call a childrenComplete callback function if template is empty', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\" }, childrenComplete: callback'></div>";
+        var callbacks = 0;
+        ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(0);
+    });
+
     it('Should stop tracking inner observables immediately when the container node is removed from the document', function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));
