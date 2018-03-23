@@ -268,10 +268,10 @@ export interface BindingContext<T = any> {
     $component?: any;
 
     extend(properties: object): BindingContext<T>;
-    extend(properties: () => object): BindingContext<T>;
+    extend(properties: (self: BindingContext<T>) => object): BindingContext<T>;
 
-    createChildContext<T>(dataItem: T | Observable<T>, dataItemAlias?: string, extendCallback?: (self: BindingContext<T>) => void): BindingContext<T>;
-    createChildContext<T>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: (self: BindingContext<T>) => void): BindingContext<T>;
+    createChildContext<X>(dataItem: T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
+    createChildContext<X>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
 }
 
 export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node | null, extendCallback?: BindingContextExtendCallback<T>): void;
