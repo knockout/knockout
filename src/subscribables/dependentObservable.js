@@ -499,7 +499,7 @@ var protoProp = ko.observable.protoProperty; // == "__ko_proto__"
 computedFn[protoProp] = ko.computed;
 
 ko.isComputed = function (instance) {
-    return (typeof instance == 'function' && instance[protoProp] === ko.computed);
+    return (typeof instance == 'function' && instance[protoProp] === computedFn[protoProp]);
 };
 
 ko.isPureComputed = function (instance) {
