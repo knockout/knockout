@@ -417,7 +417,15 @@
             var getValueAccessor = bindingsUpdater
                 ? function(bindingKey) {
                     return function() {
-                        return evaluateValueAccessor(bindingsUpdater()[bindingKey]);
+                        var bs = bindingsUpdater();
+                        if (bs[bindingKey].cache) {
+                            return bs[bindingKey].cache;
+                        }
+                        var value = evaluateValueAccessor(bs[bindingKey]);
+                        if (ko.isSubscribable(value)) {
+                            bs[bindingKey].cache = value;
+                        }
+                        return value;
                     };
                 } : function(bindingKey) {
                     return bindings[bindingKey];
