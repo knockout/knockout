@@ -18,6 +18,8 @@ describe('Parse HTML fragment', function() {
         { html: '<div></div>', parsed: ['<div></div>'] },
         { html: '<custom-component></custom-component>', parsed: ['<custom-component></custom-component>'] },
         { html: '<tr></tr>', parsed: ['<tr></tr>'] },
+        { html: '<!-- ko if:true --><tr></tr><!-- /ko -->', parsed: ['<!-- ko if:true -->','<tr></tr>','<!-- /ko -->'] },
+        { html: '<!-- this is a table row --><tr></tr>', parsed: ['<!-- this is a table row -->','<tr></tr>'] },
         { html: '<tr></tr><tr></tr>', parsed: ['<tr></tr>', '<tr></tr>'] },
         { html: '<td></td>', parsed: ['<td></td>'] },
         { html: '<th></th>', parsed: ['<th></th>'] },
