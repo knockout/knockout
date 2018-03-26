@@ -19,7 +19,7 @@
         mayRequireCreateElementHack = ko.utils.ieVersion <= 8;
 
     function getWrap(tags) {
-        var m = tags.match(/^<([a-z]+)[ >]/);
+        var m = tags.match(/^(?:<!--.*?-->\s*?)*?<([a-z]+)[\s>]/);
         return (m && lookup[m[1]]) || none;
     }
 
