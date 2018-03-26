@@ -9,9 +9,10 @@ if (window && window.navigator) {
 
     // Detect various browser versions because some old versions don't fully support the 'input' event
     var userAgent = window.navigator.userAgent,
-        operaVersion, chromeVersion, safariVersion, firefoxVersion, ieVersion;
+        operaVersion, chromeVersion, safariVersion, firefoxVersion, ieVersion, edgeVersion;
 
     (operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()))
+        || (edgeVersion = parseVersion(userAgent.match(/Edge\/([^ ]+)$/)))
         || (chromeVersion = parseVersion(userAgent.match(/Chrome\/([^ ]+)/)))
         || (safariVersion = parseVersion(userAgent.match(/Version\/([^ ]+) Safari/)))
         || (firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]+)/)))
@@ -173,6 +174,10 @@ ko.bindingHandlers['textInput'] = {
                 // Firefox <=3.5 doesn't fire the 'input' event when text is dropped into the input.
                 onEvent('dragdrop', updateModel);       // <3.5
                 onEvent('drop', updateModel);           // 3.5
+            } else if (edgeVersion && element.type === "number") {
+                // Microsoft Edge doesn't fire 'input' or 'change' events for number inputs when
+                // the value is changed via the up / down arrow keys
+                onEvent('keydown', deferUpdateModel);
             }
         }
 
