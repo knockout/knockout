@@ -12,6 +12,12 @@ declare module "knockout" {
         required(target: ko.Subscribable, overrideMessage: string): typeof target;
     }
 
+    export interface ObservableExtenderOptions {
+        numeric?: number;
+        required?: string;
+        logChange?: string;
+    }
+
     // Define your own functions
     export interface SubscribableFunctions<T> {
         publishOn(topic: string): this;

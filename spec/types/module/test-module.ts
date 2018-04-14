@@ -280,6 +280,12 @@ declare module "knockout" {
         numeric(target: ko.Subscribable, precision: number): typeof target;
         required(target: ko.Subscribable, overrideMessage: string): typeof target;
     }
+
+    export interface ObservableExtenderOptions {
+        numeric?: number;
+        required?: string;
+        logChange?: string;
+    }
 }
 
 function test_more() {

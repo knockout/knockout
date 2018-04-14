@@ -25,8 +25,8 @@ export interface SubscribableFunctions<T = any> extends Function {
     subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: "change"): Subscription;
     subscribe<X>(callback: SubscriptionCallback<X>, callbackTarget: any, event: string): Subscription;
 
-    extend(requestedExtenders: object): this;
-    extend<S extends Subscribable<any>>(requestedExtenders: object): S;
+    extend(requestedExtenders: ObservableExtenderOptions): this;
+    extend<S extends Subscribable<any>>(requestedExtenders: ObservableExtenderOptions): S;
 
     getSubscriptionsCount(event?: string): number;
 }
@@ -195,18 +195,31 @@ export function ignoreDependencies(callback: Function, callbackTarget?: any, cal
 
 //#region subscribables/extenders.js
 
-export interface Extender<T extends Subscribable = any> {
-    (target: T, options?: any): T;
+export interface RateLimitOptions {
+    timeout: number;
+    method?: "notifyAtFixedRate" | "notifyWhenChangesStop";
+}
+
+export interface Extender<T extends Subscribable = any, O = any> {
+    (target: T, options: O): T;
 }
 
 export interface Extenders {
     [name: string]: Extender;
 
-    trackArrayChanges: Extender<Subscribable>;
-    throttle: Extender<Observable>;
-    rateLimit: Extender<Subscribable>;
-    deferred: Extender<Subscribable>;
-    notify: Extender<Subscribable>;
+    trackArrayChanges: Extender<Subscribable, true | utils.CompareArraysOptions>;
+    throttle: Extender<Observable, number>;
+    rateLimit: Extender<Subscribable, number | RateLimitOptions>;
+    deferred: Extender<Subscribable, true>;
+    notify: Extender<Subscribable, "always" | any>;
+}
+
+export interface ObservableExtenderOptions {
+    trackArrayChanges?: true | utils.CompareArraysOptions;
+    throttle?: number;
+    rateLimit?: number | RateLimitOptions;
+    deferred?: true;
+    notify?: "always" | any;
 }
 
 export const extenders: Extenders;
@@ -240,12 +253,12 @@ interface AllBindings {
 }
 export type BindingHandlerControlsDescendant = { controlsDescendantBindings: boolean; }
 export type BindingHandlerAddBinding = (name: string, value: any) => void;
-export interface BindingHandler {
+export interface BindingHandler<T = any> {
     after?: string[];
-    init?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
-    update?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void;
+    init?: (element: any, valueAccessor: () => T, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
+    update?: (element: any, valueAccessor: () => T, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void;
     options?: any;
-    preprocess?: (value: any, name: string, addBinding?: BindingHandlerAddBinding) => void;
+    preprocess?: (value: string | undefined, name: string, addBinding: BindingHandlerAddBinding) => string | undefined | void;
 }
 
 export interface BindingHandlers {
@@ -257,7 +270,7 @@ export interface BindingContext<T = any> {
 
     [name: string]: any;
 
-    $parent: any;
+    $parent?: any;
     $parents: any[];
     $root: any;
     $data: T;
@@ -431,7 +444,7 @@ export interface BindingHandlers {
         init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string>, allBindings: AllBindings): void;
     };
     textinput: {
-        preprocess(value: any, name: string, addBinding?: BindingHandlerAddBinding): void;
+        preprocess(value: string | undefined, name: string, addBinding: BindingHandlerAddBinding): void;
     };
     hasfocus: {
         init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
