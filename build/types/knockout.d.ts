@@ -131,8 +131,8 @@ export function isObservableArray<T = any>(instance: any): instance is Observabl
 
 //#region subscribables/dependendObservable.js
 
-export type ComputedReadFunction<T = any> = Subscribable<T> | Observable<T> | Computed<T> | (() => T);
-export type ComputedWriteFunction<T = any> = (val: T) => void;
+export type ComputedReadFunction<T = any, TTarget = void> = Subscribable<T> | Observable<T> | Computed<T> | ((this: TTarget) => T);
+export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val: T) => void;
 export type MaybeComputed<T = any> = T | Computed<T>;
 
 export interface ComputedFunctions<T = any> extends Subscribable<T> {
@@ -151,27 +151,27 @@ export interface Computed<T = any> extends ComputedFunctions<T> {
 
 export interface PureComputed<T = any> extends Computed<T> { }
 
-export interface ComputedOptions<T = any> {
-    read?: ComputedReadFunction<T>,
-    write?: ComputedWriteFunction<T>,
-    owner?: any;
+export interface ComputedOptions<T = any, TTarget = void> {
+    read?: ComputedReadFunction<T, TTarget>;
+    write?: ComputedWriteFunction<T, TTarget>;
+    owner?: TTarget;
     pure?: boolean;
     deferEvaluation?: boolean;
     disposeWhenNodeIsRemoved?: boolean;
     disposeWhen?: () => boolean;
 }
 
-export function computed<T = any>(options: ComputedOptions<T>): Computed<T>;
+export function computed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): Computed<T>;
 export function computed<T = any>(evaluator: ComputedReadFunction<T>): Computed<T>;
-export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): Computed<T>;
-export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any, options: ComputedOptions<T>): Computed<T>;
+export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): Computed<T>;
+export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget, options: ComputedOptions<T, TTarget>): Computed<T>;
 export module computed {
     export const fn: ComputedFunctions;
 }
 
-export function pureComputed<T = any>(options: ComputedOptions<T>): PureComputed<T>;
+export function pureComputed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): PureComputed<T>;
 export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>): PureComputed<T>;
-export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): PureComputed<T>;
+export function pureComputed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): PureComputed<T>;
 
 export function isComputed<T = any>(instance: any): instance is Computed<T>;
 export function isPureComputed<T = any>(instance: any): instance is PureComputed<T>;
@@ -315,8 +315,9 @@ export interface BindingOptions {
 
 export interface IBindingProvider {
     nodeHasBindings(node: Node): boolean;
-    getBindings(node: Node, bindingContext: BindingContext<any>): object;
+    getBindings?(node: Node, bindingContext: BindingContext<any>): object;
     getBindingAccessors(node: Node, bindingContext: BindingContext<any>): BindingAccessors;
+    preprocessNode?(node: Node): Node[] | undefined;
 }
 
 export class bindingProvider implements IBindingProvider {
