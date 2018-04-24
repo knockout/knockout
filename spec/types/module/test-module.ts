@@ -280,6 +280,12 @@ declare module "knockout" {
         numeric(target: ko.Subscribable, precision: number): typeof target;
         required(target: ko.Subscribable, overrideMessage: string): typeof target;
     }
+
+    export interface ObservableExtenderOptions {
+        numeric?: number;
+        required?: string;
+        logChange?: string;
+    }
 }
 
 function test_more() {
@@ -409,10 +415,11 @@ function test_more() {
         this.pageIndex(1);
     };
 
+    var grid = new GridViewModel();
     ko.computed(function (this: GridViewModel) {
         var params = { page: this.pageIndex(), size: this.pageSize() };
         $.getJSON('/Some/Json/Service', params, this.currentPageData);
-    }).extend({ throttle: 1 });
+    }, grid).extend({ throttle: 1 });
 
     const removeDom = document.querySelector(".remove");
     if (removeDom) {
@@ -991,7 +998,7 @@ ko.bindingProvider.instance = {
         if ((<Element>node).tagName == 'EM')
             return { text: ++model.numBindings } as Object;
 
-        return originalBindingProvider.getBindings(node, bindingContext);
+        return originalBindingProvider.getBindings ? originalBindingProvider.getBindings(node, bindingContext) : {};
     },
     getBindingAccessors: (node, bindingContext) => {
         if ((<Element>node).tagName == 'EM')

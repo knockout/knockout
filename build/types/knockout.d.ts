@@ -25,8 +25,8 @@ export interface SubscribableFunctions<T = any> extends Function {
     subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: "change"): Subscription;
     subscribe<X>(callback: SubscriptionCallback<X>, callbackTarget: any, event: string): Subscription;
 
-    extend(requestedExtenders: object): this;
-    extend<S extends Subscribable<any>>(requestedExtenders: object): S;
+    extend(requestedExtenders: ObservableExtenderOptions): this;
+    extend<S extends Subscribable<any>>(requestedExtenders: ObservableExtenderOptions): S;
 
     getSubscriptionsCount(event?: string): number;
 }
@@ -131,8 +131,8 @@ export function isObservableArray<T = any>(instance: any): instance is Observabl
 
 //#region subscribables/dependendObservable.js
 
-export type ComputedReadFunction<T = any> = Subscribable<T> | Observable<T> | Computed<T> | (() => T);
-export type ComputedWriteFunction<T = any> = (val: T) => void;
+export type ComputedReadFunction<T = any, TTarget = void> = Subscribable<T> | Observable<T> | Computed<T> | ((this: TTarget) => T);
+export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val: T) => void;
 export type MaybeComputed<T = any> = T | Computed<T>;
 
 export interface ComputedFunctions<T = any> extends Subscribable<T> {
@@ -151,27 +151,27 @@ export interface Computed<T = any> extends ComputedFunctions<T> {
 
 export interface PureComputed<T = any> extends Computed<T> { }
 
-export interface ComputedOptions<T = any> {
-    read?: ComputedReadFunction<T>,
-    write?: ComputedWriteFunction<T>,
-    owner?: any;
+export interface ComputedOptions<T = any, TTarget = void> {
+    read?: ComputedReadFunction<T, TTarget>;
+    write?: ComputedWriteFunction<T, TTarget>;
+    owner?: TTarget;
     pure?: boolean;
     deferEvaluation?: boolean;
     disposeWhenNodeIsRemoved?: boolean;
     disposeWhen?: () => boolean;
 }
 
-export function computed<T = any>(options: ComputedOptions<T>): Computed<T>;
+export function computed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): Computed<T>;
 export function computed<T = any>(evaluator: ComputedReadFunction<T>): Computed<T>;
-export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): Computed<T>;
-export function computed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any, options: ComputedOptions<T>): Computed<T>;
+export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): Computed<T>;
+export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget, options: ComputedOptions<T, TTarget>): Computed<T>;
 export module computed {
     export const fn: ComputedFunctions;
 }
 
-export function pureComputed<T = any>(options: ComputedOptions<T>): PureComputed<T>;
+export function pureComputed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): PureComputed<T>;
 export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>): PureComputed<T>;
-export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>, evaluatorTarget: any): PureComputed<T>;
+export function pureComputed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): PureComputed<T>;
 
 export function isComputed<T = any>(instance: any): instance is Computed<T>;
 export function isPureComputed<T = any>(instance: any): instance is PureComputed<T>;
@@ -195,18 +195,31 @@ export function ignoreDependencies(callback: Function, callbackTarget?: any, cal
 
 //#region subscribables/extenders.js
 
-export interface Extender<T extends Subscribable = any> {
-    (target: T, options?: any): T;
+export interface RateLimitOptions {
+    timeout: number;
+    method?: "notifyAtFixedRate" | "notifyWhenChangesStop";
+}
+
+export interface Extender<T extends Subscribable = any, O = any> {
+    (target: T, options: O): T;
 }
 
 export interface Extenders {
     [name: string]: Extender;
 
-    trackArrayChanges: Extender<Subscribable>;
-    throttle: Extender<Observable>;
-    rateLimit: Extender<Subscribable>;
-    deferred: Extender<Subscribable>;
-    notify: Extender<Subscribable>;
+    trackArrayChanges: Extender<Subscribable, true | utils.CompareArraysOptions>;
+    throttle: Extender<Observable, number>;
+    rateLimit: Extender<Subscribable, number | RateLimitOptions>;
+    deferred: Extender<Subscribable, true>;
+    notify: Extender<Subscribable, "always" | any>;
+}
+
+export interface ObservableExtenderOptions {
+    trackArrayChanges?: true | utils.CompareArraysOptions;
+    throttle?: number;
+    rateLimit?: number | RateLimitOptions;
+    deferred?: true;
+    notify?: "always" | any;
 }
 
 export const extenders: Extenders;
@@ -240,12 +253,12 @@ interface AllBindings {
 }
 export type BindingHandlerControlsDescendant = { controlsDescendantBindings: boolean; }
 export type BindingHandlerAddBinding = (name: string, value: any) => void;
-export interface BindingHandler {
+export interface BindingHandler<T = any> {
     after?: string[];
-    init?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
-    update?: (element: any, valueAccessor: () => any, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void;
+    init?: (element: any, valueAccessor: () => T, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void | BindingHandlerControlsDescendant;
+    update?: (element: any, valueAccessor: () => T, allBindings: AllBindings, viewModel: any, bindingContext: BindingContext<any>) => void;
     options?: any;
-    preprocess?: (value: any, name: string, addBinding?: BindingHandlerAddBinding) => void;
+    preprocess?: (value: string | undefined, name: string, addBinding: BindingHandlerAddBinding) => string | undefined | void;
 }
 
 export interface BindingHandlers {
@@ -257,7 +270,7 @@ export interface BindingContext<T = any> {
 
     [name: string]: any;
 
-    $parent: any;
+    $parent?: any;
     $parents: any[];
     $root: any;
     $data: T;
@@ -302,8 +315,9 @@ export interface BindingOptions {
 
 export interface IBindingProvider {
     nodeHasBindings(node: Node): boolean;
-    getBindings(node: Node, bindingContext: BindingContext<any>): object;
+    getBindings?(node: Node, bindingContext: BindingContext<any>): object;
     getBindingAccessors(node: Node, bindingContext: BindingContext<any>): BindingAccessors;
+    preprocessNode?(node: Node): Node[] | undefined;
 }
 
 export class bindingProvider implements IBindingProvider {
@@ -431,7 +445,7 @@ export interface BindingHandlers {
         init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<string>, allBindings: AllBindings): void;
     };
     textinput: {
-        preprocess(value: any, name: string, addBinding?: BindingHandlerAddBinding): void;
+        preprocess(value: string | undefined, name: string, addBinding: BindingHandlerAddBinding): void;
     };
     hasfocus: {
         init(element: HTMLElement, valueAccessor: () => MaybeSubscribable<any>, allBindings: AllBindings): void;
