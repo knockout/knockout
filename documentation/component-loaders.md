@@ -88,7 +88,7 @@ The `templateConfig` value is simply the `template` property from any `component
 
   * If you do not want your loader to supply a template for the given parameters (e.g., because it does not recognize the configuration format), call `callback(null)`. Knockout will then consult any other registered loaders in sequence, until one supplies a non-`null` value.
 
-### `loadViewModel(name, templateConfig, callback)`
+### `loadViewModel(name, viewModelConfig, callback)`
 
 ***Define this if:** you want to use custom logic to supply a viewmodel factory for a given viewmodel configuration (e.g., integrating with a third-party module loader or dependency injection system).*
 
