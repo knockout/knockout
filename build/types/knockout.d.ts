@@ -243,7 +243,7 @@ export function when<T>(predicate: () => T | Subscribable<T>, callback: (value: 
 
 export type BindingAccessors = { [name: string]: Function; };
 
-interface AllBindings {
+export interface AllBindings {
     (): any;
 
     get(name: string): any;
