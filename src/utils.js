@@ -102,37 +102,27 @@ ko.utils = (function () {
         fieldsIncludedWithJsonPost: ['authenticity_token', /^__RequestVerificationToken(_.*)?$/],
 
         arrayForEach: function (array, action, actionOwner) {
-            if (array) {
-                if (typeof array.forEach == 'function') {
-                    array.forEach(action, actionOwner);
-                } else {
-                    for (var i = 0, j = array.length; i < j; i++) {
-                        action.call(actionOwner, array[i], i, array);
-                    }
-                }
+            for (var i = 0, j = array.length; i < j; i++) {
+                action.call(actionOwner, array[i], i, array);
             }
         },
 
-        arrayIndexOf: function (array, item) {
-            if (array) {
-                if (typeof array.indexOf == 'function') {
-                    return array.indexOf(item);
-                }
-                for (var i = 0, j = array.length; i < j; i++)
+        arrayIndexOf: typeof Array.prototype.indexOf == "function"
+            ? function (array, item) {
+                return Array.prototype.indexOf.call(array, item);
+            }
+            : function (array, item) {
+                for (var i = 0, j = array.length; i < j; i++) {
                     if (array[i] === item)
                         return i;
-            }
-            return -1;
-        },
+                }
+                return -1;
+            },
 
         arrayFirst: function (array, predicate, predicateOwner) {
-            if (array) {
-                if (typeof array.find == 'function') {
-                    return array.find(predicate, predicateOwner);
-                }
-                for (var i = 0, j = array.length; i < j; i++)
-                    if (predicate.call(predicateOwner, array[i], i, array))
-                        return array[i];
+            for (var i = 0, j = array.length; i < j; i++) {
+                if (predicate.call(predicateOwner, array[i], i, array))
+                    return array[i];
             }
             return undefined;
         },
@@ -159,9 +149,6 @@ ko.utils = (function () {
         },
 
         arrayMap: function (array, mapping, mappingOwner) {
-            if (array && typeof array.map == 'function') {
-                return array.map(mapping, mappingOwner);
-            }
             var result = [];
             if (array) {
                 for (var i = 0, j = array.length; i < j; i++)
@@ -171,9 +158,6 @@ ko.utils = (function () {
         },
 
         arrayFilter: function (array, predicate, predicateOwner) {
-            if (array && typeof array.filter == 'function') {
-                return array.filter(predicate, predicateOwner);
-            }
             var result = [];
             if (array) {
                 for (var i = 0, j = array.length; i < j; i++)

@@ -57,6 +57,12 @@ describe('arrayForEach', function () {
         }, expectedContext);
         expect(actualContext).toBe(expectedContext);
     });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayForEach(null, function () {});
+        }).toThrow();
+    });
 });
 
 describe('arrayIndexOf', function () {
@@ -78,6 +84,12 @@ describe('arrayIndexOf', function () {
     it('Should return the first index if the element is found twice', function () {
         var result = ko.utils.arrayIndexOf(["a", "b", "c", "c"], "c");
         expect(result).toBe(2);
+    });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayIndexOf(null, "a");
+        }).toThrow();
     });
 });
 
@@ -104,6 +116,12 @@ describe('arrayRemoveItem', function () {
         var input = ["a", "b", "b", "c"];
         ko.utils.arrayRemoveItem(input, "b");
         expect(input).toEqual(["a", "b", "c"]);
+    });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayRemoteItem(null, "a");
+        }).toThrow();
     });
 });
 
@@ -157,6 +175,12 @@ describe('arrayFirst', function () {
         expect(matchD.calls[1].args).toEqual(["b", 1, ["a", "b", "c"]]);
         expect(matchD.calls[2].args).toEqual(["c", 2, ["a", "b", "c"]]);
     });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayFirst(null, function () {});
+        }).toThrow();
+    });
 });
 
 describe('arrayGetDistinctValues', function () {
@@ -186,6 +210,11 @@ describe('arrayGetDistinctValues', function () {
         var result = ko.utils.arrayGetDistinctValues(input);
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
+    });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayGetDistinctValues(null);
+        expect(result).toEqual([]);
     });
 });
 
@@ -233,6 +262,11 @@ describe('arrayMap', function () {
 
         expect(actualContext).toBe(expectedContext);
     });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayMap(null, function () {});
+        expect(result).toEqual([]);
+    });
 });
 
 describe('arrayFilter', function () {
@@ -279,6 +313,11 @@ describe('arrayFilter', function () {
 
         expect(expectedContext).toEqual(actualContext);
     });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayFilter(null, function () {});
+        expect(result).toEqual([]);
+    });
 });
 
 describe('arrayPushAll', function () {
@@ -295,6 +334,18 @@ describe('arrayPushAll', function () {
         var targetArray = [1,2,3];
         ko.utils.arrayPushAll(targetArray, []);
         expect(targetArray).toEqual([1, 2, 3]);
+    });
+
+    it('Should throw an error for a null first array', function () {
+        expect(function () {
+            ko.utils.arrayPushAll(null, []);
+        }).toThrow();
+    });
+
+    it('Should throw an error for a null second array', function () {
+        expect(function () {
+            ko.utils.arrayPushAll([], null);
+        }).toThrow();
     });
 });
 
