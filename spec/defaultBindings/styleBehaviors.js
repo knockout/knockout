@@ -51,4 +51,21 @@ describe('Binding: CSS style', function() {
         ko.applyBindings(null, testNode);
         expect(testNode.childNodes[0].style.width).toBe("");
     });
+
+    it('Should properly respond to changes in the observable, adding px when appropriate', function() {
+        var width = ko.observable();
+        testNode.innerHTML = "<div data-bind='style: { width: width }'></div>";
+
+        ko.applyBindings({width: width}, testNode);
+        expect(testNode.childNodes[0].style.width).toBe("");
+
+        width(10);
+        expect(testNode.childNodes[0].style.width).toBe("10px");
+
+        width(20);
+        expect(testNode.childNodes[0].style.width).toBe("20px");
+
+        width(false);
+        expect(testNode.childNodes[0].style.width).toBe("");
+    });
 });

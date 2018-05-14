@@ -16,9 +16,10 @@ ko.bindingHandlers['style'] = {
                     return letter.toUpperCase();
                 });
 
+                var previousStyle = element.style[styleName];
                 element.style[styleName] = styleValue;
 
-                if (styleValue !== '' && element.style[styleName] == '' && !isNaN(styleValue)) {
+                if (styleValue !== previousStyle && element.style[styleName] == previousStyle && !isNaN(styleValue)) {
                     element.style[styleName] = styleValue + "px";
                 }
             }
