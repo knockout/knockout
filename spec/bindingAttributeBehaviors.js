@@ -291,6 +291,23 @@ describe('Binding attribute syntax', function() {
         expect(ko.contextFor(testNode.childNodes[0].childNodes[1].childNodes[0])).toBeUndefined();
     });
 
+    it('Should return the context object for nodes specifically bound, but override with general binding', function() {
+        // See https://github.com/knockout/knockout/issues/231#issuecomment-388210267
+        testNode.innerHTML = '<div data-bind="text: name"></div>';
+
+        var vm1 = { name: "specific" };
+        ko.applyBindingsToNode(testNode.childNodes[0], { text: vm1.name }, vm1);
+        expect(testNode).toContainText(vm1.name);
+        expect(ko.dataFor(testNode.childNodes[0])).toBe(vm1);
+        expect(ko.contextFor(testNode.childNodes[0]).$data).toBe(vm1);
+
+        var vm2 = { name: "general" };
+        ko.applyBindings(vm2, testNode);
+        expect(testNode).toContainText(vm2.name);
+        expect(ko.dataFor(testNode.childNodes[0])).toBe(vm2);
+        expect(ko.contextFor(testNode.childNodes[0]).$data).toBe(vm2);
+    });
+
     it('Should not be allowed to use containerless binding syntax for bindings other than whitelisted ones', function() {
         testNode.innerHTML = "Hello <!-- ko visible: false -->Some text<!-- /ko --> Goodbye";
         expect(function () {

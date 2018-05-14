@@ -309,12 +309,10 @@
                 nextInQueue = ko.virtualElements.firstChild(elementOrVirtualElement);
             }
 
-            var bindingApplied = false;
             while (currentChild = nextInQueue) {
                 // Keep a record of the next child *before* applying bindings, in case the binding removes the current child from its position
                 nextInQueue = ko.virtualElements.nextSibling(currentChild);
                 applyBindingsToNodeAndDescendantsInternal(bindingContext, currentChild);
-                bindingApplied = true;
             }
         }
         ko.bindingEvent.notify(elementOrVirtualElement, ko.bindingEvent.childrenComplete);
@@ -373,13 +371,17 @@
     }
 
     function applyBindingsToNodeInternal(node, sourceBindings, bindingContext) {
+        var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
+
         // Prevent multiple applyBindings calls for the same node, except when a binding value is specified
+        var alreadyBound = bindingInfo.alreadyBound;
         if (!sourceBindings) {
-            var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
-            if (bindingInfo.context) {
+            if (alreadyBound) {
                 throw Error("You cannot apply bindings multiple times to the same element.");
             }
-
+            bindingInfo.alreadyBound = true;
+        }
+        if (!alreadyBound) {
             bindingInfo.context = bindingContext;
         }
 
