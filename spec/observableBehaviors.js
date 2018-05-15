@@ -46,6 +46,7 @@ describe('Observable', function() {
     it('Should be able to write values to it', function () {
         var instance = new ko.observable();
         instance(123);
+        expect(instance()).toEqual(123)
     });
 
     it('Should be able to write to multiple observable properties on a model object using chaining syntax', function() {
