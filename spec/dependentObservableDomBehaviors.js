@@ -7,7 +7,7 @@ describe('Dependent Observable DOM', function() {
         var nodeForActive = document.createElement('DIV'),
             observable = ko.observable('initial'),
             activeDependentObservable = ko.dependentObservable({ read: function() { return observable(); }, disposeWhenNodeIsRemoved: nodeForActive });
-        var nodeForInactive = document.createElement('DIV')
+        var nodeForInactive = document.createElement('DIV'),
             inactiveDependentObservable = ko.dependentObservable({ read: function() { return 123; }, disposeWhenNodeIsRemoved: nodeForInactive });
 
         expect(activeDependentObservable.isActive()).toEqual(true);
