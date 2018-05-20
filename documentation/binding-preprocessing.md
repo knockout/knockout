@@ -5,7 +5,7 @@ title: Extending Knockout's binding syntax using preprocessing
 
 *Note: This is an advanced technique, typically used only when creating libraries of reusable bindings or extended syntaxes. It's not something you'll normally need to do when building applications with Knockout.*
 
-Starting with Knockout 3.0, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings during the binding process.
+With binding preprocessing, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings during the binding process.
 
 ## Preprocessing binding strings
 

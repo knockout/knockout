@@ -1,10 +1,12 @@
 ---
 layout: documentation
-title: The "visible" binding
+title: The "visible" and "hidden" bindings
+redirect_from:
+  - /documentation/hidden-binding.html
 ---
 
 ### Purpose
-The `visible` binding causes the associated DOM element to become hidden or visible according to the value you pass to the binding.
+The `visible` and `hidden` bindings cause the associated DOM element to become hidden or visible according to the value you pass to the binding.
 
 ### Example
     <div data-bind="visible: shouldShowMessage">
@@ -23,11 +25,13 @@ The `visible` binding causes the associated DOM element to become hidden or visi
 
   * Main parameter
 
-      * When the parameter resolves to a **false-like value** (e.g., the boolean value `false`, or the numeric value `0`, or `null`, or `undefined`), the binding sets `yourElement.style.display` to `none`, causing it to be hidden. This takes priority over any display style you've defined using CSS.
+      * When the parameter resolves to a **false-like value** (e.g., the boolean value `false`, or the numeric value `0`, or `null`, or `undefined`), the `visible` binding sets `yourElement.style.display` to `none`, causing it to be hidden. This takes priority over any display style you've defined using CSS.
 
-      * When the parameter resolves to a **true-like value** (e.g., the boolean value `true`, or a non-`null` object or array), the binding removes the `yourElement.style.display` value, causing it to become visible.
+      * When the parameter resolves to a **true-like value** (e.g., the boolean value `true`, or a non-`null` object or array), the `visible` binding removes the `yourElement.style.display` value, causing it to become visible.
 
         Note that any display style you've configured using your CSS rules will then apply (so CSS rules like `x { display:table-row }` work fine in conjunction with this binding).
+        
+    The `hidden` binding works oppositely, setting the `display` style to `none`, and so hiding the element, when the parameter is `true` and removing the style it when the parameter is `false`.
 
     If this parameter is an observable value, the binding will update the element's visibility whenever the value changes. If the parameter isn't observable, it will only set the element's visibility once and will not update it again later.
 

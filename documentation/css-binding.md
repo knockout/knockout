@@ -1,6 +1,8 @@
 ---
 layout: documentation
 title: The "class" and "css" bindings
+redirect_from:
+  - /documentation/class-binding.html
 ---
 
 ### Purpose
