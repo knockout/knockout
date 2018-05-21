@@ -96,6 +96,10 @@ So, what's this `_destroy` thing all about? It's only really interesting to Rail
 
 When Knockout renders a `foreach` binding with the parameter `includeDestroyed: false` set, it will hide any objects marked with `_destroy` equal to `true`. So, you can have some kind of "delete" button that invokes the `destroy(someItem)` method on the array, and this will immediately cause the specified item to vanish from the visible UI. Later, when you submit the JSON object graph to Rails, that item will also be deleted from the database (while the other array items will be inserted or updated as usual).
 
+## Determining if a property is an observableArray
+
+In some scenarios, it is useful to programmatically determine if you are dealing with an observableArray. Knockout provides a utility function, `ko.isObservableArray` to help with this situation.
+
 ## Delaying and/or suppressing change notifications
 
 Normally, an `observableArray` notifies its subscribers immediately, as soon as it's changed. But if an `observableArray` is changed repeatedly or triggers expensive updates, you may get better performance by limiting or delaying change notifications. This is accomplished using the [`rateLimit` extender](rateLimit-observable.html) like this:
