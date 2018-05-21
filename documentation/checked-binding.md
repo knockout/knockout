@@ -64,21 +64,19 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
 
   * Main parameter
 
-    KO sets the element's checked state to match your parameter value. Any previous checked state will be overwritten. The way your parameter is interpreted depends on what type of element you're binding to:
+    Knockout sets the element's checked state to match your parameter value. Any previous checked state will be overwritten. The way your parameter is interpreted depends on what type of element you're binding to:
 
-      * For **checkboxes**, KO will set the element to be *checked* when the parameter value is `true`, and *unchecked* when it is `false`. If you give a value that isn't actually boolean, it will be interpreted loosely. This means that nonzero numbers and non-`null` objects and non-empty strings will all be interpreted as `true`, whereas zero, `null`, `undefined`, and empty strings will be interpreted as `false`.
+      * For **checkboxes**, Knockout will set the element to be *checked* when the parameter value is `true`, and *unchecked* when it is `false`. If you give a value that isn't actually boolean, it will be interpreted loosely. This means that nonzero numbers and non-`null` objects and non-empty strings will all be interpreted as `true`, whereas zero, `null`, `undefined`, and empty strings will be interpreted as `false`. When the user checks or unchecks the checkbox, Knockout will set your model property to `true` or `false` accordingly.
+      
+        If the `checkedValue` parameter is set, that value is used instead of `true` to represent a *checked* status, and an *unchecked* status is represented with a value of `undefined`.
 
-        When the user checks or unchecks the checkbox, KO will set your model property to `true` or `false` accordingly.
+        Special consideration is given if your parameter resolves to an `array`. In this case, Knockout will set the element to be *checked* if its value matches an item in the array, and *unchecked* if it is not contained in the array. The value of a checkbox is either the element's `value` attribute or the value specified by the `checkedValue` parameter. When the user checks or unchecks the checkbox, Knockout will add or remove its value from the array accordingly.
 
-        Special consideration is given if your parameter resolves to an `array`. In this case, KO will set the element to be *checked* if the value matches an item in the array, and *unchecked* if it is not contained in the array.
+      * For **radio buttons**, Knockout will set the element to be *checked* when the parameter value equals the radio button element's `value` attribute or the value specified by the `checkedValue` parameter. In the previous example, the radio button with `value="almond"` was checked only when the view model's `spamFlavor` property was equal to `"almond"`.
 
-        When the user checks or unchecks the checkbox, KO will add or remove the value from the array accordingly.
+        When the user changes which radio button is selected, Knockout will set your model property to equal the value of the selected radio button. In the preceding example, clicking on the radio button with `value="cherry"` would set `viewModel.spamFlavor` to be `"cherry"`.
 
-      * For **radio buttons**, KO will set the element to be *checked* if and only if the parameter value equals the radio button node's `value` attribute or the value specified by the `checkedValue` parameter. In the previous example, the radio button with `value="almond"` was checked only when the view model's `spamFlavor` property was equal to `"almond"`.
-
-        When the user changes which radio button is selected, KO will set your model property to equal the value of the selected radio button. In the preceding example, clicking on the radio button with `value="cherry"` would set `viewModel.spamFlavor` to be `"cherry"`.
-
-        Of course, this is most useful when you have multiple radio button elements bound to a single model property. To ensure that only *one* of those radio buttons can be checked at any one time, you should set all of their `name` attributes to an arbitrary common value (e.g., the value `flavorGroup` in the preceding example) - doing this puts them into a group where only one can be selected.
+        Of course, this is most useful when you have multiple radio button elements bound to a single model property. To ensure that only *one* of those radio buttons can be checked at any one time, you should set all of their `name` attributes to an arbitrary common value (e.g., the value `flavorGroup` in the preceding example) -- doing this puts them into a group where only one can be selected.
 
      If your parameter is an observable value, the binding will update the element's checked state whenever the value changes. If the parameter isn't observable, it will only set the element's checked state once and will not update it again later.
 
@@ -105,7 +103,7 @@ Note: For text boxes, drop-down lists, and all non-checkable form controls, use 
                 };
             </script>
 
-        If your `checkedValue` parameter is an observable value, whenever the value changes and the element is currently checked, the binding will update the `checked` model property. For checkboxes, it will remove the old value from the array and add the new value. For radio buttons, it will just update the model value.
+        If your `checkedValue` parameter is an observable value, whenever the value changes and the element is currently checked, the binding will update the `checked` model property. For checkboxes bound to an array, it will remove the previous value from the array and add the new value. Otherwise, it will just update the model value.
 
 ### Dependencies
 
