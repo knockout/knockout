@@ -68,6 +68,11 @@ All of these functions are equivalent to running the native JavaScript array fun
 
 For more details about these `observableArray` functions, see the equivalent documentation of the [standard JavaScript array functions](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array#Methods_2).
 
+### sorted and reversed
+
+ * `sorted()` --- Returns a sorted **copy** of the array. This is preferable to `sort` if you want to leave the observable array in its original order but need to display it in a specific order.
+ * `reversed()` --- Returns a reversed **copy** of the array.
+
 ### replace, remove and removeAll
 
 `observableArray` adds some more useful methods that aren't found on JavaScript arrays by default:
@@ -89,7 +94,7 @@ The `destroy` and `destroyAll` functions are mainly intended as a convenience fo
 
 So, what's this `_destroy` thing all about? It's only really interesting to Rails developers. The convention in Rails is that, when you pass into an action a JSON object graph, the framework can automatically convert it to an ActiveRecord object graph and then save it to your database. It knows which of the objects are already in your database, and issues the correct INSERT or UPDATE statements. To tell the framework to DELETE a record, you just mark it with `_destroy` set to `true`.
 
-Note that when KO renders a `foreach` binding, it automatically hides any objects marked with `_destroy` equal to `true`. So, you can have some kind of "delete" button that invokes the `destroy(someItem)` method on the array, and this will immediately cause the specified item to vanish from the visible UI. Later, when you submit the JSON object graph to Rails, that item will also be deleted from the database (while the other array items will be inserted or updated as usual).
+When Knockout renders a `foreach` binding with the parameter `includeDestroyed: false` set, it will hide any objects marked with `_destroy` equal to `true`. So, you can have some kind of "delete" button that invokes the `destroy(someItem)` method on the array, and this will immediately cause the specified item to vanish from the visible UI. Later, when you submit the JSON object graph to Rails, that item will also be deleted from the database (while the other array items will be inserted or updated as usual).
 
 ## Delaying and/or suppressing change notifications
 

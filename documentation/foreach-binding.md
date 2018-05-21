@@ -223,16 +223,17 @@ When you modify the contents of your model array (by adding, moving, or deleting
 
 Note that reordering detection is not guaranteed: to ensure the algorithm completes quickly, it is optimized to detect "simple" movements of small numbers of array entries. If the algorithm detects too many simultaneous reorderings combined with unrelated insertions and deletions, then for speed it can choose to regard a reordering as an "delete" plus an "add" instead of a single "move", and in that case the corresponding DOM elements will be torn down and recreated. Most developers won't encounter this edge case, and even if you do, the end-user experience will usually be identical.
 
-### Note 6: Destroyed entries are hidden by default
+### Note 6: Hiding destroyed entries
 
-Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy-and-destroyall).
+Sometimes you may want to mark an array entry as deleted without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy-and-destroyall).
 
-By default, the `foreach` binding will skip over (i.e., hide) any array entries that are marked as destroyed. If you want to show destroyed entries, use the `includeDestroyed` option. For example,
+By default, the `foreach` binding will show all array entries, even those that are marked as destroyed. If you want to hide destroyed entries, set the `includeDestroyed` option to `false`. For example,
 
-    <div data-bind='foreach: { data: myArray, includeDestroyed: true }'>
+    <div data-bind='foreach: { data: myArray, includeDestroyed: false }'>
         ...
     </div>
-
+    
+Prior to Knockout 3.5.0, the default behavior was to hide destroyed items. To use this behavior as the default in newer versions, you can set a global option: `ko.options.foreachHidesDestroyed = true`. Then, if you want to show destroyed items for a specific `foreach` binding, you would set `includeDestroyed: true`.
 
 ### Note 7: Post-processing or animating the generated DOM elements
 
