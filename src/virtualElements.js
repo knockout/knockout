@@ -28,7 +28,7 @@
         return isEndComment(node) && !(ko.utils.domData.get(node, matchedEndCommentDataKey));
     }
 
-    var matchedEndCommentDataKey = "__ko_matchedEndComment__"
+    var matchedEndCommentDataKey = "__ko_matchedEndComment__";
 
     function getVirtualChildren(startComment, allowUnbalanced) {
         var currentNode = startComment;

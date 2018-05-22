@@ -58,7 +58,7 @@ ko.templateRewriting = (function () {
                 }
             });
         }
-    }
+    };
 })();
 
 

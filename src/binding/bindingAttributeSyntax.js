@@ -109,7 +109,7 @@
                 self[contextSubscribable] = undefined;
             }
         }
-    }
+    };
 
     // Extend the binding context hierarchy with a new view model object. If the parent context is watching
     // any observables, the new child context will automatically get a dependency on the parent context.
@@ -285,7 +285,7 @@
     function validateThatBindingIsAllowedForVirtualElements(bindingName) {
         var validator = ko.virtualElements.allowedBindings[bindingName];
         if (!validator)
-            throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements")
+            throw new Error("The binding '" + bindingName + "' cannot be used with virtual elements");
     }
 
     function applyBindingsToDescendantsInternal(bindingContext, elementOrVirtualElement) {
@@ -511,12 +511,12 @@
             'shouldBindDescendants': shouldBindDescendants,
             'bindingContextForDescendants': shouldBindDescendants && contextToExtend
         };
-    };
+    }
 
     ko.storedBindingContextForNode = function (node) {
         var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
         return bindingInfo && bindingInfo.context;
-    }
+    };
 
     function getBindingContext(viewModelOrBindingContext, extendContextCallback) {
         return viewModelOrBindingContext && (viewModelOrBindingContext instanceof ko.bindingContext)
