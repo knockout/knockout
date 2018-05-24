@@ -741,6 +741,21 @@ describe('Binding: Foreach', function() {
             expect(testNode.childNodes[0]).toContainText('second');
             expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
         });
+
+        it('Should call an afterRender callback function with the array item', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            var someItems = ko.observableArray(['Alpha', 'Beta']),
+                callbackReceivedArrayValues = [];
+            ko.applyBindings({
+                someItems: someItems,
+                callback: function(nodes, arrayValue) {
+                    callbackReceivedArrayValues.push(arrayValue);
+                }
+            }, testNode);
+
+            expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+            expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+        });
     });
 
     describe('With "createChildContextWithAs = true" and "as"', function () {
@@ -796,6 +811,21 @@ describe('Binding: Foreach', function() {
             x('second');
             expect(testNode.childNodes[0]).toContainText('second');
             expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
+
+        it('Should call an afterRender callback function with the array item', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            var someItems = ko.observableArray(['Alpha', 'Beta']),
+                callbackReceivedArrayValues = [];
+            ko.applyBindings({
+                someItems: someItems,
+                callback: function(nodes, arrayValue) {
+                    callbackReceivedArrayValues.push(arrayValue);
+                }
+            }, testNode);
+
+            expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+            expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
         });
     });
 });

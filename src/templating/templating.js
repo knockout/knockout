@@ -107,7 +107,7 @@
         if (haveAddedNodesToParent) {
             activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
             if (options['afterRender']) {
-                ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
+                ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext[options['as'] || '$data']]);
             }
             if (renderMode == "replaceChildren") {
                 ko.bindingEvent.notify(targetNodeOrNodeArray, ko.bindingEvent.childrenComplete);
