@@ -229,14 +229,16 @@
         startPossiblyAsyncContentBinding: function (node, bindingContext) {
             var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
 
-            // If the context was already extended with this node's binding info, just return the extended context
+            if (!bindingInfo.asyncContext) {
+                bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingContext[contextAncestorBindingInfo]);
+            }
+
+            // If the provided context was already extended with this node's binding info, just return the extended context
             if (bindingContext[contextAncestorBindingInfo] == bindingInfo) {
                 return bindingContext;
             }
 
-            // Create (or get the existing) async context object for this node, and return a new binding context with a pointer to this node
-            var asyncContext = bindingInfo.asyncContext || (bindingInfo.asyncContext = new AsyncCompleteContext(node, bindingInfo, bindingContext[contextAncestorBindingInfo]));
-            return bindingContext['extend'](function(ctx) {
+            return bindingContext['extend'](function (ctx) {
                 ctx[contextAncestorBindingInfo] = bindingInfo;
             });
         }
