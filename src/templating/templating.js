@@ -179,6 +179,9 @@
             // Support selecting template as a function of the data being rendered
             arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
                 context['$index'] = index;
+                if (options['as']) {
+                    context[options['as'] + "Index"] = index;
+                }
             });
 
             var templateName = resolveTemplateName(template, arrayValue, arrayItemContext);

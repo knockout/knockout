@@ -756,6 +756,17 @@ describe('Binding: Foreach', function() {
             expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
             expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
         });
+
+        it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
+                               +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
+        });
     });
 
     describe('With "createChildContextWithAs = true" and "as"', function () {
@@ -826,6 +837,17 @@ describe('Binding: Foreach', function() {
 
             expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
             expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+        });
+
+        it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
+                               +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
         });
     });
 });
