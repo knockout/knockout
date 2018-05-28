@@ -179,10 +179,11 @@ describe('Components: Custom elements', function() {
             bindings.push(bindingKey);
         };
 
-        ko.components.register('test-component', {});
+        ko.components.register('test-component', {template: 'Ignored'});
         testNode.innerHTML = '<test-component params="value: value"></test-component>';
         ko.applyBindings({value: 123}, testNode);
 
+        jasmine.Clock.tick(1);
         // The only binding it should look up is "component"
         expect(bindings).toEqual(['component']);
     });
