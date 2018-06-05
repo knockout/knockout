@@ -8,6 +8,7 @@ function test_creatingVMs() {
     };
 
     ko.applyBindings(myViewModel);
+    ko.applyBindings(myViewModel, document.body, (ctx) => { ctx.x = "test"; });
     ko.applyBindings(myViewModel, document.getElementById('someElementId'));
 
     myViewModel.personName();

@@ -529,7 +529,7 @@
     ko.applyBindingAccessorsToNode = function (node, bindings, viewModelOrBindingContext) {
         if (node.nodeType === 1) // If it's an element, workaround IE <= 8 HTML parsing weirdness
             ko.virtualElements.normaliseVirtualElementDomStructure(node);
-        return applyBindingsToNodeInternal(node, bindings, getBindingContext(viewModelOrBindingContext), true);
+        return applyBindingsToNodeInternal(node, bindings, getBindingContext(viewModelOrBindingContext));
     };
 
     ko.applyBindingsToNode = function (node, bindings, viewModelOrBindingContext) {
@@ -539,26 +539,26 @@
 
     ko.applyBindingsToDescendants = function(viewModelOrBindingContext, rootNode) {
         if (rootNode.nodeType === 1 || rootNode.nodeType === 8)
-            applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode, true);
+            applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode);
     };
 
-    ko.applyBindings = function (viewModelOrBindingContext, rootNode, extendContextCallback) {
+    ko.applyBindings = function (viewModelOrBindingContext, rootNodeArg, extendContextCallback) {
         // If jQuery is loaded after Knockout, we won't initially have access to it. So save it here.
         if (!jQueryInstance && window['jQuery']) {
             jQueryInstance = window['jQuery'];
         }
 
-        // rootNode is optional
-        if (!rootNode) {
+        var rootNode = rootNodeArg;
+        if (!rootNode && arguments.length < 2) {
             rootNode = window.document.body;
             if (!rootNode) {
                 throw Error("ko.applyBindings: could not find window.document.body; has the document been loaded?");
             }
-        } else if (rootNode.nodeType !== 1 && rootNode.nodeType !== 8) {
+        } else if (!rootNode || (rootNode.nodeType !== 1 && rootNode.nodeType !== 8)) {
             throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         }
 
-        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode, true);
+        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode);
     };
 
     // Retrieving binding context from arbitrary nodes

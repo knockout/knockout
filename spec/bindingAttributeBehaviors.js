@@ -55,6 +55,23 @@ describe('Binding attribute syntax', function() {
         expect(didInit).toEqual(true);
     });
 
+    var exceptionMessage = "second parameter should be a DOM node";
+    ko.utils.arrayForEach([
+        undefined,
+        null,
+        "",
+        "A Node",
+        123,
+        {},
+        []
+    ], function (testValue) {
+        it('applyBindings should throw an error if called with a non-node value: '+ jasmine.pp(testValue), function () {
+            expect(function () {
+                ko.applyBindings({}, testValue);
+            }).toThrowContaining(exceptionMessage);
+        });
+    });
+
     it('applyBindings should accept three parameters and use the third parameter as a callback for modifying the root context', function() {
         var didInit = false;
         ko.bindingHandlers.test = {
