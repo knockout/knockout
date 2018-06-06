@@ -287,7 +287,8 @@ export interface BindingContext<T = any> {
     createChildContext<X>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
 }
 
-export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node | null, extendCallback?: BindingContextExtendCallback<T>): void;
+export function applyBindings<T = any>(bindingContext: T | BindingContext<T>): void;
+export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node | null, extendCallback?: BindingContextExtendCallback<T>): void;
 export function applyBindingsToDescendants<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node): void;
 export function applyBindingsToNode<T = any>(node: Node, bindings: object | (() => object), viewModel: T | BindingContext<T>): void;
 export function applyBindingAccessorsToNode<T = any>(node: Node, bindings: BindingAccessors | (() => BindingAccessors), viewModel: T | BindingContext<T>): void;
