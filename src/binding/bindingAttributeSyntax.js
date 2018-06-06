@@ -542,14 +542,13 @@
             applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode);
     };
 
-    ko.applyBindings = function (viewModelOrBindingContext, rootNodeArg, extendContextCallback) {
+    ko.applyBindings = function (viewModelOrBindingContext, rootNode, extendContextCallback) {
         // If jQuery is loaded after Knockout, we won't initially have access to it. So save it here.
         if (!jQueryInstance && window['jQuery']) {
             jQueryInstance = window['jQuery'];
         }
 
-        var rootNode = rootNodeArg;
-        if (!rootNode && arguments.length < 2) {
+        if (arguments.length < 2) {
             rootNode = window.document.body;
             if (!rootNode) {
                 throw Error("ko.applyBindings: could not find window.document.body; has the document been loaded?");
