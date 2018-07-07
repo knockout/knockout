@@ -4,7 +4,7 @@
 function makeWithIfBinding(bindingKey, isWith, isNot) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var savedNodes, asOption, wrapCondition, ifCondition, contextToExtend;
+            var savedNodes, asOption, wrapCondition, ifCondition, completeOnRender, needAsyncContext;
 
             if (isWith) {
                 asOption = allBindings.get('as');
@@ -19,19 +19,21 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                 }, null, { disposeWhenNodeIsRemoved: element });
             }
 
-            ko.computed(function() {
-                var rawWithValue, shouldDisplay, isFirstRender = !savedNodes;
+            completeOnRender = allBindings.get("completeOn") == "render";
+            needAsyncContext = completeOnRender || allBindings['has'](ko.bindingEvent.descendantsComplete);
 
-                if (wrapCondition) {
-                    shouldDisplay = ifCondition();
-                } else {
-                    rawWithValue = ko.utils.unwrapObservable(valueAccessor());
-                    shouldDisplay = !!rawWithValue;
-                }
+            ko.computed(function() {
+                var value = wrapCondition ? ifCondition() : ko.utils.unwrapObservable(valueAccessor()),
+                    shouldDisplay = !!value,
+                    isFirstRender = !savedNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
                 if (isFirstRender && ko.computedContext.getDependenciesCount()) {
                     savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
+                }
+
+                if (needAsyncContext) {
+                    bindingContext = ko.bindingEvent.startPossiblyAsyncContentBinding(element, bindingContext);
                 }
 
                 if (shouldDisplay) {
@@ -41,7 +43,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 
                     var childContext;
                     if (isWith) {
-                        childContext = bindingContext['createChildContext'](typeof rawWithValue == "function" ? rawWithValue : valueAccessor, asOption);
+                        childContext = bindingContext['createChildContext'](typeof value == "function" ? value : valueAccessor, asOption);
                     } else if (ifCondition.isActive()) {
                         childContext = bindingContext['extend'](function() { ifCondition(); return null; });
                     } else {
@@ -51,6 +53,10 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
                     ko.applyBindingsToDescendants(childContext, element);
                 } else {
                     ko.virtualElements.emptyNode(element);
+
+                    if (!completeOnRender) {
+                        ko.bindingEvent.notify(element, ko.bindingEvent.childrenComplete);
+                    }
                 }
             }, null, { disposeWhenNodeIsRemoved: element });
 
