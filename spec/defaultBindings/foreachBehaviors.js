@@ -686,8 +686,53 @@ describe('Binding: Foreach', function() {
         // After the delay, the deleted item's node is removed
         jasmine.Clock.tick(1);
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Mars++--Jupiter++--Saturn++');
-
     });
+
+    if ("activeElement" in document) {
+        it('Should maintain focus on focused element even when it\'s moved', function() {
+            testNode.innerHTML = "<div data-bind='foreach: sortedItems'><input type='text' data-bind='value: name'></div>";
+            var items = ko.observableArray([
+                { name: ko.observable("Zeta") },
+                { name: ko.observable("Drake") },
+                { name: ko.observable("Alpha") },
+                { name: ko.observable("Dreadful") },
+                { name: ko.observable("Rotten") }
+            ]);
+            var sortedItems = ko.pureComputed(function () {
+                return items.sorted(function(a, b) {
+                    a = a.name().toLowerCase();
+                    b = b.name().toLowerCase();
+                    return (a < b) ? -1 : (a > b) ? 1 : 0;
+                });
+            });
+            ko.applyBindings({ sortedItems: sortedItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['Alpha', 'Drake', 'Dreadful', 'Rotten', 'Zeta']);
+            testNode.childNodes[0].childNodes[0].focus();
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[0]);  // Alpha
+
+            // When the focused element moves down (to the middle)
+            sortedItems()[0].name("Fish");
+            expect(testNode.childNodes[0]).toHaveValues(['Drake', 'Dreadful', 'Fish', 'Rotten', 'Zeta']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[2]);
+
+            // When the focused element moves up (because another element moves down)
+            sortedItems()[3].name("Element");
+            expect(testNode.childNodes[0]).toHaveValues(['Drake', 'Dreadful', 'Element', 'Fish', 'Zeta']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[3]);
+
+            // When the focused element moves up (to the top)
+            testNode.childNodes[0].childNodes[4].focus();
+            sortedItems()[4].name("Beta");
+            expect(testNode.childNodes[0]).toHaveValues(['Beta', 'Drake', 'Dreadful', 'Element', 'Fish']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[0]);
+
+            // When the focused element moves down (to the bottom)
+            testNode.childNodes[0].childNodes[1].focus();
+            sortedItems()[1].name("King");
+            expect(testNode.childNodes[0]).toHaveValues(['Beta', 'Dreadful', 'Element', 'Fish', 'King']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[4]);
+        });
+    }
 
     describe('With "createChildContextWithAs = false" and "as"', function () {
         beforeEach(function() {

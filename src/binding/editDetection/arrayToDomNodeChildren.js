@@ -48,7 +48,7 @@
         var newMappingResultIndex = 0;
 
         var nodesToDelete = [];
-        var itemsToProcess = [];
+        var itemsToMoveFirstIndexes = [];
         var itemsForBeforeRemoveCallbacks = [];
         var itemsForMoveCallbacks = [];
         var itemsForAfterAddCallbacks = [];
@@ -58,7 +58,6 @@
         function itemAdded(value) {
             mapData = { arrayEntry: value, indexObservable: ko.observable(newMappingResultIndex++) };
             newMappingResult.push(mapData);
-            itemsToProcess.push(mapData);
             if (!isFirstExecution) {
                 itemsForAfterAddCallbacks.push(mapData);
             }
@@ -72,7 +71,6 @@
             mapData.indexObservable(newMappingResultIndex++);
             ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode);
             newMappingResult.push(mapData);
-            itemsToProcess.push(mapData);
         }
 
         function callCallback(callback, items) {
@@ -119,7 +117,6 @@
                             if (ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode).length) {
                                 if (options['beforeRemove']) {
                                     newMappingResult.push(mapData);
-                                    itemsToProcess.push(mapData);
                                     countWaitingForRemove++;
                                     if (mapData.arrayEntry === deletedItemDummyValue) {
                                         mapData = null;
@@ -140,6 +137,7 @@
                             itemMovedOrRetained(lastMappingResultIndex++);
                         }
                         if (movedIndex !== undefined) {
+                            itemsToMoveFirstIndexes.push(newMappingResultIndex);
                             itemMovedOrRetained(movedIndex);
                         } else {
                             itemAdded(editScriptItem['value']);
@@ -166,16 +164,42 @@
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
         ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
 
+        var i, j, nextNodeInDom, lastNode, nodeToInsert, mappedNodes, activeElement;
+
+        // Since most browsers remove the focus from an element when it's moved to another location,
+        // save the focused element and try to restore it later.
+        try {
+            activeElement = domNode.ownerDocument.activeElement;
+        } catch(e) {
+            // IE9 throws if you access activeElement during page load (see issue #703)
+        }
+
+        // Try to reduce overall moved nodes by first moving the ones that were marked as moved by the edit script
+        if (itemsToMoveFirstIndexes.length) {
+            while ((i = itemsToMoveFirstIndexes.shift()) != undefined) {
+                mapData = newMappingResult[i];
+                for (lastNode = undefined; i; ) {
+                    if ((mappedNodes = newMappingResult[--i].mappedNodes) && mappedNodes.length) {
+                        lastNode = mappedNodes[mappedNodes.length-1];
+                        break;
+                    }
+                }
+                for (j = 0; nodeToInsert = mapData.mappedNodes[j]; lastNode = nodeToInsert, j++) {
+                    ko.virtualElements.insertAfter(domNode, nodeToInsert, lastNode);
+                }
+            }
+        }
+
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
-        for (var i = 0, nextNode = ko.virtualElements.firstChild(domNode), lastNode, node; mapData = itemsToProcess[i]; i++) {
+        for (i = 0, nextNodeInDom = ko.virtualElements.firstChild(domNode); mapData = newMappingResult[i]; i++) {
             // Get nodes for newly added items
             if (!mapData.mappedNodes)
                 ko.utils.extend(mapData, mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable));
 
             // Put nodes in the right place if they aren't there already
-            for (var j = 0; node = mapData.mappedNodes[j]; nextNode = node.nextSibling, lastNode = node, j++) {
-                if (node !== nextNode)
-                    ko.virtualElements.insertAfter(domNode, node, lastNode);
+            for (j = 0; nodeToInsert = mapData.mappedNodes[j]; nextNodeInDom = nodeToInsert.nextSibling, lastNode = nodeToInsert, j++) {
+                if (nodeToInsert !== nextNodeInDom)
+                    ko.virtualElements.insertAfter(domNode, nodeToInsert, lastNode);
             }
 
             // Run the callbacks for newly added nodes (for example, to apply bindings, etc.)
@@ -183,6 +207,11 @@
                 callbackAfterAddingNodes(mapData.arrayEntry, mapData.mappedNodes, mapData.indexObservable);
                 mapData.initialized = true;
             }
+        }
+
+        // Restore the focused element if it had lost focus
+        if (activeElement && domNode.ownerDocument.activeElement != activeElement) {
+            activeElement.focus();
         }
 
         // If there's a beforeRemove callback, call it after reordering.
