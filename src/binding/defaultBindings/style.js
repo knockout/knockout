@@ -12,15 +12,30 @@ ko.bindingHandlers['style'] = {
             if (jQueryInstance) {
                 jQueryInstance(element)['css'](styleName, styleValue);
             } else {
-                styleName = styleName.replace(/-(\w)/g, function (all, letter) {
-                    return letter.toUpperCase();
-                });
+                var previousStyle;
+                var postStyle;
+                var requiresGetPropertyValue = (styleName.substring(0, 2) === "--");
 
-                var previousStyle = element.style[styleName];
-                element.style[styleName] = styleValue;
+                if(requiresGetPropertyValue){
+                    previousStyle = element.style.getPropertyValue(styleName);
+                    element.style.setProperty(styleName, styleValue);
+                    postStyle = element.style.getPropertyValue(styleName);
 
-                if (styleValue !== previousStyle && element.style[styleName] == previousStyle && !isNaN(styleValue)) {
-                    element.style[styleName] = styleValue + "px";
+                    if (styleValue !== previousStyle && postStyle == previousStyle && !isNaN(styleValue)) {
+                        element.style.setProperty(styleName, styleValue + "px");
+                    }
+                } else {
+                    styleName = styleName.replace(/-(\w)/g, function (all, letter) {
+                        return letter.toUpperCase();
+                    });
+
+                    previousStyle = element.style[styleName];
+                    element.style[styleName] = styleValue;
+                    postStyle = element.style[styleName];
+
+                    if (styleValue !== previousStyle && postStyle == previousStyle && !isNaN(styleValue)) {
+                        element.style[styleName] = styleValue + "px";
+                    }
                 }
             }
         });
