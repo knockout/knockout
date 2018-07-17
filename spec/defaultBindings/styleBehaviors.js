@@ -52,6 +52,20 @@ describe('Binding: CSS style', function() {
         expect(testNode.childNodes[0].style.width).toBe("");
     });
 
+    xit('Should be able to assign values to custom CSS properties', function() {
+        var customWidth = ko.observable();
+        testNode.innerHTML = "<div style=\"width: var(--custom-width)\" data-bind=\"style: {'--custom-width': customWidth}\"></div>";
+
+        ko.applyBindings({customWidth: customWidth}, testNode);
+        expect(testNode.childNodes[0].style.getPropertyValue("--custom-width")).toBe("");
+
+        customWidth("100px");
+        expect(testNode.childNodes[0].style.getPropertyValue("--custom-width")).toBe("100px");
+
+        customWidth(false);
+        expect(testNode.childNodes[0].style.getPropertyValue("--custom-width")).toBe("");
+    });
+
     it('Should properly respond to changes in the observable, adding px when appropriate', function() {
         var width = ko.observable();
         testNode.innerHTML = "<div data-bind='style: { width: width }'></div>";
