@@ -12,30 +12,21 @@ ko.bindingHandlers['style'] = {
             if (jQueryInstance) {
                 jQueryInstance(element)['css'](styleName, styleValue);
             } else {
-                var previousStyle;
-                var postStyle;
-                var requiresGetPropertyValue = (styleName.substring(0, 2) === "--");
-
-                if(requiresGetPropertyValue){
-                    previousStyle = element.style.getPropertyValue(styleName);
+                // Is styleName a custom CSS property?
+                if(styleName.substring(0, 2) === "--"){
                     element.style.setProperty(styleName, styleValue);
-                    postStyle = element.style.getPropertyValue(styleName);
+                    return;
+                }
 
-                    if (styleValue !== previousStyle && postStyle == previousStyle && !isNaN(styleValue)) {
-                        element.style.setProperty(styleName, styleValue + "px");
-                    }
-                } else {
-                    styleName = styleName.replace(/-(\w)/g, function (all, letter) {
-                        return letter.toUpperCase();
-                    });
+                styleName = styleName.replace(/-(\w)/g, function (all, letter) {
+                    return letter.toUpperCase();
+                });
 
-                    previousStyle = element.style[styleName];
-                    element.style[styleName] = styleValue;
-                    postStyle = element.style[styleName];
+                var previousStyle = element.style[styleName];
+                element.style[styleName] = styleValue;
 
-                    if (styleValue !== previousStyle && postStyle == previousStyle && !isNaN(styleValue)) {
-                        element.style[styleName] = styleValue + "px";
-                    }
+                if (styleValue !== previousStyle && element.style[styleName] == previousStyle && !isNaN(styleValue)) {
+                    element.style[styleName] = styleValue + "px";
                 }
             }
         });
