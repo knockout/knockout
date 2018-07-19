@@ -158,7 +158,7 @@
         var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey),
             asyncContext = bindingInfo && bindingInfo.asyncContext;
         if (asyncContext) {
-            bindingInfo.asyncContext = undefined;
+            bindingInfo.asyncContext = null;
             asyncContext.notifyAncestor();
         }
     }
@@ -191,7 +191,7 @@
     AsyncCompleteContext.prototype.completeChildren = function () {
         this.childrenComplete = true;
         if (this.bindingInfo.asyncContext && !this.asyncDescendants.length) {
-            this.bindingInfo.asyncContext = undefined;
+            this.bindingInfo.asyncContext = null;
             ko.utils.domNodeDisposal.removeDisposeCallback(this.node, asyncContextDispose);
             ko.bindingEvent.notify(this.node, ko.bindingEvent.descendantsComplete);
             this.notifyAncestor();
@@ -219,7 +219,9 @@
                 if (event == ko.bindingEvent.childrenComplete) {
                     if (bindingInfo.asyncContext) {
                         bindingInfo.asyncContext.completeChildren();
-                    } else if (bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
+                    } else if (bindingInfo.asyncContext === undefined && bindingInfo.eventSubscribable && bindingInfo.eventSubscribable.hasSubscriptionsForEvent(ko.bindingEvent.descendantsComplete)) {
+                        // It's currently an error to register a descendantsComplete handler for a node that was never registered as completing asynchronously.
+                        // That's because without the asyncContext, we don't have a way to know that all descendants have completed.
                         throw new Error("descendantsComplete event not supported for bindings on this node");
                     }
                 }
