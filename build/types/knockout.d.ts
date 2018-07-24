@@ -184,7 +184,7 @@ export interface ComputedContext {
     getDependenciesCount(): number;
     getDependencies(): Subscribable[];
     isInitial(): boolean;
-    registerDependency(subscribable: Subscribable): void; 
+    registerDependency(subscribable: Subscribable): void;
 }
 
 export const computedContext: ComputedContext;
@@ -285,6 +285,14 @@ export interface BindingContext<T = any> {
 
     createChildContext<X>(dataItem: T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
     createChildContext<X>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
+    createChildContext<X>(dataItem: T | Observable<T>, options: BindingChildContextOptions<X>): BindingContext<X>;
+    createChildContext<X>(accessor: () => T | Observable<T>, options: BindingChildContextOptions<X>): BindingContext<X>;
+}
+
+export interface BindingChildContextOptions<T = any> {
+    as?: string;
+    extend?: BindingContextExtendCallback<T>;
+    noChildContext?: boolean;
 }
 
 export function applyBindings<T = any>(bindingContext: T | BindingContext<T>): void;

@@ -172,15 +172,19 @@
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
         // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
-        var arrayItemContext;
+        var arrayItemContext, asName = options['as'];
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
             // Support selecting template as a function of the data being rendered
-            arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function(context) {
-                context['$index'] = index;
-                if (options['as']) {
-                    context[options['as'] + "Index"] = index;
+            arrayItemContext = parentBindingContext['createChildContext'](arrayValue, {
+                'as': asName,
+                'noChildContext': options['noChildContext'],
+                'extend': function(context) {
+                    context['$index'] = index;
+                    if (asName) {
+                        context[asName + "Index"] = index;
+                    }
                 }
             });
 
@@ -310,9 +314,14 @@
                 ko.virtualElements.emptyNode(element);
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
-                var innerBindingContext = ('data' in options) ?
-                    bindingContext.createStaticChildContext(options['data'], options['as']) :  // Given an explicit 'data' value, we create a child binding context for it
-                    bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
+                var innerBindingContext = bindingContext;
+                if ('data' in options) {
+                    innerBindingContext = bindingContext['createChildContext'](options['data'], {
+                        'as': options['as'],
+                        'noChildContext': options['noChildContext'],
+                        'exportDependencies': true
+                    });
+                }
                 templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
             }
 

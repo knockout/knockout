@@ -134,10 +134,7 @@ describe('Binding: With', function() {
         expect(ko.contextFor(firstSpan).$parents[1].name).toEqual("top");
     });
 
-    it('Should be able to access all parent bindings when using "as" when "createChildContextWithAs" is set', function() {
-        this.restoreAfter(ko.options, 'createChildContextWithAs');
-        ko.options.createChildContextWithAs = true;
-
+    it('Should be able to access all parent bindings when using "as"', function() {
         testNode.innerHTML = "<div data-bind='with: topItem'>" +
                                 "<div data-bind='with: middleItem, as: \"middle\"'>" +
                                     "<div data-bind='with: bottomItem'>" +
@@ -431,14 +428,9 @@ describe('Binding: With', function() {
         expect(testNode).toContainText('');
     });
 
-    describe('With "createChildContextWithAs = false" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = false;
-        });
-
+    describe('With "noChildContext = true" and "as"', function () {
         it('Should not create a child context', function () {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.childProp'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: true'><span data-bind='text: item.childProp'></span></div>";
             var someItem = { childProp: 'Hello' };
             ko.applyBindings({ someItem: someItem }, testNode);
 
@@ -447,7 +439,7 @@ describe('Binding: With', function() {
         });
 
         it('Should provide access to observable value', function() {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><input data-bind='value: item'/></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: true'><input data-bind='value: item'/></div>";
             var someItem = ko.observable('Hello');
             ko.applyBindings({ someItem: someItem }, testNode);
             expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello');
@@ -465,7 +457,7 @@ describe('Binding: With', function() {
         });
 
         it('Should not re-render the nodes when an observable value changes', function() {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: true'><span data-bind='text: item'></span></div>";
             var someItem = ko.observable('first');
             ko.applyBindings({ someItem: someItem }, testNode);
             expect(testNode.childNodes[0]).toContainText('first');
@@ -478,7 +470,7 @@ describe('Binding: With', function() {
 
         it('Should remove nodes when an observable value become falsy', function() {
             var someItem = ko.observable(undefined);
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item().occasionallyExistentChildProp'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: true'><span data-bind='text: item().occasionallyExistentChildProp'></span></div>";
             ko.applyBindings({ someItem: someItem }, testNode);
 
             // First it's not there
@@ -495,14 +487,9 @@ describe('Binding: With', function() {
         });
     });
 
-    describe('With "createChildContextWithAs = true" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = true;
-        });
-
+    describe('With "noChildContext = false" and "as"', function () {
         it('Should create a child context', function () {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.childProp'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: false'><span data-bind='text: item.childProp'></span></div>";
             var someItem = { childProp: 'Hello' };
             ko.applyBindings({ someItem: someItem }, testNode);
 
@@ -511,7 +498,7 @@ describe('Binding: With', function() {
         });
 
         it('Should unwrap observable value', function() {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: false'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
             var someItem = ko.observable('Hello');
             ko.applyBindings({ someItem: someItem }, testNode);
             expect(testNode.childNodes[0]).toHaveValues(['Hello', 'Hello']);
@@ -532,7 +519,7 @@ describe('Binding: With', function() {
         });
 
         it('Should re-render the nodes when an observable value changes', function() {
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: false'><span data-bind='text: item'></span></div>";
             var someItem = ko.observable('first');
             ko.applyBindings({ someItem: someItem }, testNode);
             expect(testNode.childNodes[0]).toContainText('first');
@@ -545,7 +532,7 @@ describe('Binding: With', function() {
 
         it('Should remove nodes when an observable value become falsy', function() {
             var someItem = ko.observable(undefined);
-            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\"'><span data-bind='text: item.occasionallyExistentChildProp'></span></div>";
+            testNode.innerHTML = "<div data-bind='with: someItem, as: \"item\", noChildContext: false'><span data-bind='text: item.occasionallyExistentChildProp'></span></div>";
             ko.applyBindings({ someItem: someItem }, testNode);
 
             // First it's not there
