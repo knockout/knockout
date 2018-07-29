@@ -136,7 +136,9 @@ export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val
 export type MaybeComputed<T = any> = T | Computed<T>;
 
 export interface ComputedFunctions<T = any> extends Subscribable<T> {
-    equalityComparer(a: T, b: T): boolean;
+    // It's possible for a to be undefined, since the equalityComparer is run on the initial
+    // computation with undefined as the first argument. This is user-relevant for deferred computeds.
+    equalityComparer(a: T | undefined, b: T): boolean;
     peek(): T;
     dispose(): void;
     isActive(): boolean;
