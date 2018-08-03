@@ -195,9 +195,12 @@ export function ignoreDependencies(callback: Function, callbackTarget?: any, cal
 
 //#region subscribables/extenders.js
 
+export type RateLimitMethod = (callback: () => void, timeout: number, options: any) => (() => void);
+
 export interface RateLimitOptions {
     timeout: number;
-    method?: "notifyAtFixedRate" | "notifyWhenChangesStop";
+    method?: "notifyAtFixedRate" | "notifyWhenChangesStop" | RateLimitMethod;
+    [option: string]: any;
 }
 
 export interface Extender<T extends Subscribable = any, O = any> {
