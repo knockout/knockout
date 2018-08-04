@@ -11,6 +11,9 @@ ko.bindingHandlers['style'] = {
 
             if (jQueryInstance) {
                 jQueryInstance(element)['css'](styleName, styleValue);
+            } else if (/^--/.test(styleName)) {
+                // Is styleName a custom CSS property?
+                element.style.setProperty(styleName, styleValue);
             } else {
                 styleName = styleName.replace(/-(\w)/g, function (all, letter) {
                     return letter.toUpperCase();
