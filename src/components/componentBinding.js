@@ -63,9 +63,11 @@
                     };
 
                     var componentViewModel = createViewModel(componentDefinition, componentParams, componentInfo),
-                        childBindingContext = asyncContext['createChildContext'](componentViewModel, /* dataItemAlias */ undefined, function(ctx) {
-                            ctx['$component'] = componentViewModel;
-                            ctx['$componentTemplateNodes'] = originalChildNodes;
+                        childBindingContext = asyncContext['createChildContext'](componentViewModel, {
+                            'extend': function(ctx) {
+                                ctx['$component'] = componentViewModel;
+                                ctx['$componentTemplateNodes'] = originalChildNodes;
+                            }
                         });
 
                     if (componentViewModel && componentViewModel['koDescendantsComplete']) {

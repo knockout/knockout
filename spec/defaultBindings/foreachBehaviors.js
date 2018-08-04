@@ -734,14 +734,14 @@ describe('Binding: Foreach', function() {
         });
     }
 
-    describe('With "createChildContextWithAs = false" and "as"', function () {
+    describe('With "noChildContext = true" and "as"', function () {
         beforeEach(function() {
             this.restoreAfter(ko.options, 'createChildContextWithAs');
             ko.options.createChildContextWithAs = false;
         });
 
         it('Should not create a child context', function () {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><span data-bind='text: item'></span></div>";
             var someItems = ['alpha', 'beta'];
             ko.applyBindings({ someItems: someItems }, testNode);
 
@@ -753,7 +753,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should provide access to observable items', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><input data-bind='value: item'/></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><input data-bind='value: item'/></div>";
             var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toHaveValues(['first', 'second']);
@@ -776,7 +776,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should not re-render the nodes when an observable item changes', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><span data-bind='text: item'></span></div>";
             var x = ko.observable('first'), someItems = [ x ];
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toContainText('first');
@@ -788,7 +788,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should call an afterRender callback function with the array item', function () {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true, afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
             var someItems = ko.observableArray(['Alpha', 'Beta']),
                 callbackReceivedArrayValues = [];
             ko.applyBindings({
@@ -803,8 +803,8 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
                                +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
                                +    "</span>"
                                + "</div>";
@@ -814,14 +814,9 @@ describe('Binding: Foreach', function() {
         });
     });
 
-    describe('With "createChildContextWithAs = true" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = true;
-        });
-
+    describe('With "noChildContext = false" and "as"', function () {
         it('Should create a child context', function () {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><span data-bind='text: item'></span></div>";
             var someItems = ['alpha', 'beta'];
             ko.applyBindings({ someItems: someItems }, testNode);
 
@@ -833,7 +828,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should unwrap observable items', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
             var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toHaveValues(['first', 'first', 'second', 'second']);
@@ -858,7 +853,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should not re-render the nodes when an observable item changes', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><span data-bind='text: item'></span></div>";
             var x = ko.observable('first'), someItems = [ x ];
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toContainText('first');
@@ -870,7 +865,7 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should call an afterRender callback function with the array item', function () {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false, afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
             var someItems = ko.observableArray(['Alpha', 'Beta']),
                 callbackReceivedArrayValues = [];
             ko.applyBindings({
@@ -885,8 +880,8 @@ describe('Binding: Foreach', function() {
         });
 
         it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
-            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: false }'>"
                                +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
                                +    "</span>"
                                + "</div>";
