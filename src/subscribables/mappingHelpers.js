@@ -10,7 +10,7 @@
         return mapJsObjectGraph(rootObject, function(valueToMap) {
             // Loop because an observable's value might in turn be another observable wrapper
             for (var i = 0; ko.isObservable(valueToMap) && (i < maxNestedObservableDepth); i++)
-                valueToMap = valueToMap();
+                valueToMap = valueToMap.peek();
             return valueToMap;
         });
     };
