@@ -7,7 +7,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
             ko.computed(function() {
                 var rawValue = valueAccessor(),
                     dataValue = ko.utils.unwrapObservable(rawValue),
-                    shouldDisplay = !isNot !== !dataValue, // equivalent to isNot ? !dataValue : !!dataValue
+                    shouldDisplay = isWith ? dataValue != null : !isNot !== !dataValue, // equivalent to isNot ? !dataValue : !!dataValue
                     isFirstRender = !savedNodes,
                     needsRefresh = isFirstRender || isWith || (shouldDisplay !== didDisplayOnLastUpdate);
 
