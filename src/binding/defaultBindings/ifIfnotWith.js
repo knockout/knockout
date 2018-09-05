@@ -23,7 +23,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 
             ko.computed(function() {
                 var value = wrapCondition ? ifCondition() : ko.utils.unwrapObservable(valueAccessor()),
-                    shouldDisplay = !!value,
+                    shouldDisplay = isWith ? value != null : !!value,
                     isFirstRender = !savedNodes;
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
