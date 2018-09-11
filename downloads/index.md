@@ -50,6 +50,9 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v3.5.0 Release Candidate 2](knockout-3.5.0rc2.js) ([debug](knockout-3.5.0rc2.debug.js)) --- September 8, 2018
+* [v3.5.0 Release Candidate](knockout-3.5.0rc.js) ([debug](knockout-3.5.0rc.debug.js)) --- April 25, 2018
+* [v3.5.0 Beta](knockout-3.5.0beta.js) ([debug](knockout-3.5.0beta.debug.js)) --- December 29, 2017
 * [v3.4.2](knockout-3.4.2.js) ([debug](knockout-3.4.2.debug.js)) --- March 6, 2017
 * [v3.4.1](knockout-3.4.1.js) ([debug](knockout-3.4.1.debug.js)) --- November 7, 2016
 * [v3.4.0](knockout-3.4.0.js) ([debug](knockout-3.4.0.debug.js)) --- November 16, 2015
