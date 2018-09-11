@@ -735,11 +735,6 @@ describe('Binding: Foreach', function() {
     }
 
     describe('With "noChildContext = true" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = false;
-        });
-
         it('Should not create a child context', function () {
             testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><span data-bind='text: item'></span></div>";
             var someItems = ['alpha', 'beta'];
