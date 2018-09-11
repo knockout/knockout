@@ -165,15 +165,11 @@ Tip: Remember to pass a *string literal value* to `as` (e.g., `as: 'category'`, 
 
 #### Using "as" without creating a child context
 
-The default behavior of the `as` option is to add a name for the current item while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on in the current version, set the following option before binding:
+The default behavior of the `as` option is to add a name for the current item while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the array items must be through the given name, and `$data` will remain set to the outer viewmodel. For example:
 
-* `ko.options.noChildContextWithAs = true;`
-
-When this global option is turned on, all access to the array items when using `as` must be through the given name. For example:
-
-    <ul data-bind="foreach: { data: categories, as: 'category' }">
+    <ul data-bind="foreach: { data: categories, as: 'category', noChildContext: true }">
         <li>
-            <ul data-bind="foreach: { data: category.items, as: 'item' }">
+            <ul data-bind="foreach: { data: category.items, as: 'item', noChildContext: true }">
                 <li>
                     <span data-bind="text: category.name"></span>:
                     <span data-bind="text: item"></span>
