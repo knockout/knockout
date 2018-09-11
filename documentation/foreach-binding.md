@@ -163,6 +163,8 @@ Now anywhere inside this `foreach` loop, bindings will be able to refer to `pers
 
 Tip: Remember to pass a *string literal value* to `as` (e.g., `as: 'category'`, *not* `as: category`), because you are giving a name for a new variable, not reading the value of a variable that already exists.
 
+The `as` option also provides a corresponding *index* value. For example, if you set `as: 'category'`, you can access the index of the current item using `categoryIndex`.
+
 #### Using "as" without creating a child context
 
 The default behavior of the `as` option is to add a name for the current item while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the array items must be through the given name, and `$data` will remain set to the outer viewmodel. For example:
