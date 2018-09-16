@@ -27,6 +27,7 @@ ko.subscribable = function () {
 }
 
 var defaultEvent = "change";
+var allEvent = "__allSubscribableEvents";
 
 // Moved out of "limit" to avoid the extra closure
 function limitNotifySubscribers(value, event) {
@@ -66,7 +67,10 @@ var ko_subscribable_fn = {
 
         return subscription;
     },
-
+    subscribeAll: function(callback, context) {
+        return this.subscribe(callback, context, allEvent);
+    },
+    "allEvent": "__allSubscribableEvents",
     "notifySubscribers": function (valueToNotify, event) {
         event = event || defaultEvent;
         if (event === defaultEvent) {
@@ -81,6 +85,20 @@ var ko_subscribable_fn = {
                     // for isDisposed on each subscription before invoking its callback
                     if (!subscription._isDisposed)
                         subscription._callback(valueToNotify);
+                }
+            } finally {
+                ko.dependencyDetection.end(); // End suppressing dependency detection
+            }
+        }
+        // Notify subscribers to the ALL_EVENT event, but not if that was the event that was fired (prevent double events)
+        if (this.hasSubscriptionsForEvent(allEvent) && event != allEvent) {
+            try {
+                ko.dependencyDetection.begin(); // Begin suppressing dependency detection (by setting the top frame to undefined)
+                for (var a = this._subscriptions[allEvent].slice(0), i = 0, subscription; subscription = a[i]; ++i) {
+                    // In case a subscription was disposed during the arrayForEach cycle, check
+                    // for isDisposed on each subscription before invoking its callback
+                    if (!subscription.isDisposed)
+                        subscription.callback(valueToNotify, event);
                 }
             } finally {
                 ko.dependencyDetection.end(); // End suppressing dependency detection
@@ -182,8 +200,10 @@ var ko_subscribable_fn = {
 
 ko.exportProperty(ko_subscribable_fn, 'init', ko_subscribable_fn.init);
 ko.exportProperty(ko_subscribable_fn, 'subscribe', ko_subscribable_fn.subscribe);
+ko.exportProperty(ko_subscribable_fn, 'subscribeAll', ko_subscribable_fn.subscribeAll);
 ko.exportProperty(ko_subscribable_fn, 'extend', ko_subscribable_fn.extend);
 ko.exportProperty(ko_subscribable_fn, 'getSubscriptionsCount', ko_subscribable_fn.getSubscriptionsCount);
+ko.exportProperty(ko_subscribable_fn, 'allEvent', allEvent);
 
 // For browsers that support proto assignment, we overwrite the prototype of each
 // observable instance. Since observables are functions, we need Function.prototype
