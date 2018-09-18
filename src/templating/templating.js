@@ -176,14 +176,35 @@
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
+            var isFirst = function() { return index() === 0; }
+            var isLast = function() { return index() === ko.utils.unwrapObservable(arrayOrObservableArray).length-1; }
+            var isEven = function() { return index() % 2 == 0; }
+            var isOdd = function() { return index() % 2 == 1; }
+            var previous = function() { return ko.utils.unwrapObservable(arrayOrObservableArray)[index()-1]; }
+            var next = function() { return ko.utils.unwrapObservable(arrayOrObservableArray)[index()+1]; }
+
             // Support selecting template as a function of the data being rendered
             arrayItemContext = parentBindingContext['createChildContext'](arrayValue, {
                 'as': asName,
                 'noChildContext': options['noChildContext'],
                 'extend': function(context) {
                     context['$index'] = index;
+                    context['$isFirst'] = ko.pureComputed(isFirst);
+                    context['$isLast'] = ko.pureComputed(isLast);
+                    context['$isEven'] = ko.pureComputed(isEven);
+                    context['$isOdd'] = ko.pureComputed(isOdd);
+                    context['$previous'] = ko.pureComputed(previous);
+                    context['$next'] = ko.pureComputed(next);
+                    context['$array'] = arrayOrObservableArray;
                     if (asName) {
                         context[asName + "Index"] = index;
+                        context[asName + 'IsFirst'] = ko.pureComputed(isFirst);
+                        context[asName + 'IsLast'] = ko.pureComputed(isLast);
+                        context[asName + 'IsEven'] = ko.pureComputed(isEven);
+                        context[asName + 'IsOdd'] = ko.pureComputed(isOdd);
+                        context[asName + 'Previous'] = ko.pureComputed(previous);
+                        context[asName + 'Next'] = ko.pureComputed(next);
+                        context[asName + 'Array'] = arrayOrObservableArray;
                     }
                 }
             });
