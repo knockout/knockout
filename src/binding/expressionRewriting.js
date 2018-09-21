@@ -100,6 +100,9 @@ ko.expressionRewriting = (function () {
                 }
                 values.push(tok);
             }
+            if (depth > 0) {
+                throw Error("Unbalanced parentheses, braces, or brackets");
+            }
         }
         return result;
     }

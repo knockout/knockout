@@ -1179,17 +1179,12 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
     });
 
-    describe('With "createChildContextWithAs = false" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = false;
-        });
-
+    describe('With "noChildContext = true" and "as"', function () {
         it('Should bind viewmodel to an alias', function() {
             ko.setTemplateEngine(new dummyTemplateEngine({
                 myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
             }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\" }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: true }'></div>";
             ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
             expect(testNode.childNodes[0]).toContainText("ValueLiteral: Hello, ValueBound: Hello");
         });
@@ -1203,23 +1198,18 @@ describe('Templating', function() {
             ko.setTemplateEngine(new dummyTemplateEngine({
                 myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
             }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", afterRender: callback }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: true, afterRender: callback }'></div>";
             ko.applyBindings({ someItem: myModel, callback: myCallback }, testNode);
             expect(passedDataItem).toEqual(myModel);
         });
     });
 
-    describe('With "createChildContextWithAs = true" and "as"', function () {
-        beforeEach(function() {
-            this.restoreAfter(ko.options, 'createChildContextWithAs');
-            ko.options.createChildContextWithAs = true;
-        });
-
+    describe('With "noChildContext = false" and "as"', function () {
         it('Should bind viewmodel to an alias', function() {
             ko.setTemplateEngine(new dummyTemplateEngine({
                 myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
             }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\" }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: false }'></div>";
             ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
             expect(testNode.childNodes[0]).toContainText("ValueLiteral: Hello, ValueBound: Hello");
         });
@@ -1233,7 +1223,7 @@ describe('Templating', function() {
             ko.setTemplateEngine(new dummyTemplateEngine({
                 myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
             }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", afterRender: callback }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: false, afterRender: callback }'></div>";
             ko.applyBindings({ someItem: myModel, callback: myCallback }, testNode);
             expect(passedDataItem).toEqual(myModel);
         });

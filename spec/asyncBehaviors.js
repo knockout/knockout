@@ -741,6 +741,74 @@ describe('Rate-limited', function() {
             }
         });
     });
+
+    describe('with custom function', function() {
+        it('that notifies synchronously', function() {
+            var customFuncSpy = jasmine.createSpy('customFuncSpy');
+            function notifySync(callback) {
+                return customFuncSpy.andCallFake(callback);
+            }
+
+            var observable = ko.observable().extend({rateLimit: { method: notifySync }});
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+            expect(customFuncSpy).not.toHaveBeenCalled();
+
+            observable('a');
+            expect(customFuncSpy).toHaveBeenCalled();
+            expect(notifySpy.argsForCall).toEqual([ ['a'] ]);
+
+            customFuncSpy.reset();
+            notifySpy.reset();
+            observable('b');
+            expect(customFuncSpy).toHaveBeenCalled();
+            expect(notifySpy.argsForCall).toEqual([ ['b'] ]);
+        });
+
+        it('that takes custom options', function() {
+            // This debounce function will check for an 'immediate' option
+            function debounce(callback, timeout, options) {
+                var timeoutInstance;
+                if (options.immediate) {
+                    return function () {
+                        var callnow = !timeoutInstance;
+                        clearTimeout(timeoutInstance);
+                        timeoutInstance = ko.utils.setTimeout(function() {
+                            timeoutInstance = null;
+                            callback();
+                        }, timeout);
+                        if (callnow) {
+                            callback();
+                        }
+                    };
+                } else {
+                    throw Error("test expects immediate = true");
+                }
+            }
+
+            var observable = ko.observable().extend({rateLimit: {method: debounce, timeout: 500, immediate: true} });
+            var notifySpy = jasmine.createSpy('notifySpy');
+            observable.subscribe(notifySpy);
+
+            var times = 5;
+            while (--times) {   // Verify that it works repeatedly
+                // Observable is changed, initial notification happens immediately
+                notifySpy.reset();
+                observable('a');
+                expect(observable()).toEqual('a');
+                expect(notifySpy.argsForCall).toEqual([ ['a'] ]);
+
+                // Second change notification is delayed
+                notifySpy.reset();
+                observable('b');
+                expect(notifySpy).not.toHaveBeenCalled();
+
+                // Advance clock; Change notification happens now using the latest value notified
+                jasmine.Clock.tick(500);
+                expect(notifySpy.argsForCall).toEqual([ ['b'] ]);
+            }
+        });
+    });
 });
 
 describe('Deferred', function() {

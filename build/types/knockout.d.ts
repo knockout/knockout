@@ -136,7 +136,9 @@ export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val
 export type MaybeComputed<T = any> = T | Computed<T>;
 
 export interface ComputedFunctions<T = any> extends Subscribable<T> {
-    equalityComparer(a: T, b: T): boolean;
+    // It's possible for a to be undefined, since the equalityComparer is run on the initial
+    // computation with undefined as the first argument. This is user-relevant for deferred computeds.
+    equalityComparer(a: T | undefined, b: T): boolean;
     peek(): T;
     dispose(): void;
     isActive(): boolean;
@@ -184,7 +186,7 @@ export interface ComputedContext {
     getDependenciesCount(): number;
     getDependencies(): Subscribable[];
     isInitial(): boolean;
-    registerDependency(subscribable: Subscribable): void; 
+    registerDependency(subscribable: Subscribable): void;
 }
 
 export const computedContext: ComputedContext;
@@ -195,9 +197,12 @@ export function ignoreDependencies(callback: Function, callbackTarget?: any, cal
 
 //#region subscribables/extenders.js
 
+export type RateLimitMethod = (callback: () => void, timeout: number, options: any) => (() => void);
+
 export interface RateLimitOptions {
     timeout: number;
-    method?: "notifyAtFixedRate" | "notifyWhenChangesStop";
+    method?: "notifyAtFixedRate" | "notifyWhenChangesStop" | RateLimitMethod;
+    [option: string]: any;
 }
 
 export interface Extender<T extends Subscribable = any, O = any> {
@@ -285,6 +290,14 @@ export interface BindingContext<T = any> {
 
     createChildContext<X>(dataItem: T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
     createChildContext<X>(accessor: () => T | Observable<T>, dataItemAlias?: string, extendCallback?: BindingContextExtendCallback<X>): BindingContext<X>;
+    createChildContext<X>(dataItem: T | Observable<T>, options: BindingChildContextOptions<X>): BindingContext<X>;
+    createChildContext<X>(accessor: () => T | Observable<T>, options: BindingChildContextOptions<X>): BindingContext<X>;
+}
+
+export interface BindingChildContextOptions<T = any> {
+    as?: string;
+    extend?: BindingContextExtendCallback<T>;
+    noChildContext?: boolean;
 }
 
 export function applyBindings<T = any>(bindingContext: T | BindingContext<T>): void;

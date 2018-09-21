@@ -117,13 +117,19 @@
     // view model also depends on the parent view model, you must provide a function that returns the correct
     // view model on each update.
     ko.bindingContext.prototype['createChildContext'] = function (dataItemOrAccessor, dataItemAlias, extendCallback, options) {
-        if (dataItemAlias && !ko.options['createChildContextWithAs']) {
+        if (!options && dataItemAlias && typeof dataItemAlias == "object") {
+            options = dataItemAlias;
+            dataItemAlias = options['as'];
+            extendCallback = options['extend'];
+        }
+
+        if (dataItemAlias && options && options['noChildContext']) {
             var isFunc = typeof(dataItemOrAccessor) == "function" && !ko.isObservable(dataItemOrAccessor);
             return new ko.bindingContext(inheritParentVm, this, null, function (self) {
                 if (extendCallback)
                     extendCallback(self);
                 self[dataItemAlias] = isFunc ? dataItemOrAccessor() : dataItemOrAccessor;
-            });
+            }, options);
         }
 
         return new ko.bindingContext(dataItemOrAccessor, this, dataItemAlias, function (self, parentContext) {
@@ -146,10 +152,6 @@
         return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties(self) : properties);
         });
-    };
-
-    ko.bindingContext.prototype.createStaticChildContext = function (dataItemOrAccessor, dataItemAlias) {
-        return this['createChildContext'](dataItemOrAccessor, dataItemAlias, null, { "exportDependencies": true });
     };
 
     var boundElementDomDataKey = ko.utils.domData.nextKey();
@@ -551,9 +553,9 @@
         }
 
         if (arguments.length < 2) {
-            rootNode = window.document.body;
+            rootNode = document.body;
             if (!rootNode) {
-                throw Error("ko.applyBindings: could not find window.document.body; has the document been loaded?");
+                throw Error("ko.applyBindings: could not find document.body; has the document been loaded?");
             }
         } else if (!rootNode || (rootNode.nodeType !== 1 && rootNode.nodeType !== 8)) {
             throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");

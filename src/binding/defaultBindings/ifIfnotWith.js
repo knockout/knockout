@@ -4,13 +4,12 @@
 function makeWithIfBinding(bindingKey, isWith, isNot) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var savedNodes, asOption, wrapCondition, ifCondition, completeOnRender, needAsyncContext;
+            var savedNodes, wrapCondition = true, withOptions, ifCondition, completeOnRender, needAsyncContext;
 
             if (isWith) {
-                asOption = allBindings.get('as');
-                wrapCondition = asOption && !ko.options['createChildContextWithAs'];
-            } else {
-                wrapCondition = true;
+                var as = allBindings.get('as'), noChildContext = allBindings.get('noChildContext');
+                wrapCondition = as && noChildContext;
+                withOptions = { 'as': as, 'noChildContext': noChildContext };
             }
 
             if (wrapCondition) {
@@ -43,7 +42,7 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 
                     var childContext;
                     if (isWith) {
-                        childContext = bindingContext['createChildContext'](typeof value == "function" ? value : valueAccessor, asOption);
+                        childContext = bindingContext['createChildContext'](typeof value == "function" ? value : valueAccessor, withOptions);
                     } else if (ifCondition.isActive()) {
                         childContext = bindingContext['extend'](function() { ifCondition(); return null; });
                     } else {

@@ -189,6 +189,12 @@ describe('Expression Rewriting', function() {
         expect(result).toEqual([]);
     });
 
+    it('Should throw an error for missing closing braces, etc.', function() {
+        expect(function() {
+            ko.expressionRewriting.parseObjectLiteral("if: f(g[something]");
+        }).toThrowContaining("Unbalanced");
+    });
+
     it('Should be able to parse object literals containing C++ style comments', function() {
         // From https://github.com/knockout/knockout/issues/1524
         var result = ko.expressionRewriting.parseObjectLiteral(
