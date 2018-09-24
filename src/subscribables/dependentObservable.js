@@ -111,6 +111,8 @@ ko.computed = ko.dependentObservable = function (evaluatorFunctionOrOptions, eva
         ko.utils.domNodeDisposal.addDisposeCallback(state.disposeWhenNodeIsRemoved, state.domNodeDisposalCallback = function () {
             computedObservable.dispose();
         });
+
+        ko.dependencyDetection.registerBindingComputedOrder(computedObservable);
     }
 
     return computedObservable;
@@ -198,7 +200,7 @@ var computedFn = {
         }
     },
     subscribeToDependency: function (target) {
-        if (target._deferUpdates) {
+        if (target._deferUpdates && !this[computedState].disposeWhenNodeIsRemoved) {
             var dirtySub = target.subscribe(this.markDirty, this, 'dirty'),
                 changeSub = target.subscribe(this.respondToChange, this);
             return {
@@ -361,27 +363,38 @@ var computedFn = {
         // Override the limit function with one that delays evaluation as well
         ko.subscribable['fn'].limit.call(this, limitFunction);
         this._evalIfChanged = function () {
-            if (!this[computedState].isSleeping) {
-                if (this[computedState].isStale) {
+            var state = this[computedState];
+
+            if (state.disposeWhenNodeIsRemoved) {
+                ko.dependencyDetection.deferredBindingUpdated(this);
+            }
+            if (!state.isSleeping) {
+                if (state.isStale) {
                     this.evaluateImmediate();
                 } else {
-                    this[computedState].isDirty = false;
+                    state.isDirty = false;
                 }
             }
             return this[computedState].latestValue;
         };
         this._evalDelayed = function (isChange) {
+            var state = this[computedState];
+
             this._limitBeforeChange(this[computedState].latestValue);
 
             // Mark as dirty
-            this[computedState].isDirty = true;
+            state.isDirty = true;
             if (isChange) {
-                this[computedState].isStale = true;
+                state.isStale = true;
             }
 
             // Pass the observable to the "limit" code, which will evaluate it when
             // it's time to do the notification.
             this._limitChange(this, !isChange /* isDirty */);
+
+            if (state.disposeWhenNodeIsRemoved) {
+                ko.dependencyDetection.deferredBindingUpdateScheduled(this);
+            }
         };
     },
     dispose: function () {
@@ -394,6 +407,7 @@ var computedFn = {
         }
         if (state.disposeWhenNodeIsRemoved && state.domNodeDisposalCallback) {
             ko.utils.domNodeDisposal.removeDisposeCallback(state.disposeWhenNodeIsRemoved, state.domNodeDisposalCallback);
+            state.domNodeDisposalCallback = undefined;
         }
         state.dependencyTracking = undefined;
         state.dependenciesCount = 0;
@@ -401,7 +415,7 @@ var computedFn = {
         state.isStale = false;
         state.isDirty = false;
         state.isSleeping = false;
-        state.disposeWhenNodeIsRemoved = undefined;
+        state.disposeWhenNodeIsRemoved = !!state.disposeWhenNodeIsRemoved;
         state.disposeWhen = undefined;
         state.readFunction = undefined;
         if (!this.hasWriteFunction) {

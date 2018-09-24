@@ -129,13 +129,12 @@ describe("Deferred bindings", function() {
     it('Should get latest value when conditionally included', function() {
         // Test is based on example in https://github.com/knockout/knockout/issues/1975
 
-        testNode.innerHTML = "<div data-bind=\"if: show\"><div data-bind=\"text: status\"></div></div>";
+        testNode.innerHTML = "<div data-bind=\"if: value() > 0 && is1()\"><div data-bind=\"text: status\"></div></div>";
         var value = ko.observable(0),
             is1 = ko.pureComputed(function () {  return value() == 1; }),
-            status = ko.pureComputed(function () { return is1() ? 'ok' : 'error'; }),
-            show = ko.pureComputed(function () { return value() > 0 && is1(); });
+            status = ko.pureComputed(function () { return is1() ? 'ok' : 'error'; });
 
-        ko.applyBindings({ status: status, show: show }, testNode);
+        ko.applyBindings({ status: status, value: value, is1: is1 }, testNode);
         expect(testNode.childNodes[0]).toContainHtml('');
 
         value(1);

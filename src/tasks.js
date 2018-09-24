@@ -3,7 +3,8 @@ ko.tasks = (function () {
         taskQueue = [],
         taskQueueLength = 0,
         nextHandle = 1,
-        nextIndexToProcess = 0;
+        nextIndexToProcess = 0,
+        finallyTasks = [];
 
     if (window['MutationObserver']) {
         // Chrome 27+, Firefox 14+, IE 11+, Opera 15+, Safari 6.1+
@@ -36,10 +37,17 @@ ko.tasks = (function () {
         if (taskQueueLength) {
             // Each mark represents the end of a logical group of tasks and the number of these groups is
             // limited to prevent unchecked recursion.
-            var mark = taskQueueLength, countMarks = 0;
+            var mark = taskQueueLength, countMarks = 0, task;
 
             // nextIndexToProcess keeps track of where we are in the queue; processTasks can be called recursively without issue
-            for (var task; nextIndexToProcess < taskQueueLength; ) {
+            for (;;) {
+                if (nextIndexToProcess >= taskQueueLength) {
+                    if (finallyTasks.length) {
+                        tasks.schedule(finallyTasks.shift());
+                    } else {
+                        break;
+                    }
+                }
                 if (task = taskQueue[nextIndexToProcess++]) {
                     if (nextIndexToProcess > mark) {
                         if (++countMarks >= 5000) {
@@ -89,6 +97,10 @@ ko.tasks = (function () {
             }
         },
 
+        finally: function (func) {
+            finallyTasks.push(func);
+        },
+
         // For testing only: reset the queue and return the previous queue length
         'resetForTesting': function () {
             var length = taskQueueLength - nextIndexToProcess;
@@ -104,5 +116,6 @@ ko.tasks = (function () {
 
 ko.exportSymbol('tasks', ko.tasks);
 ko.exportSymbol('tasks.schedule', ko.tasks.schedule);
+ko.exportSymbol('tasks.finally', ko.tasks.finally);
 //ko.exportSymbol('tasks.cancel', ko.tasks.cancel);  "cancel" isn't minified
 ko.exportSymbol('tasks.runEarly', ko.tasks.runEarly);
