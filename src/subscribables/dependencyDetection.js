@@ -80,6 +80,8 @@ ko.computedContext = ko.dependencyDetection = (function () {
 window.scheduled.initial++;
                 // Schedule a cleanup task
                 ko.tasks.finally(function () {
+window.scheduled.cleanup++;
+window.scheduled.cleaned += sortedBindingsToUpdate.length;
                     sortedBindingsToUpdate.length = 0;
                 });
                 sortedBindingsToUpdate[0] = computed;
@@ -115,7 +117,7 @@ window.scheduled.rescheduled += (sortedBindingsToUpdate.length - i - 1);
     };
 })();
 
-window.scheduled = { initial: 0, ordered: 0, unordered: 0, rescheduled: 0 };
+window.scheduled = { initial: 0, ordered: 0, unordered: 0, rescheduled: 0, cleanup: 0, cleaned: 0 };
 
 ko.exportSymbol('computedContext', ko.computedContext);
 ko.exportSymbol('computedContext.getDependenciesCount', ko.computedContext.getDependenciesCount);
