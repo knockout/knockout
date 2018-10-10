@@ -2,6 +2,7 @@
     // Hide or don't minify context properties, see https://github.com/knockout/knockout/issues/2294
     var contextSubscribable = ko.utils.createSymbolOrString('_subscribable');
     var contextAncestorBindingInfo = ko.utils.createSymbolOrString('_ancestorBindingInfo');
+    var contextDataDependency = ko.utils.createSymbolOrString('_dataDependency');
 
     ko.bindingHandlers = {};
 
@@ -80,6 +81,10 @@
             if (extendCallback)
                 extendCallback(self, parentContext, dataItem);
 
+            if (dataDependency) {
+                self[contextDataDependency] = dataDependency;
+            }
+
             return self['$data'];
         }
 
@@ -88,7 +93,8 @@
             realDataItemOrAccessor = shouldInheritData ? undefined : dataItemOrAccessor,
             isFunc = typeof(realDataItemOrAccessor) == "function" && !ko.isObservable(realDataItemOrAccessor),
             nodes,
-            subscribable;
+            subscribable,
+            dataDependency = options && options['dataDependency'];
 
         if (options && options['exportDependencies']) {
             // The "exportDependencies" option means that the calling code will track any dependencies and re-create
@@ -146,12 +152,12 @@
     // Extend the binding context with new custom properties. This doesn't change the context hierarchy.
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
-    ko.bindingContext.prototype['extend'] = function(properties) {
+    ko.bindingContext.prototype['extend'] = function(properties, options) {
         // If the parent context references an observable view model, "contextSubscribable" will always be the
         // latest view model object. If not, "contextSubscribable" isn't set, and we can use the static "$data" value.
         return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties(self) : properties);
-        });
+        }, options);
     };
 
     var boundElementDomDataKey = ko.utils.domData.nextKey();
@@ -405,8 +411,14 @@
                 function() {
                     bindings = sourceBindings ? sourceBindings(bindingContext, node) : getBindings.call(provider, node, bindingContext);
                     // Register a dependency on the binding context to support observable view models.
-                    if (bindings && bindingContext[contextSubscribable])
-                        bindingContext[contextSubscribable]();
+                    if (bindings) {
+                        if (bindingContext[contextSubscribable]) {
+                            bindingContext[contextSubscribable]();
+                        }
+                        if (bindingContext[contextDataDependency]) {
+                            bindingContext[contextDataDependency]();
+                        }
+                    }
                     return bindings;
                 },
                 null, { disposeWhenNodeIsRemoved: node }

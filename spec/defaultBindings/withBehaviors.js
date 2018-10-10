@@ -215,7 +215,7 @@ describe('Binding: With', function() {
         testNode.innerHTML = "<div data-bind='with: item'><input data-bind='value: $rawData'/><div data-bind='text: $data'></div></div>";
         var item = ko.observable('one');
         ko.applyBindings({ item: item }, testNode);
-        expect(item.getSubscriptionsCount('change')).toEqual(3);    // subscriptions are the with and value bindings, and the binding context
+        expect(item.getSubscriptionsCount('change')).toEqual(2);    // subscriptions are the with and value bindings
         expect(testNode.childNodes[0]).toHaveValues(['one']);
         expect(testNode.childNodes[0].childNodes[1]).toContainText('one');
 
@@ -231,7 +231,7 @@ describe('Binding: With', function() {
         expect(testNode.childNodes[0].childNodes[1]).toContainText('three');
 
         // subscription count is stable
-        expect(item.getSubscriptionsCount('change')).toEqual(3);
+        expect(item.getSubscriptionsCount('change')).toEqual(2);
     });
 
     it('Should update if given a function', function () {
