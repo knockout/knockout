@@ -14,7 +14,11 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 
             if (wrapCondition) {
                 ifCondition = ko.computed(function() {
-                    return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
+                    if (isWith) {
+                        return ko.utils.unwrapObservable(valueAccessor()) != null;
+                    } else {
+                        return !isNot !== !ko.utils.unwrapObservable(valueAccessor());
+                    }
                 }, null, { disposeWhenNodeIsRemoved: element });
             }
 
@@ -23,8 +27,14 @@ function makeWithIfBinding(bindingKey, isWith, isNot) {
 
             ko.computed(function() {
                 var value = wrapCondition ? ifCondition() : ko.utils.unwrapObservable(valueAccessor()),
-                    shouldDisplay = !!value,
                     isFirstRender = !savedNodes;
+
+                var shouldDisplay;
+                if (isWith) {
+                    shouldDisplay = wrapCondition ? value : value != null;
+                } else {
+                    shouldDisplay = !!value;
+                }
 
                 // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
                 if (isFirstRender && ko.computedContext.getDependenciesCount()) {
