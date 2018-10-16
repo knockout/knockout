@@ -688,6 +688,42 @@ describe('Binding: Foreach', function() {
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Mars++--Jupiter++--Saturn++');
     });
 
+    it('Should properly handle a combination of adds, deletes, and moves with a beforeRemove callback', function() {
+        testNode.innerHTML = "<div data-bind='foreach: {data: planets, beforeRemove: beforeRemove}'><span data-bind='text: $data'></span></div>";
+        var planets = ko.observableArray([ 'M', 'N' ]),
+            beforeRemove = function(elem) { ko.removeNode(elem); };
+
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove }, testNode);
+        expect(testNode).toContainText('MN');
+
+        planets([ 'K', 'L', 'M' ]);
+        expect(testNode).toContainText('KLM');
+
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+    });
+
+    it('Should call a beforeMove callback immediately after a move and not after beforeRemove itemss are actually removed', function() {
+        testNode.innerHTML = "<div data-bind='foreach: {data: planets, beforeRemove: beforeRemove, beforeMove: beforeMove}'><span data-bind='text: $data'></span></div>";
+        var planets = ko.observableArray([ 'K', 'L', 'M' ]),
+            beforeRemove = function(elem) { ko.removeNode(elem); },
+            beforeMoveItems = [],
+            beforeMove = function(elem, i, item) { beforeMoveItems.push(item); };
+
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove, beforeMove: beforeMove }, testNode);
+        expect(testNode).toContainText('KLM');
+
+        beforeMoveItems = [];
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+        expect(beforeMoveItems).toEqual([ 'K' ]);
+
+        beforeMoveItems = [];
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+        expect(beforeMoveItems).toEqual([]);
+    });
+
     if ("activeElement" in document) {
         it('Should maintain focus on focused element even when it\'s moved', function() {
             testNode.innerHTML = "<div data-bind='foreach: sortedItems'><input type='text' data-bind='value: name'></div>";

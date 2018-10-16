@@ -45,7 +45,7 @@
         // Build the new mapping result
         var newMappingResult = [];
         var lastMappingResultIndex = 0;
-        var newMappingResultIndex = 0;
+        var currentArrayIndex = 0;
 
         var nodesToDelete = [];
         var itemsToMoveFirstIndexes = [];
@@ -56,7 +56,7 @@
         var countWaitingForRemove = 0;
 
         function itemAdded(value) {
-            mapData = { arrayEntry: value, indexObservable: ko.observable(newMappingResultIndex++) };
+            mapData = { arrayEntry: value, indexObservable: ko.observable(currentArrayIndex++) };
             newMappingResult.push(mapData);
             if (!isFirstExecution) {
                 itemsForAfterAddCallbacks.push(mapData);
@@ -65,10 +65,10 @@
 
         function itemMovedOrRetained(oldPosition) {
             mapData = lastMappingResult[oldPosition];
-            if (newMappingResultIndex !== oldPosition)
+            if (currentArrayIndex !== mapData.indexObservable.peek())
                 itemsForMoveCallbacks.push(mapData);
             // Since updating the index might change the nodes, do so before calling fixUpContinuousNodeArray
-            mapData.indexObservable(newMappingResultIndex++);
+            mapData.indexObservable(currentArrayIndex++);
             ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode);
             newMappingResult.push(mapData);
         }
@@ -133,11 +133,11 @@
                         break;
 
                     case "added":
-                        while (newMappingResultIndex < itemIndex) {
+                        while (currentArrayIndex < itemIndex) {
                             itemMovedOrRetained(lastMappingResultIndex++);
                         }
                         if (movedIndex !== undefined) {
-                            itemsToMoveFirstIndexes.push(newMappingResultIndex);
+                            itemsToMoveFirstIndexes.push(newMappingResult.length);
                             itemMovedOrRetained(movedIndex);
                         } else {
                             itemAdded(editScriptItem['value']);
@@ -146,7 +146,7 @@
                 }
             }
 
-            while (newMappingResultIndex < array.length) {
+            while (currentArrayIndex < array.length) {
                 itemMovedOrRetained(lastMappingResultIndex++);
             }
 
