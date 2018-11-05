@@ -254,6 +254,7 @@ describe('Binding attribute syntax', function() {
         if (ko.utils.createSymbolOrString('') === '') {
             allowedProperties.push('_subscribable');
             allowedProperties.push('_ancestorBindingInfo');
+            allowedProperties.push('_dataDependency');
         }
         ko.utils.objectForEach(ko.contextFor(testNode.childNodes[0].childNodes[0]), function (prop) {
             expect(allowedProperties).toContain(prop);

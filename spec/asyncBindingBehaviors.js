@@ -153,7 +153,13 @@ describe("Deferred bindings", function() {
 
     it('Should update "if" binding before descendant bindings', function() {
         // Based on example at https://github.com/knockout/knockout/pull/2226
-        testNode.innerHTML = '<div data-bind="if: hasAddress()"><span data-bind="text: streetNumber().toLowerCase()"></span><span data-bind="text: street().toLowerCase()"></span></div>';
+        testNode.innerHTML =
+            '<div data-bind="if: hasAddress()">' +
+                '<span data-bind="text: streetNumber().toLowerCase()"></span>' +
+                '<div data-bind="with: street().toLowerCase()">' +
+                    '<span data-bind="text: $data"></span>' +
+                '</div>' +
+            '</div>';
         var vm = {
             street: ko.observable(),
             streetNumber: ko.observable(),
