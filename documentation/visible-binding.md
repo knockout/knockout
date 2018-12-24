@@ -31,7 +31,7 @@ The `visible` and `hidden` bindings cause the associated DOM element to become h
 
         Note that any display style you've configured using your CSS rules will then apply (so CSS rules like `x { display:table-row }` work fine in conjunction with this binding).
         
-    The `hidden` binding works oppositely, setting the `display` style to `none`, and so hiding the element, when the parameter is `true` and removing the style it when the parameter is `false`.
+    The `hidden` binding works oppositely—when the parameter is `true`, it hides the element by setting the `display` style to `none`; and when the parameter is `false`, it removes the `display` style.
 
     If this parameter is an observable value, the binding will update the element's visibility whenever the value changes. If the parameter isn't observable, it will only set the element's visibility once and will not update it again later.
 
