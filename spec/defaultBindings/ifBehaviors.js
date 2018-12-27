@@ -62,6 +62,16 @@ describe('Binding: If', function() {
         expect(ko.contextFor(testNode.childNodes[0].childNodes[1]).$parents.length).toEqual(0);
     });
 
+    it('Should update descendant bindings when observable viewmodel changes', function() {
+        var vm = ko.observable({ someItem: "first value" });
+        testNode.innerHTML = "<div data-bind='if: true'><span data-bind='text: someItem'></span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0]).toContainText("first value");
+
+        vm({someItem: "second value"});
+        expect(testNode.childNodes[0]).toContainText("second value");
+    });
+
     it('Should be able to define an \"if\" region using a containerless template', function() {
         var someitem = ko.observable(undefined);
         testNode.innerHTML = "hello <!-- ko if: someitem --><span data-bind=\"text: someitem().occasionallyexistentchildprop\"></span><!-- /ko --> goodbye";

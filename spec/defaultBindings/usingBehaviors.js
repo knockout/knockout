@@ -54,6 +54,16 @@ describe('Binding: Using', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("Parent prop value");
     });
 
+    it('Should update descendant bindings when observable viewmodel changes', function() {
+        var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
+        testNode.innerHTML = "<div data-bind='using: childItem'><span data-bind='text: $parent.parentItem'></span> <span data-bind='text: $data'></span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0]).toContainText("first parent child value");
+
+        vm({parentItem: "second parent", childItem: "child value"});
+        expect(testNode.childNodes[0]).toContainText("second parent child value");
+    });
+
     it('Should be able to access all parent binding contexts via $parents, and root context via $root', function() {
         testNode.innerHTML = "<div data-bind='using: topItem'>" +
                                 "<div data-bind='using: middleItem'>" +
@@ -188,5 +198,15 @@ describe('Binding: Using', function() {
         // Should update the input when the observable changes
         item('three');
         expect(testNode.childNodes[0]).toHaveValues(['three']);
+    });
+
+    it('Should minimize binding updates with nested bindings', function() {
+        testNode.innerHTML = "<div data-bind='using: topLevel'><div data-bind='using: secondLevel'>Renders: <span data-bind='text: ++$root.countRenders'></span> <span data-bind='text: $data'></span></div></div>";
+
+        var topLevel = ko.observable({ secondLevel: "first value" });
+        ko.applyBindings({ topLevel: topLevel, countRenders: 0 }, testNode);
+
+        topLevel({ secondLevel: "second value" })
+        expect(testNode.childNodes[0]).toContainText("Renders: 2 second value");
     });
 });

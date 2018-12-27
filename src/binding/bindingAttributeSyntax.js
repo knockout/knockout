@@ -41,11 +41,6 @@
                 dataItem = ko.utils.unwrapObservable(dataItemOrObservable);
 
             if (parentContext) {
-                // When a "parent" context is given, register a dependency on the parent context. Thus whenever the
-                // parent context is updated, this context will also be updated.
-                if (parentContext[contextSubscribable])
-                    parentContext[contextSubscribable]();
-
                 // Copy $root and any custom properties from the parent context
                 ko.utils.extend(self, parentContext);
 
@@ -80,6 +75,12 @@
             // function could also add dependencies to this binding context.
             if (extendCallback)
                 extendCallback(self, parentContext, dataItem);
+
+            // When a "parent" context is given and we don't already have a dependency on its context, register a dependency on it.
+            // Thus whenever the parent context is updated, this context will also be updated.
+            if (parentContext && parentContext[contextSubscribable] && !ko.computedContext.computed().hasAncestorDependency(parentContext[contextSubscribable])) {
+                parentContext[contextSubscribable]();
+            }
 
             if (dataDependency) {
                 self[contextDataDependency] = dataDependency;

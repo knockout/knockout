@@ -159,6 +159,18 @@ var computedFn = {
 
         return dependentObservables;
     },
+    hasAncestorDependency: function (obs) {
+        if (!this[computedState].dependenciesCount) {
+            return false;
+        }
+        var dependencies = this.getDependencies();
+        if (ko.utils.arrayIndexOf(dependencies, obs) !== -1) {
+            return true;
+        }
+        return !!ko.utils.arrayFirst(dependencies, function (dep) {
+            return dep.hasAncestorDependency && dep.hasAncestorDependency(obs);
+        });
+    },
     addDependencyTracking: function (id, target, trackingObj) {
         if (this[computedState].pure && target === this) {
             throw Error("A 'pure' computed must not be called recursively");
