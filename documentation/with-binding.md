@@ -1,19 +1,19 @@
 ---
 layout: documentation
-title: The "with" binding
+title: The "with" and "using" bindings
 ---
 
 ### Purpose
-The `with` binding creates a new [binding context](binding-context.html), so that descendant elements are bound in the context of a specified object.
+The `with` and `using` bindings create a new [binding context](binding-context.html), so that descendant elements are bound in the context of a specified object. (The differences between these binding are described below under [Parameters](#parameters).)
 
-Of course, you can arbitrarily nest `with` bindings along with the other control-flow bindings such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html).
+Of course, you can arbitrarily nest `with` and `using` bindings along with the other control-flow bindings such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html).
 
 ### Example 1
 
 Here is a very basic example of switching the binding context to a child object. Notice that in the `data-bind` attributes, it is *not* necessary to prefix `latitude` or `longitude` with `coords.`, because the binding context is switched to `coords`.
 
     <h1 data-bind="text: city"> </h1>
-    <p data-bind="with: coords">
+    <p data-bind="using: coords">
         Latitude: <span data-bind="text: latitude"> </span>,
         Longitude: <span data-bind="text: longitude"> </span>
     </p>
@@ -87,17 +87,23 @@ ko.applyBindings(new AppViewModel());
 
     The object that you want to use as the context for binding descendant elements.
 
-    If the expression you supply evaluates to `null` or `undefined`, descendant elements will *not* be bound at all, but will instead be removed from the document.
+    These bindings differ in how they deal with a value of `null` or `undefined`:
+    
+    * For the `with` binding, descendant elements will *not* be bound at all, but will instead be removed from the document.
+    * For the `using` binding, it is generally incorrect to supply a `null` or `undefined` value since it will try to use that value as the context for descendant elements.
 
-    If the expression you supply involves any observable values, the expression will be re-evaluated whenever any of those observables change. Then, descendant elements will be cleared out, and **a new copy of the markup** will be added to your document and bound in the context of the new evaluation result.
+    If the expression you supply involves any observable values, the expression will be re-evaluated whenever any of those observables change. These bindings differ in how they react when the bound value changes:
+    
+    * For the `with` binding, descendant elements will be cleared out, and **a new copy of the markup** will be added to your document and bound in the context of the new value.
+    * For the `using` binding, descendant elements will remain in the document and their bindings re-evaluated with the new context value.
 
   * Additional parameters
 
      * None
 
-### Note 1: Using "with" without a container element
+### Note 1: Using "with" or "using" without a container element
 
-Just like other control flow elements such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html), you can use `with` without any container element to host it. This is useful if you need to use `with` in a place where it would not be legal to introduce a new container element just to hold the `with` binding. See the documentation for [`if`](if-binding.html) or [`foreach`](foreach-binding.html) for more details.
+Just like other control flow bindings such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html), you can use `with` and `using` without any container element to host it. This is useful if you need to use these bindings in a place where it would not be legal to introduce a new container element just to hold the binding. See the documentation for [`if`](if-binding.html) or [`foreach`](foreach-binding.html) for more details.
 
 Example:
 
@@ -112,6 +118,10 @@ Example:
     </ul>
 
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
+
+### Note 2: Why are there two similar bindings?
+
+The `using` binding was introduced in Knockout 3.5 as a replacement for `with` when re-rendering descendant elements isn't desired. Because `using` re-evaluates descendant bindings instead of re-rendering, each descendant binding will include an additional dependency on the `using` context.
 
 ### Dependencies
 
