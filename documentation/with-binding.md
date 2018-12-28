@@ -99,8 +99,20 @@ ko.applyBindings(new AppViewModel());
 
   * Additional parameters
 
-     * None
+      * `on`
 
+        The `on` option allows you set an alias for the new context object. Although you can refer to the object using the `$data` [context variable](binding-context.html), it may be useful to give it a more descriptive name using the `as` option like:
+
+            <div data-bind="with: currentPerson, as: 'person'"></div>
+
+        Now any descendant binding will be able to refer to `person` to access this context object. This can be especially useful in scenarios where you have nested contexts and you need to refer to something declared at a higher level in the hierarchy.
+
+      * `noChildContext`
+
+        The default behavior of the `as` option is to set a name for the provided object while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the object must be through the given name, and `$data` will remain set to the outer viewmodel.
+        
+        For the `using` binding, although you can use this option, it would generally be more efficient and descriptive to use the [`let` binding](let-binding.html) instead. So instead of `using: currentPerson, as: 'person', noChildContext: true`, you'd have `let: { person: currentPerson }`.
+        
 ### Note 1: Using "with" or "using" without a container element
 
 Just like other control flow bindings such as [`if`](if-binding.html) and [`foreach`](foreach-binding.html), you can use `with` and `using` without any container element to host it. This is useful if you need to use these bindings in a place where it would not be legal to introduce a new container element just to hold the binding. See the documentation for [`if`](if-binding.html) or [`foreach`](foreach-binding.html) for more details.
