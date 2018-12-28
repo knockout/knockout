@@ -10,11 +10,16 @@ ko.subscription = function (target, callback, disposeCallback) {
     ko.exportProperty(this, 'disposeWhenNodeIsRemoved', this.disposeWhenNodeIsRemoved);
 };
 ko.subscription.prototype.dispose = function () {
-    if (this._domNodeDisposalCallback) {
-        ko.utils.domNodeDisposal.removeDisposeCallback(this._node, this._domNodeDisposalCallback);
+    var self = this;
+    if (!self._isDisposed) {
+        if (self._domNodeDisposalCallback) {
+            ko.utils.domNodeDisposal.removeDisposeCallback(self._node, self._domNodeDisposalCallback);
+        }
+        self._isDisposed = true;
+        self._disposeCallback();
+
+        self._target = self._callback = self._disposeCallback = self._node = self._domNodeDisposalCallback = null;
     }
-    this._isDisposed = true;
-    this._disposeCallback();
 };
 ko.subscription.prototype.disposeWhenNodeIsRemoved = function (node) {
     this._node = node;
