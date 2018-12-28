@@ -109,9 +109,9 @@ ko.applyBindings(new AppViewModel());
 
       * `noChildContext`
 
-        The default behavior of the `as` option is to set a name for the provided object while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the object must be through the given name, and `$data` will remain set to the outer viewmodel.
+        The default behavior of the `as` option is to set a name for the provided object while still also binding the contents to the object. But you may prefer keep the context unchanged and only set the name of the object. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the object must be through the given name, and `$data` will remain set to the outer viewmodel.
         
-        For the `using` binding, although you can use this option, it would generally be more efficient and descriptive to use the [`let` binding](let-binding.html) instead. So instead of `using: currentPerson, as: 'person', noChildContext: true`, you'd have `let: { person: currentPerson }`.
+        For the `using` binding, although you can use this option, it would generally be more efficient and descriptive to use the [`let` binding](let-binding.html) instead. Rather than `using: currentPerson, as: 'person', noChildContext: true`, you'd use `let: { person: currentPerson }`.
         
 ### Note 1: Using "with" or "using" without a container element
 

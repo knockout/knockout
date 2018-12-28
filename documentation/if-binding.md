@@ -10,7 +10,7 @@ The `if` binding causes a section of markup to appear in your document (and to h
 
 The `ifnot` binding works just like the `if` binding, except that it inverts the result of whatever expression you pass to it.
 
-`if` (and `ifnot`) play a similar role to [the `visible` (and `hidden`) bindings](visible-binding.html). The difference is that, with `visible`, the contained markup always remains in the DOM and always has its `data-bind` attributes applied - the `visible` binding just uses CSS to toggle the container element's visiblity. The `if` binding, however, physically adds or removes the contained markup in your DOM, and only applies bindings to descendants if the expression is `true`.
+`if` (and `ifnot`) play a similar role to [the `visible` (and `hidden`) bindings](visible-binding.html). The difference is that, with `visible`, the contained markup always remains in the DOM and always has its `data-bind` attributes applied—the `visible` binding just uses CSS to toggle the container element's visiblity. The `if` binding, however, physically adds or removes the contained markup in your DOM, and only applies bindings to descendants if the expression is `true`.
 
 ### Example 1
 
