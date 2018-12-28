@@ -533,7 +533,7 @@ function test_misc(this: any) {
             ko.computed({
                 read: () => {
                     ko.utils.unwrapObservable(valueAccessor());
-                    ko.bindingHandlers.options.update.apply(this, args);
+                    ko.bindingHandlers.options.update.apply(this, args as any);
                 },
                 owner: this,
                 disposeWhenNodeIsRemoved: element
