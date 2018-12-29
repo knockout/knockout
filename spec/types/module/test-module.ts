@@ -19,6 +19,26 @@ function test_creatingVMs() {
         alert("The person's new name is " + newValue);
     });
 
+    // arrayChange event works for any observable
+    myViewModel.personName.extend({ trackArrayChanges: true });
+    myViewModel.personName.subscribe(changes => {
+        console.log(changes[0].value.toUpperCase());
+    }, myViewModel, "arrayChange");
+
+    ko.when<string>(myViewModel.personName, value => {
+        console.log("personName has a value of ", value.toUpperCase());
+    });
+
+    ko.when(() => {
+        return !myViewModel.personName();
+    }).then(x => {
+        if (x === true) {
+            console.log("personName is clear");
+        } else {
+            throw Error("Should never happen");
+        }
+    });
+
     subscription.dispose();
 }
 
@@ -62,9 +82,9 @@ function test_computed() {
         public acceptedNumericValue = ko.observable(123);
         public lastInputWasValid = ko.observable(true);
 
-        public attemptedValue = ko.computed<number>({
+        public attemptedValue = ko.computed<number, this>({
             read: this.acceptedNumericValue,
-            write: function (this: MyViewModel2, value) {
+            write: function (value) {
                 if (isNaN(value))
                     this.lastInputWasValid(false);
                 else {
@@ -103,6 +123,10 @@ function test_observableArrays() {
     ]);
 
     const multiTypeObservableArray = ko.observableArray<string | number | undefined>();
+
+    anotherObservableArray.subscribe(changes => {
+        console.log(changes[0].value.name.toUpperCase());
+    }, null, "arrayChange");
 
     myObservableArray().length;
     myObservableArray()[0];
@@ -594,7 +618,7 @@ function test_customObservable() {
                 // The caller only needs to be notified of changes if they did a "read" operation
                 ko.computedContext.registerDependency(observableAttribute);
                 return observableAttribute.peek();
-    }
+            }
         });
 
         // Create a function to fetch the attribute value that

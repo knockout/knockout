@@ -6,7 +6,7 @@ export as namespace ko;
 
 //#region subscribables/subscribable.js
 
-export type SubscriptionCallback<T = any> = (val: T) => void;
+export type SubscriptionCallback<T = any, TTarget = void> = (this: TTarget, val: T) => void;
 export type MaybeSubscribable<T = any> = T | Subscribable<T>;
 
 export interface Subscription {
@@ -14,16 +14,19 @@ export interface Subscription {
     disposeWhenNodeIsRemoved(node: Node): void;
 }
 
+type Flatten<T> = T extends Array<infer U> ? U : T;
+
 export interface SubscribableFunctions<T = any> extends Function {
     init<S extends Subscribable<any>>(instance: S): void;
 
     notifySubscribers(valueToWrite?: T, event?: string): void;
 
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget: any, event: "beforeChange" | "spectate" | "awake"): Subscription;
-    subscribe(callback: SubscriptionCallback<Array<utils.ArrayChange<T>>>, callbackTarget: any, event: "arrayChange"): Subscription;
-    subscribe(callback: SubscriptionCallback<undefined>, callbackTarget: any, event: "asleep"): Subscription;
-    subscribe(callback: SubscriptionCallback<T>, callbackTarget?: any, event?: "change"): Subscription;
-    subscribe<X>(callback: SubscriptionCallback<X>, callbackTarget: any, event: string): Subscription;
+    subscribe<TTarget = void>(callback: SubscriptionCallback<utils.ArrayChanges<Flatten<T>>, TTarget>, callbackTarget: TTarget, event: "arrayChange"): Subscription;
+
+    subscribe<TTarget = void>(callback: SubscriptionCallback<T, TTarget>, callbackTarget: TTarget, event: "beforeChange" | "spectate" | "awake"): Subscription;
+    subscribe<TTarget = void>(callback: SubscriptionCallback<undefined, TTarget>, callbackTarget: TTarget, event: "asleep"): Subscription;
+    subscribe<TTarget = void>(callback: SubscriptionCallback<T, TTarget>, callbackTarget?: TTarget, event?: "change"): Subscription;
+    subscribe<X = any, TTarget = void>(callback: SubscriptionCallback<X, TTarget>, callbackTarget: TTarget, event: string): Subscription;
 
     extend(requestedExtenders: ObservableExtenderOptions): this;
     extend<S extends Subscribable<any>>(requestedExtenders: ObservableExtenderOptions): S;
@@ -240,7 +243,8 @@ export function toJSON(rootObject: any, replacer?: Function, space?: number): an
 
 //#region subscribables/observableUtils.js
 
-export function when<T>(predicate: () => T | Subscribable<T>, callback: (value: T) => void, context?: any): Subscription;
+export function when<T, TTarget = void>(predicate: ComputedReadFunction<T, TTarget>, callback: SubscriptionCallback<T, TTarget>, context?: TTarget): Subscription;
+export function when<T>(predicate: ComputedReadFunction<T, void>): Promise<T>;
 
 //#endregion
 
@@ -512,14 +516,16 @@ export module utils {
         moved?: number;
     }
 
+    export type ArrayChanges<T = any> = ArrayChange<T>[];
+
     export interface CompareArraysOptions {
         dontLimitMoves?: boolean;
         sparse?: boolean;
     }
 
-    export function compareArrays<T = any>(a: T[], b: T[]): Array<ArrayChange<T>>;
-    export function compareArrays<T = any>(a: T[], b: T[], dontLimitMoves: boolean): Array<ArrayChange<T>>;
-    export function compareArrays<T = any>(a: T[], b: T[], options: CompareArraysOptions): Array<ArrayChange<T>>;
+    export function compareArrays<T = any>(a: T[], b: T[]): ArrayChanges<T>;
+    export function compareArrays<T = any>(a: T[], b: T[], dontLimitMoves: boolean): ArrayChanges<T>;
+    export function compareArrays<T = any>(a: T[], b: T[], options: CompareArraysOptions): ArrayChanges<T>;
 }
 
 //#endregion

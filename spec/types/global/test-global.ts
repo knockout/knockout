@@ -21,6 +21,10 @@ function test_creatingVMs() {
         alert("The person's new name is " + newValue);
     });
 
+    myViewModel.personName.subscribe(changes => {
+        console.log(changes[0].value.toUpperCase());
+    }, null, "arrayChange");
+
     subscription.dispose();
 }
 
@@ -64,9 +68,9 @@ function test_computed() {
         public acceptedNumericValue = ko.observable(123);
         public lastInputWasValid = ko.observable(true);
 
-        public attemptedValue = ko.computed<number>({
+        public attemptedValue = ko.computed<number, this>({
             read: this.acceptedNumericValue,
-            write: function (this: MyViewModel2, value) {
+            write: function (value) {
                 if (isNaN(value))
                     this.lastInputWasValid(false);
                 else {
@@ -105,6 +109,10 @@ function test_observableArrays() {
     ]);
 
     const multiTypeObservableArray = ko.observableArray<string | number | undefined>();
+
+    anotherObservableArray.subscribe(changes => {
+        console.log(changes[0].value.name.toUpperCase());
+    }, null, "arrayChange");
 
     myObservableArray().length;
     myObservableArray()[0];
