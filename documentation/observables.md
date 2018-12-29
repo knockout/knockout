@@ -113,6 +113,22 @@ If you want to be notified of the value of an observable before it is about to b
     
 Note: Knockout does not guarantee that the `beforeChange` and `change` events will occur in pairs, since other parts of your code might raise either event individually. If you need to track the previous value of an observable, it's up to you to use a subscription to capture and track it.
 
+## Reacting to a specific observable event with "ko.when"
+
+*This advanced technique for working with observables was added in Knockout 3.5.*
+
+Sometimes, rather than reacting to every change to an observable, you just need to know when the observable arrives at a specific value. This is what `ko.when` makes easy. For example:
+
+    ko.when(function () {
+        return myViewModel.personName() !== undefined;
+    }, function () {
+        myViewModel.isInitialized(true);
+    });
+
+`ko.when` waits until the first function (`predicate`) returns `true` or a true-ish value, at which time it runs the second function (`callback`). You can optionally pass in a third parameter (`context`) that defines the value of `this` for the predicate and callback functions. `ko.when` returns a `subscription` object that you can use the cancel the action.
+
+`ko.when` can also be called with just the `predicate` function. In that case, it returns a `Promise` that will be resolved once the `predicate` returns `true`.
+
 ## Forcing observables to always notify subscribers
 
 When writing to an observable that contains a primitive value (a number, string, boolean, or null), the dependencies of the observable are normally only notified if the value actually changed. However, it is possible to use the built-in `notify` [extender](extenders.html) to ensure that an observable's subscribers are always notified on a write, even if the value is the same. You would apply the extender to an observable like this:
