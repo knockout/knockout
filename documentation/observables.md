@@ -121,13 +121,13 @@ Sometimes, rather than reacting to every change to an observable, you just need 
 
     ko.when(function () {
         return myViewModel.personName() !== undefined;
-    }, function () {
+    }, function (result) {
         myViewModel.isInitialized(true);
     });
 
-`ko.when` waits until the first function (`predicate`) returns `true` or a true-ish value, at which time it runs the second function (`callback`). You can optionally pass in a third parameter (`context`) that defines the value of `this` for the predicate and callback functions. `ko.when` returns a `subscription` object that you can use the cancel the action.
+`ko.when` waits until the first function (`predicate`) returns `true` or a true-ish value, at which time it runs the second function (`callback`), passing the `predicate` result. You can optionally pass in a third parameter (`context`) that defines the value of `this` for the predicate and callback functions. `ko.when` returns a `subscription` object that you can use the cancel the action.
 
-`ko.when` can also be called with just the `predicate` function. In that case, it returns a `Promise` that will be resolved once the `predicate` returns `true`.
+`ko.when` can also be called with just the `predicate` function. In that case, it returns a `Promise` that will be resolved with the `predicate` result once the `predicate` returns a true-ish value.
 
 ## Forcing observables to always notify subscribers
 
