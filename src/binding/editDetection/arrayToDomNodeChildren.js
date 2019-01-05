@@ -88,7 +88,7 @@
         } else {
             if (!editScript || (lastMappingResult && lastMappingResult['_countWaitingForRemove'])) {
                 // Compare the provided array against the previous one
-                var lastArray = isFirstExecution ? [] : ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; }),
+                var lastArray = ko.utils.arrayMap(lastMappingResult, function (x) { return x.arrayEntry; }),
                     compareOptions = {
                         'dontLimitMoves': options['dontLimitMoves'],
                         'sparse': true
@@ -206,6 +206,7 @@
             if (!mapData.initialized && callbackAfterAddingNodes) {
                 callbackAfterAddingNodes(mapData.arrayEntry, mapData.mappedNodes, mapData.indexObservable);
                 mapData.initialized = true;
+                lastNode = mapData.mappedNodes[mapData.mappedNodes.length - 1];     // get the last node again since it may have been changed by a preprocessor
             }
         }
 

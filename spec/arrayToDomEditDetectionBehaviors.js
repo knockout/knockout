@@ -183,4 +183,53 @@ describe('Array to DOM node children mapping', function() {
         expect(mappingInvocations.length).toEqual(0);
         expect(countCallbackInvocations).toEqual(0);
     });
+
+    it('Should insert nodes correctly when callback modifies node list', function() {
+        var array = ["A", "B"];
+        var mapping = function (arrayItem) {
+            var output1 = document.createElement("DIV");
+            output1.innerHTML = arrayItem + "1";
+            return [output1];
+        };
+        var callback = function(arrayItem, nodes) {
+            var output2 = document.createElement("DIV");
+            output2.innerHTML = arrayItem + "2";
+
+            var node = nodes[0], parent = node.parentNode;
+            parent.insertBefore(output2, node);
+            parent.removeChild(node);
+            nodes[0] = output2;
+        }
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode, array, mapping, null, callback);
+        expect(testNode.childNodes.length).toEqual(2);
+        expect(testNode.childNodes[0].innerHTML).toEqual("A2");
+        expect(testNode.childNodes[1].innerHTML).toEqual("B2");
+    });
+
+    it('Should insert nodes correctly when callback modifies node list when using virtual elements', function() {
+        // See https://github.com/knockout/knockout/issues/2433
+        var array = ["A", "B"];
+        var mapping = function (arrayItem) {
+            var output1 = document.createElement("DIV");
+            output1.innerHTML = arrayItem + "1";
+            return [output1];
+        };
+        var callback = function(arrayItem, nodes) {
+            var output2 = document.createElement("DIV");
+            output2.innerHTML = arrayItem + "2";
+
+            var node = nodes[0], parent = node.parentNode;
+            parent.insertBefore(output2, node);
+            parent.removeChild(node);
+            nodes[0] = output2;
+        }
+        testNode.innerHTML = "xxx<!--ko--><!--/ko-->";
+        expect(testNode.childNodes.length).toEqual(3);
+
+        ko.utils.setDomNodeChildrenFromArrayMapping(testNode.childNodes[1], array, mapping, null, callback);
+        expect(testNode.childNodes.length).toEqual(5);
+        expect(testNode.childNodes[2].innerHTML).toEqual("A2");
+        expect(testNode.childNodes[3].innerHTML).toEqual("B2");
+    });
 });
