@@ -21,9 +21,25 @@ function test_creatingVMs() {
         alert("The person's new name is " + newValue);
     });
 
+    // arrayChange event works for any observable
+    myViewModel.personName.extend({ trackArrayChanges: true });
     myViewModel.personName.subscribe(changes => {
         console.log(changes[0].value.toUpperCase());
-    }, null, "arrayChange");
+    }, myViewModel, "arrayChange");
+
+    ko.when<string>(myViewModel.personName, value => {
+        console.log("personName has a value of ", value.toUpperCase());
+    });
+
+    ko.when(() => {
+        return !myViewModel.personName();
+    }).then(x => {
+        if (x === true) {
+            console.log("personName is clear");
+        } else {
+            throw Error("Should never happen");
+        }
+    });
 
     subscription.dispose();
 }
