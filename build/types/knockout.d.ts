@@ -208,27 +208,25 @@ export interface RateLimitOptions {
     [option: string]: any;
 }
 
+export interface ExtendersOptions {
+    trackArrayChanges: true | utils.CompareArraysOptions;
+    throttle: number;
+    rateLimit: number | RateLimitOptions;
+    deferred: true;
+    notify: "always" | any;
+}
+
 export interface Extender<T extends Subscribable = any, O = any> {
     (target: T, options: O): T;
 }
 
-export interface Extenders {
+type AsExtenders<T> = { [P in keyof T]: Extender<Subscribable, T[P]> }
+
+export interface Extenders extends AsExtenders<ExtendersOptions> {
     [name: string]: Extender;
-
-    trackArrayChanges: Extender<Subscribable, true | utils.CompareArraysOptions>;
-    throttle: Extender<Observable, number>;
-    rateLimit: Extender<Subscribable, number | RateLimitOptions>;
-    deferred: Extender<Subscribable, true>;
-    notify: Extender<Subscribable, "always" | any>;
 }
 
-export interface ObservableExtenderOptions {
-    trackArrayChanges?: true | utils.CompareArraysOptions;
-    throttle?: number;
-    rateLimit?: number | RateLimitOptions;
-    deferred?: true;
-    notify?: "always" | any;
-}
+export interface ObservableExtenderOptions extends Partial<ExtendersOptions> { }
 
 export const extenders: Extenders;
 

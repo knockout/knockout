@@ -6,16 +6,10 @@ declare module "knockout" {
         filterByProperty(propName: string, matchValue: boolean): ko.Computed<any>;
     }
 
-    export interface Extenders {
-        logChange(target: ko.Subscribable, option: string): typeof target;
-        numeric(target: ko.Subscribable, precision: number): typeof target;
-        required(target: ko.Subscribable, overrideMessage: string): typeof target;
-    }
-
-    export interface ObservableExtenderOptions {
-        numeric?: number;
-        required?: string;
-        logChange?: string;
+    export interface ExtendersOptions {
+        numeric: number;
+        required: string;
+        logChange: string;
     }
 
     // Define your own functions
