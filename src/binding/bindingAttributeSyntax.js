@@ -154,8 +154,6 @@
     // Similarly to "child" contexts, provide a function here to make sure that the correct values are set
     // when an observable view model is updated.
     ko.bindingContext.prototype['extend'] = function(properties, options) {
-        // If the parent context references an observable view model, "contextSubscribable" will always be the
-        // latest view model object. If not, "contextSubscribable" isn't set, and we can use the static "$data" value.
         return new ko.bindingContext(inheritParentVm, this, null, function(self, parentContext) {
             ko.utils.extend(self, typeof(properties) == "function" ? properties(self) : properties);
         }, options);
@@ -593,6 +591,7 @@
     ko.exportSymbol('bindingHandlers', ko.bindingHandlers);
     ko.exportSymbol('bindingEvent', ko.bindingEvent);
     ko.exportSymbol('bindingEvent.subscribe', ko.bindingEvent.subscribe);
+    ko.exportSymbol('bindingEvent.startPossiblyAsyncContentBinding', ko.bindingEvent.startPossiblyAsyncContentBinding);
     ko.exportSymbol('applyBindings', ko.applyBindings);
     ko.exportSymbol('applyBindingsToDescendants', ko.applyBindingsToDescendants);
     ko.exportSymbol('applyBindingAccessorsToNode', ko.applyBindingAccessorsToNode);

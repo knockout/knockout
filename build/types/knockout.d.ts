@@ -318,6 +318,7 @@ export type BindingContextExtendCallback<T = any> = (self: BindingContext<T>, pa
 
 export module bindingEvent {
     export function subscribe(node: Node, event: "childrenComplete" | "descendantsComplete", callback: (node: Node) => void, callbackContext?: any): Subscription;
+    export function startPossiblyAsyncContentBinding(node: Element, bindingContext: BindingContext): BindingContext;
 }
 
 //#endregion
