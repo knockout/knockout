@@ -416,6 +416,63 @@ describe('Observable Array change tracking', function() {
         expect(changelist[changelist.length-1]).toEqual({ status: 'added', value: 'T', index: 19, moved: 4 });
     });
 
+    it('Should cancel or update change list of observable is updated during change notification', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray([]),
+                changelists = [];
+
+            myArray.subscribe(function (value) {
+                if (value && value.length) {
+                    myArray([]);
+                }
+            });
+
+            myArray.subscribe(function(changes) { changelists.push(changes); }, null, 'arrayChange');
+
+            myArray(['Alpha']);
+            expect(callLog.length).toBe(1);
+            expect(changelists).toEqual([]);
+        });
+    });
+
+    it('Should only report changes that occur after subscribing even if subscribed during change notification', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray([]),
+                changelists1 = [],
+                changelists2 = [],
+                sub2;
+
+            myArray.subscribe(function (value) {
+                if (!sub2 && value && value.length) {
+                    sub2 = myArray.subscribe(function(changes) { changelists2.push(changes); }, null, 'arrayChange');
+                }
+            });
+
+            myArray.subscribe(function(changes) { changelists1.push(changes); }, null, 'arrayChange');
+
+            myArray(['Alpha']);
+            expect(callLog.length).toBe(1);
+            expect(changelists1).toEqual([
+                [
+                    { status: 'added', value: 'Alpha', index: 0 }
+                ]
+            ]);
+            expect(changelists2).toEqual([]);
+
+            changelists1 = [];
+            myArray(['Alpha', 'Beta']);
+            expect(callLog.length).toBe(2);
+            expect(changelists1).toEqual([
+                [
+                    { status: 'added', value: 'Beta', index: 1 }
+                ]
+            ]);
+            expect(changelists2).toEqual(changelists1);
+        });
+    });
+
 
     function testKnownOperation(array, operationName, options) {
         var changeList,

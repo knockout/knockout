@@ -724,6 +724,20 @@ describe('Binding: Foreach', function() {
         expect(beforeMoveItems).toEqual([]);
     });
 
+    it('Should not update a binding that was just initialized', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        testNode.innerHTML = '<div data-bind="if: items().length"><div data-bind="foreach: items"><div data-bind="text: $data"></div></div></div><div data-bind="foreach: items"><b></b></div>';
+
+        var vm = {
+            items: ko.observableArray([]),
+        };
+        ko.applyBindings(vm, testNode);
+        expect(testNode).toContainText("");
+
+        vm.items(["item"]);
+        expect(testNode).toContainText("item");
+    });
+
     if ("activeElement" in document) {
         it('Should maintain focus on focused element even when it\'s moved', function() {
             testNode.innerHTML = "<div data-bind='foreach: sortedItems'><input type='text' data-bind='value: name'></div>";
