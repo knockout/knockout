@@ -416,7 +416,7 @@ describe('Observable Array change tracking', function() {
         expect(changelist[changelist.length-1]).toEqual({ status: 'added', value: 'T', index: 19, moved: 4 });
     });
 
-    it('Should cancel or update change list of observable is updated during change notification', function() {
+    it('Should cancel or update change list if observable is updated during change notification', function() {
         // See https://github.com/knockout/knockout/issues/2439
         captureCompareArraysCalls(function(callLog) {
             var myArray = ko.observableArray([]),
