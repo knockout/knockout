@@ -15,6 +15,7 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
         cachedDiff = null,
         arrayChangeSubscription,
         pendingNotifications = 0,
+        previousContents,
         underlyingNotifySubscribersFunction,
         underlyingBeforeSubscriptionAddFunction = target.beforeSubscriptionAdd,
         underlyingAfterSubscriptionRemoveFunction = target.afterSubscriptionRemove;
@@ -41,12 +42,15 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
             }
             arrayChangeSubscription = null;
             trackingChanges = false;
+            previousContents = undefined;
         }
     };
 
     function trackChanges() {
-        // Calling 'trackChanges' multiple times is the same as calling it once
         if (trackingChanges) {
+            // Whenever there's a new subscription and there are pending notifications, make sure all previous
+            // subscriptions are notified of the change so that all subscriptions are in sync.
+            notifyChanges();
             return;
         }
 
@@ -63,26 +67,30 @@ ko.extenders['trackArrayChanges'] = function(target, options) {
 
         // Each time the array changes value, capture a clone so that on the next
         // change it's possible to produce a diff
-        var previousContents = [].concat(target.peek() || []);
+        previousContents = [].concat(target.peek() || []);
         cachedDiff = null;
-        arrayChangeSubscription = target.subscribe(function(currentContents) {
-            // Make a copy of the current contents and ensure it's an array
-            currentContents = [].concat(currentContents || []);
+        arrayChangeSubscription = target.subscribe(notifyChanges);
 
-            // Compute the diff and issue notifications, but only if someone is listening
-            if (target.hasSubscriptionsForEvent(arrayChangeEventName)) {
-                var changes = getChanges(previousContents, currentContents);
+        function notifyChanges() {
+            if (pendingNotifications) {
+                // Make a copy of the current contents and ensure it's an array
+                var currentContents = [].concat(target.peek() || []);
+
+                // Compute the diff and issue notifications, but only if someone is listening
+                if (target.hasSubscriptionsForEvent(arrayChangeEventName)) {
+                    var changes = getChanges(previousContents, currentContents);
+                }
+
+                // Eliminate references to the old, removed items, so they can be GCed
+                previousContents = currentContents;
+                cachedDiff = null;
+                pendingNotifications = 0;
+
+                if (changes && changes.length) {
+                    target['notifySubscribers'](changes, arrayChangeEventName);
+                }
             }
-
-            // Eliminate references to the old, removed items, so they can be GCed
-            previousContents = currentContents;
-            cachedDiff = null;
-            pendingNotifications = 0;
-
-            if (changes && changes.length) {
-                target['notifySubscribers'](changes, arrayChangeEventName);
-            }
-        });
+        }
     }
 
     function getChanges(previousContents, currentContents) {
