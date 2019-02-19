@@ -9,9 +9,9 @@ With binding preprocessing, developers can define custom syntaxes by providing c
 
 ## Preprocessing binding strings
 
-You can hook into Knockout's logic for interpreting `data-bind` attributes by providing a *binding preprocessor* for a specific binding handler (such as `click`, `visible`, or any [custom binding handler](custom-bindings.html)).
+You can hook into Knockout's logic for interpreting `data-bind` attributes by providing a *binding preprocessor* for a specific binding (such as `click`, `visible`, or any [custom binding](custom-bindings.html)).
 
-To do this, attach a `preprocess` function to the binding handler:
+To do this, attach a `preprocess` function to the binding handler object:
 
     ko.bindingHandlers.yourBindingHandler.preprocess = function(stringFromMarkup) {
         // Return stringFromMarkup if you don't want to change anything, or return
