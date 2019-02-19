@@ -116,3 +116,48 @@ Normally, an `observableArray` notifies its subscribers immediately, as soon as 
 
     // Ensure it notifies about changes no more than once per 50-millisecond period
     myViewModel.myObservableArray.extend({ rateLimit: 50 });
+
+## Tracking array changes
+
+Although you can subscribe to and access an `observableArray` just like any other observable, Knockout also provides a super-fast method to find out how an observable array has changed (i.e., which items were just added, deleted, or moved). You subscribe to array changes as follows:
+
+    obsArray.subscribe(fn, thisArg, "arrayChange");
+
+The main advantages of subscribing to changes:
+
+- Performance is `O(1)` in most cases, i.e., there’s basically no performance implication at all, because for straightforward operations, (`push`, `splice`, etc.) Knockout supplies the change log without running any difference algorithm. Knockout only falls back on an algorithm if you’ve made an arbitrary change without using a typical array mutation function.
+
+- The change log just gives you the items that actually changed.
+
+Here are examples of how the changes are reported:
+
+    var myArray = ko.observableArray(["Alpha", "Beta", "Gamma"]);
+
+    myArray.push("Delta");
+    // Changes: [{ index: 3, status: 'added', value: 'Delta' }]
+    // New value: ["Alpha", "Beta", "Gamma", "Delta"]
+
+    myArray.pop();
+    // Changes: [{ index: 3, status: 'deleted', value: 'Delta' }]
+    // New value: ["Alpha", "Beta", "Gamma"]
+
+    myArray.splice(1, 2, "Omega");
+    // Changes:
+    // [{ index: 1, status: 'deleted', value: 'Beta' },
+    //  { index: 1, status: 'added', value: 'Omega' },
+    //  { index: 2, status: 'deleted', value: 'Gamma' }]
+    // New value: ["Alpha", "Omega"]
+
+    myArray.reverse();
+    // Changes:
+    // [{ index: 0, moved: 1, status: 'deleted', value: 'Alpha' },
+    //  { index: 1, moved: 0, status: 'added', value: 'Alpha' }]
+    // New value: ["Omega", "Alpha"]
+
+As shown above, the changes are reported as a list of *added* and *deleted* values. The indexes for *deleted* items refer to the original array, and the indexes for *added* items refer to the new array.
+
+When items are re-ordered, as shown in the last example above, you will also get *moved* information. You can choose to ignore the *moved* information and just interpret it as the original `Alpha` being deleted and a different `Alpha` being added to the array's end. Or you can recognize that the *moved* information tells you that you can think of the *added* and *deleted* values being the same item that just changes position (by matching up the indexes).
+
+An `observableArray` has array tracking enabled at construction, but you can extend any other `subscribable` (i.e. `ko.observable` and `ko.computed`) by extending it as follows:
+
+    trackable = ko.observable().extend({trackArrayChanges: true});
