@@ -158,6 +158,6 @@ As shown above, the changes are reported as a list of *added* and *deleted* valu
 
 When items are re-ordered, as shown in the last example above, you will also get *moved* information. You can choose to ignore the *moved* information and just interpret it as the original `Alpha` being deleted and a different `Alpha` being added to the array's end. Or you can recognize that the *moved* information tells you that you can think of the *added* and *deleted* values being the same item that just changes position (by matching up the indexes).
 
-An `observableArray` has array tracking enabled at construction, but you can extend any other `subscribable` (i.e. `ko.observable` and `ko.computed`) by extending it as follows:
+An `observableArray` has array tracking enabled at construction, but you can extend any other `subscribable` (i.e. `ko.observable` and `ko.computed`) as follows:
 
     trackable = ko.observable().extend({trackArrayChanges: true});
