@@ -106,7 +106,6 @@ This example also demonstrates a simple way to create cascading dropdowns.
         };
     };
 
-    ko.options.deferUpdates = true;
     ko.applyBindings(new Cart());
 {% endcapture %}
 {% include live-example-tabs.html %}
