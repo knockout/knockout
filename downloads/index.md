@@ -13,7 +13,7 @@ Get the latest stable production build of Knockout.js:
 </div>
 
 <div class="download-debug-panel">
-    Also available: <a href='knockout-3.4.2.debug.js'>debug build</a>.
+    Also available: <a href='knockout-3.5.0.debug.js'>debug build</a>.
     <strong>Note:</strong> This is only intended to help you understand how Knockout works. Don't use it for normal application
     development, because it exposes additional unsupported private APIs.
 </div>
@@ -32,7 +32,7 @@ Additionally, you can include the `--save` option to add knockout to your `bower
 
 Simply reference the JavaScript file using a `<script>` tag somewhere on your HTML pages. For example,
 
-    <script type='text/javascript' src='knockout-3.4.2.js'></script>
+    <script type='text/javascript' src='knockout-3.5.0.js'></script>
 
 Of course, update the `src` attribute to match the location where you put the downloaded file. Next, if you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](../documentation/observables.html).
 
@@ -50,6 +50,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v3.5.0](knockout-3.5.0.js) ([debug](knockout-3.5.0.debug.js)) --- February 21, 2019
 * [v3.5.0 Release Candidate 2](knockout-3.5.0rc2.js) ([debug](knockout-3.5.0rc2.debug.js)) --- September 8, 2018
 * [v3.5.0 Release Candidate](knockout-3.5.0rc.js) ([debug](knockout-3.5.0rc.debug.js)) --- April 25, 2018
 * [v3.5.0 Beta](knockout-3.5.0beta.js) ([debug](knockout-3.5.0beta.debug.js)) --- December 29, 2017
