@@ -173,7 +173,7 @@ describe("Deferred bindings", function() {
         vm.street('my street');
         vm.streetNumber('123');
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainText('123my street');
+        expect(testNode.childNodes[0]).toContainText('123 my street', /* ignoreSpaces */ true);
 
         vm.street(null);
         vm.streetNumber(null);
@@ -197,7 +197,7 @@ describe("Deferred bindings", function() {
         vm.street('my street');
         vm.streetNumber('123');
         jasmine.Clock.tick(1);
-        expect(testNode.childNodes[0]).toContainText('123my street');
+        expect(testNode.childNodes[0]).toContainText('123 my street', /* ignoreSpaces */ true);
 
         vm.street(null);
         vm.streetNumber(null);

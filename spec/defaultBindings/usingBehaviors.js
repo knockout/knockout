@@ -58,10 +58,10 @@ describe('Binding: Using', function() {
         var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
         testNode.innerHTML = "<div data-bind='using: childItem'><span data-bind='text: $parent.parentItem'></span> <span data-bind='text: $data'></span></div>";
         ko.applyBindings(vm, testNode);
-        expect(testNode.childNodes[0]).toContainText("first parent child value");
+        expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
 
         vm({parentItem: "second parent", childItem: "child value"});
-        expect(testNode.childNodes[0]).toContainText("second parent child value");
+        expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
     });
 
     it('Should be able to access all parent binding contexts via $parents, and root context via $root', function() {
@@ -207,7 +207,7 @@ describe('Binding: Using', function() {
         ko.applyBindings({ topLevel: topLevel, countRenders: 0 }, testNode);
 
         topLevel({ secondLevel: "second value" })
-        expect(testNode.childNodes[0]).toContainText("Renders: 2 second value");
+        expect(testNode.childNodes[0]).toContainText("Renders: 2 second value", /* ignoreSpaces */ true);
     });
 
     describe('With "noChildContext = true" and "as"', function () {
@@ -242,10 +242,10 @@ describe('Binding: Using', function() {
             var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
             testNode.innerHTML = "<div data-bind='using: childItem, as: \"item\", noChildContext: true'><span data-bind='text: parentItem'></span> <span data-bind='text: item'></span></div>";
             ko.applyBindings(vm, testNode);
-            expect(testNode.childNodes[0]).toContainText("first parent child value");
+            expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
 
             vm({parentItem: "second parent", childItem: "child value"});
-            expect(testNode.childNodes[0]).toContainText("second parent child value");
+            expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
         });
     });
 
@@ -284,10 +284,10 @@ describe('Binding: Using', function() {
             var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
             testNode.innerHTML = "<div data-bind='using: childItem, as: \"item\", noChildContext: false'><span data-bind='text: $parent.parentItem'></span> <span data-bind='text: item'></span></div>";
             ko.applyBindings(vm, testNode);
-            expect(testNode.childNodes[0]).toContainText("first parent child value");
+            expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
 
             vm({parentItem: "second parent", childItem: "child value"});
-            expect(testNode.childNodes[0]).toContainText("second parent child value");
+            expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
         });
     });
 });
