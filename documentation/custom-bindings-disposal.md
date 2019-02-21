@@ -24,6 +24,24 @@ To register a function to run when a node is removed, you can call `ko.utils.dom
         }
     };
 
+### Setting computed observables or manual subscriptions to dispose automatically
+
+If you create a computed observable in a custom binding, rather than using a custom disposal callback, you can set the computed to dispose automatically when the node is removed. When constructing the computed observable, provide the node using the `disposeWhenNodeIsRemoved` option:
+
+    ko.computed({
+        read: function () {
+            element.title = ko.unwrap(valueAccessor());
+        },
+        disposeWhenNodeIsRemoved: element
+    });
+    
+If a binding includes a manual subscription, this can be set to dispose automatically by calling its `disposeWhenNodeIsRemoved` method:
+
+    var titleSubscription = someObservable.subscribe(function (val) {
+        element.title = val;
+    });
+    titleSubscription.disposeWhenNodeIsRemoved(element);
+
 ### Overriding the clean-up of external data
 
 When removing an element, Knockout runs logic to clean up any data associated with the element. As part of this logic, Knockout calls jQuery's `cleanData` method if jQuery is loaded in your page. In advanced scenarios, you may want to prevent or customize how this data is removed in your application. Knockout exposes a function, `ko.utils.domNodeDisposal.cleanExternalData(node)`, that can be overridden to support custom logic. For example, to prevent `cleanData` from being called, an empty function could be used to replace the standard `cleanExternalData` implementation:

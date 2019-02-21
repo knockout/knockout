@@ -24,11 +24,13 @@ If you only need to combine updates without adding a delay, [deferred updates](d
     // Longhand: Specify timeout and/or method
     someObservableOrComputed.extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
 
-The `method` option controls when notifications fire, and accepts the following values:
+The `method` option controls when notifications fire, and accepts any of the following values:
 
-1. `notifyAtFixedRate` --- **Default value if not otherwise specified**. The notification happens after the specified period of time from the first change to the observable (either initially or since the previous notification).
+1. `"notifyAtFixedRate"` --- **Default value if not otherwise specified**. The notification happens after the specified period of time from the first change to the observable (either initially or since the previous notification).
 
-2. `notifyWhenChangesStop` --- The notification happens after no changes have occured to the observable for the specified period of time. Each time the observable changes, that timer is reset, so notifications cannot happen if the observable continuously changes more frequently than the timeout period.
+2. `"notifyWhenChangesStop"` --- The notification happens after no changes have occured to the observable for the specified period of time. Each time the observable changes, that timer is reset, so notifications cannot happen if the observable continuously changes more frequently than the timeout period.
+
+3. A custom function that will handle the scheduling of notifications. For example, you could use Underscore's `throttle` method: `myObservable.extend({ rateLimit: { timeout: 500, method: _.throttle } });` For more details, see the section below on custom rate-limit methods.
 
 ### Example 1: The basics
 
@@ -85,6 +87,30 @@ function AppViewModel() {
 ko.applyBindings(new AppViewModel());
 {% endcapture %}
 {% include live-example-minimal.html %}
+
+## Custom rate-limit methods
+
+Knockout 3.5 introduced the ability to specify a custom rate-limit method by passing a function to the `rateLimit` extender rather than just a string. The function is called with three parameters (function, timeout, options) and must return a new, rate-limited function. Whenever the observable has a possibly new value to notify, it will call the returned function, which should then call the original function after some delay based on the rules of the custom method. For example, here is a function that implements *debounce* but also immediately notifies the initial value:
+
+    function debounceSubsequentChanges(action, timeout) {
+        var timeoutInstance;
+        return function () {
+            if (!timeoutInstance) {
+                action();
+                timeoutInstance = setTimeout(function () {
+                    timeoutInstance = undefined;
+                }, timeout);
+            } else {
+                clearTimeout(timeoutInstance);
+                timeoutInstance = setTimeout(function() {
+                    timeoutInstance = undefined;
+                    action();
+                }, timeout);
+            }
+        };
+    }
+    
+Your function can also accept a third parameter, an object that includes any additional parameters passed to the `rateLimit` extender.
 
 ## Special consideration for computed observables
 

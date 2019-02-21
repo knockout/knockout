@@ -34,6 +34,7 @@ A computed observable provides the following functions:
 * `dispose()` --- Manually disposes the computed observable, clearing all subscriptions to dependencies. This function is useful if you want to stop a computed observable from being updated or want to clean up memory for a computed observable that has dependencies on observables that won't be cleaned.
 * `extend(extenders)` --- Applies the given [extenders](extenders.html) to the computed observable.
 * `getDependenciesCount()` --- Returns the current number of dependencies of the computed observable.
+* `getDependencies()` --- Returns an array of the current dependencies of the computed observable. The dependencies will be returned in the order that they were accessed while evaluating the computed observable.
 * `getSubscriptionsCount( [event] )` --- Returns the current number of subscriptions (either from other computed observables or manual subscriptions) of the computed observable. Optionally, pass an event name (like `"change"`) to return just the count of subscriptions for that event.
 * `isActive()` --- Returns whether the computed observable may be updated in the future. A computed observable is inactive if it has no dependencies.
 * `peek()` --- Returns the current value of the computed observable without creating a dependency (see the section on [`peek`](computed-dependency-tracking.html#controlling-dependencies-using-peek)).
@@ -56,6 +57,8 @@ During the execution of a computed observable's evaluator function, you can acce
 
 * `getDependenciesCount()` --- Returns the number of dependencies of the computed observable detected so far during the current evaluation.
   * Note: `ko.computedContext.getDependenciesCount()` is equivalent to calling `getDependenciesCount()` on the computed observable itself. The reason that it also exists on `ko.computedContext` is to provide a way of counting the dependencies during the first ever evaluation, before the computed observable has even finished being constructed.
+
+* `getDependencies()` --- Returns an array of the dependencies of the computed observable detected so far during the current evaluation. The dependencies will be returned in the order that they were accessed while evaluating the computed observable.
 
 Example:
 

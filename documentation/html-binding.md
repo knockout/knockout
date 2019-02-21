@@ -6,7 +6,7 @@ title: The "html" binding
 ### Purpose
 The `html` binding causes the associated DOM element to display the HTML specified by your parameter.
 
-Typically this is useful when values in your view model are actually strings of HTML markup that you want to render.
+Typically this is useful when values in your view model are actually strings of HTML markup that you want to render. If you know your view model value is plain text, use the more efficient [text binding](text-binding.html) instead.
 
 ### Example
     <div data-bind="html: details"></div>
@@ -34,7 +34,7 @@ Typically this is useful when values in your view model are actually strings of 
 
 ### Note: About HTML encoding
 
-Since this binding sets your element's content using `innerHTML`, you should be careful not to use it with untrusted model values, because that might open the possibility of a script injection attack.  If you cannot guarantee that the content is safe to display (for example, if it is based on a different user's input that was stored in your database), then you can use [the text binding](text-binding.html), which will set the element's text value using `innerText` or `textContent` instead.
+Since this binding sets your element's content using `innerHTML`, you should be careful not to use it with untrusted model values, because that might open the possibility of a script injection attack.  If you cannot guarantee that the content is safe to display (for example, if it is based on a different user's input that was stored in your database), then you can use [the text binding](text-binding.html), which will set the element's text value instead.
 
 ### Dependencies
 

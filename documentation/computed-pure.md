@@ -140,18 +140,26 @@ In some scenarios, it is useful to programmatically determine if you are dealing
 
 ### State-change notifications
 
-A pure computed observable notifies an `awake` event (using its current value) whenever it enters the *listening* state and notifies an `asleep` event (using an `undefined` value) whevener it enter the *sleeping* state. You won't normally need to know about the internal state of your computed observables. But since the internal state can correspond to whether the computed observable is bound to the view or not, you might use that information to do some view-model initialization or cleanup.
+A pure computed observable notifies some events that allow you to respond to changes to the state of the observable. 
 
-    this.someComputedThatWillBeBound = ko.pureComputed(function () {
-        ...
-    }, this);
+  - `awake` — Whenever the computed observable enters the *listening* state, it notifies an `awake` event using its current value. (The `awake` event also applies to normal computed observables created with the `deferEvaluation` option.) You won't normally need to know about the internal state of your observables. But since the internal state can correspond to whether the observable is bound to the view or not, you might use that information to do some view-model initialization or cleanup.
 
-    this.someComputedThatWillBeBound.subscribe(function () {
-        // do something when this is bound
-    }, this, "awake");
+        this.someComputedThatWillBeBound = ko.pureComputed(function () {
+            ...
+        }, this);
 
-    this.someComputedThatWillBeBound.subscribe(function () {
-        // do something when this is un-bound
-    }, this, "asleep");
+        this.someComputedThatWillBeBound.subscribe(function () {
+            // do something when this is bound
+        }, this, "awake");
 
-(The `awake` event also applies to normal computed observables created with the `deferEvaluation` option.)
+  - `asleep` — Whevener the computed observable enters the *sleeping* state, it notifies an `asleep` event with a value of `undefined`.
+
+        this.someComputedThatWillBeBound.subscribe(function () {
+            // do something when this is un-bound
+        }, this, "asleep");
+
+  - `spectate` — Whenever the computed observable **records** a change to its value, even while sleeping, it notifies a `spectate` event with the new value. (The `spectate` event applies to any type of observable but is generally most useful for pure computed observables.) This event allows you to track the current value of the observable without affecting its sleeping/waking state. Also note that when using rate-limiting or deferred updates, the "spectated" values might include intermediate values that aren't captured by `change` notifications.
+
+### Status of a disposed pure computed observable
+
+You can manually dispose a computed observable by calling its `dispose` function, which clears all subscriptions to its dependencies. It is also automatically disposed if its evaluator function doesn't access any observables. Although you can continue to access the most recent value of a disposed computed observable, its evaluator function will not be run again. Additionally, a disposed *pure* computed observables is neither awake nor asleep, and does not notify state-change events. To determine if a computed observable is disposed, call `myComputed.isActive()`.

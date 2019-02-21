@@ -19,7 +19,7 @@ An element can include multiple bindings (related or unrelated), with each bindi
     <!-- unrelated bindings -->
     Cellphone: <input data-bind="value: cellphoneNumber, enable: hasCellphone" />
 
-The binding *name* should generally match a registered binding handler (either built-in or [custom](custom-bindings.html)) or be a parameter for another binding. If the name matches neither of those, Knockout will ignore it (without any error or warning). So if a binding doesn't appear to work, first check that the name is correct.
+The binding *name* should generally match a registered binding (either built-in or [custom](custom-bindings.html)) or be a parameter for another binding. If the name matches neither of those, Knockout will ignore it (without any error or warning). So if a binding doesn't appear to work, first check that the name is correct.
 
 #### Binding values
 
@@ -28,8 +28,8 @@ The binding *value* can be a single [value, variable, or literal](https://develo
     <!-- variable (usually a property of the current view model -->
     <div data-bind="visible: shouldShowMessage">...</div>
 
-    <!-- comparison and conditional -->
-    The item is <span data-bind="text: price() > 50 ? 'expensive' : 'cheap'"></span>.
+    <!-- comparison and conditional, template literals -->
+    The item is <span data-bind="text: price() > 50 ? `expensive` : `cheap`"></span>.
 
     <!-- function call and comparison -->
     <button data-bind="enable: parseAreaCode(cellphoneNumber()) != '555'">...</button>
@@ -59,9 +59,20 @@ Bindings can include any amount of *whitespace* (spaces, tab, and newlines), so 
         value: selectedCountry,
         optionsCaption: 'Choose...'"></select>
 
+#### Comments
+
+Bindings can include JavaScript-style comments (`//...` and `/*...*/`). For example:
+
+    <select data-bind="
+        options: availableCountries,  // Only list countries that are available
+        optionsText: 'countryName',
+        /* optionsValue: 'countryId',
+        value: selectedCountry, */    // These two bindings are not processed
+        optionsCaption: 'Choose...'"></select>
+
 #### Skipping the binding value
 
-Starting with Knockout 3.0, you can specify bindings without a value, which will give the binding an `undefined` value. For example:
+If you specify bindings without a value, Knockout will give the binding an `undefined` value. For example:
 
     <span data-bind="text">Text that will be cleared when bindings are applied.</span>
    

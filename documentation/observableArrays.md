@@ -62,11 +62,26 @@ All of these functions are equivalent to running the native JavaScript array fun
  * `unshift( value )` --- Inserts a new item at the beginning of the array.
  * `shift()` --- Removes the first value from the array and returns it.
  * `reverse()` --- Reverses the order of the array and returns the `observableArray` (not the underlying array).
- * `sort()` --- Sorts the array contents and returns the `observableArray`.
-   * The default sort is alphabetical, but you can optionally pass a function to control how the array should be sorted. Your function should accept any two objects from the array and return a negative value if the first argument is smaller, a positive value is the second is smaller, or zero to treat them as equal. For example, to sort an array of 'person' objects by last name, you could write `myObservableArray.sort(function (left, right) { return left.lastName == right.lastName ? 0 : (left.lastName < right.lastName ? -1 : 1) })`
+ * `sort()` --- Sorts the array contents and returns the `observableArray`. The default sort is alphabetical, but you can optionally pass a function to control how the array should be sorted. See the example under `sorted` below.
  * `splice()` --- Removes and returns a given number of elements starting from a given index. For example, `myObservableArray.splice(1, 3)` removes three elements starting from index position 1 (i.e., the 2nd, 3rd, and 4th elements) and returns them as an array.
 
 For more details about these `observableArray` functions, see the equivalent documentation of the [standard JavaScript array functions](https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array#Methods_2).
+
+### sorted and reversed
+
+  * `sorted()` --- Returns a sorted **copy** of the array. This is preferable to `sort` if you want to leave the observable array in its original order but need to display it in a specific order.
+
+    The default sort is alphabetical, but you can optionally pass a function to control how the array should be sorted. Your function should accept any two objects from the array and return a negative value if the first argument is smaller, a positive value is the second is smaller, or zero to treat them as equal. For example, to sort an array of 'person' objects by last name, you could write:
+
+        var mySortedArray = ko.pureComputed(function () {
+            return myObservableArray.sorted(function (left, right) {
+                return left.lastName === right.lastName ? 0
+                     : left.lastName < right.lastName ? -1
+                     : 1;
+            });
+        });
+
+  * `reversed()` --- Returns a reversed **copy** of the array.
 
 ### replace, remove and removeAll
 
@@ -89,7 +104,11 @@ The `destroy` and `destroyAll` functions are mainly intended as a convenience fo
 
 So, what's this `_destroy` thing all about? It's only really interesting to Rails developers. The convention in Rails is that, when you pass into an action a JSON object graph, the framework can automatically convert it to an ActiveRecord object graph and then save it to your database. It knows which of the objects are already in your database, and issues the correct INSERT or UPDATE statements. To tell the framework to DELETE a record, you just mark it with `_destroy` set to `true`.
 
-Note that when KO renders a `foreach` binding, it automatically hides any objects marked with `_destroy` equal to `true`. So, you can have some kind of "delete" button that invokes the `destroy(someItem)` method on the array, and this will immediately cause the specified item to vanish from the visible UI. Later, when you submit the JSON object graph to Rails, that item will also be deleted from the database (while the other array items will be inserted or updated as usual).
+When Knockout renders a `foreach` binding with the parameter `includeDestroyed: false` set, it will hide any objects marked with `_destroy` equal to `true`. So, you can have some kind of "delete" button that invokes the `destroy(someItem)` method on the array, and this will immediately cause the specified item to vanish from the visible UI. Later, when you submit the JSON object graph to Rails, that item will also be deleted from the database (while the other array items will be inserted or updated as usual).
+
+## Determining if a property is an observableArray
+
+In some scenarios, it is useful to programmatically determine if you are dealing with an observableArray. Knockout provides a utility function, `ko.isObservableArray` to help with this situation.
 
 ## Delaying and/or suppressing change notifications
 
@@ -97,3 +116,48 @@ Normally, an `observableArray` notifies its subscribers immediately, as soon as 
 
     // Ensure it notifies about changes no more than once per 50-millisecond period
     myViewModel.myObservableArray.extend({ rateLimit: 50 });
+
+## Tracking array changes
+
+Although you can subscribe to and access an `observableArray` just like any other observable, Knockout also provides a super-fast method to find out how an observable array has changed (i.e., which items were just added, deleted, or moved). You subscribe to array changes as follows:
+
+    obsArray.subscribe(fn, thisArg, "arrayChange");
+
+The main advantages of subscribing to changes:
+
+- Performance is `O(1)` in most cases, i.e., there’s basically no performance implication at all, because for straightforward operations, (`push`, `splice`, etc.) Knockout supplies the change log without running any difference algorithm. Knockout only falls back on an algorithm if you’ve made an arbitrary change without using a typical array mutation function.
+
+- The change log just gives you the items that actually changed.
+
+Here are examples of how the changes are reported:
+
+    var myArray = ko.observableArray(["Alpha", "Beta", "Gamma"]);
+
+    myArray.push("Delta");
+    // Changes: [{ index: 3, status: 'added', value: 'Delta' }]
+    // New value: ["Alpha", "Beta", "Gamma", "Delta"]
+
+    myArray.pop();
+    // Changes: [{ index: 3, status: 'deleted', value: 'Delta' }]
+    // New value: ["Alpha", "Beta", "Gamma"]
+
+    myArray.splice(1, 2, "Omega");
+    // Changes:
+    // [{ index: 1, status: 'deleted', value: 'Beta' },
+    //  { index: 1, status: 'added', value: 'Omega' },
+    //  { index: 2, status: 'deleted', value: 'Gamma' }]
+    // New value: ["Alpha", "Omega"]
+
+    myArray.reverse();
+    // Changes:
+    // [{ index: 0, moved: 1, status: 'deleted', value: 'Alpha' },
+    //  { index: 1, moved: 0, status: 'added', value: 'Alpha' }]
+    // New value: ["Omega", "Alpha"]
+
+As shown above, the changes are reported as a list of *added* and *deleted* values. The indexes for *deleted* items refer to the original array, and the indexes for *added* items refer to the new array.
+
+When items are re-ordered, as shown in the last example above, you will also get *moved* information. You can choose to ignore the *moved* information and just interpret it as the original `Alpha` being deleted and a different `Alpha` being added to the array's end. Or you can recognize that the *moved* information tells you that you can think of the *added* and *deleted* values being the same item that just changes position (by matching up the indexes).
+
+An `observableArray` has array tracking enabled at construction, but you can extend any other `subscribable` (i.e. `ko.observable` and `ko.computed`) as follows:
+
+    trackable = ko.observable().extend({trackArrayChanges: true});

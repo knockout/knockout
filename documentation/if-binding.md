@@ -1,12 +1,16 @@
 ---
 layout: documentation
-title: The "if" binding
+title: The "if" and "ifnot" bindings
+redirect_from:
+  - /documentation/ifnot-binding.html
 ---
 
 ### Purpose
-The `if` binding causes a section of markup to appear in your document (and to have its `data-bind` attributes applied), only if a specified expression evaluates to `true` (or a `true`-ish value such as a non-`null` object or nonempty string). 
+The `if` binding causes a section of markup to appear in your document (and to have its `data-bind` attributes applied), only if a specified expression evaluates to `true` (or a `true`-ish value such as a non-`null` object or nonempty string).
 
-`if` plays a similar role to [the `visible` binding](visible-binding.html). The difference is that, with `visible`, the contained markup always remains in the DOM and always has its `data-bind` attributes applied - the `visible` binding just uses CSS to toggle the container element's visiblity. The `if` binding, however, physically adds or removes the contained markup in your DOM, and only applies bindings to descendants if the expression is `true`.
+The `ifnot` binding works just like the `if` binding, except that it inverts the result of whatever expression you pass to it.
+
+`if` (and `ifnot`) play a similar role to [the `visible` (and `hidden`) bindings](visible-binding.html). The difference is that, with `visible`, the contained markup always remains in the DOM and always has its `data-bind` attributes applied—the `visible` binding just uses CSS to toggle the container element's visiblity. The `if` binding, however, physically adds or removes the contained markup in your DOM, and only applies bindings to descendants if the expression is `true`.
 
 ### Example 1
 
@@ -55,17 +59,17 @@ It's important to understand that the `if` binding really is vital to make this 
 
   * Main parameter
  
-    The expression you wish to evaluate. If it evaluates to `true` (or a true-ish value), the contained markup will be present in the document, and any `data-bind` attributes on it will be applied. If your expression evaluates to `false`, the contained markup will be removed from your document without first applying any bindings to it.
+    The expression you wish to evaluate. For the `if` binding, if it evaluates to `true` (or a true-ish value), the contained markup will be present in the document, and any `data-bind` attributes on it will be applied; if your expression evaluates to `false`, the contained markup will be removed from your document without first applying any bindings to it. For the `ifnot` binding, the behavior is reversed.
 
-    If your expression involves any observable values, the expression will be re-evaluated whenever any of them change. Correspondingly, the markup within your `if` block can be added or removed dynamically as the result of the expression changes. `data-bind` attributes will be applied to **a new copy of the contained markup** whenever it is re-added.
+    If your expression involves any observable values, the expression will be re-evaluated whenever any of them change. Correspondingly, the markup within your `if` or `ifnot` block can be added or removed dynamically as the result of the expression changes. `data-bind` attributes will be applied to **a new copy of the contained markup** whenever it is re-added.
      
   * Additional parameters 
 
      * None
 
-### Note: Using "if" without a container element
+### Note: Using "if" and "ifnot" without a container element
 
-Sometimes you may want to control the presence/absence of a section of markup *without* having any container element that can hold an `if` binding. For example, you might want to control whether a certain `<li>` element appears alongside siblings that always appear:
+Sometimes you may want to control the presence/absence of a section of markup *without* having any container element that can hold an `if` of `ifnot` binding. For example, you might want to control whether a certain `<li>` element appears alongside siblings that always appear:
 
     <ul>
         <li>This item always appears</li>
@@ -84,6 +88,20 @@ To handle this, you can use the *containerless control flow syntax*, which is ba
     </ul>
 
 The `<!-- ko -->` and `<!-- /ko -->` comments act as start/end markers, defining a "virtual element" that contains the markup inside. Knockout understands this virtual element syntax and binds as if you had a real container element.
+
+### Note: "ifnot" is the same as a negated "if"
+
+The following markup:
+
+    <div data-bind="ifnot: someProperty">...</div>
+
+... is equivalent to the following:
+
+    <div data-bind="if: !someProperty()">...</div>
+
+... assuming that `someProperty` is *observable* and hence you need to invoke it as a function to obtain the current value.
+
+The main reason to use `ifnot` instead of a negated `if` is just as a matter of taste: many developers feel that it looks tidier.
 
 ### Dependencies
 

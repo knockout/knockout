@@ -115,7 +115,7 @@ If you wanted, you could use `$data` as a prefix when referencing properties on 
 
     <td data-bind="text: $data.firstName"></td>
 
-... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway.
+... but you don't have to, because `firstName` will be evaluated within the context of `$data` by default anyway. If the items in the array are observables, `$data` will refer to the value of each observable. To refer to the observable itself, use `$rawData`.
 
 ### Note 2: Using $index, $parent, and other context properties
 
@@ -138,7 +138,7 @@ As described in Note 1, you can refer to each array entry using the `$data` [con
 
     <ul data-bind="foreach: { data: people, as: 'person' }"></ul>
 
-Now anywhere inside this `foreach` loop, bindings will be able to refer to `person` to access the current array item, from the `people` array, that is being rendered. This can be especially useful in scenarios where you have nested `foreach` blocks and you need to refer to an item declared at a higher level in the hierarchy. For example:
+Now anywhere inside this `foreach` loop, bindings will be able to refer to `person` to access the current array item that is being rendered from the `people` array. This can be especially useful in scenarios where you have nested `foreach` blocks and you need to refer to an item declared at a higher level in the hierarchy. For example:
 
     <ul data-bind="foreach: { data: categories, as: 'category' }">
         <li>
@@ -163,6 +163,22 @@ Now anywhere inside this `foreach` loop, bindings will be able to refer to `pers
 
 Tip: Remember to pass a *string literal value* to `as` (e.g., `as: 'category'`, *not* `as: category`), because you are giving a name for a new variable, not reading the value of a variable that already exists.
 
+The `as` option also provides a corresponding *index* value. For example, if you set `as: 'category'`, you can access the index of the current item using `categoryIndex`.
+
+#### Using "as" without creating a child context
+
+The default behavior of the `as` option is to add a name for the current item while still also binding the contents to the item. But you may prefer keep the context unchanged and only set the name of the current item. This latter behavior will probably be the default in a future version of Knockout. To turn it on for a specific binding, set the `noChildContext` option to `true`. When this option is used along with `as`, all access to the array items must be through the given name, and `$data` will remain set to the outer viewmodel. For example:
+
+    <ul data-bind="foreach: { data: categories, as: 'category', noChildContext: true }">
+        <li>
+            <ul data-bind="foreach: { data: category.items, as: 'item', noChildContext: true }">
+                <li>
+                    <span data-bind="text: category.name"></span>:
+                    <span data-bind="text: item"></span>
+                </li>
+            </ul>
+        </li>
+    </ul>
 
 ### Note 4: Using foreach without a container element
 
@@ -205,16 +221,17 @@ When you modify the contents of your model array (by adding, moving, or deleting
 
 Note that reordering detection is not guaranteed: to ensure the algorithm completes quickly, it is optimized to detect "simple" movements of small numbers of array entries. If the algorithm detects too many simultaneous reorderings combined with unrelated insertions and deletions, then for speed it can choose to regard a reordering as an "delete" plus an "add" instead of a single "move", and in that case the corresponding DOM elements will be torn down and recreated. Most developers won't encounter this edge case, and even if you do, the end-user experience will usually be identical.
 
-### Note 6: Destroyed entries are hidden by default
+### Note 6: Hiding destroyed entries
 
-Sometimes you may want to mark an array entry as deleted, but without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy-and-destroyall).
+Sometimes you may want to mark an array entry as deleted without actually losing record of its existence. This is known as a *non-destructive delete*. For details of how to do this, see [the destroy function on `observableArray`](observableArrays.html#destroy-and-destroyall).
 
-By default, the `foreach` binding will skip over (i.e., hide) any array entries that are marked as destroyed. If you want to show destroyed entries, use the `includeDestroyed` option. For example,
+By default, the `foreach` binding will show all array entries, even those that are marked as destroyed. If you want to hide destroyed entries, set the `includeDestroyed` option to `false`. For example,
 
-    <div data-bind='foreach: { data: myArray, includeDestroyed: true }'>
+    <div data-bind='foreach: { data: myArray, includeDestroyed: false }'>
         ...
     </div>
-
+    
+Prior to Knockout 3.5.0, the default behavior was to hide destroyed items. To use this behavior as the default in newer versions, you can set a global option: `ko.options.foreachHidesDestroyed = true`. Then, if you want to show destroyed items for a specific `foreach` binding, you would set `includeDestroyed: true`.
 
 ### Note 7: Post-processing or animating the generated DOM elements
 

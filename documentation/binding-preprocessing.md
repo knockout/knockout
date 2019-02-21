@@ -5,13 +5,13 @@ title: Extending Knockout's binding syntax using preprocessing
 
 *Note: This is an advanced technique, typically used only when creating libraries of reusable bindings or extended syntaxes. It's not something you'll normally need to do when building applications with Knockout.*
 
-Starting with Knockout 3.0, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings during the binding process.
+With binding preprocessing, developers can define custom syntaxes by providing callbacks that rewrite DOM nodes and binding strings during the binding process.
 
 ## Preprocessing binding strings
 
-You can hook into Knockout's logic for interpreting `data-bind` attributes by providing a *binding preprocessor* for a specific binding handler (such as `click`, `visible`, or any [custom binding handler](custom-bindings.html)).
+You can hook into Knockout's logic for interpreting `data-bind` attributes by providing a *binding preprocessor* for a specific binding (such as `click`, `visible`, or any [custom binding](custom-bindings.html)).
 
-To do this, attach a `preprocess` function to the binding handler:
+To do this, attach a `preprocess` function to the binding handler object:
 
     ko.bindingHandlers.yourBindingHandler.preprocess = function(stringFromMarkup) {
         // Return stringFromMarkup if you don't want to change anything, or return
@@ -32,7 +32,9 @@ If you leave off the value of a binding, it's bound to `undefined` by default. I
 Now you can bind it like this:
 
     <input data-bind="value: someModelProperty, uniqueName" />
-    
+
+If your binding uses a `preprocess` function but should still have `undefined` as a default value, the function should return the string `"undefined"` rather than an `undefined` value. Returning `undefined` will remove the binding instead.
+
 ### Example 2: Binding expressions to events
 
 If you'd like to be able to bind expressions to `click` events (rather than a function reference as Knockout expects), you can set up a preprocessor for the `click` handler to support this syntax:
@@ -53,7 +55,7 @@ Now you can bind `click` like this:
 
     **Parameters:**
 
-      * `value`: the syntax associated with the binding value before Knockout attempts to parse it (e.g., for `yourBinding: 1 + 1`, the associated value is `"1 + 1"` as a string).
+      * `value`: the syntax associated with the binding value before Knockout attempts to parse it (e.g., for `yourBinding: 1 + 1`, the associated value is `"1 + 1"` as a string). If the binding was given without a value, this will be `undefined`.
 
       * `name`: the name of the binding (e.g., for `yourBinding: 1 + 1`, the name is `"yourBinding"` as a string).
 
@@ -63,7 +65,7 @@ Now you can bind `click` like this:
 
     Your `preprocess` function must return the new string value to be parsed and passed to the binding, or return `undefined` to remove the binding.
 
-    For example, if you return `'value + ".toUpperCase()"'` as a string, then `yourBinding: "Bert"` would be interpreted as if the markup contained `yourBinding: "Bert".toUpperCase()`. Knockout will parse the returned value in the normal way, so it has to be a legal JavaScript expression.
+    For example, if you return `value + ".toUpperCase()"` as a string, then `yourBinding: "Bert"` would be interpreted as if the markup contained `yourBinding: "Bert".toUpperCase()`. Knockout will parse the returned value in the normal way, so it has to be a legal JavaScript expression.
 
     Don't return non-string values. That wouldn't make sense, because markup is always a string.
 

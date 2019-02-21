@@ -1,10 +1,12 @@
 ---
 layout: documentation
-title: The "enable" binding
+title: The "enable" and "disable" bindings
+redirect_from: 
+  - /documentation/disable-binding.html
 ---
 
 ### Purpose
-The `enable` binding causes the associated DOM element to be enabled only when the parameter value is `true`. This is useful with form elements like `input`, `select`, and `textarea`.
+The `enable` binding causes the associated DOM element to be enabled when its parameter value is `true`. The `disable` binding works oppositely, causing the associated DOM element to be disabled when its value is `true`. These bindings are useful with form elements like `input`, `select`, and `textarea`.
 
 ### Example
     <p>
