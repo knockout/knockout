@@ -9,6 +9,14 @@ ko.utils = (function () {
         }
     }
 
+    function contextForNodeOrNearestParent(node) {
+        var context = ko.contextFor(node);
+        if (!context && node.parentNode) {
+            return contextForNodeOrNearestParent(node.parentNode);
+        }
+        return context;
+    }
+
     function extend(target, source) {
         if (source) {
             for(var prop in source) {
@@ -590,7 +598,9 @@ ko.utils = (function () {
             document.body.appendChild(form);
             options['submitter'] ? options['submitter'](form) : form.submit();
             setTimeout(function () { form.parentNode.removeChild(form); }, 0);
-        }
+        },
+
+        closestContext: contextForNodeOrNearestParent
     }
 }());
 
@@ -621,6 +631,7 @@ ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
 ko.exportSymbol('utils.setTextContent', ko.utils.setTextContent);
+ko.exportSymbol('utils.closestContext', ko.utils.closestContext);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {
