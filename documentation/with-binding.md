@@ -99,9 +99,9 @@ ko.applyBindings(new AppViewModel());
 
   * Additional parameters
 
-      * `on`
+      * `as`
 
-        The `on` option allows you set an alias for the new context object. Although you can refer to the object using the `$data` [context variable](binding-context.html), it may be useful to give it a more descriptive name using the `as` option like:
+        The `as` option allows you set an alias for the new context object. Although you can refer to the object using the `$data` [context variable](binding-context.html), it may be useful to give it a more descriptive name using the `as` option like:
 
             <div data-bind="with: currentPerson, as: 'person'"></div>
 
