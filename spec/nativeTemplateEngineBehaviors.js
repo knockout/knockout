@@ -61,9 +61,15 @@ describe('Native template engine', function() {
 
         it('can data-bind to blank name', function () {
             // See #2446; This has always worked even if it wasn't a "supported" scenario
-            testNode.innerHTML = "<div data-bind='template: { name: \"\" }'</div>"
+            testNode.innerHTML = "<div data-bind='template: { name: \"\" }'></div>"
             ko.applyBindings({}, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("");
+        });
 
+        it('can data-bind to undefined name', function () {
+            // See #2446; This has always worked even if it wasn't a "supported" scenario
+            testNode.innerHTML = "<div data-bind='template: { name: undefined }'></div>"
+            ko.applyBindings({}, testNode);
             expect(testNode.childNodes[0]).toContainHtml("");
         });
     });

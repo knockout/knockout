@@ -297,10 +297,7 @@
                 template = value;
                 options = {};
             } else {
-                template = options['name'];
-                if (template === null || template === undefined) {
-                     template = element;
-                }
+                template = 'name' in options ? options['name'] : element;
 
                 // Support "if"/"ifnot" conditions
                 if ('if' in options)
@@ -309,7 +306,7 @@
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
 
                 // Don't show anything if an empty name is given (see #2446)
-                if (shouldDisplay && template === "") {
+                if (shouldDisplay && !template) {
                     shouldDisplay = false;
                 }
             }
