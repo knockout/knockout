@@ -252,7 +252,7 @@
         'init': function(element, valueAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            if (typeof bindingValue == "string" || bindingValue['name']) {
+            if (typeof bindingValue == "string" || 'name' in bindingValue) {
                 // It's a named template - clear the element
                 ko.virtualElements.emptyNode(element);
             } else if ('nodes' in bindingValue) {
@@ -291,25 +291,33 @@
                 options = ko.utils.unwrapObservable(value),
                 shouldDisplay = true,
                 templateComputed = null,
-                templateName;
+                template;
 
             if (typeof options == "string") {
-                templateName = value;
+                template = value;
                 options = {};
             } else {
-                templateName = options['name'];
+                template = options['name'];
+                if (template === null || template === undefined) {
+                     template = element;
+                }
 
                 // Support "if"/"ifnot" conditions
                 if ('if' in options)
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
+
+                // Don't show anything if an empty name is given (see #2446)
+                if (shouldDisplay && template === "") {
+                    shouldDisplay = false;
+                }
             }
 
             if ('foreach' in options) {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && options['foreach']) || [];
-                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
+                templateComputed = ko.renderTemplateForEach(template, dataArray, options, element, bindingContext);
             } else if (!shouldDisplay) {
                 ko.virtualElements.emptyNode(element);
             } else {
@@ -322,7 +330,7 @@
                         'exportDependencies': true
                     });
                 }
-                templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
+                templateComputed = ko.renderTemplate(template, innerBindingContext, options, element);
             }
 
             // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
