@@ -113,29 +113,39 @@
         },
 
         prepend: function(containerNode, nodeToPrepend) {
-            if (!isStartComment(containerNode)) {
-                if (containerNode.firstChild)
-                    containerNode.insertBefore(nodeToPrepend, containerNode.firstChild);
-                else
-                    containerNode.appendChild(nodeToPrepend);
-            } else {
+            var insertBeforeNode;
+
+            if (isStartComment(containerNode)) {
                 // Start comments must always have a parent and at least one following sibling (the end comment)
-                containerNode.parentNode.insertBefore(nodeToPrepend, containerNode.nextSibling);
+                insertBeforeNode = containerNode.nextSibling;
+                containerNode = containerNode.parentNode;
+            } else {
+                insertBeforeNode = containerNode.firstChild;
+            }
+
+            if (!insertBeforeNode) {
+                containerNode.appendChild(nodeToPrepend);
+            } else if (nodeToPrepend !== insertBeforeNode) {       // IE will sometimes crash if you try to insert a node before itself
+                containerNode.insertBefore(nodeToPrepend, insertBeforeNode);
             }
         },
 
         insertAfter: function(containerNode, nodeToInsert, insertAfterNode) {
             if (!insertAfterNode) {
                 ko.virtualElements.prepend(containerNode, nodeToInsert);
-            } else if (!isStartComment(containerNode)) {
-                // Insert after insertion point
-                if (insertAfterNode.nextSibling)
-                    containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
-                else
-                    containerNode.appendChild(nodeToInsert);
             } else {
                 // Children of start comments must always have a parent and at least one following sibling (the end comment)
-                containerNode.parentNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
+                var insertBeforeNode = insertAfterNode.nextSibling;
+
+                if (isStartComment(containerNode)) {
+                    containerNode = containerNode.parentNode;
+                }
+
+                if (!insertBeforeNode) {
+                    containerNode.appendChild(nodeToInsert);
+                } else if (nodeToInsert !== insertBeforeNode) {       // IE will sometimes crash if you try to insert a node before itself
+                    containerNode.insertBefore(nodeToInsert, insertBeforeNode);
+                }
             }
         },
 

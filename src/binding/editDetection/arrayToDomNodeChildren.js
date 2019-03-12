@@ -164,7 +164,7 @@
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
         ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
 
-        var i, j, nextNodeInDom, lastNode, nodeToInsert, mappedNodes, activeElement;
+        var i, j, lastNode, nodeToInsert, mappedNodes, activeElement;
 
         // Since most browsers remove the focus from an element when it's moved to another location,
         // save the focused element and try to restore it later.
@@ -191,15 +191,14 @@
         }
 
         // Next add/reorder the remaining items (will include deleted items if there's a beforeRemove callback)
-        for (i = 0, nextNodeInDom = ko.virtualElements.firstChild(domNode); mapData = newMappingResult[i]; i++) {
+        for (i = 0; mapData = newMappingResult[i]; i++) {
             // Get nodes for newly added items
             if (!mapData.mappedNodes)
                 ko.utils.extend(mapData, mapNodeAndRefreshWhenChanged(domNode, mapping, mapData.arrayEntry, callbackAfterAddingNodes, mapData.indexObservable));
 
             // Put nodes in the right place if they aren't there already
-            for (j = 0; nodeToInsert = mapData.mappedNodes[j]; nextNodeInDom = nodeToInsert.nextSibling, lastNode = nodeToInsert, j++) {
-                if (nodeToInsert !== nextNodeInDom)
-                    ko.virtualElements.insertAfter(domNode, nodeToInsert, lastNode);
+            for (j = 0; nodeToInsert = mapData.mappedNodes[j]; lastNode = nodeToInsert, j++) {
+                ko.virtualElements.insertAfter(domNode, nodeToInsert, lastNode);
             }
 
             // Run the callbacks for newly added nodes (for example, to apply bindings, etc.)
