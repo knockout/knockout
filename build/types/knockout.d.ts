@@ -60,9 +60,10 @@ export interface Observable<T = any> extends ObservableFunctions<T> {
     (): T;
     (value: T): any;
 }
-
-export function observable<T = any>(): Observable<T>;
-export function observable<T = any>(initialValue: T): Observable<T>;
+export function observable<T>(value: T): Observable<T>;
+export function observable<T = any>(value: null): Observable<T | null>
+/** No initial value provided, so implicitly includes `undefined` as a possible value */
+export function observable<T = any>(): Observable<T | undefined>
 export module observable {
     export const fn: ObservableFunctions;
 }

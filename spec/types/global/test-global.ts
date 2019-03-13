@@ -391,6 +391,7 @@ function test_more() {
     const upperCaseName = ko.computed(() => name.toUpperCase()).extend({ throttle: 500 });
 
     class AppViewModel3 {
+        // Observable<string | undefined> since there's no initial value
         public instantaneousValue = ko.observable<string>();
         public throttledValue = ko.computed(this.instantaneousValue)
             .extend({ throttle: 400 });
@@ -399,7 +400,7 @@ function test_more() {
 
         public throttledValueLogger = ko.computed(() => {
             const val = this.instantaneousValue();
-            if (val !== '')
+            if (val && val !== '')
                 this.loggedValues.push(val);
         });
     }
@@ -574,12 +575,12 @@ function test_customObservable() {
         // Set up the attribute observable cache
         model._koObservables || (model._koObservables = {});
 
-        // If we already have a cached observable then just return it		
+        // If we already have a cached observable then just return it
         if (attribute in model._koObservables) {
             return model._koObservables[attribute];
         }
 
-        // Create our observable getter/setter function	
+        // Create our observable getter/setter function
         var observableAttribute = <ko.Observable>(function (this: any): any {
             if (arguments.length > 0) {
                 observableAttribute.valueWillMutate();
@@ -667,7 +668,7 @@ function test_Components() {
         // viewModel from createViewModel factory method
         ko.components.register("name", { template: "string-template", viewModel: { createViewModel: function (params: any, componentInfo: ko.components.ComponentInfo) { return null; } } });
 
-        // viewModel from an AMD module 
+        // viewModel from an AMD module
         ko.components.register("name", { template: "string-template", viewModel: { require: "module" } });
 
         // ------- template overloads
@@ -680,7 +681,7 @@ function test_Components() {
         // template using Node array
         ko.components.register("name", { template: nodeArray, viewModel: viewModelFn });
 
-        // template using an AMD module 
+        // template using an AMD module
         ko.components.register("name", { template: { require: "text!module" }, viewModel: viewModelFn });
 
         // Empty config for registering custom elements that are handled by name convention
@@ -739,7 +740,7 @@ class DummyTemplateEngine extends ko.templateEngine {
             return new DummyTemplateSource(this, template); // Named template comes from the in-memory collection
         }
         else if ((template.nodeType == 1) || (template.nodeType == 8)) {
-            return new ko.templateSources.anonymousTemplate(template); // Anonymous 
+            return new ko.templateSources.anonymousTemplate(template); // Anonymous
         }
         else {
             throw new Error("Unrecognized template source");
