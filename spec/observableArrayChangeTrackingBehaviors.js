@@ -473,6 +473,98 @@ describe('Observable Array change tracking', function() {
         });
     });
 
+    describe('With deferred updates', function () {
+        beforeEach(function() {
+            jasmine.Clock.useMockForTasks();
+
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+        });
+
+        afterEach(function() {
+            expect(ko.tasks.resetForTesting()).toEqual(0);
+            jasmine.Clock.reset();
+        });
+
+        it('Supplies changelists to subscribers', function() {
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
+                changelist;
+
+            myArray.subscribe(function(changes) {
+                changelist = changes;
+            }, null, 'arrayChange');
+
+            myArray.push('Delta');
+            jasmine.Clock.tick(1);
+            expect(changelist).toEqual([
+                { status: 'added', value: 'Delta', index: 3 }
+            ]);
+        });
+
+        it('Should support tracking of a computed observable using extender', function() {
+            var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
+                myComputed = ko.computed(function() {
+                    return myArray().slice(-2);
+                }).extend({trackArrayChanges:true}),
+                changelist;
+
+            expect(myComputed()).toEqual(['Beta', 'Gamma']);
+
+            var arrayChange = myComputed.subscribe(function(changes) {
+                changelist = changes;
+            }, null, 'arrayChange');
+
+            myArray(['Alpha', 'Beta', 'Gamma', 'Delta']);
+            jasmine.Clock.tick(1);
+            expect(myComputed()).toEqual(['Gamma', 'Delta']);
+            expect(changelist).toEqual([
+                { status : 'deleted', value : 'Beta', index : 0 },
+                { status : 'added', value : 'Delta', index : 1 }
+            ]);
+
+            // Should clean up all subscriptions when arrayChange subscription is disposed
+            arrayChange.dispose();
+            expect(myComputed.getSubscriptionsCount()).toBe(0);
+        });
+
+        it('Skips the diff algorithm when the array mutation is a known operation, but calls compareArrays for multiple operations', function() {
+            captureCompareArraysCalls(function(callLog) {
+                var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
+                    changelist;
+
+                myArray.subscribe(function(changes) {
+                    changelist = changes;
+                }, null, 'arrayChange');
+
+                // single operation
+                myArray.push('Delta');
+                jasmine.Clock.tick(1);
+                expect(changelist).toEqual([
+                    { status: 'added', value: 'Delta', index: 3 }
+                ]);
+                expect(callLog.length).toBe(0);
+
+                // multiple operations
+                myArray.push('Epsilon');
+                myArray.push('Zeta');
+                jasmine.Clock.tick(1);
+                expect(changelist).toEqual([
+                    { status: 'added', value: 'Epsilon', index: 4 },
+                    { status: 'added', value: 'Zeta', index: 5 }
+                ]);
+                expect(callLog.length).toBe(1);
+
+                // multiple operations that cancel out
+                changelist = undefined;
+                myArray.push('Eta');
+                myArray.pop();
+                jasmine.Clock.tick(1);
+                expect(changelist).toBeUndefined();
+                expect(callLog.length).toBe(2);
+            });
+        });
+    });
+
 
     function testKnownOperation(array, operationName, options) {
         var changeList,
