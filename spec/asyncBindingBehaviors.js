@@ -205,6 +205,34 @@ describe("Deferred bindings", function() {
         expect(testNode.childNodes[0]).toContainText('');
     });
 
+    it('Should update "with" binding with "noChildContext = true" and "as" before descendant bindings', function() {
+        // Based on example at https://github.com/knockout/knockout/pull/2226
+        testNode.innerHTML =
+            '<div data-bind="with: hasAddress(), as: \'h\', noChildContext: true">' +
+                '<span data-bind="text: streetNumber().toLowerCase()"></span>' +
+                '<span data-bind="text: street().toLowerCase()"></span>' +
+            '</div>';
+        var vm = {
+            street: ko.observable(),
+            streetNumber: ko.observable(),
+            hasAddress: ko.pureComputed(function () { return vm.streetNumber() && vm.street(); })
+        };
+
+        ko.applyBindings(vm, testNode);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+
+        vm.street('my street');
+        vm.streetNumber('123');
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('123 my street', /* ignoreSpaces */ true);
+
+        vm.street(null);
+        vm.streetNumber(null);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('');
+    });
+
     it('Should leave descendant nodes unchanged if the value is truthy and remains truthy when changed', function() {
         var someItem = ko.observable(true);
         testNode.innerHTML = "<div data-bind='if: someItem'><span data-bind='text: (++counter)'></span></div>";
