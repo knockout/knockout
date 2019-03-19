@@ -209,10 +209,13 @@
         childrenComplete: "childrenComplete",
         descendantsComplete : "descendantsComplete",
 
-        subscribe: function (node, event, callback, context) {
+        subscribe: function (node, event, callback, context, options) {
             var bindingInfo = ko.utils.domData.getOrSet(node, boundElementDomDataKey, {});
             if (!bindingInfo.eventSubscribable) {
                 bindingInfo.eventSubscribable = new ko.subscribable;
+            }
+            if (options && options['notifyImmediately'] && bindingInfo.notifiedEvents[event]) {
+                ko.dependencyDetection.ignore(callback, context, [node]);
             }
             return bindingInfo.eventSubscribable.subscribe(callback, context, event);
         },
@@ -220,6 +223,7 @@
         notify: function (node, event) {
             var bindingInfo = ko.utils.domData.get(node, boundElementDomDataKey);
             if (bindingInfo) {
+                bindingInfo.notifiedEvents[event] = true;
                 if (bindingInfo.eventSubscribable) {
                     bindingInfo.eventSubscribable['notifySubscribers'](node, event);
                 }
@@ -394,6 +398,9 @@
         }
         if (!alreadyBound) {
             bindingInfo.context = bindingContext;
+        }
+        if (!bindingInfo.notifiedEvents) {
+            bindingInfo.notifiedEvents = {};
         }
 
         // Use bindings if given, otherwise fall back on asking the bindings provider to give us some bindings

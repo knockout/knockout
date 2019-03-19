@@ -1,5 +1,4 @@
 ko.bindingHandlers['value'] = {
-    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
         var tagName = ko.utils.tagNameLower(element),
             isInputElement = tagName == "input";
@@ -107,7 +106,20 @@ ko.bindingHandlers['value'] = {
             };
         }
 
-        ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        if (tagName === "select") {
+            var updateFromModelComputed;
+            ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
+                if (!updateFromModelComputed) {
+                    updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+                } else if (allBindings.get('valueAllowUnset')) {
+                    updateFromModel();
+                } else {
+                    valueUpdateHandler();
+                }
+            }, null, { 'notifyImmediately': true });
+        } else {
+            ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        }
     },
     'update': function() {} // Keep for backwards compatibility with code that may have wrapped value binding
 };
