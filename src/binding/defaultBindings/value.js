@@ -9,8 +9,7 @@ ko.bindingHandlers['value'] = {
             return;
         }
 
-        // Always catch "change" event; possibly other events too if asked
-        var eventsToCatch = ["change"];
+        var eventsToCatch = [];
         var requestedEventsToCatch = allBindings.get("valueUpdate");
         var propertyChangedFired = false;
         var elementValueBeforeEvent = null;
@@ -110,6 +109,7 @@ ko.bindingHandlers['value'] = {
             var updateFromModelComputed;
             ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
                 if (!updateFromModelComputed) {
+                    ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
                     updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
                 } else if (allBindings.get('valueAllowUnset')) {
                     updateFromModel();
@@ -118,6 +118,7 @@ ko.bindingHandlers['value'] = {
                 }
             }, null, { 'notifyImmediately': true });
         } else {
+            ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
             ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
         }
     },

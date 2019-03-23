@@ -128,10 +128,10 @@ describe('Binding: Options', function() {
         expect(testNode.childNodes[0].options[0]).toBe(captionElement);
     });
 
-    it('Should trigger a childrenComplete event when the options selection is populated or changed by modifying the options data (single select)', function() {
+    it('Should trigger a change event when the options selection is populated or changed by modifying the options data (single select)', function() {
         var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
         testNode.innerHTML = "<select data-bind='options:myValues'></select>";
-        ko.bindingEvent.subscribe(testNode.childNodes[0], "childrenComplete", function () {
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
             changeHandlerFireCount++;
         });
         ko.applyBindings({ myValues: observable }, testNode);
@@ -159,50 +159,48 @@ describe('Binding: Options', function() {
         expect(changeHandlerFireCount).toEqual(4);
     });
 
-    it('Should trigger a childrenComplete event when the options selection is changed by modifying the options data (multiple select)', function() {
+    it('Should trigger a change event when the options selection is changed by modifying the options data (multiple select)', function() {
         var observable = new ko.observableArray(["A", "B", "C"]), changeHandlerFireCount = 0;
         testNode.innerHTML = "<select data-bind='options:myValues' multiple='multiple'></select>";
-        ko.bindingEvent.subscribe(testNode.childNodes[0], "childrenComplete", function () {
+        ko.utils.registerEventHandler(testNode.childNodes[0], "change", function() {
             changeHandlerFireCount++;
         });
         ko.applyBindings({ myValues: observable }, testNode);
-        expect(changeHandlerFireCount).toEqual(1);  // initial render
+        expect(changeHandlerFireCount).toEqual(0);  // Selection wasn't changed
 
         // Select the first item and change the order of options; since selection is not changed, should not trigger change event
         testNode.childNodes[0].options[0].selected = true;
         expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
         observable(["B", "C", "A"]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
-        expect(changeHandlerFireCount).toEqual(1);
+        expect(changeHandlerFireCount).toEqual(0);
 
         // Select another item and then remove it from options; since selection is changed, should trigger change event
         testNode.childNodes[0].options[0].selected = true;
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B","A"]);
         observable(["C", "A"]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["A"]);
-        expect(changeHandlerFireCount).toEqual(2);
+        expect(changeHandlerFireCount).toEqual(1);
 
         // Change to a new set of options; since selection is changed (to nothing), should trigger change event
         observable(["D", "E"]);
         expect(testNode.childNodes[0]).toHaveSelectedValues([]);
-        expect(changeHandlerFireCount).toEqual(3);
+        expect(changeHandlerFireCount).toEqual(2);
 
         // Delete all options; selection is not changed, so shouldn't trigger event
         observable([]);
-        expect(changeHandlerFireCount).toEqual(3);
+        expect(changeHandlerFireCount).toEqual(2);
 
         // Set observable options and select them
         observable([ko.observable("X"), ko.observable("Y")]);
-        expect(changeHandlerFireCount).toEqual(4);  // event is triggered whenever adding new set of options
-        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
-
+        expect(changeHandlerFireCount).toEqual(2);
         testNode.childNodes[0].options[0].selected = testNode.childNodes[0].options[1].selected = true;
         expect(testNode.childNodes[0]).toHaveSelectedValues(["X","Y"]);
 
         // Change the value of a selected item, which should deselect it and trigger a change event
         observable()[1]("Z");
         expect(testNode.childNodes[0]).toHaveSelectedValues(["X"]);
-        expect(changeHandlerFireCount).toEqual(5    );
+        expect(changeHandlerFireCount).toEqual(3);
     });
 
     it('Should place a caption at the top of the options list and display it when the model value is undefined', function() {
