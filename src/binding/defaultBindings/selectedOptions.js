@@ -29,11 +29,10 @@ ko.bindingHandlers['selectedOptions'] = {
             throw new Error("selectedOptions binding applies only to SELECT elements");
         }
 
-        ko.utils.registerEventHandler(element, "change", updateFromView);
-
         var updateFromModelComputed;
         ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
             if (!updateFromModelComputed) {
+                ko.utils.registerEventHandler(element, "change", updateFromView);
                 updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
             } else {
                 updateFromView();
