@@ -15,10 +15,13 @@ ko.bindingHandlers['value'] = {
         var elementValueBeforeEvent = null;
 
         if (requestedEventsToCatch) {
-            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
-                requestedEventsToCatch = [requestedEventsToCatch];
-            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
-            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
+            // Allow both individual event names, and arrays of event names
+            if (typeof requestedEventsToCatch == "string") {
+                eventsToCatch = [requestedEventsToCatch];
+            } else {
+                eventsToCatch = ko.utils.arrayGetDistinctValues(requestedEventsToCatch);
+            }
+            ko.utils.arrayRemoveItem(eventsToCatch, "change");  // We'll subscribe to "change" events later
         }
 
         var valueUpdateHandler = function() {
