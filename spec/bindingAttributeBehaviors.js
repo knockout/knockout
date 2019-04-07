@@ -678,6 +678,22 @@ describe('Binding attribute syntax', function() {
         expect(callbacks).toEqual(1);
     });
 
+    it('Should call childrenComplete callback immediately if already bound and "notifyImmediately" option set', function () {
+        var callbacks = 0,
+            vm = {};
+
+        testNode.innerHTML = "<div></div>";
+        ko.applyBindings(vm, testNode);
+
+        ko.bindingEvent.subscribe(testNode, "childrenComplete", function (node) {
+            callbacks++;
+            expect(node).toEqual(testNode);
+            expect(ko.dataFor(node)).toEqual(vm);
+        }, null, { notifyImmediately: true });
+
+        expect(callbacks).toEqual(1);
+    });
+
     it('Should call a descendantsComplete callback function after descendant elements are bound', function () {
         var callbacks = 0,
             callback = function (node) {

@@ -1,5 +1,4 @@
 ko.bindingHandlers['value'] = {
-    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
         var tagName = ko.utils.tagNameLower(element),
             isInputElement = tagName == "input";
@@ -10,17 +9,19 @@ ko.bindingHandlers['value'] = {
             return;
         }
 
-        // Always catch "change" event; possibly other events too if asked
-        var eventsToCatch = ["change"];
+        var eventsToCatch = [];
         var requestedEventsToCatch = allBindings.get("valueUpdate");
         var propertyChangedFired = false;
         var elementValueBeforeEvent = null;
 
         if (requestedEventsToCatch) {
-            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
-                requestedEventsToCatch = [requestedEventsToCatch];
-            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
-            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
+            // Allow both individual event names, and arrays of event names
+            if (typeof requestedEventsToCatch == "string") {
+                eventsToCatch = [requestedEventsToCatch];
+            } else {
+                eventsToCatch = ko.utils.arrayGetDistinctValues(requestedEventsToCatch);
+            }
+            ko.utils.arrayRemoveItem(eventsToCatch, "change");  // We'll subscribe to "change" events later
         }
 
         var valueUpdateHandler = function() {
@@ -107,7 +108,22 @@ ko.bindingHandlers['value'] = {
             };
         }
 
-        ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        if (tagName === "select") {
+            var updateFromModelComputed;
+            ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
+                if (!updateFromModelComputed) {
+                    ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
+                    updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+                } else if (allBindings.get('valueAllowUnset')) {
+                    updateFromModel();
+                } else {
+                    valueUpdateHandler();
+                }
+            }, null, { 'notifyImmediately': true });
+        } else {
+            ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
+            ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        }
     },
     'update': function() {} // Keep for backwards compatibility with code that may have wrapped value binding
 };

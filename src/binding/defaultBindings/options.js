@@ -103,8 +103,7 @@ ko.bindingHandlers['options'] = {
         function setSelectionCallback(arrayEntry, newOptions) {
             if (itemUpdate && valueAllowUnset) {
                 // The model value is authoritative, so make sure its value is the one selected
-                // There is no need to use dependencyDetection.ignore since setDomNodeChildrenFromArrayMapping does so already.
-                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+                ko.bindingEvent.notify(element, ko.bindingEvent.childrenComplete);
             } else if (previousSelectedValues.length) {
                 // IE6 doesn't like us to assign selection to OPTION nodes before they're added to the document.
                 // That's why we first added them without selection. Now it's time to set the selection.
@@ -128,33 +127,32 @@ ko.bindingHandlers['options'] = {
 
         ko.utils.setDomNodeChildrenFromArrayMapping(element, filteredArray, optionForArrayItem, arrayToDomNodeChildrenOptions, callback);
 
-        ko.dependencyDetection.ignore(function () {
-            if (valueAllowUnset) {
-                // The model value is authoritative, so make sure its value is the one selected
-                ko.selectExtensions.writeValue(element, ko.utils.unwrapObservable(allBindings.get('value')), true /* allowUnset */);
+        if (!valueAllowUnset) {
+            // Determine if the selection has changed as a result of updating the options list
+            var selectionChanged;
+            if (multiple) {
+                // For a multiple-select box, compare the new selection count to the previous one
+                // But if nothing was selected before, the selection can't have changed
+                selectionChanged = previousSelectedValues.length && selectedOptions().length < previousSelectedValues.length;
             } else {
-                // Determine if the selection has changed as a result of updating the options list
-                var selectionChanged;
-                if (multiple) {
-                    // For a multiple-select box, compare the new selection count to the previous one
-                    // But if nothing was selected before, the selection can't have changed
-                    selectionChanged = previousSelectedValues.length && selectedOptions().length < previousSelectedValues.length;
-                } else {
-                    // For a single-select box, compare the current value to the previous value
-                    // But if nothing was selected before or nothing is selected now, just look for a change in selection
-                    selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
-                        ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
-                        : (previousSelectedValues.length || element.selectedIndex >= 0);
-                }
-
-                // Ensure consistency between model value and selected option.
-                // If the dropdown was changed so that selection is no longer the same,
-                // notify the value or selectedOptions binding.
-                if (selectionChanged) {
-                    ko.utils.triggerEvent(element, "change");
-                }
+                // For a single-select box, compare the current value to the previous value
+                // But if nothing was selected before or nothing is selected now, just look for a change in selection
+                selectionChanged = (previousSelectedValues.length && element.selectedIndex >= 0)
+                    ? (ko.selectExtensions.readValue(element.options[element.selectedIndex]) !== previousSelectedValues[0])
+                    : (previousSelectedValues.length || element.selectedIndex >= 0);
             }
-        });
+
+            // Ensure consistency between model value and selected option.
+            // If the dropdown was changed so that selection is no longer the same,
+            // notify the value or selectedOptions binding.
+            if (selectionChanged) {
+                ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
+            }
+        }
+
+        if (valueAllowUnset || ko.computedContext.isInitial()) {
+            ko.bindingEvent.notify(element, ko.bindingEvent.childrenComplete);
+        }
 
         // Workaround for IE bug
         ko.utils.ensureSelectElementIsRenderedCorrectly(element);
