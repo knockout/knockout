@@ -162,7 +162,7 @@ export interface ComputedOptions<T = any, TTarget = void> {
     owner?: TTarget;
     pure?: boolean;
     deferEvaluation?: boolean;
-    disposeWhenNodeIsRemoved?: boolean;
+    disposeWhenNodeIsRemoved?: Node;
     disposeWhen?: () => boolean;
 }
 
