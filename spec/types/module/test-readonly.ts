@@ -1,4 +1,4 @@
-import { ReadonlyObservable, Observable} from "knockout";
+import { ReadonlyObservable, Observable, ReadonlyComputed} from "knockout";
 import * as ko from "knockout";
 
 function testReadonlyObservable() {
@@ -32,4 +32,16 @@ function testReadonlyObservableArray() {
     // Can cast back to a writeable
     const writeAgain = read as ko.ObservableArray<string>
     writeAgain(["foo"]);
+}
+
+function testReadonlyComputed() {
+    const write = ko.computed({
+        read: () => {},
+        write: () => {},
+    });
+
+    // Can cast a computed as readonly
+    const read: ReadonlyComputed<any> = write;
+    read();
+    // read("foo"); // $ExpectError // no way to test this currently
 }

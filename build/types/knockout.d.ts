@@ -166,19 +166,26 @@ export type ComputedReadFunction<T = any, TTarget = void> = Subscribable<T> | Ob
 export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val: T) => void;
 export type MaybeComputed<T = any> = T | Computed<T>;
 
-export interface ComputedFunctions<T = any> extends Subscribable<T> {
+export interface ReadonlyComputedFunctions<T = any> extends Subscribable<T> {
+    dispose(): void;
+}
+export interface ComputedFunctions<T = any> extends ReadonlyComputedFunctions<T> {
     // It's possible for a to be undefined, since the equalityComparer is run on the initial
     // computation with undefined as the first argument. This is user-relevant for deferred computeds.
     equalityComparer(a: T | undefined, b: T): boolean;
     peek(): T;
-    dispose(): void;
     isActive(): boolean;
     getDependenciesCount(): number;
     getDependencies(): Subscribable[];
 }
 
-export interface Computed<T = any> extends ComputedFunctions<T> {
+/**
+ * The part of an computed contract that do not mutate the underlying value - see ReadableObservable type for rationale
+ */
+export interface ReadonlyComputed<T = any> extends ReadonlyComputedFunctions<T> {
     (): T;
+}
+export interface Computed<T = any> extends ComputedFunctions<T>, ReadonlyComputed<T> {
     (value: T): this;
 }
 
