@@ -14,3 +14,22 @@ function testReadonlyObservable() {
     const writeAgain = read as Observable<string>
     writeAgain("bar");
 };
+
+function testReadonlyObservableArray() {
+    // Normal observable array behavior
+    const write = ko.observableArray(["foo"]);
+    write(["bar"]);
+    write.push("foo");
+
+    // Readonly observable array
+    const read = write as ko.ReadonlyObservableArray<string>;
+    read(); //$ExpectType ReadonlyArray<string>
+    read.slice(0, 1); //$ExpectType string[]
+
+    // read(["foo"]); // $ExpectError // no way to test this, currently
+    const _hasPushMethod: typeof read extends { push: any } ? true : false = false;
+
+    // Can cast back to a writeable
+    const writeAgain = read as ko.ObservableArray<string>
+    writeAgain(["foo"]);
+}

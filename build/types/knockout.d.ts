@@ -97,7 +97,10 @@ export function isWritableObservable<T = any>(instance: any): instance is Observ
 
 export type MaybeObservableArray<T = any> = T[] | ObservableArray<T>;
 
-export interface ObservableArrayFunctions<T = any> extends ObservableFunctions<T[]> {
+/**
+ * The part of an observable array contract that do not mutate the underlying value - see ReadableObservable type for rationale
+ */
+export interface ReadonlyObservableArrayFunctions<T = any> extends ReadonlyObservableFunctions<T[]> {
     // General Array functions
     indexOf(searchElement: T, fromIndex?: number): number;
 
@@ -107,6 +110,14 @@ export interface ObservableArrayFunctions<T = any> extends ObservableFunctions<T
     splice(start: number): T[];
     splice(start: number, deleteCount: number, ...items: T[]): T[];
 
+    // Ko specific
+    reversed(): T[];
+
+    sorted(compareFunction?: (left: T, right: T) => number): T[];
+}
+
+export interface ObservableArrayFunctions<T = any> extends ReadonlyObservableArrayFunctions<T>, ObservableFunctions<T[]> {
+    // General Array functions
     pop(): T;
     push(...items: T[]): number;
 
@@ -118,10 +129,6 @@ export interface ObservableArrayFunctions<T = any> extends ObservableFunctions<T
     sort(compareFunction?: (left: T, right: T) => number): this;
 
     // Ko specific
-    reversed(): T[];
-
-    sorted(compareFunction?: (left: T, right: T) => number): T[];
-
     replace(oldItem: T, newItem: T): void;
 
     remove(item: T): T[];
@@ -137,7 +144,9 @@ export interface ObservableArrayFunctions<T = any> extends ObservableFunctions<T
     destroyAll(items: T[]): void;
 }
 
-export interface ObservableArray<T = any> extends Observable<T[]>, ObservableArrayFunctions<T> {
+export interface ReadonlyObservableArray<T = any> extends ReadonlyObservable<T[]>, ReadonlyObservableArrayFunctions<T> {}
+
+export interface ObservableArray<T = any> extends Observable<T[]>, ReadonlyObservableArray<T>, ObservableArrayFunctions<T> {
     (value: T[] | null | undefined): this;
 }
 
