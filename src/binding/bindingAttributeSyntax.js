@@ -560,7 +560,7 @@
     };
 
     ko.applyBindingsToDescendants = function(viewModelOrBindingContext, rootNode) {
-        if (rootNode.nodeType === 1 || rootNode.nodeType === 8)
+        if (rootNode.nodeType === 1 || rootNode.nodeType === 8 || rootNode.nodeType === 11)
             applyBindingsToDescendantsInternal(getBindingContext(viewModelOrBindingContext), rootNode);
     };
 
@@ -575,17 +575,20 @@
             if (!rootNode) {
                 throw Error("ko.applyBindings: could not find document.body; has the document been loaded?");
             }
-        } else if (!rootNode || (rootNode.nodeType !== 1 && rootNode.nodeType !== 8)) {
+        } else if (!rootNode || (rootNode.nodeType !== 1 && rootNode.nodeType !== 8 && rootNode.nodeType !== 11)) {
             throw Error("ko.applyBindings: first parameter should be your view model; second parameter should be a DOM node");
         }
 
-        applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode);
+        // If the node has a Shadow DOM, then it's a Web Component.  The correct context is the shadowRoot.
+        rootNode.shadowRoot
+        ? applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode.shadowRoot)
+        : applyBindingsToNodeAndDescendantsInternal(getBindingContext(viewModelOrBindingContext, extendContextCallback), rootNode)
     };
 
     // Retrieving binding context from arbitrary nodes
     ko.contextFor = function(node) {
-        // We can only do something meaningful for elements and comment nodes (in particular, not text nodes, as IE can't store domdata for them)
-        if (node && (node.nodeType === 1 || node.nodeType === 8)) {
+        // We can only do something meaningful for elements, comment nodes, and document fragments (in particular, not text nodes, as IE can't store domdata for them)
+        if (node && (node.nodeType === 1 || node.nodeType === 8 || node.nodeType === 11)) {
             return ko.storedBindingContextForNode(node);
         }
         return undefined;

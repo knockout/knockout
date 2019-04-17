@@ -770,4 +770,49 @@ describe('Binding attribute syntax', function() {
         ko.applyBindings(vm, testNode);
         expect(callbacks).toEqual(1);
     });
+
+    it('Should bind to the shadow root of a shadow DOM', function() {
+      var callbacks = 0,
+        vm = { textProp: "Hello World" },
+        shadow = testNode.attachShadow({mode: "open"});
+
+      shadow.innerHTML = "<div id='shadowRoot' data-bind='text: textProp'></div>";
+      ko.applyBindings(vm,shadow);
+
+      expect(shadow.childNodes[0].textContent || shadow.childNodes[0].innerText).toEqual(vm.textProp);
+      expect(shadow.nodeType).toEqual(11);
+    });
+
+    it('Should bind to the shadow root when called directly on a vanilla custom element', function() {
+      var vm = { textProp: "Hello World" };
+
+      customElements.define("my-elem", class extends HTMLElement {
+        constructor() {
+          super();
+          var shadowRoot = this.attachShadow({mode: 'open'});
+          shadowRoot.innerHTML = "<div id='shadowRoot' data-bind='text: textProp'></div>";
+        }
+      });
+      testNode.innerHTML = "<my-elem></my-elem>";
+      var customElement = testNode.childNodes[0];
+      ko.applyBindings(vm,customElement);
+
+      expect(customElement.shadowRoot.childNodes[0].textContent || customElement.shadowRoot.childNodes[0].innerText).toEqual(vm.textProp);
+    });
+
+    it('Should bind in the constructor of an encapsulated Web Component', function() {
+      customElements.define("my-comp", class extends HTMLElement {
+        constructor() {
+          super();
+          var shadowRoot = this.attachShadow({mode: 'open'}),
+           vm = { textProp: "Hello World" };
+          shadowRoot.innerHTML = "<div id='shadowRoot' data-bind='text: textProp'></div>";
+          // could also bind to this instead
+          ko.applyBindings(vm,shadowRoot);
+        }
+      });
+      testNode.innerHTML = "<my-comp></my-comp>";
+
+      expect(testNode.childNodes[0].shadowRoot.childNodes[0].textContent || testNode.childNodes[0].shadowRoot.childNodes[0].innerText).toEqual("Hello World");
+    });
 });
