@@ -194,7 +194,11 @@ export interface ComputedContext {
 
 export const computedContext: ComputedContext;
 
-export function ignoreDependencies(callback: Function, callbackTarget?: any, callbackArgs?: any[]): void;
+export function ignoreDependencies<Return, Target, Args extends any[]>(
+    callback: (this: Target, ...args: Args) => Return,
+    callbackTarget?: Target,
+    callbackArgs?: Args
+): Return;
 
 //#endregion
 
