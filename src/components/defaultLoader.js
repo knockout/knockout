@@ -195,7 +195,12 @@
         if (typeof config['require'] === 'string') {
             // The config is the value of an AMD module
             if (amdRequire || window['require']) {
-                (amdRequire || window['require'])([config['require']], callback);
+                (amdRequire || window['require'])([config['require']], function (module) {
+                    if (module && typeof module === 'object' && module.__esModule && module.default) {
+                        module = module.default;
+                    }
+                    callback(module);
+                });
             } else {
                 errorCallback('Uses require, but no AMD loader is present');
             }
