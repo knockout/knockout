@@ -438,27 +438,6 @@ describe('Binding: With', function() {
         expect(testNode).toContainText('');
     });
 
-    it('Should only evaluate the value function once per update', function () {
-        testNode.innerHTML = "<div data-bind='with: createItem()'><span data-bind='text: $data'></span></div>";
-
-        var timesEvaluated = 0;
-        var itemObservable = ko.observable(1);
-        var vm = {
-            createItem: function () {
-                itemObservable();
-                return ++timesEvaluated;
-            }
-        };
-
-        ko.applyBindings(vm, testNode);
-        expect(timesEvaluated).toEqual(1);
-        expect(testNode).toContainText("1");
-
-        itemObservable(2);
-        expect(timesEvaluated).toEqual(2);
-        expect(testNode).toContainText("2");
-    });
-
     it('Should only evaluate a provided function once per update', function () {
         testNode.innerHTML = "<div data-bind='with: createItem'><span data-bind='text: $data'></span></div>";
 
@@ -571,27 +550,6 @@ describe('Binding: With', function() {
 
             model.items()[0].x(10);
             expect(testNode).toContainText("25");
-        });
-
-        it('Should only evaluate the value function once per update', function () {
-            testNode.innerHTML = "<div data-bind='with: createItem(), as: \"item\", noChildContext: true'><span data-bind='text: item'></span></div>";
-
-            var timesEvaluated = 0;
-            var itemObservable = ko.observable(1);
-            var vm = {
-                createItem: function () {
-                    itemObservable();
-                    return ++timesEvaluated;
-                }
-            };
-
-            ko.applyBindings(vm, testNode);
-            expect(timesEvaluated).toEqual(1);
-            expect(testNode).toContainText("1");
-
-            itemObservable(2);
-            expect(timesEvaluated).toEqual(2);
-            expect(testNode).toContainText("2");
         });
 
         it('Should only evaluate a provided function once per update', function () {
@@ -710,27 +668,6 @@ describe('Binding: With', function() {
 
             model.items()[0].x(10);
             expect(testNode).toContainText("25");
-        });
-
-        it('Should only evaluate the value function once per update', function () {
-            testNode.innerHTML = "<div data-bind='with: createItem(), as: \"item\", noChildContext: false'><span data-bind='text: item'></span></div>";
-
-            var timesEvaluated = 0;
-            var itemObservable = ko.observable(1);
-            var vm = {
-                createItem: function () {
-                    itemObservable();
-                    return ++timesEvaluated;
-                }
-            };
-
-            ko.applyBindings(vm, testNode);
-            expect(timesEvaluated).toEqual(1);
-            expect(testNode).toContainText("1");
-
-            itemObservable(2);
-            expect(timesEvaluated).toEqual(2);
-            expect(testNode).toContainText("2");
         });
 
         it('Should only evaluate a provided function once per update', function () {
