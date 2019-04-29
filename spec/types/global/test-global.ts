@@ -391,6 +391,7 @@ function test_more() {
     const upperCaseName = ko.computed(() => name.toUpperCase()).extend({ throttle: 500 });
 
     class AppViewModel3 {
+        // Observable<string | undefined> since there's no initial value
         public instantaneousValue = ko.observable<string>();
         public throttledValue = ko.computed(this.instantaneousValue)
             .extend({ throttle: 400 });
@@ -399,7 +400,7 @@ function test_more() {
 
         public throttledValueLogger = ko.computed(() => {
             const val = this.instantaneousValue();
-            if (val !== '')
+            if (val && val !== '')
                 this.loggedValues.push(val);
         });
     }
