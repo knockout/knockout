@@ -194,7 +194,17 @@ export interface ComputedContext {
 
 export const computedContext: ComputedContext;
 
-export function ignoreDependencies(callback: Function, callbackTarget?: any, callbackArgs?: any[]): void;
+/**
+ * Executes a function and returns the result, while disabling depdendency tracking
+ * @param callback - the function to execute without dependency tracking
+ * @param callbackTarget - the `this` binding for `callback`
+ * @param callbackArgs - the args to provide to `callback`
+ */
+export function ignoreDependencies<Return, Target, Args extends any[]>(
+    callback: (this: Target, ...args: Args) => Return,
+    callbackTarget?: Target,
+    callbackArgs?: Args
+): Return;
 
 //#endregion
 
