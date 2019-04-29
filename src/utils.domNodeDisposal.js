@@ -67,15 +67,18 @@ ko.utils.domNodeDisposal = new (function () {
         },
 
         cleanNode : function(node) {
-            // First clean this node, where applicable
-            if (cleanableNodeTypes[node.nodeType]) {
-                cleanSingleNode(node);
+            ko.dependencyDetection.ignore(function () {
+                // First clean this node, where applicable
+                if (cleanableNodeTypes[node.nodeType]) {
+                    cleanSingleNode(node);
 
-                // ... then its descendants, where applicable
-                if (cleanableNodeTypesWithDescendants[node.nodeType]) {
-                    cleanNodesInList(node.getElementsByTagName("*"));
+                    // ... then its descendants, where applicable
+                    if (cleanableNodeTypesWithDescendants[node.nodeType]) {
+                        cleanNodesInList(node.getElementsByTagName("*"));
+                    }
                 }
-            }
+            });
+
             return node;
         },
 

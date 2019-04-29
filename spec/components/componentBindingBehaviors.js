@@ -714,6 +714,29 @@ describe('Components: Component binding', function() {
         expect(viewModelInstance.wasDisposed).toBe(true);
     });
 
+    it('Does not leak observables from dispose function through cleanNode', function() {
+        // See https://github.com/knockout/knockout/issues/2461
+        var observable = ko.observable(), wasDisposed = false;
+        function testViewModel() { }
+        testViewModel.prototype.dispose = function() { wasDisposed = true; observable(); };
+
+        ko.components.register(testComponentName, {
+            viewModel: testViewModel,
+            template: '<div>Ignored</div>'
+        });
+
+        ko.applyBindings(outerViewModel, testNode);
+        jasmine.Clock.tick(1);
+        expect(wasDisposed).toBe(false);
+
+        var cleanComputed = ko.computed(function () {
+            ko.cleanNode(testNode.firstChild);
+        });
+        expect(wasDisposed).toBe(true);
+        expect(cleanComputed.isActive()).toBeFalsy();
+        expect(observable.getSubscriptionsCount()).toBe(0);
+    });
+
     it('Does not inject the template or instantiate the viewmodel if the element was cleaned before component loading completed', function() {
         var numConstructorCalls = 0;
         ko.components.register(testComponentName, {
