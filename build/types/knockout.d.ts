@@ -764,12 +764,14 @@ export module components {
 
     export const loaders: Loader[];
 
-    export class defaultLoader implements Loader {
+    export interface DefaultLoader extends Loader {
         getConfig(componentName: string, callback: (config: Config | object) => void): void;
         loadComponent(componentName: string, config: Config, callback: (component: Component) => void): void;
         loadTemplate(componentName: string, config: TemplateConfig, callback: (resolvedTemplate: Node[]) => void): void;
         loadViewModel(componentName: string, config: ViewModelConfig, callback: (resolvedViewModel: CreateViewModel) => void): void;
     }
+
+    export const defaultLoader: DefaultLoader;
 }
 
 //#endregion

@@ -710,6 +710,10 @@ function test_Components() {
         // Empty config for registering custom elements that are handled by name convention
         ko.components.register('name', { /* No config needed */ });
     }
+
+    function test_DefaultLoader() {
+        ko.components.defaultLoader.getConfig("name", (config: ko.components.Config) => { config.synchronous = true; });
+    }
 }
 
 
