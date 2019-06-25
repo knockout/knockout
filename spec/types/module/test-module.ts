@@ -300,7 +300,7 @@ declare module "knockout" {
         filterByProperty(propName: string, matchValue: boolean): ko.Computed<any>;
     }
 
-    export interface ExtendersOptions {
+    export interface ExtendersOptions<T> {
         numeric: number;
         required: string;
         logChange: string;
