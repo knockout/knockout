@@ -245,7 +245,17 @@ export const extenders: Extenders;
 
 //#region subscribables/mappingHelpers.js
 
-export function toJS(rootObject: any): any;
+type Unwrapped<T> = T extends ko.Observable<infer R>
+    ? R
+    : T extends ko.ObservableArray<infer R>
+    ? R[]
+    : T extends ko.Computed<infer R>
+    ? R
+    : T extends Record<any, any>
+    ? { [P in keyof T]: Unwrapped<T[P]> }
+    : T
+
+export function toJS<T>(rootObject: T): Unwrapped<T>;
 export function toJSON(rootObject: any, replacer?: Function, space?: number): string;
 
 //#endregion
