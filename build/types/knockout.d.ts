@@ -246,7 +246,7 @@ export const extenders: Extenders;
 //#region subscribables/mappingHelpers.js
 
 export function toJS(rootObject: any): any;
-export function toJSON(rootObject: any, replacer?: Function, space?: number): any;
+export function toJSON(rootObject: any, replacer?: Function, space?: number): string;
 
 //#endregion
 
