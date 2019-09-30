@@ -381,7 +381,7 @@ function test_more() {
 
         test() {
             const first: string = "test";
-            this.firstName = ko.observable(first).extend({ required: "Please enter a first name", logChange: "first name" });
+            this.firstName = ko.observable(first).extend({ required: "Please enter a first name", logChange: "first name", validate: v => !!v.match(/^.+$/) });
         }
     }
 

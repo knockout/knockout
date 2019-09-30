@@ -12,6 +12,10 @@ declare module "knockout" {
         logChange: string;
     }
 
+    export interface ExtendersOptions<T> {
+        validate(v: T): boolean;
+    }
+
     // Define your own functions
     export interface SubscribableFunctions<T> {
         publishOn(topic: string): this;

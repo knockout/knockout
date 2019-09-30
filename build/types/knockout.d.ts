@@ -28,8 +28,8 @@ export interface SubscribableFunctions<T = any> extends Function {
     subscribe<TTarget = void>(callback: SubscriptionCallback<T, TTarget>, callbackTarget?: TTarget, event?: "change"): Subscription;
     subscribe<X = any, TTarget = void>(callback: SubscriptionCallback<X, TTarget>, callbackTarget: TTarget, event: string): Subscription;
 
-    extend(requestedExtenders: ObservableExtenderOptions): this;
-    extend<S extends Subscribable<any>>(requestedExtenders: ObservableExtenderOptions): S;
+    extend(requestedExtenders: ObservableExtenderOptions<T>): this;
+    extend<S extends Subscribable<T>>(requestedExtenders: ObservableExtenderOptions<T>): S;
 
     getSubscriptionsCount(event?: string): number;
 }
@@ -219,7 +219,7 @@ export interface RateLimitOptions {
     [option: string]: any;
 }
 
-export interface ExtendersOptions {
+export interface ExtendersOptions<T = any> {
     trackArrayChanges: true | utils.CompareArraysOptions;
     throttle: number;
     rateLimit: number | RateLimitOptions;
@@ -233,13 +233,13 @@ export interface Extender<T extends Subscribable = any, O = any> {
 
 type AsExtenders<T> = { [P in keyof T]: Extender<Subscribable, T[P]> }
 
-export interface Extenders extends AsExtenders<ExtendersOptions> {
+export interface Extenders<T> extends AsExtenders<ExtendersOptions<T>> {
     [name: string]: Extender;
 }
 
-export interface ObservableExtenderOptions extends Partial<ExtendersOptions> { }
+export interface ObservableExtenderOptions<T> extends Partial<ExtendersOptions<T>> { }
 
-export const extenders: Extenders;
+export const extenders: Extenders<any>;
 
 //#endregion
 
