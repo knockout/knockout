@@ -300,10 +300,14 @@ declare module "knockout" {
         filterByProperty(propName: string, matchValue: boolean): ko.Computed<any>;
     }
 
-    export interface ExtendersOptions<T> {
+    export interface ExtendersOptions {
         numeric: number;
         required: string;
         logChange: string;
+    }
+
+    export interface ExtendersOptions<T> {
+        validate(v: T): boolean;
     }
 }
 
@@ -392,7 +396,7 @@ function test_more() {
 
         test() {
             const first: string = "test";
-            this.firstName = ko.observable(first).extend({ required: "Please enter a first name", logChange: "first name" });
+            this.firstName = ko.observable(first).extend({ required: "Please enter a first name", logChange: "first name", validate: v => !!v.match(/^.+$/) });
         }
     }
 

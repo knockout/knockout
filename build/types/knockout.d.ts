@@ -219,7 +219,7 @@ export interface RateLimitOptions {
     [option: string]: any;
 }
 
-export interface ExtendersOptions<T> {
+export interface ExtendersOptions<T = any> {
     trackArrayChanges: true | utils.CompareArraysOptions;
     throttle: number;
     rateLimit: number | RateLimitOptions;

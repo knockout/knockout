@@ -6,10 +6,14 @@ declare module "knockout" {
         filterByProperty(propName: string, matchValue: boolean): ko.Computed<any>;
     }
 
-    export interface ExtendersOptions<T> {
+    export interface ExtendersOptions {
         numeric: number;
         required: string;
         logChange: string;
+    }
+
+    export interface ExtendersOptions<T> {
+        validate(v: T): boolean;
     }
 
     // Define your own functions
