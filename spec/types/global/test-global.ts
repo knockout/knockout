@@ -308,6 +308,7 @@ function test_more() {
     viewModel.hasALotOfPets = ko.computed(() => viewModel.pets().length > 2);
 
     const plainJs = ko.toJS(viewModel);
+    var petsInitials = plainJs.pets.map(x => x.charAt(0));
 
     ko.extenders.logChange = function (target: ko.Subscribable, option: string) {
         target.subscribe((newValue: string) => {
