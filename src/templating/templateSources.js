@@ -93,15 +93,17 @@
                 // parse and cache the nodes whenever there's new text content available. This allows
                 // the user to update the template content by updating the text of template node.
                 var text = this['text']();
-                if (text) {
+                if (text && text !== templateData.textData) {
                     nodes = ko.utils.parseHtmlForTemplateNodes(text, element.ownerDocument);
-                    this['text']("");   // clear the text from the node
-                    setTemplateDomData(element, {containerData: nodes, alwaysCheckText: true});
+                    setTemplateDomData(element, {containerData: nodes, textData: text, alwaysCheckText: true});
                 }
             }
             return nodes;
         } else {
             var valueToWrite = arguments[0];
+            if (this.templateType !== undefined) {
+                this['text']("");   // clear the text from the node
+            }
             setTemplateDomData(element, {containerData: valueToWrite});
         }
     };
