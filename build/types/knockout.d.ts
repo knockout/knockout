@@ -920,8 +920,8 @@ export module utils {
 
 export module utils {
     export module domNodeDisposal {
-        export function addDisposeCallback(node: Node, callback: () => void): void;
-        export function removeDisposeCallback(node: Node, callback: () => void): void;
+        export function addDisposeCallback(node: Node, callback: (node: Node) => void): void;
+        export function removeDisposeCallback(node: Node, callback: (node: Node) => void): void;
         export function cleanExternalData(node: Node): void;
     }
 }

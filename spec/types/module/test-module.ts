@@ -578,8 +578,8 @@ function test_misc(this: any) {
     var x = ko.observableArray([1, 2, 3]);
 
     let element = new HTMLElement();
-    ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
-        $(element).datepicker("destroy");
+    ko.utils.domNodeDisposal.addDisposeCallback(element, el => {
+        $(el).datepicker("destroy");
     });
 
     this.observableFactory = function (readonly: boolean = false): ko.Subscribable<number> {
