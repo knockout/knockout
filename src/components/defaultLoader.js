@@ -196,8 +196,8 @@
             // The config is the value of an AMD module
             if (amdRequire || window['require']) {
                 (amdRequire || window['require'])([config['require']], function (module) {
-                    if (module && typeof module === 'object' && module.__esModule && module.default) {
-                        module = module.default;
+                    if (module && typeof module === 'object' && module.__esModule && module['default']) {
+                        module = module['default'];
                     }
                     callback(module);
                 });
