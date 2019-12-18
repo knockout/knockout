@@ -31,11 +31,21 @@
             this.columns = configuration.columns || getColumnsForScaffolding(ko.utils.unwrapObservable(this.data)); 
 
             this.itemsOnCurrentPage = ko.computed(function () {
+                if (this.data().length === 0) {
+                     return [];
+                }
                 var startIndex = this.pageSize * this.currentPageIndex();
+                if (startIndex !== 0 && startIndex >= ko.unwrap(this.data).length) {
+                    this.currentPageIndex(Math.ceil(ko.unwrap(this.data).length / this.pageSize) - 1);
+                    startIndex = this.pageSize * this.currentPageIndex();
+                }
                 return ko.utils.unwrapObservable(this.data).slice(startIndex, startIndex + this.pageSize);
             }, this);
 
             this.maxPageIndex = ko.computed(function () {
+                if (this.data().length === 0) {
+                    return 1;
+                }
                 return Math.ceil(ko.utils.unwrapObservable(this.data).length / this.pageSize);
             }, this);
         }
@@ -66,8 +76,8 @@
                     <div class=\"ko-grid-pageLinks\">\
                         <span>Page:</span>\
                         {{each(i) ko.utils.range(1, maxPageIndex)}}\
-                            <a href=\"#\" data-bind=\"click: function() { currentPageIndex(i) }, css: { selected: i == currentPageIndex() }\">\
-                                ${ i + 1 }\
+                            <a href=\"#\" data-bind=\"click: function() { currentPageIndex(i - 1) }, css: { selected: i == currentPageIndex() + 1 }\">\
+                                ${ i }\
                             </a>\
                         {{/each}}\
                     </div>");
