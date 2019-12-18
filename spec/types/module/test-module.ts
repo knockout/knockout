@@ -741,15 +741,28 @@ function testToJS() {
     const observableArr: {
         foo: string
         bar: string
-    }[] = ko.toJS(ko.observableArray([ ko.observable({ foo: ko.observable(''), bar: '' }) ]))
+    }[] = ko.toJS(ko.observableArray([
+        ko.observable({ foo: ko.observable(''), bar: '' }),
+        ko.observable({ foo: ko.observable(''), bar: ko.observable('') })
+    ]))
 
-    const nestedObj: {
+    const plainObservableWithArray: {
+        foo: string
+        bar: string
+    }[] = ko.toJS(ko.observable([
+        ko.observable({ foo: ko.observable(''), bar: '' }),
+        ko.observable({ foo: ko.observable(''), bar: '' })
+    ]))
+
+    // const recursive: string = ko.toJS(ko.observable(ko.observable(ko.observable(''))))
+
+    const recursiveObj: {
         foo: {
             bar: string
         }
     } = ko.toJS(
         ko.observable({
-            foo: ko.observable({ bar: '' })
+            foo: ko.observable({ bar: ko.observable('') })
         })
     )
 

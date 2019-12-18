@@ -329,13 +329,13 @@ export const extenders: Extenders<any>;
 
 //#region subscribables/mappingHelpers.js
 
-type Unwrapped<T> = T extends ko.ObservableArray<infer R>
-    ? Unwrapped<R>[]
-    : T extends ko.Subscribable<infer R>
+export type Unwrapped<T> = T extends ko.Subscribable<infer R>
     ? (
-        R extends Record<any, any>
+        R extends ko.Subscribable
+        ? unknown 
+        : R extends Record<any, any>
             ? { [P in keyof R]: Unwrapped<R[P]>}
-            : R
+            :  R
     )
     : T extends Date | RegExp | Function
     ? T
