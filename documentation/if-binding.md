@@ -69,7 +69,7 @@ It's important to understand that the `if` binding really is vital to make this 
 
 ### Note: Using "if" and "ifnot" without a container element
 
-Sometimes you may want to control the presence/absence of a section of markup *without* having any container element that can hold an `if` of `ifnot` binding. For example, you might want to control whether a certain `<li>` element appears alongside siblings that always appear:
+Sometimes you may want to control the presence/absence of a section of markup *without* having any container element that can hold an `if` or `ifnot` binding. For example, you might want to control whether a certain `<li>` element appears alongside siblings that always appear:
 
     <ul>
         <li>This item always appears</li>
