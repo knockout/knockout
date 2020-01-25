@@ -42,8 +42,8 @@ describe('Binding: Selected Options', function() {
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
-        expect(selection()).toEqual(["A", cObject]);
-        expect(selection()[1] === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
+        expect(selection().map(ko.unwrap)).toEqual(["A", cObject]);
+        expect(ko.unwrap(selection()[1]) === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     });
 
     it('Should update the model when selection in the SELECT node changes for non-observable property values', function () {
@@ -68,8 +68,8 @@ describe('Binding: Selected Options', function() {
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
-        expect(myModel.mySelection).toEqual(["A", cObject]);
-        expect(myModel.mySelection[1] === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
+        expect(myModel.mySelection.map(ko.unwrap)).toEqual(["A", cObject]);
+        expect(ko.unwrap(myModel.mySelection[1]) === cObject).toEqual(true); // Also check with strict equality, because we don't want to falsely accept [object Object] == cObject
     });
 
     it('Should update the model when selection in the SELECT node inside an optgroup changes', function () {
@@ -92,7 +92,7 @@ describe('Binding: Selected Options', function() {
         setMultiSelectOptionSelectionState(testNode.childNodes[0].childNodes[0].childNodes[2], true);
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
 
-        expect(selection()).toEqual(['a', 'c']);
+        expect(selection().map(ko.unwrap)).toEqual(['a', 'c']);
     });
 
     it('Should set selection in the SELECT node inside an optgroup to match the model', function () {
@@ -191,7 +191,7 @@ describe('Binding: Selected Options', function() {
         // Update with options that move the selection
         options(["B", "C"]);
         expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
-        expect(selection()).toEqual(["B"]);
+        expect(selection().map(ko.unwrap)).toEqual(["B"]);
 
         // Replace with new options; observable is updated
         options(["C", "D"]);
