@@ -54,6 +54,16 @@ describe('Binding: Using', function() {
         expect(testNode.childNodes[0].childNodes[0]).toContainText("Parent prop value");
     });
 
+    it('Should update descendant bindings when observable viewmodel changes', function() {
+        var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
+        testNode.innerHTML = "<div data-bind='using: childItem'><span data-bind='text: $parent.parentItem'></span> <span data-bind='text: $data'></span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
+
+        vm({parentItem: "second parent", childItem: "child value"});
+        expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
+    });
+
     it('Should be able to access all parent binding contexts via $parents, and root context via $root', function() {
         testNode.innerHTML = "<div data-bind='using: topItem'>" +
                                 "<div data-bind='using: middleItem'>" +
@@ -188,5 +198,96 @@ describe('Binding: Using', function() {
         // Should update the input when the observable changes
         item('three');
         expect(testNode.childNodes[0]).toHaveValues(['three']);
+    });
+
+    it('Should minimize binding updates with nested bindings', function() {
+        testNode.innerHTML = "<div data-bind='using: topLevel'><div data-bind='using: secondLevel'>Renders: <span data-bind='text: ++$root.countRenders'></span> <span data-bind='text: $data'></span></div></div>";
+
+        var topLevel = ko.observable({ secondLevel: "first value" });
+        ko.applyBindings({ topLevel: topLevel, countRenders: 0 }, testNode);
+
+        topLevel({ secondLevel: "second value" })
+        expect(testNode.childNodes[0]).toContainText("Renders: 2 second value", /* ignoreSpaces */ true);
+    });
+
+    describe('With "noChildContext = true" and "as"', function () {
+        it('Should not create a child context', function () {
+            testNode.innerHTML = "<div data-bind='using: someItem, as: \"item\", noChildContext: true'><span data-bind='text: item.childProp'></span></div>";
+            var someItem = { childProp: 'Hello' };
+            ko.applyBindings({ someItem: someItem }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('Hello');
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+        });
+
+        it('Should provide access to observable value', function() {
+            testNode.innerHTML = "<div data-bind='using: someItem, as: \"item\", noChildContext: true'><input data-bind='value: item'/></div>";
+            var someItem = ko.observable('Hello');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+
+            // Should update observable when input is changed
+            testNode.childNodes[0].childNodes[0].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(someItem()).toEqual('Goodbye');
+
+            // Should update the input when the observable changes
+            someItem('Hello again');
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello again');
+        });
+
+        it('Should update descendant bindings when observable viewmodel changes', function() {
+            var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
+            testNode.innerHTML = "<div data-bind='using: childItem, as: \"item\", noChildContext: true'><span data-bind='text: parentItem'></span> <span data-bind='text: item'></span></div>";
+            ko.applyBindings(vm, testNode);
+            expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
+
+            vm({parentItem: "second parent", childItem: "child value"});
+            expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
+        });
+    });
+
+    describe('With "noChildContext = false" and "as"', function () {
+        it('Should create a child context', function () {
+            testNode.innerHTML = "<div data-bind='using: someItem, as: \"item\", noChildContext: false'><span data-bind='text: item.childProp'></span></div>";
+            var someItem = { childProp: 'Hello' };
+            ko.applyBindings({ someItem: someItem }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('Hello');
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(someItem);
+        });
+
+        it('Should unwrap observable value', function() {
+            testNode.innerHTML = "<div data-bind='using: someItem, as: \"item\", noChildContext: false'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            var someItem = ko.observable('Hello');
+            ko.applyBindings({ someItem: someItem }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['Hello', 'Hello']);
+
+            // Should not update observable when input bound to named item is changed
+            testNode.childNodes[0].childNodes[0].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(someItem()).toEqual('Hello');
+
+            // Should update observable when input bound to $rawData is changed
+            testNode.childNodes[0].childNodes[1].value = 'Goodbye';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[1], "change");
+            expect(someItem()).toEqual('Goodbye');
+
+            // Should update the input when the observable changes
+            someItem('Hello again');
+            expect(testNode.childNodes[0].childNodes[0].value).toEqual('Hello again');
+        });
+
+        it('Should update descendant bindings when observable viewmodel changes', function() {
+            var vm = ko.observable({ parentItem: "first parent", childItem: "child value" });
+            testNode.innerHTML = "<div data-bind='using: childItem, as: \"item\", noChildContext: false'><span data-bind='text: $parent.parentItem'></span> <span data-bind='text: item'></span></div>";
+            ko.applyBindings(vm, testNode);
+            expect(testNode.childNodes[0]).toContainText("first parent child value", /* ignoreSpaces */ true);
+
+            vm({parentItem: "second parent", childItem: "child value"});
+            expect(testNode.childNodes[0]).toContainText("second parent child value", /* ignoreSpaces */ true);
+        });
     });
 });

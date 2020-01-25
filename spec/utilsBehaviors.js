@@ -36,9 +36,9 @@ describe('arrayForEach', function () {
         ko.utils.arrayForEach(["a", "b", "c"], callback);
 
         expect(callback.calls.length).toBe(3);
-        expect(callback.calls[0].args).toEqual(["a", 0]);
-        expect(callback.calls[1].args).toEqual(["b", 1]);
-        expect(callback.calls[2].args).toEqual(["c", 2]);
+        expect(callback.calls[0].args).toEqual(["a", 0, ["a", "b", "c"]]);
+        expect(callback.calls[1].args).toEqual(["b", 1, ["a", "b", "c"]]);
+        expect(callback.calls[2].args).toEqual(["c", 2, ["a", "b", "c"]]);
     });
 
     it('Should do nothing with empty arrays', function () {
@@ -47,6 +47,21 @@ describe('arrayForEach', function () {
         ko.utils.arrayForEach([], callback);
 
         expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        ko.utils.arrayForEach(["a"], function() {
+            actualContext = this;
+        }, expectedContext);
+        expect(actualContext).toBe(expectedContext);
+    });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayForEach(null, function () {});
+        }).toThrow();
     });
 });
 
@@ -69,6 +84,12 @@ describe('arrayIndexOf', function () {
     it('Should return the first index if the element is found twice', function () {
         var result = ko.utils.arrayIndexOf(["a", "b", "c", "c"], "c");
         expect(result).toBe(2);
+    });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayIndexOf(null, "a");
+        }).toThrow();
     });
 });
 
@@ -96,6 +117,12 @@ describe('arrayRemoveItem', function () {
         ko.utils.arrayRemoveItem(input, "b");
         expect(input).toEqual(["a", "b", "c"]);
     });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayRemoteItem(null, "a");
+        }).toThrow();
+    });
 });
 
 describe('arrayFirst', function () {
@@ -117,12 +144,12 @@ describe('arrayFirst', function () {
         expect(result).toBe("b");
     });
 
-    it('Should return null with empty arrays, and not call the predicate', function () {
+    it('Should return undefined with empty arrays, and not call the predicate', function () {
         var predicate = jasmine.createSpy('predicate');
 
         var result = ko.utils.arrayFirst([], predicate);
 
-        expect(result).toBe(null);
+        expect(result).toBe(undefined);
         expect(predicate).not.toHaveBeenCalled();
     });
 
@@ -130,23 +157,29 @@ describe('arrayFirst', function () {
         ko.utils.arrayFirst(["a", "b", "c"], matchB);
 
         expect(matchB.calls.length).toBe(2);
-        expect(matchB.calls[0].args).toEqual(["a", 0]);
-        expect(matchB.calls[1].args).toEqual(["b", 1]);
+        expect(matchB.calls[0].args).toEqual(["a", 0, ["a", "b", "c"]]);
+        expect(matchB.calls[1].args).toEqual(["b", 1, ["a", "b", "c"]]);
     });
 
-    it('Should return null if no element matches', function () {
+    it('Should return undefined if no element matches', function () {
         var result = ko.utils.arrayFirst(["a", "b", "c"], matchD);
 
-        expect(result).toBe(null);
+        expect(result).toBe(undefined);
     });
 
     it('Should test every element if no element matches', function () {
         ko.utils.arrayFirst(["a", "b", "c"], matchD);
 
         expect(matchD.calls.length).toBe(3);
-        expect(matchD.calls[0].args).toEqual(["a", 0]);
-        expect(matchD.calls[1].args).toEqual(["b", 1]);
-        expect(matchD.calls[2].args).toEqual(["c", 2]);
+        expect(matchD.calls[0].args).toEqual(["a", 0, ["a", "b", "c"]]);
+        expect(matchD.calls[1].args).toEqual(["b", 1, ["a", "b", "c"]]);
+        expect(matchD.calls[2].args).toEqual(["c", 2, ["a", "b", "c"]]);
+    });
+
+    it('Should throw an error for a null array', function () {
+        expect(function () {
+            ko.utils.arrayFirst(null, function () {});
+        }).toThrow();
     });
 });
 
@@ -178,6 +211,11 @@ describe('arrayGetDistinctValues', function () {
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
     });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayGetDistinctValues(null);
+        expect(result).toEqual([]);
+    });
 });
 
 describe('arrayMap', function () {
@@ -203,13 +241,31 @@ describe('arrayMap', function () {
     it('Should copy the array before returning it', function () {
         var identityFunction = function(x) {
             return x;
-        }
+        };
 
         var input = ["a", "b", "c"];
         var result = ko.utils.arrayMap(input, identityFunction);
 
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
+    });
+
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(x) {
+            actualContext = this;
+            return x;
+        };
+
+        ko.utils.arrayMap(["a"], identityFunction, expectedContext);
+
+        expect(actualContext).toBe(expectedContext);
+    });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayMap(null, function () {});
+        expect(result).toEqual([]);
     });
 });
 
@@ -236,13 +292,31 @@ describe('arrayFilter', function () {
     it('Should copy the array before returning it', function () {
         var alwaysTrue = function(x) {
             return true;
-        }
+        };
 
         var input = ["a", "b", "c"];
         var result = ko.utils.arrayFilter(input, alwaysTrue);
 
         expect(result).toEqual(input);
         expect(result).not.toBe(input);
+    });
+
+    it('Should alter "this" context when defined as an argument', function () {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(x) {
+            actualContext = this;
+            return x;
+        };
+
+        var result = ko.utils.arrayFilter(["a"], identityFunction, expectedContext);
+
+        expect(expectedContext).toEqual(actualContext);
+    });
+
+    it('Should return an empty array when called with a null array', function () {
+        var result = ko.utils.arrayFilter(null, function () {});
+        expect(result).toEqual([]);
     });
 });
 
@@ -260,6 +334,18 @@ describe('arrayPushAll', function () {
         var targetArray = [1,2,3];
         ko.utils.arrayPushAll(targetArray, []);
         expect(targetArray).toEqual([1, 2, 3]);
+    });
+
+    it('Should throw an error for a null first array', function () {
+        expect(function () {
+            ko.utils.arrayPushAll(null, []);
+        }).toThrow();
+    });
+
+    it('Should throw an error for a null second array', function () {
+        expect(function () {
+            ko.utils.arrayPushAll([], null);
+        }).toThrow();
     });
 });
 
@@ -279,7 +365,7 @@ describe('Function.bind', function() {
         expect(bound('a')).toEqual([object, 'a']);
     });
 
-    it('should accept a falsey `thisArg` argument', function () {
+    it('should accept a falsy `thisArg` argument', function () {
         ko.utils.arrayForEach(['', 0, false, NaN], function (value) {
             var bound = fn.bind(value);
             expect(bound()[0].constructor).toEqual(Object(value).constructor);
@@ -340,5 +426,20 @@ describe('Function.bind', function() {
         expect(bound1()).toEqual([object1]);
         expect(bound2()).toEqual([object1, 'a']);
         expect(bound3()).toEqual([object1, 'b']);
+    });
+});
+
+describe('objectMap', function () {
+    it('Should alter "this" context when defined as an argument', function() {
+        var expectedContext = {};
+        var actualContext = null;
+        var identityFunction = function(obj) {
+            actualContext = this;
+            return {x : obj.x};
+        };
+
+        var result = ko.utils.objectMap({x:1}, identityFunction, expectedContext);
+
+        expect(expectedContext).toEqual(actualContext);
     });
 });

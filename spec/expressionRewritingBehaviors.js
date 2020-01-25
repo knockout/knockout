@@ -100,7 +100,7 @@ describe('Expression Rewriting', function() {
         var rewritten = ko.expressionRewriting.preProcessBindings(
             'a : 1, b : firstName, c : function() { return "returnValue"; }, ' +
             'd: firstName+lastName, e: boss.firstName, f: boss . lastName, ' +
-            'g: getAssitant(), h: getAssitant().firstName, i: getAssitant("[dummy]")[ "lastName" ], ' +
+            'g: getAssistant(), h: getAssistant().firstName, i: getAssistant("[dummy]")[ "lastName" ], ' +
             'j: boss.firstName + boss.lastName'
         );
 
@@ -111,7 +111,7 @@ describe('Expression Rewriting', function() {
         var model = {
             firstName: "bob", lastName: "smith",
             boss: { firstName: "rick", lastName: "martin" },
-            getAssitant: function() { return assistant }
+            getAssistant: function() { return assistant }
         };
         with (model) {
             var parsed = eval("({" + rewritten + "})");
@@ -189,13 +189,19 @@ describe('Expression Rewriting', function() {
         expect(result).toEqual([]);
     });
 
+    it('Should throw an error for missing closing braces, etc.', function() {
+        expect(function() {
+            ko.expressionRewriting.parseObjectLiteral("if: f(g[something]");
+        }).toThrowContaining("Unbalanced");
+    });
+
     it('Should be able to parse object literals containing C++ style comments', function() {
         // From https://github.com/knockout/knockout/issues/1524
         var result = ko.expressionRewriting.parseObjectLiteral(
             "model: router.activeItem, //wiring the router\n" +
             "afterCompose: router.afterCompose, //wiring the router\n" +
             "//transition:'entrance', //use the 'entrance' transition when switching views\n" +
-            "skipTransitionOnSameViewId: true,//Transition entrance is disabled for better perfomance\n" +
+            "skipTransitionOnSameViewId: true,//Transition entrance is disabled for better performance\n" +
             "cacheViews:true //telling composition to keep views in the dom, and reuse them (only a good idea with singleton view models)\n");
         expect(result).toEqual([
                 { key: 'model', value: 'router.activeItem' },

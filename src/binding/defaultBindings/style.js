@@ -9,7 +9,23 @@ ko.bindingHandlers['style'] = {
                 styleValue = "";
             }
 
-            element.style[styleName] = styleValue;
+            if (jQueryInstance) {
+                jQueryInstance(element)['css'](styleName, styleValue);
+            } else if (/^--/.test(styleName)) {
+                // Is styleName a custom CSS property?
+                element.style.setProperty(styleName, styleValue);
+            } else {
+                styleName = styleName.replace(/-(\w)/g, function (all, letter) {
+                    return letter.toUpperCase();
+                });
+
+                var previousStyle = element.style[styleName];
+                element.style[styleName] = styleValue;
+
+                if (styleValue !== previousStyle && element.style[styleName] == previousStyle && !isNaN(styleValue)) {
+                    element.style[styleName] = styleValue + "px";
+                }
+            }
         });
     }
 };

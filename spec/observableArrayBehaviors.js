@@ -16,6 +16,23 @@ describe('Observable Array', function() {
         expect(ko.isObservable(testObservableArray)).toEqual(true);
     });
 
+    it('Should advertise as observable array', function () {
+        expect(ko.isObservableArray(ko.observableArray())).toEqual(true);
+    });
+
+    it('ko.isObservableArray should return false for non-observable array values', function () {
+        ko.utils.arrayForEach([
+            undefined,
+            null,
+            "x",
+            {},
+            function() {},
+            ko.observable([]),
+        ], function (value) {
+            expect(ko.isObservableArray(value)).toEqual(false);
+        });
+    });
+
     it('Should initialize to empty array if you pass no args to constructor', function() {
         var instance = new ko.observableArray();
         expect(instance().length).toEqual(0);
@@ -193,6 +210,20 @@ describe('Observable Array', function() {
         expect(notifiedValues).toEqual([[x]]);
     });
 
+    it ('Should throw an exception if matching array item moved or removed during "remove"', function () {
+        testObservableArray(["Alpha", "Beta", "Gamma"]);
+        notifiedValues = [];
+        expect(function () {
+            testObservableArray.remove(function (value) {
+                if (value == "Beta") {
+                    testObservableArray.splice(0, 1);
+                    return true;
+                }
+            });
+        }).toThrow();
+        expect(testObservableArray()).toEqual(["Beta", "Gamma"]);
+    });
+
     it('Should notify subscribers on replace', function () {
         testObservableArray(["Alpha", "Beta", "Gamma"]);
         notifiedValues = [];
@@ -283,6 +314,33 @@ describe('Observable Array', function() {
 
         // Verify that reverse and sort notified their changes
         expect(notifiedValues).toEqual([ [3, 2, 1], [1, 2, 3] ]);
+    });
+
+    it('Should return a new sorted array from "sorted"', function() {
+        // set some unsorted values so we can see that the new array is sorted
+        testObservableArray([ 5, 7, 3, 1 ]);
+        notifiedValues = [];
+
+        var newArray = testObservableArray.sorted();
+        expect(newArray).toEqual([ 1, 3, 5, 7 ]);
+        expect(newArray).not.toBe(testObservableArray());
+
+        var newArray2 = testObservableArray.sorted(function(a, b) {
+            return b - a;
+        });
+        expect(newArray2).toEqual([ 7, 5, 3, 1 ]);
+        expect(newArray2).not.toBe(testObservableArray());
+        expect(newArray2).not.toBe(newArray);
+
+        expect(notifiedValues).toEqual([]);
+    });
+
+    it('Should return a new reversed array from "reversed"', function() {
+        var newArray = testObservableArray.reversed();
+        expect(newArray).toEqual([ 3, 2, 1 ]);
+        expect(newArray).not.toBe(testObservableArray());
+
+        expect(notifiedValues).toEqual([]);
     });
 
     it('Should inherit any properties defined on ko.subscribable.fn, ko.observable.fn, or ko.observableArray.fn', function() {

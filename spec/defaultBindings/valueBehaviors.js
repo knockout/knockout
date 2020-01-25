@@ -360,6 +360,11 @@ describe('Binding: Value', function() {
             observable("");
             expect(testNode.childNodes[0].selectedIndex).toEqual(0);
 
+            // Also check that the selection doesn't change later (see https://github.com/knockout/knockout/issues/2218)
+            waits(10);
+            runs(function() {
+                expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            });
         });
 
         it('Should display the caption when the model value changes to undefined, null, or \"\" when options specified directly', function() {
@@ -528,6 +533,93 @@ describe('Binding: Value', function() {
             expect(observable()).not.toBeUndefined();       // The spec doesn't specify which of the two possible values is actually set
         });
 
+        it('Should update model value and selection when options change', function() {
+            var observable = ko.observable("D");
+            var options = ko.observableArray(["A", "B"]);
+            testNode.innerHTML = "<select data-bind='options:myOptions, value:myObservable'></select>";
+            ko.applyBindings({ myObservable: observable, myOptions: options }, testNode);
+
+            // Observable is updated to match default selection (first option)
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("A");
+
+            // Replace with new options; observable is updated to match
+            options(["B", "C"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("B");
+
+            // Update with options that move the selection
+            options(["A", "B"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(observable()).toEqual("B");
+
+            // Update back to options that remove the selection (default selected)
+            options(["E", "F"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("E");
+        });
+
+        it('Should update model value and selection when changing observable option value', function() {
+            var selected = ko.observable('B');
+            var people = [
+                { name: ko.observable('Annie'), id: ko.observable('A') },
+                { name: ko.observable('Bert'), id: ko.observable('B') }
+            ];
+            testNode.innerHTML = "<select data-bind=\"options:people, optionsText:'name', optionsValue:'id', value:selected\"></select>";
+
+            ko.applyBindings({people: people, selected: selected}, testNode);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Bert"]);
+            expect(selected()).toEqual("B");
+
+            // Changing an option name shouldn't change selection
+            people[1].name("Charles");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Charles"]);
+            expect(selected()).toEqual("B");
+
+            // Changing the selected option value should reset selection
+            people[1].id("C");
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(selected()).toEqual("A");
+        });
+
+        it('Should update model value and selection when contents change', function() {
+            var observable = ko.observable("D");
+            var options = ko.observableArray(["A", "B"]);
+            testNode.innerHTML = "<select data-bind='value:myObservable, foreach: myOptions'><option data-bind='value: $data, text: $data'></option></select>";
+            ko.applyBindings({ myObservable: observable, myOptions: options }, testNode);
+
+            // Observable is updated to match default selection (first option)
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("A");
+
+            // Replace with new options; observable is updated to match
+            options(["B", "C"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("B");
+
+            // Update with options that move the selection
+            options(["A", "B"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(observable()).toEqual("B");
+
+            // Update back to options that remove the selection (default selected)
+            options(["E", "F"]);
+            expect(testNode.childNodes[0].selectedIndex).toEqual(0);
+            expect(observable()).toEqual("E");
+        });
+
+        it('Should set selection initially after contents are bound', function() {
+            var observable = ko.observable("B");
+            var options = ko.observableArray(["A", "B"]);
+            testNode.innerHTML = "<select data-bind='value:myObservable'><!--ko foreach: myOptions--><option data-bind='value: $data, text: $data'></option><!--/ko--></select>";
+            ko.applyBindings({ myObservable: observable, myOptions: options }, testNode);
+
+            expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+            expect(observable()).toEqual("B");
+        });
+
         describe('Using valueAllowUnset option', function () {
             it('Should display the caption when the model value changes to undefined, null, or \"\" when using \'options\' binding', function() {
                 var observable = ko.observable('B');
@@ -564,6 +656,17 @@ describe('Binding: Value', function() {
 
                 select.selectedIndex = 2;
                 observable("");
+                expect(select.selectedIndex).toEqual(0);
+            });
+
+            it('Should display the caption when the model value changes to undefined after having no selection', function() {
+                var observable = ko.observable('B');
+                testNode.innerHTML = "<select data-bind='options:[\"A\", \"B\"], optionsCaption:\"Select...\", value:myObservable, valueAllowUnset:true'></select>";
+                ko.applyBindings({ myObservable: observable }, testNode);
+                var select = testNode.childNodes[0];
+
+                select.selectedIndex = -1;
+                observable(undefined);
                 expect(select.selectedIndex).toEqual(0);
             });
 
@@ -640,6 +743,32 @@ describe('Binding: Value', function() {
                 people[0].name("Amelia");
                 expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
                 expect(selected()).toEqual("B");
+            });
+
+            it('Should maintain model value and update selection when contents change', function() {
+                var observable = ko.observable("D");
+                var options = ko.observableArray(["A", "B"]);
+                testNode.innerHTML = "<select data-bind='value:myObservable, valueAllowUnset:true, foreach: myOptions'><option data-bind='value: $data, text: $data'></option></select>";
+                ko.applyBindings({ myObservable: observable, myOptions: options }, testNode);
+
+                // Initially nothing is selected because the value isn't in the options list
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
+
+                // Replace with new options that still don't contain the value
+                options(["B", "C"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
+
+                // Now update with options that do contain the value
+                options(["C", "D"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(1);
+                expect(observable()).toEqual("D");
+
+                // Update back to options that don't contain the value
+                options(["E", "F"]);
+                expect(testNode.childNodes[0].selectedIndex).toEqual(-1);
+                expect(observable()).toEqual("D");
             });
 
             it('Should select no options if model value is null and option value is 0', function() {

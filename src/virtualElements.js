@@ -24,12 +24,19 @@
         return (node.nodeType == 8) && endCommentRegex.test(commentNodesHaveTextProperty ? node.text : node.nodeValue);
     }
 
+    function isUnmatchedEndComment(node) {
+        return isEndComment(node) && !(ko.utils.domData.get(node, matchedEndCommentDataKey));
+    }
+
+    var matchedEndCommentDataKey = "__ko_matchedEndComment__"
+
     function getVirtualChildren(startComment, allowUnbalanced) {
         var currentNode = startComment;
         var depth = 1;
         var children = [];
         while (currentNode = currentNode.nextSibling) {
             if (isEndComment(currentNode)) {
+                ko.utils.domData.set(currentNode, matchedEndCommentDataKey, true);
                 depth--;
                 if (depth === 0)
                     return children;
@@ -106,46 +113,69 @@
         },
 
         prepend: function(containerNode, nodeToPrepend) {
-            if (!isStartComment(containerNode)) {
-                if (containerNode.firstChild)
-                    containerNode.insertBefore(nodeToPrepend, containerNode.firstChild);
-                else
-                    containerNode.appendChild(nodeToPrepend);
-            } else {
+            var insertBeforeNode;
+
+            if (isStartComment(containerNode)) {
                 // Start comments must always have a parent and at least one following sibling (the end comment)
-                containerNode.parentNode.insertBefore(nodeToPrepend, containerNode.nextSibling);
+                insertBeforeNode = containerNode.nextSibling;
+                containerNode = containerNode.parentNode;
+            } else {
+                insertBeforeNode = containerNode.firstChild;
+            }
+
+            if (!insertBeforeNode) {
+                containerNode.appendChild(nodeToPrepend);
+            } else if (nodeToPrepend !== insertBeforeNode) {       // IE will sometimes crash if you try to insert a node before itself
+                containerNode.insertBefore(nodeToPrepend, insertBeforeNode);
             }
         },
 
         insertAfter: function(containerNode, nodeToInsert, insertAfterNode) {
             if (!insertAfterNode) {
                 ko.virtualElements.prepend(containerNode, nodeToInsert);
-            } else if (!isStartComment(containerNode)) {
-                // Insert after insertion point
-                if (insertAfterNode.nextSibling)
-                    containerNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
-                else
-                    containerNode.appendChild(nodeToInsert);
             } else {
                 // Children of start comments must always have a parent and at least one following sibling (the end comment)
-                containerNode.parentNode.insertBefore(nodeToInsert, insertAfterNode.nextSibling);
+                var insertBeforeNode = insertAfterNode.nextSibling;
+
+                if (isStartComment(containerNode)) {
+                    containerNode = containerNode.parentNode;
+                }
+
+                if (!insertBeforeNode) {
+                    containerNode.appendChild(nodeToInsert);
+                } else if (nodeToInsert !== insertBeforeNode) {       // IE will sometimes crash if you try to insert a node before itself
+                    containerNode.insertBefore(nodeToInsert, insertBeforeNode);
+                }
             }
         },
 
         firstChild: function(node) {
-            if (!isStartComment(node))
+            if (!isStartComment(node)) {
+                if (node.firstChild && isEndComment(node.firstChild)) {
+                    throw new Error("Found invalid end comment, as the first child of " + node);
+                }
                 return node.firstChild;
-            if (!node.nextSibling || isEndComment(node.nextSibling))
+            } else if (!node.nextSibling || isEndComment(node.nextSibling)) {
                 return null;
-            return node.nextSibling;
+            } else {
+                return node.nextSibling;
+            }
         },
 
         nextSibling: function(node) {
-            if (isStartComment(node))
+            if (isStartComment(node)) {
                 node = getMatchingEndComment(node);
-            if (node.nextSibling && isEndComment(node.nextSibling))
-                return null;
-            return node.nextSibling;
+            }
+
+            if (node.nextSibling && isEndComment(node.nextSibling)) {
+                if (isUnmatchedEndComment(node.nextSibling)) {
+                    throw Error("Found end comment without a matching opening comment, as child of " + node);
+                } else {
+                    return null;
+                }
+            } else {
+                return node.nextSibling;
+            }
         },
 
         hasBindingValue: isStartComment,

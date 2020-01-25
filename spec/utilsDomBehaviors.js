@@ -99,7 +99,7 @@ describe('cloneNodes', function () {
 
     it ('should return clones', function() {
         var newNodes = ko.utils.cloneNodes([testNode]);
-        var isClone = !testNode.isSameNode(newNodes[0]) && testNode.isEqualNode(newNodes[0]);
+        var isClone = testNode.isSameNode ? !testNode.isSameNode(newNodes[0]) && testNode.isEqualNode(newNodes[0]) : testNode !== newNodes[0];
         expect(isClone).toBe(true);
     });
 
@@ -108,9 +108,9 @@ describe('cloneNodes', function () {
         testNode.appendChild(child);
 
         var newNodes = ko.utils.cloneNodes([testNode]);
-        var newChild = newNodes[0].children[0];
+        var newChild = newNodes[0].childNodes[0];
 
-        var childIsClone = !child.isSameNode(newChild) && child.isEqualNode(newChild);
+        var childIsClone = child.isSameNode ? !child.isSameNode(newChild) && child.isEqualNode(newChild) : child !== newChild;
 
         expect(childIsClone).toBe(true);
     });

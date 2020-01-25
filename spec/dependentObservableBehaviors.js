@@ -145,11 +145,11 @@ describe('Dependent Observable', function() {
 
     it('Should automatically update value when a dependency changes', function () {
         var observable = new ko.observable(1);
-        var depedentObservable = ko.computed(function () { return observable() + 1; });
-        expect(depedentObservable()).toEqual(2);
+        var dependentObservable = ko.computed(function () { return observable() + 1; });
+        expect(dependentObservable()).toEqual(2);
 
         observable(50);
-        expect(depedentObservable()).toEqual(51);
+        expect(dependentObservable()).toEqual(51);
     });
 
     it('Should be able to use \'peek\' on an observable to avoid a dependency', function() {
@@ -177,12 +177,12 @@ describe('Dependent Observable', function() {
         var observableB = new ko.observable("B");
         var observableToUse = "A";
         var timesEvaluated = 0;
-        var depedentObservable = ko.computed(function () {
+        var dependentObservable = ko.computed(function () {
             timesEvaluated++;
             return observableToUse == "A" ? observableA() : observableB();
         });
 
-        expect(depedentObservable()).toEqual("A");
+        expect(dependentObservable()).toEqual("A");
         expect(timesEvaluated).toEqual(1);
 
         // Changing an unrelated observable doesn't trigger evaluation
@@ -192,7 +192,7 @@ describe('Dependent Observable', function() {
         // Switch to other observable
         observableToUse = "B";
         observableA("A2");
-        expect(depedentObservable()).toEqual("B2");
+        expect(dependentObservable()).toEqual("B2");
         expect(timesEvaluated).toEqual(2);
 
         // Now changing the first observable doesn't trigger evaluation
@@ -203,8 +203,8 @@ describe('Dependent Observable', function() {
     it('Should notify subscribers of changes', function () {
         var notifiedValue;
         var observable = new ko.observable(1);
-        var depedentObservable = ko.computed(function () { return observable() + 1; });
-        depedentObservable.subscribe(function (value) { notifiedValue = value; });
+        var dependentObservable = ko.computed(function () { return observable() + 1; });
+        dependentObservable.subscribe(function (value) { notifiedValue = value; });
 
         expect(notifiedValue).toEqual(undefined);
         observable(2);
@@ -227,20 +227,20 @@ describe('Dependent Observable', function() {
     it('Should notify "beforeChange" subscribers before changes', function () {
         var notifiedValue;
         var observable = new ko.observable(1);
-        var depedentObservable = ko.computed(function () { return observable() + 1; });
-        depedentObservable.subscribe(function (value) { notifiedValue = value; }, null, "beforeChange");
+        var dependentObservable = ko.computed(function () { return observable() + 1; });
+        dependentObservable.subscribe(function (value) { notifiedValue = value; }, null, "beforeChange");
 
         expect(notifiedValue).toEqual(undefined);
         observable(2);
         expect(notifiedValue).toEqual(2);
-        expect(depedentObservable()).toEqual(3);
+        expect(dependentObservable()).toEqual(3);
     });
 
     it('Should only update once when each dependency changes, even if evaluation calls the dependency multiple times', function () {
         var notifiedValues = [];
         var observable = new ko.observable();
-        var depedentObservable = ko.computed(function () { return observable() * observable(); });
-        depedentObservable.subscribe(function (value) { notifiedValues.push(value); });
+        var dependentObservable = ko.computed(function () { return observable() * observable(); });
+        dependentObservable.subscribe(function (value) { notifiedValues.push(value); });
         observable(2);
         expect(notifiedValues.length).toEqual(1);
         expect(notifiedValues[0]).toEqual(4);
@@ -288,12 +288,14 @@ describe('Dependent Observable', function() {
         );
         expect(timesEvaluated).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([ underlyingObservable ]);
         expect(computed.isActive()).toEqual(true);
 
         timeToDispose = true;
         underlyingObservable(101);
         expect(timesEvaluated).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
         expect(computed.isActive()).toEqual(false);
     });
 
@@ -351,13 +353,26 @@ describe('Dependent Observable', function() {
     it('Should describe itself as inactive if subsequent runs of the evaluator result in there being no dependencies', function() {
         var someObservable = ko.observable('initial'),
             shouldHaveDependency = true,
-            computed = ko.computed(function () { return shouldHaveDependency && someObservable(); });
+            computed = ko.computed(function () { shouldHaveDependency && someObservable(); });
         expect(computed.isActive()).toEqual(true);
 
         // Trigger a refresh
         shouldHaveDependency = false;
         someObservable('modified');
         expect(computed.isActive()).toEqual(false);
+    });
+
+    it('Should be inactive if it depends on an inactive computed', function() {
+        var someObservable = ko.observable('initial'),
+            shouldHaveDependency = true,
+            computed1 = ko.computed(function () { shouldHaveDependency && someObservable(); }),
+            computed2 = ko.computed(computed1);
+        expect(computed2.isActive()).toEqual(true);
+
+        // Trigger a refresh
+        shouldHaveDependency = false;
+        someObservable('modified');
+        expect(computed2.isActive()).toEqual(false);
     });
 
     it('Should advertise that instances *can* have values written to them if you supply a "write" callback', function() {
@@ -387,12 +402,14 @@ describe('Dependent Observable', function() {
 
         // initially computed has no dependencies since it has not been evaluated
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
 
         // Now subscribe to computed
         computed.subscribe(result);
 
         // The dependency should now be tracked
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([ data ]);
 
         // But the subscription should not have sent down the initial value
         expect(result()).toEqual(undefined);
@@ -442,6 +459,7 @@ describe('Dependent Observable', function() {
 
         // initially there is only one dependency
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
 
         // create a change subscription that also accesses an observable
         computed.subscribe(function() { observableIndependent() });
@@ -449,11 +467,13 @@ describe('Dependent Observable', function() {
         observableDependent(1);
         // there should still only be one dependency
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
 
         // also test with a beforeChange subscription
         computed.subscribe(function() { observableIndependent() }, null, 'beforeChange');
         observableDependent(2);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
     });
 
     it('Should not subscribe to observables accessed through change notifications of a modified observable', function() {
@@ -465,6 +485,7 @@ describe('Dependent Observable', function() {
 
         // initially there is only one dependency
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
 
         // create a change subscription that also accesses an observable
         observableModified.subscribe(function() { observableIndependent() });
@@ -472,11 +493,13 @@ describe('Dependent Observable', function() {
         observableDependent(1);
         // there should still only be one dependency
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
 
         // also test with a beforeChange subscription
         observableModified.subscribe(function() { observableIndependent() }, null, 'beforeChange');
         observableDependent(2);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableDependent]);
     });
 
     it('Should be able to re-evaluate a computed that previously threw an exception', function() {
@@ -489,7 +512,7 @@ describe('Dependent Observable', function() {
                 }
             });
 
-        // Initially the computed evaluated sucessfully
+        // Initially the computed evaluated successfully
         expect(computed()).toEqual(1);
 
         expect(function () {
@@ -501,6 +524,7 @@ describe('Dependent Observable', function() {
         expect(computed()).toEqual(1);
         // The computed should not be dependent on the second observable
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([observableSwitch]);
 
         // Updating the second observable shouldn't re-evaluate computed
         observableValue(2);
@@ -602,6 +626,7 @@ describe('Dependent Observable', function() {
         expect(evaluateCount).toEqual(1);
         expect(computed()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
     });
 
     it('Should not evaluate (or add dependencies) after it has been disposed if created with "deferEvaluation"', function () {
@@ -622,6 +647,7 @@ describe('Dependent Observable', function() {
         expect(evaluateCount).toEqual(0);
         expect(computed()).toEqual(undefined);
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
     });
 
     it('Should not add dependencies if disposed during evaluation', function () {
@@ -642,6 +668,7 @@ describe('Dependent Observable', function() {
         expect(evaluateCount).toEqual(1);
         expect(computed()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(2);
+        expect(computed.getDependencies()).toEqual([observableToTriggerDisposal, observableGivingValue]);
         expect(observableGivingValue.getSubscriptionsCount()).toEqual(1);
 
         // Now cause a disposal during evaluation
@@ -649,6 +676,7 @@ describe('Dependent Observable', function() {
         expect(evaluateCount).toEqual(2);
         expect(computed()).toEqual(2);
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
         expect(observableGivingValue.getSubscriptionsCount()).toEqual(0);
     });
 
@@ -699,26 +727,33 @@ describe('Dependent Observable', function() {
                     ++evaluationCount;
                     // no dependencies at first
                     expect(ko.computedContext.getDependenciesCount()).toEqual(0);
+                    expect(ko.computedContext.getDependencies()).toEqual([]);
                     // add a single dependency
                     observable1();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(1);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1]);
                     // add a second one
                     observable2();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1, observable2]);
                     // accessing observable again doesn't affect count
                     observable1();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1, observable2]);
                 });
 
             expect(evaluationCount).toEqual(1);     // single evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+            expect(computed.getDependencies()).toEqual([observable1, observable2]);
 
             observable1(2);
             expect(evaluationCount).toEqual(2);     // second evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+            expect(computed.getDependencies()).toEqual([observable1, observable2]);
 
             // value outside of computed is undefined
             expect(ko.computedContext.getDependenciesCount()).toBeUndefined();
+            expect(ko.computedContext.getDependencies()).toBeUndefined();
         });
     });
 });

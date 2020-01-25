@@ -1,7 +1,7 @@
 describe('Binding: Foreach', function() {
     beforeEach(jasmine.prepareTestNode);
 
-    it('Should remove descendant nodes from the document (and not bind them) if the value is falsey', function() {
+    it('Should remove descendant nodes from the document (and not bind them) if the value is falsy', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItem'><span data-bind='text: someItem.nonExistentChildProp'></span></div>";
         expect(testNode.childNodes[0].childNodes.length).toEqual(1);
         ko.applyBindings({ someItem: null }, testNode);
@@ -23,6 +23,13 @@ describe('Binding: Foreach', function() {
         ];
         ko.applyBindings({ someItems: someItems }, testNode);
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: childprop">first child</span><span data-bind="text: childprop">second child</span>');
+    });
+
+    it('Should reject bindings where no template content is specified', function () {
+        testNode.innerHTML = "<div data-bind='foreach: [1, 2, 3]'></div>";
+        expect(function () {
+            ko.applyBindings({}, testNode);
+        }).toThrowContaining("no template content");
     });
 
     it('Should clean away any data values attached to the original template nodes before use', function() {
@@ -54,7 +61,7 @@ describe('Binding: Foreach', function() {
 
 
     it('Should add and remove nodes to match changes in the bound array', function() {
-        testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: childProp'></span></div>";
+        testNode.innerHTML = "<div data-bind='foreach: { data: someItems, includeDestroyed: false }'><span data-bind='text: childProp'></span></div>";
         var someItems = ko.observableArray([
             { childProp: 'first child' },
             { childProp: 'second child' }
@@ -149,8 +156,8 @@ describe('Binding: Foreach', function() {
         var afterAddCallbackData = [], beforeRemoveCallbackData = [];
         ko.applyBindings({
             someItems: someItems,
-            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
-            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
+            myAfterAdd: function(elem, index, value) { afterAddCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) },
+            myBeforeRemove: function(elem, index, value) { beforeRemoveCallbackData.push({ elem: elem, index: index, value: value, currentParentClone: elem.parentNode.cloneNode(true) }) }
         }, testNode);
 
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span>');
@@ -160,6 +167,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[1]);
+        expect(afterAddCallbackData[0].index).toEqual(0);
         expect(afterAddCallbackData[0].value).toEqual("added child");
         expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
 
@@ -167,6 +175,7 @@ describe('Binding: Foreach', function() {
         someItems.shift();
         expect(beforeRemoveCallbackData.length).toEqual(1);
         expect(beforeRemoveCallbackData[0].elem).toContainText("first child");
+        expect(beforeRemoveCallbackData[0].index).toEqual(0);
         expect(beforeRemoveCallbackData[0].value).toEqual("first child");
         // Note that when using "beforeRemove", we *don't* remove the node from the doc - it's up to the beforeRemove callback to do it. So, check it's still there.
         expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
@@ -177,6 +186,7 @@ describe('Binding: Foreach', function() {
         someItems.shift();
         expect(beforeRemoveCallbackData.length).toEqual(1);
         expect(beforeRemoveCallbackData[0].elem).toContainText("added child");
+        expect(beforeRemoveCallbackData[0].index).toEqual(0);
         expect(beforeRemoveCallbackData[0].value).toEqual("added child");
         // Neither item has yet been removed and both are still in their original locations
         expect(beforeRemoveCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
@@ -189,6 +199,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[0]);
+        expect(afterAddCallbackData[0].index).toEqual(0);
         expect(afterAddCallbackData[0].value).toEqual("added child");
         expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">added child</span>');
     });
@@ -261,7 +272,7 @@ describe('Binding: Foreach', function() {
         var someItems = ko.observableArray([ 'A', 'B', 'C' ]),
             callback = function(element, index, data) { if (data === 'D') throw "Exception"; };
 
-        ko.applyBindings({someItems: someItems, callback: callback });
+        ko.applyBindings({someItems: someItems, callback: callback }, testNode);
         expect(testNode.childNodes[0]).toContainText('ABC');
 
         expect(function() { someItems.push('D'); }).toThrow("Exception");
@@ -540,7 +551,7 @@ describe('Binding: Foreach', function() {
 
     it('Should be able to give an alias to $data using \"as\", and use it within a nested loop', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<span data-bind='foreach: sub'>"
+                           +    "<span data-bind='foreach: item.sub'>"
                            +        "<span data-bind='text: item.name+\":\"+$data'></span>,"
                            +    "</span>"
                            + "</div>";
@@ -551,7 +562,7 @@ describe('Binding: Foreach', function() {
 
     it('Should be able to set up multiple nested levels of aliases using \"as\"', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'>"
-                           +    "<span data-bind='foreach: { data: sub, as: \"subvalue\" }'>"
+                           +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\" }'>"
                            +        "<span data-bind='text: item.name+\":\"+subvalue'></span>,"
                            +    "</span>"
                            + "</div>";
@@ -600,7 +611,7 @@ describe('Binding: Foreach', function() {
         }
     });
 
-    it('Should provide access to observable array items through $rawData', function() {
+    it('Should provide access to observable items through $rawData', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><input data-bind='value: $rawData'/></div>";
         var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -620,7 +631,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toHaveValues(['third']);
     });
 
-    it('Should not re-render the nodes when a observable array item changes', function() {
+    it('Should not re-render the nodes when an observable item changes', function() {
         testNode.innerHTML = "<div data-bind='foreach: someItems'><span data-bind='text: $data'></span></div>";
         var x = ko.observable('first'), someItems = [ x ];
         ko.applyBindings({ someItems: someItems }, testNode);
@@ -675,6 +686,253 @@ describe('Binding: Foreach', function() {
         // After the delay, the deleted item's node is removed
         jasmine.Clock.tick(1);
         expect(testNode).toContainText('--Mercury++--Venus++--Earth++--Mars++--Jupiter++--Saturn++');
+    });
 
+    it('Should properly handle a combination of adds, deletes, and moves with a beforeRemove callback', function() {
+        testNode.innerHTML = "<div data-bind='foreach: {data: planets, beforeRemove: beforeRemove}'><span data-bind='text: $data'></span></div>";
+        var planets = ko.observableArray([ 'M', 'N' ]),
+            beforeRemove = function(elem) { ko.removeNode(elem); };
+
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove }, testNode);
+        expect(testNode).toContainText('MN');
+
+        planets([ 'K', 'L', 'M' ]);
+        expect(testNode).toContainText('KLM');
+
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+    });
+
+    it('Should call a beforeMove callback immediately after a move and not after beforeRemove itemss are actually removed', function() {
+        testNode.innerHTML = "<div data-bind='foreach: {data: planets, beforeRemove: beforeRemove, beforeMove: beforeMove}'><span data-bind='text: $data'></span></div>";
+        var planets = ko.observableArray([ 'K', 'L', 'M' ]),
+            beforeRemove = function(elem) { ko.removeNode(elem); },
+            beforeMoveItems = [],
+            beforeMove = function(elem, i, item) { beforeMoveItems.push(item); };
+
+        ko.applyBindings({ planets: planets, beforeRemove: beforeRemove, beforeMove: beforeMove }, testNode);
+        expect(testNode).toContainText('KLM');
+
+        beforeMoveItems = [];
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+        expect(beforeMoveItems).toEqual([ 'K' ]);
+
+        beforeMoveItems = [];
+        planets([ 'H', 'I', 'J', 'K' ]);
+        expect(testNode).toContainText('HIJK');
+        expect(beforeMoveItems).toEqual([]);
+    });
+
+    it('Should not update a binding that was just initialized', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        testNode.innerHTML = '<div data-bind="if: items().length"><div data-bind="foreach: items"><div data-bind="text: $data"></div></div></div><div data-bind="foreach: items"><b></b></div>';
+
+        var vm = {
+            items: ko.observableArray([]),
+        };
+        ko.applyBindings(vm, testNode);
+        expect(testNode).toContainText("");
+
+        vm.items(["item"]);
+        expect(testNode).toContainText("item");
+    });
+
+    if ("activeElement" in document) {
+        it('Should maintain focus on focused element even when it\'s moved', function() {
+            testNode.innerHTML = "<div data-bind='foreach: sortedItems'><input type='text' data-bind='value: name'></div>";
+            var items = ko.observableArray([
+                { name: ko.observable("Zeta") },
+                { name: ko.observable("Drake") },
+                { name: ko.observable("Alpha") },
+                { name: ko.observable("Dreadful") },
+                { name: ko.observable("Rotten") }
+            ]);
+            var sortedItems = ko.pureComputed(function () {
+                return items.sorted(function(a, b) {
+                    a = a.name().toLowerCase();
+                    b = b.name().toLowerCase();
+                    return (a < b) ? -1 : (a > b) ? 1 : 0;
+                });
+            });
+            ko.applyBindings({ sortedItems: sortedItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['Alpha', 'Drake', 'Dreadful', 'Rotten', 'Zeta']);
+            testNode.childNodes[0].childNodes[0].focus();
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[0]);  // Alpha
+
+            // When the focused element moves down (to the middle)
+            sortedItems()[0].name("Fish");
+            expect(testNode.childNodes[0]).toHaveValues(['Drake', 'Dreadful', 'Fish', 'Rotten', 'Zeta']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[2]);
+
+            // When the focused element moves up (because another element moves down)
+            sortedItems()[3].name("Element");
+            expect(testNode.childNodes[0]).toHaveValues(['Drake', 'Dreadful', 'Element', 'Fish', 'Zeta']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[3]);
+
+            // When the focused element moves up (to the top)
+            testNode.childNodes[0].childNodes[4].focus();
+            sortedItems()[4].name("Beta");
+            expect(testNode.childNodes[0]).toHaveValues(['Beta', 'Drake', 'Dreadful', 'Element', 'Fish']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[0]);
+
+            // When the focused element moves down (to the bottom)
+            testNode.childNodes[0].childNodes[1].focus();
+            sortedItems()[1].name("King");
+            expect(testNode.childNodes[0]).toHaveValues(['Beta', 'Dreadful', 'Element', 'Fish', 'King']);
+            expect(document.activeElement).toBe(testNode.childNodes[0].childNodes[4]);
+        });
+    }
+
+    describe('With "noChildContext = true" and "as"', function () {
+        it('Should not create a child context', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><span data-bind='text: item'></span></div>";
+            var someItems = ['alpha', 'beta'];
+            ko.applyBindings({ someItems: someItems }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('alpha');
+            expect(testNode.childNodes[0].childNodes[1]).toContainText('beta');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(ko.dataFor(testNode));
+        });
+
+        it('Should provide access to observable items', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><input data-bind='value: item'/></div>";
+            var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['first', 'second']);
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(ko.dataFor(testNode));
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(ko.dataFor(testNode));
+
+            // Should update observable when input is changed
+            testNode.childNodes[0].childNodes[0].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(x()).toEqual('third');
+
+            // Should update the input when the observable changes
+            y('fourth');
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'fourth']);
+
+            // Should update the inputs when the array changes
+            someItems([x]);
+            expect(testNode.childNodes[0]).toHaveValues(['third']);
+        });
+
+        it('Should not re-render the nodes when an observable item changes', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'><span data-bind='text: item'></span></div>";
+            var x = ko.observable('first'), someItems = [ x ];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            x('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
+
+        it('Should call an afterRender callback function with the array item', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true, afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            var someItems = ko.observableArray(['Alpha', 'Beta']),
+                callbackReceivedArrayValues = [];
+            ko.applyBindings({
+                someItems: someItems,
+                callback: function(nodes, arrayValue) {
+                    callbackReceivedArrayValues.push(arrayValue);
+                }
+            }, testNode);
+
+            expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+            expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+        });
+
+        it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
+        });
+    });
+
+    describe('With "noChildContext = false" and "as"', function () {
+        it('Should create a child context', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><span data-bind='text: item'></span></div>";
+            var someItems = ['alpha', 'beta'];
+            ko.applyBindings({ someItems: someItems }, testNode);
+
+            expect(testNode.childNodes[0].childNodes[0]).toContainText('alpha');
+            expect(testNode.childNodes[0].childNodes[1]).toContainText('beta');
+
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[0])).toEqual(someItems[0]);
+            expect(ko.dataFor(testNode.childNodes[0].childNodes[1])).toEqual(someItems[1]);
+        });
+
+        it('Should unwrap observable items', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><input data-bind='value: item'/><input data-bind='value: $rawData'/></div>";
+            var x = ko.observable('first'), y = ko.observable('second'), someItems = ko.observableArray([ x, y ]);
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toHaveValues(['first', 'first', 'second', 'second']);
+
+            // Should not update observable when input bound to named item is changed
+            testNode.childNodes[0].childNodes[0].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "change");
+            expect(x()).toEqual('first');
+
+            // Should update observable when input bound to $rawData is changed
+            testNode.childNodes[0].childNodes[1].value = 'third';
+            ko.utils.triggerEvent(testNode.childNodes[0].childNodes[1], "change");
+            expect(x()).toEqual('third');
+
+            // Should update the input when the observable changes
+            y('fourth');
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'third', 'fourth', 'fourth']);
+
+            // Should update the inputs when the array changes
+            someItems([x]);
+            expect(testNode.childNodes[0]).toHaveValues(['third', 'third']);
+        });
+
+        it('Should not re-render the nodes when an observable item changes', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'><span data-bind='text: item'></span></div>";
+            var x = ko.observable('first'), someItems = [ x ];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('first');
+
+            var saveNode = testNode.childNodes[0].childNodes[0];
+            x('second');
+            expect(testNode.childNodes[0]).toContainText('second');
+            expect(testNode.childNodes[0].childNodes[0]).toEqual(saveNode);
+        });
+
+        it('Should call an afterRender callback function with the array item', function () {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false, afterRender: callback }'>[<span data-bind='text: item'></span>]</div>";
+            var someItems = ko.observableArray(['Alpha', 'Beta']),
+                callbackReceivedArrayValues = [];
+            ko.applyBindings({
+                someItems: someItems,
+                callback: function(nodes, arrayValue) {
+                    callbackReceivedArrayValues.push(arrayValue);
+                }
+            }, testNode);
+
+            expect(testNode.childNodes[0]).toContainText('[Alpha][Beta]');
+            expect(callbackReceivedArrayValues).toEqual(['Alpha', 'Beta']);
+        });
+
+        it('Should provide itemIndex observable in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: false }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: false }'>"
+                               +        "<span data-bind='text: itemIndex()+item.name+\":\"+subvalueIndex()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
+        });
     });
 });

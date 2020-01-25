@@ -84,6 +84,32 @@ describe('Observable Array change tracking', function() {
         });
     });
 
+    it('Converts a non array to an array', function() {
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observable('hello').extend({'trackArrayChanges':true}),
+                changelist1;
+
+            myArray.subscribe(function(changes) { changelist1 = changes; }, null, 'arrayChange');
+            myArray(1);
+
+            // See that, not only did it invoke compareArrays only once, but the
+            // return values from getChanges are the same array instances
+            expect(callLog.length).toBe(1);
+            expect(changelist1).toEqual([
+                { status: 'added', value: 1, index: 0 },
+                { status: 'deleted', value: 'hello', index: 0 }
+            ]);
+
+            // Objects get converted to Array
+            myArray({a: 1});
+            expect(callLog.length).toBe(2);
+            expect(changelist1).toEqual([
+                { status: 'added', value: {a: 1}, index: 0 },
+                { status: 'deleted', value: 1, index: 0 }
+            ]);
+        });
+    });
+
     it('Skips the diff algorithm when the array mutation is a known operation', function() {
         captureCompareArraysCalls(function(callLog) {
             var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
@@ -347,7 +373,7 @@ describe('Observable Array change tracking', function() {
         };
         var list = ko.observableArray([]);
 
-        // This adds all descendent nodes to the list when a node is added
+        // This adds all descendant nodes to the list when a node is added
         list.subscribe(function (events) {
             events = events.slice(0);
             for (var i = 0; i < events.length; i++) {
@@ -362,7 +388,7 @@ describe('Observable Array change tracking', function() {
 
         // Add the top-level node
         list.push(toAdd);
-        // See that descendent nodes are also added
+        // See that descendant nodes are also added
         expect(list()).toEqual([ toAdd, toAdd.nodes[0], toAdd.nodes[1], toAdd.nodes[2], toAdd.nodes[0].nodes[0] ]);
     });
 
@@ -388,6 +414,155 @@ describe('Observable Array change tracking', function() {
         myArray.extend({ trackArrayChanges: { dontLimitMoves: true } });
         myArray(array1);
         expect(changelist[changelist.length-1]).toEqual({ status: 'added', value: 'T', index: 19, moved: 4 });
+    });
+
+    it('Should cancel or update change list if observable is updated during change notification', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray([]),
+                changelists = [];
+
+            myArray.subscribe(function (value) {
+                if (value && value.length) {
+                    myArray([]);
+                }
+            });
+
+            myArray.subscribe(function(changes) { changelists.push(changes); }, null, 'arrayChange');
+
+            myArray(['Alpha']);
+            expect(callLog.length).toBe(1);
+            expect(changelists).toEqual([]);
+        });
+    });
+
+    it('Should only report changes that occur after subscribing even if subscribed during change notification', function() {
+        // See https://github.com/knockout/knockout/issues/2439
+        captureCompareArraysCalls(function(callLog) {
+            var myArray = ko.observableArray([]),
+                changelists1 = [],
+                changelists2 = [],
+                sub2;
+
+            myArray.subscribe(function (value) {
+                if (!sub2 && value && value.length) {
+                    sub2 = myArray.subscribe(function(changes) { changelists2.push(changes); }, null, 'arrayChange');
+                }
+            });
+
+            myArray.subscribe(function(changes) { changelists1.push(changes); }, null, 'arrayChange');
+
+            myArray(['Alpha']);
+            expect(callLog.length).toBe(1);
+            expect(changelists1).toEqual([
+                [
+                    { status: 'added', value: 'Alpha', index: 0 }
+                ]
+            ]);
+            expect(changelists2).toEqual([]);
+
+            changelists1 = [];
+            myArray(['Alpha', 'Beta']);
+            expect(callLog.length).toBe(2);
+            expect(changelists1).toEqual([
+                [
+                    { status: 'added', value: 'Beta', index: 1 }
+                ]
+            ]);
+            expect(changelists2).toEqual(changelists1);
+        });
+    });
+
+    describe('With deferred updates', function () {
+        beforeEach(function() {
+            jasmine.Clock.useMockForTasks();
+
+            this.restoreAfter(ko.options, 'deferUpdates');
+            ko.options.deferUpdates = true;
+        });
+
+        afterEach(function() {
+            expect(ko.tasks.resetForTesting()).toEqual(0);
+            jasmine.Clock.reset();
+        });
+
+        it('Supplies changelists to subscribers', function() {
+            var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
+                changelist;
+
+            myArray.subscribe(function(changes) {
+                changelist = changes;
+            }, null, 'arrayChange');
+
+            myArray.push('Delta');
+            jasmine.Clock.tick(1);
+            expect(changelist).toEqual([
+                { status: 'added', value: 'Delta', index: 3 }
+            ]);
+        });
+
+        it('Should support tracking of a computed observable using extender', function() {
+            var myArray = ko.observable(['Alpha', 'Beta', 'Gamma']),
+                myComputed = ko.computed(function() {
+                    return myArray().slice(-2);
+                }).extend({trackArrayChanges:true}),
+                changelist;
+
+            expect(myComputed()).toEqual(['Beta', 'Gamma']);
+
+            var arrayChange = myComputed.subscribe(function(changes) {
+                changelist = changes;
+            }, null, 'arrayChange');
+
+            myArray(['Alpha', 'Beta', 'Gamma', 'Delta']);
+            jasmine.Clock.tick(1);
+            expect(myComputed()).toEqual(['Gamma', 'Delta']);
+            expect(changelist).toEqual([
+                { status : 'deleted', value : 'Beta', index : 0 },
+                { status : 'added', value : 'Delta', index : 1 }
+            ]);
+
+            // Should clean up all subscriptions when arrayChange subscription is disposed
+            arrayChange.dispose();
+            expect(myComputed.getSubscriptionsCount()).toBe(0);
+        });
+
+        it('Skips the diff algorithm when the array mutation is a known operation, but calls compareArrays for multiple operations', function() {
+            captureCompareArraysCalls(function(callLog) {
+                var myArray = ko.observableArray(['Alpha', 'Beta', 'Gamma']),
+                    changelist;
+
+                myArray.subscribe(function(changes) {
+                    changelist = changes;
+                }, null, 'arrayChange');
+
+                // single operation
+                myArray.push('Delta');
+                jasmine.Clock.tick(1);
+                expect(changelist).toEqual([
+                    { status: 'added', value: 'Delta', index: 3 }
+                ]);
+                expect(callLog.length).toBe(0);
+
+                // multiple operations
+                myArray.push('Epsilon');
+                myArray.push('Zeta');
+                jasmine.Clock.tick(1);
+                expect(changelist).toEqual([
+                    { status: 'added', value: 'Epsilon', index: 4 },
+                    { status: 'added', value: 'Zeta', index: 5 }
+                ]);
+                expect(callLog.length).toBe(1);
+
+                // multiple operations that cancel out
+                changelist = undefined;
+                myArray.push('Eta');
+                myArray.pop();
+                jasmine.Clock.tick(1);
+                expect(changelist).toBeUndefined();
+                expect(callLog.length).toBe(2);
+            });
+        });
     });
 
 

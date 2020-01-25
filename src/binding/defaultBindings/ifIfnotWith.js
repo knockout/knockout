@@ -1,34 +1,71 @@
+(function () {
+
 // Makes a binding like with or if
-function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
+function makeWithIfBinding(bindingKey, isWith, isNot) {
     ko.bindingHandlers[bindingKey] = {
         'init': function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-            var didDisplayOnLastUpdate,
-                savedNodes;
+            var didDisplayOnLastUpdate, savedNodes, contextOptions = {}, completeOnRender, needAsyncContext, renderOnEveryChange;
+
+            if (isWith) {
+                var as = allBindings.get('as'), noChildContext = allBindings.get('noChildContext');
+                renderOnEveryChange = !(as && noChildContext);
+                contextOptions = { 'as': as, 'noChildContext': noChildContext, 'exportDependencies': renderOnEveryChange };
+            }
+
+            completeOnRender = allBindings.get("completeOn") == "render";
+            needAsyncContext = completeOnRender || allBindings['has'](ko.bindingEvent.descendantsComplete);
+
             ko.computed(function() {
-                var rawValue = valueAccessor(),
-                    dataValue = ko.utils.unwrapObservable(rawValue),
-                    shouldDisplay = isWith ? dataValue != null : !isNot !== !dataValue, // equivalent to isNot ? !dataValue : !!dataValue
-                    isFirstRender = !savedNodes,
-                    needsRefresh = isFirstRender || isWith || (shouldDisplay !== didDisplayOnLastUpdate);
+                var value = ko.utils.unwrapObservable(valueAccessor()),
+                    shouldDisplay = isWith ? value != null : !isNot !== !value, // equivalent to isNot ? !value : !!value
+                    isInitial = !savedNodes,
+                    childContext;
 
-                if (needsRefresh) {
-                    // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
-                    if (isFirstRender && ko.computedContext.getDependenciesCount()) {
-                        savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
-                    }
-
-                    if (shouldDisplay) {
-                        if (!isFirstRender) {
-                            ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
-                        }
-                        ko.applyBindingsToDescendants(makeContextCallback ? makeContextCallback(bindingContext, rawValue) : bindingContext, element);
-                    } else {
-                        ko.virtualElements.emptyNode(element);
-                    }
-
-                    didDisplayOnLastUpdate = shouldDisplay;
+                if (!renderOnEveryChange && shouldDisplay === didDisplayOnLastUpdate) {
+                    return;
                 }
+
+                if (needAsyncContext) {
+                    bindingContext = ko.bindingEvent.startPossiblyAsyncContentBinding(element, bindingContext);
+                }
+
+                if (shouldDisplay) {
+                    if (!isWith || renderOnEveryChange) {
+                        contextOptions['dataDependency'] = ko.computedContext.computed();
+                    }
+
+                    if (isWith) {
+                        childContext = bindingContext['createChildContext'](typeof value == "function" ? value : valueAccessor, contextOptions);
+                    } else if (ko.computedContext.getDependenciesCount()) {
+                        childContext = bindingContext['extend'](null, contextOptions);
+                    } else {
+                        childContext = bindingContext;
+                    }
+                }
+
+                // Save a copy of the inner nodes on the initial update, but only if we have dependencies.
+                if (isInitial && ko.computedContext.getDependenciesCount()) {
+                    savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true /* shouldCleanNodes */);
+                }
+
+                if (shouldDisplay) {
+                    if (!isInitial) {
+                        ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(savedNodes));
+                    }
+
+                    ko.applyBindingsToDescendants(childContext, element);
+                } else {
+                    ko.virtualElements.emptyNode(element);
+
+                    if (!completeOnRender) {
+                        ko.bindingEvent.notify(element, ko.bindingEvent.childrenComplete);
+                    }
+                }
+
+                didDisplayOnLastUpdate = shouldDisplay;
+
             }, null, { disposeWhenNodeIsRemoved: element });
+
             return { 'controlsDescendantBindings': true };
         }
     };
@@ -39,8 +76,6 @@ function makeWithIfBinding(bindingKey, isWith, isNot, makeContextCallback) {
 // Construct the actual binding handlers
 makeWithIfBinding('if');
 makeWithIfBinding('ifnot', false /* isWith */, true /* isNot */);
-makeWithIfBinding('with', true /* isWith */, false /* isNot */,
-    function(bindingContext, dataValue) {
-        return bindingContext.createStaticChildContext(dataValue);
-    }
-);
+makeWithIfBinding('with', true /* isWith */);
+
+})();

@@ -118,11 +118,12 @@ describe('Pure Computed', function() {
         // Accessing the computed evaluates it
         expect(computed()).toEqual('A');
 
-        // No subscription is registered on the depenedent observable
+        // No subscription is registered on the dependent observable
         expect(data.getSubscriptionsCount()).toEqual(0);
 
         // getDependenciesCount returns the correct number
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([data]);
     });
 
     it('Should not evaluate after it has been disposed', function () {
@@ -151,6 +152,7 @@ describe('Pure Computed', function() {
         computed.subscribe(function (value) { notifiedValues.push(value); });
         expect(data.getSubscriptionsCount()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([data]);
 
         // The subscription should not have sent down the initial value
         expect(notifiedValues).toEqual([]);
@@ -160,19 +162,21 @@ describe('Pure Computed', function() {
         expect(notifiedValues).toEqual(['B']);
     });
 
-    it('Should go back to sleep when all subcriptions are disposed', function() {
+    it('Should go back to sleep when all subscriptions are disposed', function() {
         var data = ko.observable('A'),
             computed = ko.pureComputed(data),
             subscription = computed.subscribe(function () {});
 
         expect(data.getSubscriptionsCount()).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([data]);
 
         // Dispose the subscription to the computed
         subscription.dispose();
         // It goes to sleep, disposing its subscription to the observable
         expect(data.getSubscriptionsCount()).toEqual(0);
         expect(computed.getDependenciesCount()).toEqual(1);     // dependency count of computed doesn't change
+        expect(computed.getDependencies()).toEqual([data]);
     });
 
     it('Should fire "awake" and "asleep" events when changing state', function() {
@@ -213,6 +217,7 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(1);
+        expect(computed.getDependencies()).toEqual([data]);
 
         // Subscribing to the computed adds a subscription to the dependency without re-evaluating
         subscription = computed.subscribe(subscribeFunc);
@@ -344,12 +349,14 @@ describe('Pure Computed', function() {
         expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(1);
         expect(computed.getDependenciesCount()).toEqual(2);
+        expect(computed.getDependencies()).toEqual([observableToTriggerDisposal, observableGivingValue]);
 
         // Now cause a disposal during evaluation
         observableToTriggerDisposal(true);
         expect(computed()).toEqual('A');
         expect(timesEvaluated).toEqual(2);
         expect(computed.getDependenciesCount()).toEqual(0);
+        expect(computed.getDependencies()).toEqual([]);
     });
 
     it('Should reevaluate if dependency was changed during awakening, but not otherwise', function() {
@@ -373,6 +380,23 @@ describe('Pure Computed', function() {
         subscription = isEven.subscribe(function() {});
         expect(pureComputed()).toEqual(false);
         expect(timesEvaluated).toEqual(2);
+    });
+
+    it('Should wake with the correct value when a chained pure computed has side effects for its awake event', function () {
+        var observableToUpdateOnAwake = ko.observable(null),
+            computed1 = ko.pureComputed(observableToUpdateOnAwake),
+            computed2 = ko.pureComputed(computed1);
+
+        computed1.subscribe(function () {
+            observableToUpdateOnAwake('foo');
+        }, null, 'awake');
+
+        // Reading from the computed before subscribing caused the subscription to
+        // ignore side-effects from the awake callback of chained pure computeds
+        computed2();
+
+        computed2.subscribe(function () {});
+        expect(computed2()).toEqual('foo');
     });
 
     describe('Should maintain order of subscriptions', function () {
@@ -453,25 +477,31 @@ describe('Pure Computed', function() {
                 computed = ko.pureComputed(function() {
                     // no dependencies at first
                     expect(ko.computedContext.getDependenciesCount()).toEqual(0);
+                    expect(ko.computedContext.getDependencies()).toEqual([]);
                     // add a single dependency
                     observable1();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(1);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1]);
                     // add a second one
                     observable2();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1, observable2]);
                     // accessing observable again doesn't affect count
                     observable1();
                     expect(ko.computedContext.getDependenciesCount()).toEqual(2);
+                    expect(ko.computedContext.getDependencies()).toEqual([observable1, observable2]);
 
                     return ++evaluationCount;
                 });
 
             expect(computed()).toEqual(1);     // single evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+            expect(computed.getDependencies()).toEqual([observable1, observable2]);
 
             observable1(2);
             expect(computed()).toEqual(2);     // second evaluation
             expect(computed.getDependenciesCount()).toEqual(2); // matches value from context
+            expect(computed.getDependencies()).toEqual([observable1, observable2]);
         });
     });
 });

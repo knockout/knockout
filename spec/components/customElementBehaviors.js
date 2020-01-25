@@ -179,28 +179,33 @@ describe('Components: Custom elements', function() {
             bindings.push(bindingKey);
         };
 
-        ko.components.register('test-component', {});
+        ko.components.register('test-component', {template: 'Ignored'});
         testNode.innerHTML = '<test-component params="value: value"></test-component>';
         ko.applyBindings({value: 123}, testNode);
 
+        jasmine.Clock.tick(1);
         // The only binding it should look up is "component"
         expect(bindings).toEqual(['component']);
     });
 
     it('Should update component when observable view model changes', function() {
         ko.components.register('test-component', {
-            template: '<p>the value: <span data-bind="text: textToShow"></span></p>'
+            template: '<p>the component value: <span data-bind="text: textToShow"></span>, the root value: <span data-bind="text: $root.value"></span></p>'
         });
 
         testNode.innerHTML = '<test-component params="textToShow: value"></test-component>';
         var vm = ko.observable({ value: 'A' });
         ko.applyBindings(vm, testNode);
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText("the value: A");
+        expect(testNode).toContainText("the component value: A, the root value: A");
 
         vm({ value: 'Z' });
+        // The view-model change updates the old component contents before the new contents get rendered.
+        // This is the way it has always worked, but maybe this isn't the best experience
+        expect(testNode).toContainText("the component value: A, the root value: Z");
+
         jasmine.Clock.tick(1);
-        expect(testNode).toContainText("the value: Z");
+        expect(testNode).toContainText("the component value: Z, the root value: Z");
     });
 
     it('Is possible to pass observable instances', function() {
@@ -507,5 +512,26 @@ describe('Components: Custom elements', function() {
           +     '<em data-bind="text: name">roquefort</em> has quality <em data-bind="text: quality">3</em>'
           + '</li>'
         );
+    });
+
+    it('Should call a childrenComplete callback function', function () {
+        ko.components.register('test-component', { template: 'custom element'});
+        testNode.innerHTML = '<test-component data-bind="childrenComplete: callback"></test-component>';
+
+        var callbacks = 0,
+            viewModel = {
+                callback: function (nodes, data) {
+                    expect(nodes.length).toEqual(1);
+                    expect(nodes[0]).toEqual(testNode.childNodes[0].childNodes[0]);
+                    expect(data).toEqual(undefined);
+                    callbacks++;
+                }
+            };
+        ko.applyBindings(viewModel, testNode);
+        expect(callbacks).toEqual(0);
+
+        jasmine.Clock.tick(1);
+        expect(callbacks).toEqual(1);
+        expect(testNode).toContainHtml('<test-component data-bind="childrencomplete: callback">custom element</test-component>');
     });
 });

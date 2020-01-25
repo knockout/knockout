@@ -133,4 +133,79 @@ describe('Binding: Selected Options', function() {
         expect(selectElem.scrollTop).toBe(previousScrollTop);
         expect(selectElem).toHaveSelectedValues(['000050', '0000100']);
     });
+
+    it('Should update model value and selection when options change', function() {
+        var selection = new ko.observableArray(["B"]);
+        var options = ko.observableArray(["A", "B"]);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='options:myOptions, selectedOptions:mySelection'></select>";
+
+        ko.applyBindings({ mySelection: selection, myOptions: options }, testNode);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Update with options that move the selection
+        options(["B", "C"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Replace with new options; observable is updated
+        options(["C", "D"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
+        expect(selection()).toEqual([]);
+    });
+
+    it('Should update model value and selection when changing observable option value', function() {
+        var selection = new ko.observableArray(["B"]);
+        var people = [
+            { name: ko.observable('Annie'), id: ko.observable('A') },
+            { name: ko.observable('Bert'), id: ko.observable('B') }
+        ];
+        testNode.innerHTML = "<select multiple='multiple' data-bind=\"options:people, optionsText:'name', optionsValue:'id', selectedOptions:mySelection\"></select>";
+
+        ko.applyBindings({people: people, mySelection: selection}, testNode);
+        expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Bert"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Changing an option name shouldn't change selection
+        people[1].name("Charles");
+        expect(testNode.childNodes[0]).toHaveTexts(["Annie", "Charles"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Changing the selected option value should reset selection
+        people[1].id("C");
+        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
+        expect(selection()).toEqual([]);
+    });
+
+    it('Should update model value and selection when contents change', function() {
+        var selection = new ko.observableArray(["B"]);
+        var options = ko.observableArray(["A", "B"]);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection, foreach: myOptions'><option data-bind='value: $data, text: $data'></option></select>";
+
+        ko.applyBindings({ mySelection: selection, myOptions: options }, testNode);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Update with options that move the selection
+        options(["B", "C"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+
+        // Replace with new options; observable is updated
+        options(["C", "D"]);
+        expect(testNode.childNodes[0]).toHaveSelectedValues([]);
+        expect(selection()).toEqual([]);
+    });
+
+    it('Should set selection initially after contents are bound', function() {
+        var selection = new ko.observableArray(["B"]);
+        var options = ko.observableArray(["A", "B"]);
+        testNode.innerHTML = "<select multiple='multiple' data-bind='selectedOptions:mySelection'><!--ko foreach: myOptions--><option data-bind='value: $data, text: $data'></option><!--/ko--></select>";
+
+        ko.applyBindings({ mySelection: selection, myOptions: options }, testNode);
+        expect(testNode.childNodes[0]).toHaveSelectedValues(["B"]);
+        expect(selection()).toEqual(["B"]);
+    });
 });

@@ -35,6 +35,9 @@ ko.bindingHandlers['hasfocus'] = {
         ko.utils.registerEventHandler(element, "focusin", handleElementFocusIn); // For IE
         ko.utils.registerEventHandler(element, "blur",  handleElementFocusOut);
         ko.utils.registerEventHandler(element, "focusout",  handleElementFocusOut); // For IE
+
+        // Assume element is not focused (prevents "blur" being called initially)
+        element[hasfocusLastValue] = false;
     },
     'update': function(element, valueAccessor) {
         var value = !!ko.utils.unwrapObservable(valueAccessor());
@@ -57,4 +60,4 @@ ko.bindingHandlers['hasfocus'] = {
 ko.expressionRewriting.twoWayBindings['hasfocus'] = true;
 
 ko.bindingHandlers['hasFocus'] = ko.bindingHandlers['hasfocus']; // Make "hasFocus" an alias
-ko.expressionRewriting.twoWayBindings['hasFocus'] = true;
+ko.expressionRewriting.twoWayBindings['hasFocus'] = 'hasfocus';

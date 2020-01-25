@@ -2,10 +2,11 @@
   "name": "knockout",
   "description": "Knockout makes it easier to create rich, responsive UIs with JavaScript",
   "homepage": "http://knockoutjs.com/",
-  "version": "3.5.0-pre",
+  "version": "3.5.1-pre",
   "license": "MIT",
   "author": "The Knockout.js team",
-  "main": "build/output/knockout-latest.debug.js",
+  "main": "build/output/knockout-latest.js",
+  "types": "build/types/knockout.d.ts",
   "scripts": {
     "prepublish": "grunt",
     "test": "node spec/runner.node.js"

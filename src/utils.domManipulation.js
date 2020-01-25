@@ -52,7 +52,7 @@
             if (mayRequireCreateElementHack) {
                 // The document.createElement('my-element') trick to enable custom elements in IE6-8
                 // only works if we assign innerHTML on an element associated with that document.
-                documentContext.appendChild(div);
+                documentContext.body.appendChild(div);
             }
 
             div.innerHTML = markup;
@@ -98,6 +98,11 @@
         return jQueryInstance ?
             jQueryHtmlParse(html, documentContext) :   // As below, benefit from jQuery's optimisations where possible
             simpleHtmlParse(html, documentContext);  // ... otherwise, this simple logic will do in most common cases.
+    };
+
+    ko.utils.parseHtmlForTemplateNodes = function(html, documentContext) {
+        var nodes = ko.utils.parseHtmlFragment(html, documentContext);
+        return (nodes.length && nodes[0].parentElement) || ko.utils.moveCleanedNodesToContainerElement(nodes);
     };
 
     ko.utils.setHtml = function(node, html) {

@@ -67,23 +67,77 @@ describe('DOM node disposal', function() {
         expect(grandChildSpy).not.toHaveBeenCalled();
     });
 
-    it('Should throw an error if a cleaned node is removed in a handler', function() {
-        // Test by removing the node itself
-        var childNode = document.createElement("DIV");
-        testNode.appendChild(childNode);
-        ko.utils.domNodeDisposal.addDisposeCallback(childNode, function() {
-            testNode.removeChild(childNode);
-        });
-        expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
+    it('Should not clean nodes that are removed by a comment dispose handler', function() {
+        var childNode = document.createComment("ko comment");
+        var grandChildNode = document.createElement("DIV");
+        var childNode2 = document.createComment("ko comment");
+        var childSpy = jasmine.createSpy('childSpy')
+            .andCallFake(function() {
+                testNode.removeChild(grandChildNode);
+            });
+        var grandChildSpy = jasmine.createSpy('grandChildSpy');
+        var child2Spy = jasmine.createSpy('child2Spy');
 
-        // Test by removing a previous node
+        testNode.appendChild(childNode);
+        testNode.appendChild(grandChildNode);
+        testNode.appendChild(childNode2);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, childSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(grandChildNode, grandChildSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, child2Spy);
+
+        ko.cleanNode(testNode);
+        expect(childSpy).toHaveBeenCalledWith(childNode);
+        expect(grandChildSpy).not.toHaveBeenCalled();
+        expect(child2Spy).toHaveBeenCalledWith(childNode2);
+    });
+
+    it('Should continue cleaning if a cleaned node is removed in a handler', function() {
+        var childNode = document.createElement("DIV");
         var childNode2 = document.createElement("DIV");
+        var removeChildSpy = jasmine.createSpy('removeChildSpy')
+            .andCallFake(function() {
+                testNode.removeChild(childNode);
+            });
+        var childSpy = jasmine.createSpy('childSpy');
+
+        // Test by removing the node itself
         testNode.appendChild(childNode);
         testNode.appendChild(childNode2);
-        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, function() {
-            testNode.removeChild(childNode);
-        });
-        expect(function() { ko.cleanNode(testNode); }).toThrowContaining("cleaned node was removed");
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, removeChildSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, childSpy);
+
+        ko.cleanNode(testNode);
+        expect(removeChildSpy).toHaveBeenCalledWith(childNode);
+        expect(childSpy).toHaveBeenCalledWith(childNode2);
+
+        removeChildSpy.reset();
+        childSpy.reset();
+
+        // Test by removing a previous node
+        var childNode3 = document.createElement("DIV");
+        testNode.appendChild(childNode);
+        testNode.appendChild(childNode2);
+        testNode.appendChild(childNode3);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, removeChildSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode3, childSpy);
+
+        ko.cleanNode(testNode);
+        expect(removeChildSpy).toHaveBeenCalledWith(childNode2);
+        expect(childSpy).toHaveBeenCalledWith(childNode3);
+
+        removeChildSpy.reset();
+        childSpy.reset();
+
+        // Test by removing a comment node
+        var childNode = document.createComment("ko comment");
+        testNode.appendChild(childNode);
+        testNode.appendChild(childNode2);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode, removeChildSpy);
+        ko.utils.domNodeDisposal.addDisposeCallback(childNode2, childSpy);
+
+        ko.cleanNode(testNode);
+        expect(removeChildSpy).toHaveBeenCalledWith(childNode);
+        expect(childSpy).toHaveBeenCalledWith(childNode2);
     });
 
     it('Should be able to attach disposal callback to a node that has been cloned', function() {

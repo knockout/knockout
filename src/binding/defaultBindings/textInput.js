@@ -9,9 +9,10 @@ if (window && window.navigator) {
 
     // Detect various browser versions because some old versions don't fully support the 'input' event
     var userAgent = window.navigator.userAgent,
-        operaVersion, chromeVersion, safariVersion, firefoxVersion, ieVersion;
+        operaVersion, chromeVersion, safariVersion, firefoxVersion, ieVersion, edgeVersion;
 
     (operaVersion = window.opera && window.opera.version && parseInt(window.opera.version()))
+        || (edgeVersion = parseVersion(userAgent.match(/Edge\/([^ ]+)$/)))
         || (chromeVersion = parseVersion(userAgent.match(/Chrome\/([^ ]+)/)))
         || (safariVersion = parseVersion(userAgent.match(/Version\/([^ ]+) Safari/)))
         || (firefoxVersion = parseVersion(userAgent.match(/Firefox\/([^ ]+)/)))
@@ -79,7 +80,8 @@ ko.bindingHandlers['textInput'] = {
 
         // IE9 will mess up the DOM if you handle events synchronously which results in DOM changes (such as other bindings);
         // so we'll make sure all updates are asynchronous
-        var ieUpdateModel = ko.utils.ieVersion == 9 ? deferUpdateModel : updateModel;
+        var ieUpdateModel = ko.utils.ieVersion == 9 ? deferUpdateModel : updateModel,
+            ourUpdate = false;
 
         var updateView = function () {
             var modelValue = ko.utils.unwrapObservable(valueAccessor());
@@ -96,8 +98,10 @@ ko.bindingHandlers['textInput'] = {
             // Update the element only if the element and model are different. On some browsers, updating the value
             // will move the cursor to the end of the input, which would be bad while the user is typing.
             if (element.value !== modelValue) {
-                previousElementValue = modelValue;  // Make sure we ignore events (propertychange) that result from updating the value
+                ourUpdate = true;  // Make sure we ignore events (propertychange) that result from updating the value
                 element.value = modelValue;
+                ourUpdate = false;
+                previousElementValue = element.value; // In case the browser changes the value (see #2281)
             }
         };
 
@@ -125,7 +129,7 @@ ko.bindingHandlers['textInput'] = {
                 // but that's an acceptable compromise for this binding. IE 9 and 10 support 'input', but since they don't always
                 // fire it when using autocomplete, we'll use 'propertychange' for them also.
                 onEvent('propertychange', function(event) {
-                    if (event.propertyName === 'value') {
+                    if (!ourUpdate && event.propertyName === 'value') {
                         ieUpdateModel(event);
                     }
                 });
@@ -170,6 +174,10 @@ ko.bindingHandlers['textInput'] = {
                 // Firefox <=3.5 doesn't fire the 'input' event when text is dropped into the input.
                 onEvent('dragdrop', updateModel);       // <3.5
                 onEvent('drop', updateModel);           // 3.5
+            } else if (edgeVersion && element.type === "number") {
+                // Microsoft Edge doesn't fire 'input' or 'change' events for number inputs when
+                // the value is changed via the up / down arrow keys
+                onEvent('keydown', deferUpdateModel);
             }
         }
 

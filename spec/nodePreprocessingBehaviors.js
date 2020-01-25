@@ -9,7 +9,7 @@ describe('Node preprocessing', function() {
         ko.bindingProvider.instance = new preprocessingBindingProvider();
     });
 
-    it('Can leave the nodes unchanged by returning a falsey value', function() {
+    it('Can leave the nodes unchanged by returning a falsy value', function() {
         ko.bindingProvider.instance.preprocessNode = function(node) { return null; };
         testNode.innerHTML = "<p data-bind='text: someValue'></p>";
         ko.applyBindings({ someValue: 'hello' }, testNode);
@@ -102,5 +102,43 @@ describe('Node preprocessing', function() {
         expect(testNode).toContainText('BetaBeta');
         items.push('Gamma');
         expect(testNode).toContainText('BetaBetaGammaGamma');
+    });
+
+    it('Should call a childrenComplete callback, passing all of the rendered nodes, accounting for node preprocessing and virtual element bindings', function () {
+        // Set up a binding provider that converts text nodes to expressions
+        ko.bindingProvider.instance.preprocessNode = function (node) {
+            if (node.nodeType === 3 && node.data.charAt(0) === "$") {
+                var newNodes = [
+                    document.createComment('ko text: ' + node.data),
+                    document.createComment('/ko')
+                ];
+                for (var i = 0; i < newNodes.length; i++) {
+                    node.parentNode.insertBefore(newNodes[i], node);
+                }
+                node.parentNode.removeChild(node);
+                return newNodes;
+            }
+        };
+
+        // Now perform bindings, and see that childrenComplete gets the output from the preprocessor and bindings
+        var callbacks = 0,
+            vm = {
+                childprop: 'child property',
+                callback: function (nodes, data) {
+                    expect(nodes.length).toBe(5);
+                    expect(nodes[0]).toContainText('[');    // <span>[</span>
+                    expect(nodes[1].nodeType).toBe(8);      // <!-- ko text: $data.childprop -->
+                    expect(nodes[2].nodeType).toBe(3);      // text node inserted by text binding
+                    expect(nodes[3].nodeType).toBe(8);      // <!-- /ko -->
+                    expect(nodes[4]).toContainText(']');    // <span>]</span>
+                    expect(data).toBe(vm);
+                    callbacks++;
+                }
+            };
+
+        testNode.innerHTML = "<div data-bind='childrenComplete: callback'><span>[</span>$data.childprop<span>]</span></div>";
+        ko.applyBindings(vm, testNode);
+        expect(testNode.childNodes[0]).toContainText('[child property]');
+        expect(callbacks).toBe(1);
     });
 });

@@ -50,13 +50,27 @@ describe('Native template engine', function() {
 
         it('can fetch template from <textarea> elements and data-bind on results', function () {
             var testTextAreaTemplate = ensureNodeExistsAndIsEmpty("testTextAreaTemplate", "textarea"),
-                prop = (typeof testTextAreaTemplate.innerText !== "undefined") ? "innerText" : "textContent";
+                prop = "value";
             testRenderTemplate(testTextAreaTemplate, "testTextAreaTemplate", prop);
         });
 
         it('can fetch template from <template> elements and data-bind on results', function () {
             var testTemplateTemplate = ensureNodeExistsAndIsEmpty("testTemplateTemplate", "template");
             testRenderTemplate(testTemplateTemplate, "testTemplateTemplate");
+        });
+
+        it('can data-bind to blank name', function () {
+            // See #2446; This has always worked even if it wasn't a "supported" scenario
+            testNode.innerHTML = "<div data-bind='template: { name: \"\" }'></div>"
+            ko.applyBindings({}, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("");
+        });
+
+        it('can data-bind to undefined name', function () {
+            // See #2446; This has always worked even if it wasn't a "supported" scenario
+            testNode.innerHTML = "<div data-bind='template: { name: undefined }'></div>"
+            ko.applyBindings({}, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("");
         });
     });
 
@@ -84,6 +98,17 @@ describe('Native template engine', function() {
             ko.applyBindings(viewModel, testNode);
 
             expect(testNode.childNodes[0]).toContainText("Value: abc");
+        });
+
+        it('with no content should be rejected', function () {
+            testNode.innerHTML = "<div data-bind='template: { data: someItem }'></div>"
+
+            var viewModel = {
+                someItem: { val: 'abc' }
+            };
+            expect(function () {
+                ko.applyBindings(viewModel, testNode);
+            }).toThrowContaining("no template content");
         });
 
         it('work in conjunction with foreach', function() {

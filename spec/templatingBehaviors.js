@@ -238,6 +238,28 @@ describe('Templating', function() {
         expect(testNode.childNodes[0].innerHTML).toEqual("result = 456");
     });
 
+    it('Should call a generic childrenComplete callback function', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\", data: someItem }, childrenComplete: callback'></div>";
+        var someItem = ko.observable({ childProp: 'child' }),
+            callbacks = 0;
+        ko.applyBindings({ someItem: someItem, callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(1);
+        expect(testNode.childNodes[0]).toContainText('result = child');
+
+        someItem({ childProp: "new child" });
+        expect(callbacks).toEqual(2);
+        expect(testNode.childNodes[0]).toContainText('result = new child');
+    });
+
+    it('Should not call a childrenComplete callback function if template is empty', function () {
+        ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"someTemplate\" }, childrenComplete: callback'></div>";
+        var callbacks = 0;
+        ko.applyBindings({ callback: function () { callbacks++; } }, testNode);
+        expect(callbacks).toEqual(0);
+    });
+
     it('Should stop tracking inner observables immediately when the container node is removed from the document', function() {
         var innerObservable = ko.observable("some value");
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp()]" }));
@@ -518,6 +540,36 @@ describe('Templating', function() {
         expect(testNode.childNodes[0]).toContainHtml("begin<span>the name is beta</span>end");
     });
 
+    it('Should accept a "nodes" option that gives the template nodes, and able to use the same nodes for multiple bindings', function () {
+        testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, data: testData1, bypassDomNodeWrap: true }'></div><div data-bind='template: { nodes: testNodes, data: testData2, bypassDomNodeWrap: true }'></div>";
+        var model = {
+            testNodes: [
+                document.createTextNode("begin"),
+                document.createElement("span"),
+                document.createTextNode("end")
+            ],
+            testData1: ko.observable({ name: ko.observable("alpha1") }),
+            testData2: ko.observable({ name: ko.observable("alpha2") })
+        };
+        model.testNodes[1].setAttribute("data-bind", "text: name"); // See that bindings are applied to the injected nodes
+
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0]).toContainText("beginalpha1end");
+        expect(testNode.childNodes[1]).toContainText("beginalpha2end");
+
+        // The injected bindings update to match model changes as usual
+        model.testData1().name("beta1");
+        model.testData2().name("beta2");
+        expect(testNode.childNodes[0]).toContainText("beginbeta1end");
+        expect(testNode.childNodes[1]).toContainText("beginbeta2end");
+
+        // The template binding re-renders successfully if model changes
+        model.testData1({ name: ko.observable("gamma1") });
+        model.testData2({ name: ko.observable("gamma2") });
+        expect(testNode.childNodes[0]).toContainText("begingamma1end");
+        expect(testNode.childNodes[1]).toContainText("begingamma2end");
+    });
+
     it('Should accept a "nodes" option that gives the template nodes, and it can be used in conjunction with "foreach"', function() {
         testNode.innerHTML = "<div data-bind='template: { nodes: testNodes, foreach: testData, bypassDomNodeWrap: true }'></div>";
 
@@ -771,10 +823,10 @@ describe('Templating', function() {
             expect(innerObservable.getSubscriptionsCount()).toEqual(0);
         });
 
-        it('Should omit any items whose \'_destroy\' flag is set (unwrapping the flag if it is observable)', function() {
+        it('Should omit any items whose \'_destroy\' flag is set (unwrapping the flag if it is observable) if includeDestroyed is false', function() {
             var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }, { someProp: 4, _destroy: ko.observable(false) }]);
             ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>someProp=[js: someProp]</div>" }));
-            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection, includeDestroyed: false }'></div>";
 
             ko.applyBindings({ myCollection: myArray }, testNode);
             expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=3</div><div>someprop=4</div>");
@@ -787,6 +839,18 @@ describe('Templating', function() {
 
             ko.applyBindings({ myCollection: myArray }, testNode);
             expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=2</div><div>someprop=3</div>");
+        });
+
+        it('Should omit any items whose \'_destroy\' flag is set if foreachHidesDestroyed is set', function() {
+            this.restoreAfter(ko.options, 'foreachHidesDestroyed');
+            ko.options.foreachHidesDestroyed = true;
+
+            var myArray = new ko.observableArray([{ someProp: 1 }, { someProp: 2, _destroy: 'evals to true' }, { someProp : 3 }, { someProp: 4, _destroy: false }]);
+            ko.setTemplateEngine(new dummyTemplateEngine({ itemTemplate: "<div>someProp=[js: someProp]</div>" }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"itemTemplate\", foreach: myCollection }'></div>";
+
+            ko.applyBindings({ myCollection: myArray }, testNode);
+            expect(testNode.childNodes[0]).toContainHtml("<div>someprop=1</div><div>someprop=3</div><div>someprop=4</div>");
         });
 
         it('Should be able to render a different template for each array entry by passing a function as template name, with the array entry\'s binding context available as a second parameter', function() {
@@ -947,15 +1011,6 @@ describe('Templating', function() {
         ko.applyBindings({ chosenEngine: alternativeTemplateEngine }, testNode);
 
         expect(testNode.childNodes[0]).toContainText("Alternative output");
-    });
-
-    it('Should be able to bind $data to an alias using \'as\'', function() {
-        ko.setTemplateEngine(new dummyTemplateEngine({
-            myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
-        }));
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\" }'></div>";
-        ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
-        expect(testNode.childNodes[0]).toContainText("ValueLiteral: Hello, ValueBound: Hello");
     });
 
     it('Data-bind syntax should expose parent binding context as $parent if binding with an explicit \"data\" value', function() {
@@ -1122,5 +1177,55 @@ describe('Templating', function() {
         expect(testDocFrag.childNodes.length).toEqual(1);
         expect(testDocFrag.childNodes[0].tagName).toEqual("P");
         expect(testDocFrag.childNodes[0]).toContainHtml("myval: 123");
+    });
+
+    describe('With "noChildContext = true" and "as"', function () {
+        it('Should bind viewmodel to an alias', function() {
+            ko.setTemplateEngine(new dummyTemplateEngine({
+                myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+            }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: true }'></div>";
+            ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
+            expect(testNode.childNodes[0]).toContainText("ValueLiteral: Hello, ValueBound: Hello");
+        });
+
+        it('Should call \'afterRender\' callback with the viewmodel', function () {
+            var passedDataItem;
+            var myCallback = function(elementsArray, dataItem) {
+                passedDataItem = dataItem;
+            }
+            var myModel = { prop: 'Hello' };
+            ko.setTemplateEngine(new dummyTemplateEngine({
+                myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+            }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: true, afterRender: callback }'></div>";
+            ko.applyBindings({ someItem: myModel, callback: myCallback }, testNode);
+            expect(passedDataItem).toEqual(myModel);
+        });
+    });
+
+    describe('With "noChildContext = false" and "as"', function () {
+        it('Should bind viewmodel to an alias', function() {
+            ko.setTemplateEngine(new dummyTemplateEngine({
+                myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+            }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: false }'></div>";
+            ko.applyBindings({ someItem: { prop: 'Hello' } }, testNode);
+            expect(testNode.childNodes[0]).toContainText("ValueLiteral: Hello, ValueBound: Hello");
+        });
+
+        it('Should call \'afterRender\' callback with the viewmodel', function () {
+            var passedDataItem;
+            var myCallback = function(elementsArray, dataItem) {
+                passedDataItem = dataItem;
+            }
+            var myModel = { prop: 'Hello' };
+            ko.setTemplateEngine(new dummyTemplateEngine({
+                myTemplate: "ValueLiteral: [js:item.prop], ValueBound: <span data-bind='text: item.prop'></span>"
+            }));
+            testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", data: someItem, as: \"item\", noChildContext: false, afterRender: callback }'></div>";
+            ko.applyBindings({ someItem: myModel, callback: myCallback }, testNode);
+            expect(passedDataItem).toEqual(myModel);
+        });
     });
 });

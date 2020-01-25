@@ -61,7 +61,7 @@ observableFn[protoProperty] = ko.observable;
 
 ko.isObservable = function (instance) {
     var proto = typeof instance == 'function' && instance[protoProperty];
-    if (proto && proto !== ko.observable && proto !== ko.computed) {
+    if (proto && proto !== observableFn[protoProperty] && proto !== ko.computed['fn'][protoProperty]) {
         throw Error("Invalid object that looks like an observable; possibly from another Knockout instance");
     }
     return !!proto;
@@ -69,8 +69,8 @@ ko.isObservable = function (instance) {
 
 ko.isWriteableObservable = function (instance) {
     return (typeof instance == 'function' && (
-        (instance[protoProperty] === ko.observable) ||  // Observable
-        (instance[protoProperty] === ko.computed && instance.hasWriteFunction)));   // Writable computed observable
+        (instance[protoProperty] === observableFn[protoProperty]) ||  // Observable
+        (instance[protoProperty] === ko.computed['fn'][protoProperty] && instance.hasWriteFunction)));   // Writable computed observable
 };
 
 ko.exportSymbol('observable', ko.observable);

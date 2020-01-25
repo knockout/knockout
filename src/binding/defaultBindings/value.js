@@ -1,5 +1,4 @@
 ko.bindingHandlers['value'] = {
-    'after': ['options', 'foreach'],
     'init': function (element, valueAccessor, allBindings) {
         var tagName = ko.utils.tagNameLower(element),
             isInputElement = tagName == "input";
@@ -10,17 +9,19 @@ ko.bindingHandlers['value'] = {
             return;
         }
 
-        // Always catch "change" event; possibly other events too if asked
-        var eventsToCatch = ["change"];
+        var eventsToCatch = [];
         var requestedEventsToCatch = allBindings.get("valueUpdate");
         var propertyChangedFired = false;
         var elementValueBeforeEvent = null;
 
         if (requestedEventsToCatch) {
-            if (typeof requestedEventsToCatch == "string") // Allow both individual event names, and arrays of event names
-                requestedEventsToCatch = [requestedEventsToCatch];
-            ko.utils.arrayPushAll(eventsToCatch, requestedEventsToCatch);
-            eventsToCatch = ko.utils.arrayGetDistinctValues(eventsToCatch);
+            // Allow both individual event names, and arrays of event names
+            if (typeof requestedEventsToCatch == "string") {
+                eventsToCatch = [requestedEventsToCatch];
+            } else {
+                eventsToCatch = ko.utils.arrayGetDistinctValues(requestedEventsToCatch);
+            }
+            ko.utils.arrayRemoveItem(eventsToCatch, "change");  // We'll subscribe to "change" events later
         }
 
         var valueUpdateHandler = function() {
@@ -78,7 +79,7 @@ ko.bindingHandlers['value'] = {
                 if (newValue === null || newValue === undefined || newValue === "") {
                     element.value = "";
                 } else {
-                    valueUpdateHandler();   // reset the model to match the element
+                    ko.dependencyDetection.ignore(valueUpdateHandler);  // reset the model to match the element
                 }
             }
         } else {
@@ -91,36 +92,43 @@ ko.bindingHandlers['value'] = {
                     return;
                 }
 
-                var valueHasChanged = (newValue !== elementValue);
+                var valueHasChanged = newValue !== elementValue;
 
-                if (valueHasChanged) {
+                if (valueHasChanged || elementValue === undefined) {
                     if (tagName === "select") {
                         var allowUnset = allBindings.get('valueAllowUnset');
-                        var applyValueAction = function () {
-                            ko.selectExtensions.writeValue(element, newValue, allowUnset);
-                            ko.expressionRewriting.writeValueToProperty(valueAccessor(), allBindings, 'value', newValue);
-                        };
 						ko.delaySync.run(function () {
-                            applyValueAction();
+                            ko.selectExtensions.writeValue(element, newValue, allowUnset);
+                            //ko.expressionRewriting.writeValueToProperty(valueAccessor(), allBindings, 'value', newValue); // TODO: is this needed?, it is done by the valueUpdateHandler
                             if (!allowUnset && newValue !== ko.selectExtensions.readValue(element)) {
                                 // If you try to set a model value that can't be represented in an already-populated dropdown, reject that change,
                                 // because you're not allowed to have a model value that disagrees with a visible UI selection.
-                                ko.dependencyDetection.ignore(ko.utils.triggerEvent, null, [element, "change"]);
-                            } else {
-                                // Workaround for IE6 bug: It won't reliably apply values to SELECT nodes during the same execution thread
-                                // right after you've changed the set of OPTION nodes on it. So for that node type, we'll schedule a second thread
-                                // to apply the value as well.
-                                ko.utils.setTimeout(applyValueAction, 0);
+                                ko.dependencyDetection.ignore(valueUpdateHandler);
                             }
                         });
-					} else {
+                    } else {
                         ko.selectExtensions.writeValue(element, newValue);
                     }
                 }
             };
         }
 
-        ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        if (tagName === "select") {
+            var updateFromModelComputed;
+            ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
+                if (!updateFromModelComputed) {
+                    ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
+                    updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+                } else if (allBindings.get('valueAllowUnset')) {
+                    updateFromModel();
+                } else {
+                    valueUpdateHandler();
+                }
+            }, null, { 'notifyImmediately': true });
+        } else {
+            ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
+            ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
+        }
     },
     'update': function() {} // Keep for backwards compatibility with code that may have wrapped value binding
 };

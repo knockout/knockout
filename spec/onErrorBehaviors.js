@@ -1,7 +1,7 @@
 describe('onError handler', function () {
     var koOnErrorCount = 0;
     var windowOnErrorCount = 0;
-    var windowOnErrorOrginal;
+    var windowOnErrorOriginal;
     var lastSeenError = null;
 
     beforeEach(function () {
@@ -28,7 +28,7 @@ describe('onError handler', function () {
         koOnErrorCount = 0;
         windowOnErrorCount = 0;
 
-        windowOnErrorOrginal = window.onerror;
+        windowOnErrorOriginal = window.onerror;
 
         window.onerror = function () {
             windowOnErrorCount++;
@@ -42,7 +42,7 @@ describe('onError handler', function () {
     });
 
     afterEach(function () {
-        window.onerror = windowOnErrorOrginal;
+        window.onerror = windowOnErrorOriginal;
         ko.onError = null;
         lastSeenError = null;
     });

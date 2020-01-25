@@ -106,8 +106,12 @@
 
         if (haveAddedNodesToParent) {
             activateBindingsOnContinuousNodeArray(renderedNodesArray, bindingContext);
-            if (options['afterRender'])
-                ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext['$data']]);
+            if (options['afterRender']) {
+                ko.dependencyDetection.ignore(options['afterRender'], null, [renderedNodesArray, bindingContext[options['as'] || '$data']]);
+            }
+            if (renderMode == "replaceChildren") {
+                ko.bindingEvent.notify(targetNodeOrNodeArray, ko.bindingEvent.childrenComplete);
+            }
         }
 
         return renderedNodesArray;
@@ -168,8 +172,7 @@
     ko.renderTemplateForEach = function (template, arrayOrObservableArray, options, targetNode, parentBindingContext) {
         // Since setDomNodeChildrenFromArrayMapping always calls executeTemplateForArrayItem and then
         // activateBindingsCallback for added items, we can store the binding context in the former to use in the latter.
-        var arrayItemContext;
-        var separatorElementsCount;
+        var arrayItemContext, separatorElementsCount, asName = options['as'];
 
         // This will be called by setDomNodeChildrenFromArrayMapping to get the nodes to add to targetNode
         var executeTemplateForArrayItem = function (arrayValue, index) {
@@ -179,7 +182,7 @@
             if (hierarchyRole) {
                 var indexPath = [index];
                 var hierarchyLevel = 0;
-                var alias = "$" + (options["as"] || "item");
+                var alias = "$" + (asName || "item");
                 var contextProperties = {};
 
                 if (hierarchyRole === "Child") {
@@ -194,8 +197,15 @@
 
                 arrayItemContext = parentBindingContext['extend'](contextProperties);
             } else {
-                arrayItemContext = parentBindingContext['createChildContext'](arrayValue, options['as'], function (context) {
-                    context['$index'] = index;
+                arrayItemContext = parentBindingContext['createChildContext'](arrayValue, {
+                    'as': asName,
+                    'noChildContext': options['noChildContext'],
+                    'extend': function(context) {
+                        context['$index'] = index;
+                        if (asName) {
+                            context[asName + "Index"] = index;
+                        }
+                    }
                 });
             }
 
@@ -232,21 +242,40 @@
             arrayItemContext = null;
         };
 
-        return ko.dependentObservable(function () {
-            var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
-            if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
-                unwrappedArray = [unwrappedArray];
-
-            // Filter out any entries marked as destroyed
-            var filteredArray = ko.utils.arrayFilter(unwrappedArray, function (item) {
-                return options['includeDestroyed'] || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
-            });
-
+        var setDomNodeChildrenFromArrayMapping = function (newArray, changeList) {
             // Call setDomNodeChildrenFromArrayMapping, ignoring any observables unwrapped within (most likely from a callback function).
             // If the array items are observables, though, they will be unwrapped in executeTemplateForArrayItem and managed within setDomNodeChildrenFromArrayMapping.
-            ko.dependencyDetection.ignore(ko.utils.setDomNodeChildrenFromArrayMapping, null, [targetNode, filteredArray, executeTemplateForArrayItem, options, activateBindingsCallback]);
+            ko.dependencyDetection.ignore(ko.utils.setDomNodeChildrenFromArrayMapping, null, [targetNode, newArray, executeTemplateForArrayItem, options, activateBindingsCallback, changeList]);
+            ko.bindingEvent.notify(targetNode, ko.bindingEvent.childrenComplete);
+        };
 
-        }, null, { disposeWhenNodeIsRemoved: targetNode });
+        var shouldHideDestroyed = (options['includeDestroyed'] === false) || (ko.options['foreachHidesDestroyed'] && !options['includeDestroyed']);
+
+        if (!shouldHideDestroyed && !options['beforeRemove'] && ko.isObservableArray(arrayOrObservableArray)) {
+            setDomNodeChildrenFromArrayMapping(arrayOrObservableArray.peek());
+
+            var subscription = arrayOrObservableArray.subscribe(function (changeList) {
+                setDomNodeChildrenFromArrayMapping(arrayOrObservableArray(), changeList);
+            }, null, "arrayChange");
+            subscription.disposeWhenNodeIsRemoved(targetNode);
+
+            return subscription;
+        } else {
+            return ko.dependentObservable(function () {
+                var unwrappedArray = ko.utils.unwrapObservable(arrayOrObservableArray) || [];
+                if (typeof unwrappedArray.length == "undefined") // Coerce single value into array
+                    unwrappedArray = [unwrappedArray];
+
+                if (shouldHideDestroyed) {
+                    // Filter out any entries marked as destroyed
+                    unwrappedArray = ko.utils.arrayFilter(unwrappedArray, function(item) {
+                        return item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
+                    });
+                }
+                setDomNodeChildrenFromArrayMapping(unwrappedArray);
+
+            }, null, { disposeWhenNodeIsRemoved: targetNode });
+        }
     };
 
     var templateComputedDomDataKey = ko.utils.domData.nextKey();
@@ -254,14 +283,15 @@
         var oldComputed = ko.utils.domData.get(element, templateComputedDomDataKey);
         if (oldComputed && (typeof (oldComputed.dispose) == 'function'))
             oldComputed.dispose();
-        ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && newComputed.isActive()) ? newComputed : undefined);
+        ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && (!newComputed.isActive || newComputed.isActive())) ? newComputed : undefined);
     }
 
+    var cleanContainerDomDataKey = ko.utils.domData.nextKey();
     ko.bindingHandlers['template'] = {
         'init': function (element, valueAccessor) {
             // Support anonymous templates
             var bindingValue = ko.utils.unwrapObservable(valueAccessor());
-            if (typeof bindingValue == "string" || bindingValue['name']) {
+            if (typeof bindingValue == "string" || 'name' in bindingValue) {
                 // It's a named template - clear the element
                 ko.virtualElements.emptyNode(element);
             } else if ('nodes' in bindingValue) {
@@ -273,13 +303,25 @@
                 if (ko.isObservable(nodes)) {
                     throw new Error('The "nodes" option must be a plain, non-observable array.');
                 }
-                var container = ko.utils.moveCleanedNodesToContainerElement(nodes); // This also removes the nodes from their current parent
+
+                // If the nodes are already attached to a KO-generated container, we reuse that container without moving the
+                // elements to a new one (we check only the first node, as the nodes are always moved together)
+                var container = nodes[0] && nodes[0].parentNode;
+                if (!container || !ko.utils.domData.get(container, cleanContainerDomDataKey)) {
+                    container = ko.utils.moveCleanedNodesToContainerElement(nodes);
+                    ko.utils.domData.set(container, cleanContainerDomDataKey, true);
+                }
+
                 new ko.templateSources.anonymousTemplate(element)['nodes'](container);
             } else {
                 // It's an anonymous template - store the element contents, then clear the element
-                var templateNodes = ko.virtualElements.childNodes(element),
-                    container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
-                new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                var templateNodes = ko.virtualElements.childNodes(element);
+                if (templateNodes.length > 0) {
+                    var container = ko.utils.moveCleanedNodesToContainerElement(templateNodes); // This also removes the nodes from their current parent
+                    new ko.templateSources.anonymousTemplate(element)['nodes'](container);
+                } else {
+                    throw new Error("Anonymous template defined, but no template content was provided");
+                }
             }
             return { 'controlsDescendantBindings': true };
         },
@@ -288,33 +330,43 @@
                 options = ko.utils.unwrapObservable(value),
                 shouldDisplay = true,
                 templateComputed = null,
-                templateName;
+                template;
 
             if (typeof options == "string") {
-                templateName = value;
+                template = value;
                 options = {};
             } else {
-                templateName = options['name'];
+                template = 'name' in options ? options['name'] : element;
 
                 // Support "if"/"ifnot" conditions
                 if ('if' in options)
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
+
+                // Don't show anything if an empty name is given (see #2446)
+                if (shouldDisplay && !template) {
+                    shouldDisplay = false;
+                }
             }
 
             if ('foreach' in options) {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && options['foreach']) || [];
-                templateComputed = ko.renderTemplateForEach(templateName || element, dataArray, options, element, bindingContext);
+                templateComputed = ko.renderTemplateForEach(template, dataArray, options, element, bindingContext);
             } else if (!shouldDisplay) {
                 ko.virtualElements.emptyNode(element);
             } else {
                 // Render once for this single data point (or use the viewModel if no data was provided)
-                var innerBindingContext = ('data' in options) ?
-                    bindingContext.createStaticChildContext(options['data'], options['as']) :  // Given an explitit 'data' value, we create a child binding context for it
-                    bindingContext;                                                        // Given no explicit 'data' value, we retain the same binding context
-                templateComputed = ko.renderTemplate(templateName || element, innerBindingContext, options, element);
+                var innerBindingContext = bindingContext;
+                if ('data' in options) {
+                    innerBindingContext = bindingContext['createChildContext'](options['data'], {
+                        'as': options['as'],
+                        'noChildContext': options['noChildContext'],
+                        'exportDependencies': true
+                    });
+                }
+                templateComputed = ko.renderTemplate(template, innerBindingContext, options, element);
             }
 
             // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
