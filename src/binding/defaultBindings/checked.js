@@ -49,7 +49,7 @@ ko.bindingHandlers['checked'] = {
                     // in the model array.
                     if (isChecked) {
                         ko.utils.addOrRemoveItem(writableValue, elemValue, true, checkedArrayContainsObservables);
-                        ko.utils.addOrRemoveItem(writableValue, oldElemValue, false, checkedArrayContainsObservables);
+                        ko.utils.addOrRemoveItem(writableValue, saveOldValue, false, checkedArrayContainsObservables);
                     }
                 } else {
                     // When we're responding to the user having checked/unchecked a checkbox,
