@@ -329,7 +329,9 @@ export const extenders: Extenders<any>;
 
 //#region subscribables/mappingHelpers.js
 
-export type Unwrapped<T> = T extends ko.Subscribable<infer R>
+export type Unwrapped<T> = T extends ko.ObservableArray<infer R>
+    ? Unwrapped<R>[]
+    : T extends ko.Subscribable<infer R>
     ? (
         R extends ko.Subscribable
         ? unknown 
