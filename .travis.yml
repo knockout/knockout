@@ -3,4 +3,3 @@ node_js:
   - "node"
 script:
   - npm run grunt
-  - npm test
