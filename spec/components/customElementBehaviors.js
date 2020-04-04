@@ -423,7 +423,7 @@ describe('Components: Custom elements', function() {
         // code has patched createDocumentFragment to enable preregistered components
         // to act as custom elements in that document fragment. If we wanted, we could
         // amend simpleHtmlParse to use a document fragment, but it seems unlikely that
-        // anyone targetting IE < 9 would not be using jQuery.
+        // anyone targeting IE < 9 would not be using jQuery.
 
         this.after(function() {
             ko.components.unregister('outer-component');
