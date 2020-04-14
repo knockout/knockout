@@ -125,4 +125,32 @@ describe('Binding: CSS classes', function() {
         stringProp(null);
         expect(testNode.childNodes[0].className).toEqual("unrelatedClass");
     });
+
+    it('Should set the classes of an element to those passed in an array of strings', function() {
+        // It is expected that directly applied classes will be overwritten by the binding
+        var arrayProp = new ko.observable([]);
+        testNode.innerHTML = "<div class=\"directly-applied-class\" data-bind=\"css: arrayProp\"></div>";
+
+        ko.applyBindings({arrayProp: arrayProp}, testNode);
+
+        expect(testNode.childNodes[0].className).toEqual("");
+
+        arrayProp(['class-one', 'class-two']);
+        expect(testNode.childNodes[0].className).toEqual("class-one class-two");
+
+        arrayProp(['class-one']);
+        expect(testNode.childNodes[0].className).toEqual("class-one");
+
+    });
+
+    it("should update the class of an SVG tag if an array of strings is bound", function () {
+        if (svgTag) {
+            var arrayProp = new ko.observable([]);
+            testNode.innerHTML = "<svg class=\"Y\" data-bind=\"css: arrayProp\"></svg>";
+            ko.applyBindings({arrayProp: arrayProp}, testNode);
+            expect(testNode.childNodes[0].getAttribute('class')).toEqual(null);
+            arrayProp(["my-class"]);
+            expect(testNode.childNodes[0].getAttribute('class')).toEqual("my-class");
+        }
+    });
 });

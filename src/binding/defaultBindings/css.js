@@ -11,12 +11,18 @@ ko.bindingHandlers['class'] = {
 ko.bindingHandlers['css'] = {
     'update': function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
-        if (value !== null && typeof value == "object") {
+        if (value !== null && Object.prototype.toString.call(value) == "[object Object]") {
             ko.utils.objectForEach(value, function(className, shouldHaveClass) {
                 shouldHaveClass = ko.utils.unwrapObservable(shouldHaveClass);
                 ko.utils.toggleDomNodeCssClass(element, className, shouldHaveClass);
             });
-        } else {
+        } else if (value !== null && Object.prototype.toString.call(value) == "[object Array]") {
+            ko.utils.removeAllDomNodeCssClasses(element);
+            ko.utils.arrayForEach(value, function(className) {
+                ko.utils.toggleDomNodeCssClass(element, className, true);
+            });
+        }
+        else {
             ko.bindingHandlers['class']['update'](element, valueAccessor);
         }
     }

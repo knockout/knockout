@@ -30,7 +30,10 @@
     ]
   },
   "licenses": [
-    { "type": "MIT", "url": "http://www.opensource.org/licenses/mit-license.php" }
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
   ],
   "devDependencies": {
     "grunt": "~0.4.1",
