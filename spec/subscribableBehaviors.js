@@ -185,4 +185,29 @@ describe('Subscribable', function() {
 
         observable(dateValue3);
         expect(changes).toBe(2);
-    });});
+    });
+
+    it('Should trigger subscribers if the Date value is the same as a number.', () => {
+        var dateValue = new Date(1988, 1, 12);
+        var dateValueNumber = dateValue - 0;
+        var observable = ko.observable();
+        var changes = 0;
+
+        observable.subscribe(() => changes++);
+
+        observable(dateValue);
+        expect(changes).toBe(1);
+
+        observable(dateValueNumber);
+        expect(changes).toBe(2);
+
+        observable(dateValueNumber);
+        expect(changes).toBe(2);
+
+        observable(dateValue);
+        expect(changes).toBe(3);
+
+        observable(dateValue);
+        expect(changes).toBe(3);
+    });
+});
