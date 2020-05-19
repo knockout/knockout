@@ -75,6 +75,9 @@ ko.extenders = {
 
 var primitiveTypes = { 'undefined':1, 'boolean':1, 'number':1, 'string':1 };
 function valuesArePrimitiveAndEqual(a, b) {
+    // if comparing dates, should be treated as primitives.
+    a = (a instanceof Date ? (a - 0) : a);
+    b = (b instanceof Date ? (b - 0) : b);
     var oldValueIsPrimitive = (a === null) || (typeof(a) in primitiveTypes);
     return oldValueIsPrimitive ? (a === b) : false;
 }

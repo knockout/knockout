@@ -153,4 +153,36 @@ describe('Subscribable', function() {
 
         expect(subscribable.customFunction).toBe(customFunction);
     });
-});
+
+    it('Should not trigger subscribers if the Date object still the same.', () => {
+        var dateValue = new Date();
+        var observable = ko.observable();
+        var changes = 0;
+
+        observable.subscribe(() => changes++);
+
+        observable(dateValue);
+        expect(changes).toBe(1);
+
+        observable(dateValue);
+        expect(changes).toBe(1);
+    });
+
+    it('Should not trigger subscribers if the Date value is the same.', () => {
+        var dateValue1 = new Date(1988, 1, 12);
+        var dateValue2 = new Date(1988, 1, 12);
+        var dateValue3 = new Date(1988, 2, 14);
+        var observable = ko.observable();
+        var changes = 0;
+
+        observable.subscribe(() => changes++);
+
+        observable(dateValue1);
+        expect(changes).toBe(1);
+
+        observable(dateValue2);
+        expect(changes).toBe(1);
+
+        observable(dateValue3);
+        expect(changes).toBe(2);
+    });});
