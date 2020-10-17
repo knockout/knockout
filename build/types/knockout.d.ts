@@ -414,7 +414,7 @@ export interface BindingChildContextOptions<T = any> {
 }
 
 export function applyBindings<T = any>(bindingContext: T | BindingContext<T>): void;
-export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node | null, extendCallback?: BindingContextExtendCallback<T>): void;
+export function applyBindings<T = any>(bindingContext: T | BindingContext<T>, rootNode: Node, extendCallback?: BindingContextExtendCallback<T>): void;
 export function applyBindingsToDescendants<T = any>(bindingContext: T | BindingContext<T>, rootNode?: Node): void;
 export function applyBindingsToNode<T = any>(node: Node, bindings: object | (() => object), viewModel: T | BindingContext<T>): void;
 export function applyBindingAccessorsToNode<T = any>(node: Node, bindings: BindingAccessors | (() => BindingAccessors), viewModel: T | BindingContext<T>): void;
