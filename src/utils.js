@@ -396,8 +396,7 @@ ko.utils = (function () {
                 ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
                     element.detachEvent(attachEventName, attachEventHandler);
                 });
-            } else
-                throw new Error("Browser doesn't support addEventListener or attachEvent");
+            }
         },
 
         triggerEvent: function (element, eventType) {
