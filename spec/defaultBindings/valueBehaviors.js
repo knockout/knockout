@@ -620,6 +620,24 @@ describe('Binding: Value', function() {
             expect(observable()).toEqual("B");
         });
 
+        it('Should update observable before subsequent change event handler', function () {
+            // See https://github.com/knockout/knockout/issues/2530
+            testNode.innerHTML = '<select data-bind="value: testId, event: { change: function() {$data.checkValue($element.value)} }"><option value="1">1</option><option value="2">2</option></select>';
+            var checkedValue;
+            var vm = {
+                testId: ko.observable(1),
+                checkValue: function (val) {
+                    checkedValue = val;
+                    expect(val).toEqual(vm.testId());
+                }
+            };
+            ko.applyBindings(vm, testNode);
+
+            testNode.childNodes[0].selectedIndex = 1;
+            ko.utils.triggerEvent(testNode.childNodes[0], "change");
+            expect(checkedValue).toEqual(vm.testId());
+        });
+
         describe('Using valueAllowUnset option', function () {
             it('Should display the caption when the model value changes to undefined, null, or \"\" when using \'options\' binding', function() {
                 var observable = ko.observable('B');

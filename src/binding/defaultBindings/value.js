@@ -110,9 +110,12 @@ ko.bindingHandlers['value'] = {
 
         if (tagName === "select") {
             var updateFromModelComputed;
+            ko.utils.registerEventHandler(element, "change", function() {
+                if (updateFromModelComputed)
+                    valueUpdateHandler()
+            });
             ko.bindingEvent.subscribe(element, ko.bindingEvent.childrenComplete, function () {
                 if (!updateFromModelComputed) {
-                    ko.utils.registerEventHandler(element, "change", valueUpdateHandler);
                     updateFromModelComputed = ko.computed(updateFromModel, null, { disposeWhenNodeIsRemoved: element });
                 } else if (allBindings.get('valueAllowUnset')) {
                     updateFromModel();
