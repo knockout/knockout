@@ -240,10 +240,13 @@
     };
 
     var templateComputedDomDataKey = ko.utils.domData.nextKey();
-    function disposeOldComputedAndStoreNewOne(element, newComputed) {
+    function disposeOldComputed(element) {
         var oldComputed = ko.utils.domData.get(element, templateComputedDomDataKey);
         if (oldComputed && (typeof(oldComputed.dispose) == 'function'))
             oldComputed.dispose();
+    }
+
+    function storeNewComputed(element, newComputed) {
         ko.utils.domData.set(element, templateComputedDomDataKey, (newComputed && (!newComputed.isActive || newComputed.isActive())) ? newComputed : undefined);
     }
 
@@ -311,6 +314,9 @@
                 }
             }
 
+            // Dispose the old computed before displaying data since in some cases, the code below can cause the old computed to update
+            disposeOldComputed(element);
+
             if ('foreach' in options) {
                 // Render once for each data point (treating data set as empty if shouldDisplay==false)
                 var dataArray = (shouldDisplay && options['foreach']) || [];
@@ -330,8 +336,7 @@
                 templateComputed = ko.renderTemplate(template, innerBindingContext, options, element);
             }
 
-            // It only makes sense to have a single template computed per element (otherwise which one should have its output displayed?)
-            disposeOldComputedAndStoreNewOne(element, templateComputed);
+            storeNewComputed(element, templateComputed);
         }
     };
 

@@ -933,24 +933,24 @@ describe('Templating', function() {
     });
 
     it('Data binding syntax should support \"if\" condition in conjunction with foreach', function() {
-        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: myProp().childProp]" }));
-        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": myProp, foreach: [$data, $data, $data] }'></div>";
+        ko.setTemplateEngine(new dummyTemplateEngine({ myTemplate: "Value: [js: $data]" }));
+        testNode.innerHTML = "<div data-bind='template: { name: \"myTemplate\", \"if\": items() && items().length > 1, foreach: items }'></div>";
 
-        var viewModel = { myProp: ko.observable({ childProp: 'abc' }) };
+        var viewModel = { items: ko.observableArray(['abc','abc']) };
         ko.applyBindings(viewModel, testNode);
-        expect(testNode.childNodes[0].childNodes[0].nodeValue).toEqual("Value: abc");
-        expect(testNode.childNodes[0].childNodes[1].nodeValue).toEqual("Value: abc");
-        expect(testNode.childNodes[0].childNodes[2].nodeValue).toEqual("Value: abc");
+        expect(testNode.childNodes[0]).toHaveTexts(["Value: abc", "Value: abc"]);
 
         // Causing the condition to become false causes the output to be removed
-        viewModel.myProp(null);
+        viewModel.items.pop();
         expect(testNode.childNodes[0]).toContainText("");
 
         // Causing the condition to become true causes the output to reappear
-        viewModel.myProp({ childProp: 'def' });
-        expect(testNode.childNodes[0].childNodes[0].nodeValue).toEqual("Value: def");
-        expect(testNode.childNodes[0].childNodes[1].nodeValue).toEqual("Value: def");
-        expect(testNode.childNodes[0].childNodes[2].nodeValue).toEqual("Value: def");
+        viewModel.items(['def', 'def']);
+        expect(testNode.childNodes[0]).toHaveTexts(["Value: def", "Value: def"]);
+
+        // Adding items updates correctly
+        viewModel.items.push('ghi');
+        expect(testNode.childNodes[0]).toHaveTexts(["Value: def", "Value: def", "Value: ghi"]);
     });
 
     it('Should be able to populate checkboxes from inside templates, despite IE6 limitations', function () {
