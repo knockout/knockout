@@ -8,7 +8,8 @@
   "main": "build/output/knockout-latest.js",
   "types": "build/types/knockout.d.ts",
   "scripts": {
-    "prepublish": "grunt",
+    "grunt": "grunt",
+    "prepublishOnly": "grunt",
     "test": "node spec/runner.node.js"
   },
   "repository": {
@@ -30,11 +31,15 @@
     ]
   },
   "licenses": [
-    { "type": "MIT", "url": "http://www.opensource.org/licenses/mit-license.php" }
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
   ],
   "devDependencies": {
+    "closure-compiler": "~0.2.1",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.0",
-    "closure-compiler": "~0.2.1"
+    "typescript": "^3.7.5"
   }
 }
