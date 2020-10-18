@@ -210,7 +210,7 @@
         }
 
         // Restore the focused element if it had lost focus
-        if (activeElement && domNode.ownerDocument.activeElement != activeElement) {
+        if (activeElement && domNode.ownerDocument.activeElement != activeElement && typeof activeElement.focus === "function") {
             activeElement.focus();
         }
 
