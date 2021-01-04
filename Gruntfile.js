@@ -181,7 +181,6 @@ module.exports = function(grunt) {
         grunt.file.copy(buildConfig.min, distConfig.min);
 
         console.log('To publish, run:');
-        console.log('    git add bower.json');
         console.log('    git add -f ' + distConfig.debug);
         console.log('    git add -f ' + distConfig.min);
         console.log('    git checkout head');
