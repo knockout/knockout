@@ -77,7 +77,7 @@
             if (callback) {
                 for (var i = 0, n = items.length; i < n; i++) {
                     ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
-                        callback(node, i, items[i].arrayEntry);
+                        callback(node, ko.unwrap(items[i].indexObservable), items[i].arrayEntry);
                     });
                 }
             }

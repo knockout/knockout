@@ -167,7 +167,7 @@ describe('Binding: Foreach', function() {
         expect(testNode.childNodes[0]).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
         expect(afterAddCallbackData.length).toEqual(1);
         expect(afterAddCallbackData[0].elem).toEqual(testNode.childNodes[0].childNodes[1]);
-        expect(afterAddCallbackData[0].index).toEqual(0);
+        expect(afterAddCallbackData[0].index).toEqual(1);
         expect(afterAddCallbackData[0].value).toEqual("added child");
         expect(afterAddCallbackData[0].currentParentClone).toContainHtml('<span data-bind="text: $data">first child</span><span data-bind="text: $data">added child</span>');
 
