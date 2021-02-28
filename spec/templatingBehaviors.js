@@ -216,7 +216,7 @@ describe('Templating', function() {
         ko.applyBindings(null, testNode);
         expect(testNode.childNodes[0].innerHTML).toEqual("template output");
     });
-    
+
     it('can data-bind to blank name and displays no content', function () {
         // See #2446, #2534
         testNode.innerHTML = "<div data-bind='template: \"\"'></div>"
