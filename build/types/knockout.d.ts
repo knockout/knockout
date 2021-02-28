@@ -53,10 +53,10 @@ export type MaybeObservable<T = any> = T | Observable<T>;
 
 export interface ReadonlyObservableFunctions<T = any> extends ReadonlySubscribableFunctions<T> {
     peek(): T;
+    equalityComparer(a: T, b: T): boolean;
 }
 
 export interface ObservableFunctions<T = any> extends ReadonlyObservableFunctions<T>, SubscribableFunctions<T> {
-    equalityComparer(a: T, b: T): boolean;
     valueHasMutated(): void;
     valueWillMutate(): void;
 }
@@ -89,8 +89,8 @@ export module observable {
 
 export function isObservable<T = any>(instance: any): instance is Observable<T>;
 
-export function isWriteableObservable<T = any>(instance: any): instance is Observable<T>;
-export function isWritableObservable<T = any>(instance: any): instance is Observable<T>;
+export function isWriteableObservable<T = any>(instance: any): instance is Observable<T> | WritableComputed<T>;
+export function isWritableObservable<T = any>(instance: any): instance is Observable<T> | WritableComputed<T>;
 
 //#endregion
 
@@ -190,7 +190,7 @@ export interface ObservableArrayFunctions<T = any> extends ReadonlyObservableArr
     remove(item: T): T[];
     /**
      * Removes all values  and returns them as an array.
-     * @param removeFunction A function used to determine true if item should be removed and fasle otherwise
+     * @param removeFunction A function used to determine true if item should be removed and false otherwise
      */
     remove(removeFunction: (item: T) => boolean): T[];
 
@@ -248,55 +248,60 @@ export function isObservableArray<T = any>(instance: any): instance is Observabl
 
 //#endregion
 
-//#region subscribables/dependendObservable.js
+//#region subscribables/dependentObservable.js
 
 export type ComputedReadFunction<T = any, TTarget = void> = Subscribable<T> | Observable<T> | Computed<T> | ((this: TTarget) => T);
 export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val: T) => void;
-export type MaybeComputed<T = any> = T | Computed<T>;
+export type MaybeComputed<T = any> = T | Computed<T> | WritableComputed<T>;
 
-export interface ReadonlyComputedFunctions<T = any> extends Subscribable<T> {
-    dispose(): void;
-}
-export interface ComputedFunctions<T = any> extends ReadonlyComputedFunctions<T> {
+export interface ComputedFunctions<T = any> extends Subscribable<T> {
     // It's possible for a to be undefined, since the equalityComparer is run on the initial
     // computation with undefined as the first argument. This is user-relevant for deferred computeds.
     equalityComparer(a: T | undefined, b: T): boolean;
+    dispose(): void;
     peek(): T;
     isActive(): boolean;
     getDependenciesCount(): number;
     getDependencies(): Subscribable[];
 }
+export interface WritableComputedFunctions<T = any> extends ComputedFunctions<T> {
+}
 
-/**
- * The part of an computed contract that do not mutate the underlying value - see ReadableObservable type for rationale
- */
-export interface ReadonlyComputed<T = any> extends ReadonlyComputedFunctions<T> {
+/** A standard computed observable, which is read-only */
+export interface Computed<T = any> extends ComputedFunctions<T> {
     (): T;
 }
-export interface Computed<T = any> extends ComputedFunctions<T>, ReadonlyComputed<T> {
+/** A writable computed observable, created with the "write" option */
+export interface WritableComputed<T = any> extends WritableComputedFunctions<T>, Computed<T> {
     (value: T): this;
 }
 
 export interface PureComputed<T = any> extends Computed<T> { }
+export interface WritablePureComputed<T = any> extends WritableComputed<T> { }
 
 export interface ComputedOptions<T = any, TTarget = void> {
     read?: ComputedReadFunction<T, TTarget>;
-    write?: ComputedWriteFunction<T, TTarget>;
     owner?: TTarget;
     pure?: boolean;
     deferEvaluation?: boolean;
     disposeWhenNodeIsRemoved?: Node;
     disposeWhen?: () => boolean;
 }
+export interface WritableComputedOptions<T = any, TTarget = void> extends ComputedOptions<T, TTarget> {
+    write: ComputedWriteFunction<T, TTarget>;
+}
 
+export function computed<T = any, TTarget = any>(options: WritableComputedOptions<T, TTarget>): WritableComputed<T>;
 export function computed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): Computed<T>;
 export function computed<T = any>(evaluator: ComputedReadFunction<T>): Computed<T>;
 export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): Computed<T>;
+export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget, options: WritableComputedOptions<T, TTarget>): WritableComputed<T>;
 export function computed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget, options: ComputedOptions<T, TTarget>): Computed<T>;
 export module computed {
-    export const fn: ComputedFunctions;
+    export const fn: WritableComputedFunctions;
 }
 
+export function pureComputed<T = any, TTarget = any>(options: WritableComputedOptions<T, TTarget>): WritablePureComputed<T>;
 export function pureComputed<T = any, TTarget = any>(options: ComputedOptions<T, TTarget>): PureComputed<T>;
 export function pureComputed<T = any>(evaluator: ComputedReadFunction<T>): PureComputed<T>;
 export function pureComputed<T = any, TTarget = any>(evaluator: ComputedReadFunction<T, TTarget>, evaluatorTarget: TTarget): PureComputed<T>;
@@ -318,7 +323,7 @@ export interface ComputedContext {
 export const computedContext: ComputedContext;
 
 /**
- * Executes a function and returns the result, while disabling depdendency tracking
+ * Executes a function and returns the result, while disabling dependency tracking
  * @param callback - the function to execute without dependency tracking
  * @param callbackTarget - the `this` binding for `callback`
  * @param callbackArgs - the args to provide to `callback`
