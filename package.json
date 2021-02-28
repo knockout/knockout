@@ -40,6 +40,6 @@
     "closure-compiler": "~0.2.1",
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.9.9"
   }
 }
