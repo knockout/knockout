@@ -216,6 +216,27 @@ describe('Templating', function() {
         ko.applyBindings(null, testNode);
         expect(testNode.childNodes[0].innerHTML).toEqual("template output");
     });
+    
+    it('can data-bind to blank name and displays no content', function () {
+        // See #2446, #2534
+        testNode.innerHTML = "<div data-bind='template: \"\"'></div>"
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toContainHtml("");
+    });
+
+    it('can data-bind to blank name, passed as an option, and displays no content', function () {
+        // See #2446
+        testNode.innerHTML = "<div data-bind='template: { name: \"\" }'></div>"
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toContainHtml("");
+    });
+
+    it('can data-bind to undefined name, and displays no content', function () {
+        // See #2446
+        testNode.innerHTML = "<div data-bind='template: { name: undefined }'></div>"
+        ko.applyBindings({}, testNode);
+        expect(testNode.childNodes[0]).toContainHtml("");
+    });
 
     it('Should be able to tell data-bind syntax which object to pass as data for the template (otherwise, uses viewModel)', function () {
         ko.setTemplateEngine(new dummyTemplateEngine({ someTemplate: "result = [js: childProp]" }));

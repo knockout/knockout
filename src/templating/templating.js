@@ -307,11 +307,11 @@
                     shouldDisplay = ko.utils.unwrapObservable(options['if']);
                 if (shouldDisplay && 'ifnot' in options)
                     shouldDisplay = !ko.utils.unwrapObservable(options['ifnot']);
+            }
 
-                // Don't show anything if an empty name is given (see #2446)
-                if (shouldDisplay && !template) {
-                    shouldDisplay = false;
-                }
+            // Don't show anything if an empty name is given (see #2446)
+            if (shouldDisplay && !template) {
+                shouldDisplay = false;
             }
 
             // Dispose the old computed before displaying data since in some cases, the code below can cause the old computed to update
