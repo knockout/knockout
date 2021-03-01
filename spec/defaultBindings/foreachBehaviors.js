@@ -542,6 +542,14 @@ describe('Binding: Foreach', function() {
         expect(testNode).toContainText("B");
     });
 
+    it('Should be able to access a filtered array using \"$array\"', function() {
+        testNode.innerHTML = "<div data-bind='foreach: someItems.filter(function(el) { return el > 10 })'><span data-bind='text: ko.toJSON($array)'></span></div>";
+        var someItems = [10, 20];
+        ko.applyBindings({ someItems: someItems }, testNode);
+        expect(testNode.childNodes[0]).toContainText('[20]');
+    });
+
+
     it('Should be able to give an alias to $data using \"as\"', function() {
         testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\" }'><span data-bind='text: item'></span></div>";
         var someItems = ['alpha', 'beta'];
@@ -857,6 +865,72 @@ describe('Binding: Foreach', function() {
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
         });
+
+        it('Should provide itemIsEven as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsEven()+item.name+\":\"+subvalueIsEven()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('truealpha:truea,truealpha:falseb,falsebeta:truec,falsebeta:falsed,');
+        });
+
+        it('Should provide itemIsFirst as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsFirst()+item.name+\":\"+subvalueIsFirst()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('truealpha:truea,truealpha:falseb,falsebeta:truec,falsebeta:falsed,');
+        });
+
+        it('Should provide itemIsLast as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsLast()+item.name+\":\"+subvalueIsLast()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('falsealpha:falsea,falsealpha:trueb,truebeta:falsec,truebeta:trued,');
+        });
+
+        it('Should provide itemArray as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemArray[itemIndex()].name+item.name+\":\"+subvalueArray[subvalueIndex()]+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('alphaalpha:aa,alphaalpha:bb,betabeta:cc,betabeta:dd,');
+        });
+
+        it('Should provide itemNext as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemNext() && itemNext().name+item.name+\":\"+subvalueNext() && subvalueNext()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('ba,undefinedb,,,');
+        });
+
+        it('Should provide itemPrevious as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemPrevious() && itemPrevious().name+item.name+\":\"+subvaluePrevious() && subvaluePrevious()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText(',,undefinedc,cd,');
+        });
     });
 
     describe('With "noChildContext = false" and "as"', function () {
@@ -933,6 +1007,72 @@ describe('Binding: Foreach', function() {
             var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
             ko.applyBindings({ someItems: someItems }, testNode);
             expect(testNode.childNodes[0]).toContainText('0alpha:0a,0alpha:1b,1beta:0c,1beta:1d,');
+        });
+
+        it('Should provide itemIsEven as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsEven()+item.name+\":\"+subvalueIsEven()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('truealpha:truea,truealpha:falseb,falsebeta:truec,falsebeta:falsed,');
+        });
+
+        it('Should provide itemIsFirst as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsFirst()+item.name+\":\"+subvalueIsFirst()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('truealpha:truea,truealpha:falseb,falsebeta:truec,falsebeta:falsed,');
+        });
+
+        it('Should provide itemIsLast as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemIsLast()+item.name+\":\"+subvalueIsLast()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('falsealpha:falsea,falsealpha:trueb,truebeta:falsec,truebeta:trued,');
+        });
+
+        it('Should provide itemArray as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemArray[itemIndex()].name+item.name+\":\"+subvalueArray[subvalueIndex()]+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('alphaalpha:aa,alphaalpha:bb,betabeta:cc,betabeta:dd,');
+        });
+
+        it('Should provide itemNext as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemNext() && itemNext().name+item.name+\":\"+subvalueNext() && subvalueNext()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText('ba,undefinedb,,,');
+        });
+
+        it('Should provide itemPrevious as pureComputed in the context accessible across multiple nested levels', function() {
+            testNode.innerHTML = "<div data-bind='foreach: { data: someItems, as: \"item\", noChildContext: true }'>"
+                               +    "<span data-bind='foreach: { data: item.sub, as: \"subvalue\", noChildContext: true }'>"
+                               +        "<span data-bind='text: itemPrevious() && itemPrevious().name+item.name+\":\"+subvaluePrevious() && subvaluePrevious()+subvalue'></span>,"
+                               +    "</span>"
+                               + "</div>";
+            var someItems = [{ name: 'alpha', sub: ['a', 'b'] }, { name: 'beta', sub: ['c','d'] }];
+            ko.applyBindings({ someItems: someItems }, testNode);
+            expect(testNode.childNodes[0]).toContainText(',,undefinedc,cd,');
         });
     });
 });
