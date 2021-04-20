@@ -472,6 +472,16 @@ ko.utils = (function () {
             }
         },
 
+        setElementEnabled: function(element, enabled){
+            //element.disabled may not work in every Browser and is not typescript HTMLElement compatible
+            if (enabled && element.hasAttribute("disabled")) {
+                element.removeAttribute("disabled");
+            }
+            else if (!enabled && !element.hasAttribute("disabled")) {
+                element.setAttribute("disabled", "disabled");
+            }
+        },
+
         forceRefresh: function(node) {
             // Workaround for an IE9 rendering bug - https://github.com/SteveSanderson/knockout/issues/209
             if (ieVersion >= 9) {
