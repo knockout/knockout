@@ -38,8 +38,8 @@
   ],
   "devDependencies": {
     "closure-compiler": "~0.2.1",
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.0",
-    "typescript": "^3.7.5"
+    "grunt": "^1.3.0",
+    "grunt-cli": "^1.4.2",
+    "typescript": "^4.0.0"
   }
 }
