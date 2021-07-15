@@ -1,6 +1,7 @@
 var attrHtmlToJavaScriptMap = { 'class': 'className', 'for': 'htmlFor' };
 ko.bindingHandlers['attr'] = {
     'update': function(element, valueAccessor, allBindings) {
+        var isInputElement = ko.utils.tagNameLower(element) == "input";
         var value = ko.utils.unwrapObservable(valueAccessor()) || {};
         ko.utils.objectForEach(value, function(attrName, attrValue) {
             attrValue = ko.utils.unwrapObservable(attrValue);
@@ -39,6 +40,16 @@ ko.bindingHandlers['attr'] = {
             // entirely, and there's no strong reason to allow for such casing in HTML.
             if (attrName === "name") {
                 ko.utils.setElementName(element, toRemove ? "" : attrValue);
+            }
+
+            if (isInputElement && attrName == "value") {
+                // If the value binding is placed on a radio/checkbox, then just pass through to checkedValue and quit
+                if (isInputElement && (element.type == "checkbox" || element.type == "radio")) {
+                    ko.applyBindingAccessorsToNode(element, {'checkedValue': valueAccessor});
+                    return;
+                }
+
+                ko.utils.setElementValue(element, attrValue);
             }
         });
     }

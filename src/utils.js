@@ -472,6 +472,10 @@ ko.utils = (function () {
             }
         },
 
+        setElementValue: function(element, value) {
+            element.value = value;
+        },
+
         forceRefresh: function(node) {
             // Workaround for an IE9 rendering bug - https://github.com/SteveSanderson/knockout/issues/209
             if (ieVersion >= 9) {
