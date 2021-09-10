@@ -29,6 +29,55 @@ describe('unwrapObservable', function() {
     });
 });
 
+describe('wrap', function() {
+    it('Should return an observable containing the non-observable parameter passed', function() {
+        var someObject = { abc: 123 },
+            primitiveValue = 123,
+            someFunction = function() { return primitiveValue; },
+            wrappedPrimitiveValue,
+            wrappedObject,
+            wrappedFunction,
+            wrappedNull,
+            wrappedUndefined;
+
+        wrappedObject = ko.utils.wrap(someObject);
+        expect(ko.isObservable(wrappedObject)).toBe(true);
+        expect(wrappedObject()).toBe(someObject);
+
+        wrappedPrimitiveValue = ko.utils.wrap(primitiveValue);
+        expect(ko.isObservable(wrappedPrimitiveValue)).toBe(true);
+        expect(wrappedPrimitiveValue()).toBe(123);
+
+        wrappedFunction = ko.utils.wrap(someFunction);
+        expect(ko.isObservable(wrappedFunction)).toBe(true);
+        expect(wrappedFunction()).toBe(someFunction);
+
+        wrappedNull = ko.utils.wrap(null);
+        expect(ko.isObservable(wrappedNull)).toBe(true);
+        expect(wrappedNull()).toBe(null);
+
+        wrappedUndefined = ko.utils.wrap(undefined);
+        expect(ko.isObservable(wrappedUndefined)).toBe(true);
+        expect(wrappedUndefined()).toBe(undefined);
+    });
+
+    it('Should return the same supplied observable', function() {
+        var someObject = { abc: 123 },
+            observablePrimitiveValue = ko.observable(123),
+            observableObjectValue = ko.observable(someObject),
+            observableNullValue = ko.observable(null),
+            observableUndefinedValue = ko.observable(undefined),
+            computedValue = ko.computed(function() { return observablePrimitiveValue() + 1; });
+
+        expect(ko.utils.wrap(observablePrimitiveValue)).toBe(observablePrimitiveValue);
+        expect(ko.utils.wrap(observableObjectValue)).toBe(observableObjectValue);
+        expect(ko.utils.wrap(observableNullValue)).toBe(observableNullValue);
+        expect(ko.utils.wrap(observableUndefinedValue)).toBe(observableUndefinedValue);
+        expect(ko.utils.wrap(computedValue)).toBe(computedValue);
+
+    });
+});
+
 describe('arrayForEach', function () {
     it('Should go call the callback for each element of the array, in order', function () {
         var callback = jasmine.createSpy('callback');

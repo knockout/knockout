@@ -433,6 +433,10 @@ ko.utils = (function () {
             return ko.isObservable(value) ? value() : value;
         },
 
+        wrap: function (value) {
+            return ko.isObservable(value) ? value : ko.observable(value);
+        },
+
         peekObservable: function (value) {
             return ko.isObservable(value) ? value.peek() : value;
         },
@@ -620,6 +624,7 @@ ko.exportSymbol('utils.unwrapObservable', ko.utils.unwrapObservable);
 ko.exportSymbol('utils.objectForEach', ko.utils.objectForEach);
 ko.exportSymbol('utils.addOrRemoveItem', ko.utils.addOrRemoveItem);
 ko.exportSymbol('utils.setTextContent', ko.utils.setTextContent);
+ko.exportSymbol('utils.wrap', ko.utils.wrap);
 ko.exportSymbol('unwrap', ko.utils.unwrapObservable); // Convenient shorthand, because this is used so commonly
 
 if (!Function.prototype['bind']) {
