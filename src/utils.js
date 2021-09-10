@@ -16,6 +16,10 @@ ko.utils = (function () {
                     target[prop] = source[prop];
                 }
             }
+            var symbols = (Object.getOwnPropertySymbols && Object.getOwnPropertySymbols(source)) || [];
+            ko.utils.arrayForEach(symbols, function (symbol) {
+                target[symbol] = source[symbol];
+            });
         }
         return target;
     }
