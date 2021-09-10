@@ -45,7 +45,7 @@
                 tagNameLower == "template" && element.content && element.content.nodeType === 11 ? templateTemplate :
                 templateElement;
         }
-    }
+    };
 
     ko.templateSources.domElement.prototype['text'] = function(/* valueToWrite */) {
         var elemContentsProperty = this.templateType === templateScript ? "text"
@@ -115,7 +115,7 @@
 
     ko.templateSources.anonymousTemplate = function(element) {
         this.domElement = element;
-    }
+    };
     ko.templateSources.anonymousTemplate.prototype = new ko.templateSources.domElement();
     ko.templateSources.anonymousTemplate.prototype.constructor = ko.templateSources.anonymousTemplate;
     ko.templateSources.anonymousTemplate.prototype['text'] = function(/* valueToWrite */) {

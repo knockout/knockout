@@ -33,7 +33,7 @@
         }
 
         return allBindings;
-    }
+    };
 
     var nativeBindingProviderInstance = new ko.bindingProvider();
 
@@ -94,7 +94,7 @@
             return function(componentName) {
                 document.createElement(componentName); // Allows IE<9 to parse markup containing the custom element
                 return originalFunction.apply(this, arguments);
-            }
+            };
         })(ko.components['register']);
 
         // Whenever you create a document fragment, enable all preregistered component names as custom elements

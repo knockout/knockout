@@ -29,7 +29,7 @@ ko.subscription.prototype.disposeWhenNodeIsRemoved = function (node) {
 ko.subscribable = function () {
     ko.utils.setPrototypeOfOrExtend(this, ko_subscribable_fn);
     ko_subscribable_fn.init(this);
-}
+};
 
 var defaultEvent = "change";
 
@@ -179,7 +179,7 @@ var ko_subscribable_fn = {
     },
 
     toString: function() {
-      return '[object Object]'
+      return '[object Object]';
     },
 
     extend: applyExtenders

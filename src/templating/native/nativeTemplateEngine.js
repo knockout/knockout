@@ -1,6 +1,6 @@
 ko.nativeTemplateEngine = function () {
     this['allowTemplateRewriting'] = false;
-}
+};
 
 ko.nativeTemplateEngine.prototype = new ko.templateEngine();
 ko.nativeTemplateEngine.prototype.constructor = ko.nativeTemplateEngine;

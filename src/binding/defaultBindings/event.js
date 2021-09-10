@@ -10,7 +10,7 @@ function makeEventHandlerShortcut(eventName) {
             };
             return ko.bindingHandlers['event']['init'].call(this, element, newValueAccessor, allBindings, viewModel, bindingContext);
         }
-    }
+    };
 }
 
 ko.bindingHandlers['event'] = {

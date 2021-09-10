@@ -67,12 +67,12 @@
                 visitorCallback(propertyName);
             }
         }
-    };
+    }
 
     function objectLookup() {
         this.keys = [];
         this.values = [];
-    };
+    }
 
     objectLookup.prototype = {
         constructor: objectLookup,

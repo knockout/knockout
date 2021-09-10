@@ -37,7 +37,7 @@ ko.observable = function (initialValue) {
     }
 
     return observable;
-}
+};
 
 // Define prototype for observables
 var observableFn = {

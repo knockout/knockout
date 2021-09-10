@@ -67,7 +67,7 @@ ko.bindingHandlers['checked'] = {
                 }
                 ko.expressionRewriting.writeValueToProperty(modelValue, allBindings, 'checked', elemValue, true);
             }
-        };
+        }
 
         function updateView() {
             // This updates the view value from the model value.
@@ -87,7 +87,7 @@ ko.bindingHandlers['checked'] = {
                 // Otherwise, being checked means that the checkbox or radio button's value corresponds to the model value
                 element.checked = (checkedValue() === modelValue);
             }
-        };
+        }
 
         var isCheckbox = element.type == "checkbox",
             isRadio = element.type == "radio";
@@ -105,7 +105,7 @@ ko.bindingHandlers['checked'] = {
 
         // IE 6 won't allow radio buttons to be selected unless they have a name
         if (isRadio && !element.name)
-            ko.bindingHandlers['uniqueName']['init'](element, function() { return true });
+            ko.bindingHandlers['uniqueName']['init'](element, function() { return true; });
 
         // Set up two computeds to update the binding:
 

@@ -10,6 +10,6 @@ ko.bindingHandlers['enable'] = {
 
 ko.bindingHandlers['disable'] = {
     'update': function (element, valueAccessor) {
-        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()) });
+        ko.bindingHandlers['enable']['update'](element, function() { return !ko.utils.unwrapObservable(valueAccessor()); });
     }
 };

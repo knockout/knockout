@@ -238,7 +238,7 @@
         // Finally call afterMove and afterAdd callbacks
         callCallback(options['afterMove'], itemsForAfterMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
-    }
+    };
 })();
 
 ko.exportSymbol('utils.setDomNodeChildrenFromArrayMapping', ko.utils.setDomNodeChildrenFromArrayMapping);

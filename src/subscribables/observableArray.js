@@ -67,7 +67,7 @@ ko.observableArray['fn'] = {
     'destroyAll': function (arrayOfValues) {
         // If you passed zero args, we destroy everything
         if (arrayOfValues === undefined)
-            return this['destroy'](function() { return true });
+            return this['destroy'](function() { return true; });
 
         // If you passed an arg, we interpret it as an array of entries to destroy
         if (!arrayOfValues)
