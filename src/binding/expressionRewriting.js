@@ -203,6 +203,7 @@ ko.exportSymbol('expressionRewriting.preProcessBindings', ko.expressionRewriting
 // undocumented feature that makes it relatively easy to upgrade to KO 3.0. However, this is still not an official
 // public API, and we reserve the right to remove it at any time if we create a real public property writers API.
 ko.exportSymbol('expressionRewriting._twoWayBindings', ko.expressionRewriting.twoWayBindings);
+ko.exportSymbol('expressionRewriting._writeValueToProperty', ko.expressionRewriting.writeValueToProperty);
 
 // For backward compatibility, define the following aliases. (Previously, these function names were misleading because
 // they referred to JSON specifically, even though they actually work with arbitrary JavaScript object literal expressions.)
