@@ -21,6 +21,10 @@ ko.bindingHandlers['event'] = {
                 ko.utils.registerEventHandler(element, eventName, function (event) {
                     var handlerReturnValue;
                     var handlerFunction = valueAccessor()[eventName];
+                    if (handlerFunction !== null && handlerFunction !== undefined && typeof handlerFunction !== "function") {
+                        throw new Error("The value for a '" + eventName + "' event binding must be a function");
+                    }
+
                     if (!handlerFunction)
                         return;
 
@@ -39,7 +43,7 @@ ko.bindingHandlers['event'] = {
                         }
                     }
 
-                    var bubble = allBindings.get(eventName + 'Bubble') !== false;
+                    var bubble = allBindings.get(eventName + 'Bubble') !== false && handlerReturnValue !== false;
                     if (!bubble) {
                         event.cancelBubble = true;
                         if (event.stopPropagation)
