@@ -75,18 +75,23 @@ describe('Binding: Value', function() {
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         expect(validValue()).toEqual("1234");
         expect(isValid()).toEqual(true);
+        expect(testNode.childNodes[0].value).toEqual("1234");
 
         //set to an invalid value
         testNode.childNodes[0].value = "1234a";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         expect(validValue()).toEqual("1234");
         expect(isValid()).toEqual(false);
+        
+        // binding should revert element value since the change was rejected by the computed observable 
+        expect(testNode.childNodes[0].value).toEqual("1234");
 
         //set to a valid value where the current value of the writeable computed is the same as the written value
         testNode.childNodes[0].value = "1234";
         ko.utils.triggerEvent(testNode.childNodes[0], "change");
         expect(validValue()).toEqual("1234");
         expect(isValid()).toEqual(true);
+        expect(testNode.childNodes[0].value).toEqual("1234");
     });
 
     it('Should ignore node changes when bound to a read-only observable', function() {
