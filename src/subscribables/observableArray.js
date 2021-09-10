@@ -125,7 +125,7 @@ ko.utils.arrayForEach(["pop", "push", "reverse", "shift", "sort", "splice", "uns
 });
 
 // Populate ko.observableArray.fn with read-only functions from native arrays
-ko.utils.arrayForEach(["slice"], function (methodName) {
+ko.utils.arrayForEach(["slice", "every", "filter", "forEach", "lastIndexOf", "map", "reduce", "some"], function (methodName) {
     ko.observableArray['fn'][methodName] = function () {
         var underlyingArray = this();
         return underlyingArray[methodName].apply(underlyingArray, arguments);
