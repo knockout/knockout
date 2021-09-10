@@ -503,11 +503,7 @@ ko.utils = (function () {
         },
 
         makeArray: function(arrayLikeObject) {
-            var result = [];
-            for (var i = 0, j = arrayLikeObject.length; i < j; i++) {
-                result.push(arrayLikeObject[i]);
-            };
-            return result;
+            return ko.utils.arrayPushAll([], arrayLikeObject);
         },
 
         createSymbolOrString: function(identifier) {
