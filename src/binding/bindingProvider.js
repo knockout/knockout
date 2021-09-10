@@ -1,15 +1,16 @@
 (function() {
     var defaultBindingAttributeName = "data-bind";
 
-    ko.bindingProvider = function() {
+    ko.bindingProvider = function(bindingAttributeName) {
         this.bindingCache = {};
+        this.bindingAttributeName = bindingAttributeName || defaultBindingAttributeName;
     };
 
     ko.utils.extend(ko.bindingProvider.prototype, {
         'nodeHasBindings': function(node) {
             switch (node.nodeType) {
                 case 1: // Element
-                    return node.getAttribute(defaultBindingAttributeName) != null
+                    return node.getAttribute(this.bindingAttributeName) != null
                         || ko.components['getComponentNameForNode'](node);
                 case 8: // Comment node
                     return ko.virtualElements.hasBindingValue(node);
@@ -33,7 +34,7 @@
         // It's not part of the interface definition for a general binding provider.
         'getBindingsString': function(node, bindingContext) {
             switch (node.nodeType) {
-                case 1: return node.getAttribute(defaultBindingAttributeName);   // Element
+                case 1: return node.getAttribute(this.bindingAttributeName);   // Element
                 case 8: return ko.virtualElements.virtualNodeBindingValue(node); // Comment node
                 default: return null;
             }
@@ -49,7 +50,12 @@
                 ex.message = "Unable to parse bindings.\nBindings value: " + bindingsString + "\nMessage: " + ex.message;
                 throw ex;
             }
+        },
+
+        'setBindingAttributeName': function(attrName) {
+        	this.bindingAttributeName = attrName;
         }
+
     });
 
     ko.bindingProvider['instance'] = new ko.bindingProvider();
