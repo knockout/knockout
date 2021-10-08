@@ -1,6 +1,16 @@
 (function() {
     var defaultBindingAttributeName = "data-bind";
 
+    if (typeof trustedTypes !== "undefined") {
+        var knockoutPolicy = trustedTypes['createPolicy']('knockout', {
+            // This is relatively safe for DOM-based XSS.
+            // But it is not safe for Store/Reflected XSS.
+            'createScript': function(opaqueScript) {
+                return opaqueScript;
+            }
+        });
+    }
+
     ko.bindingProvider = function() {
         this.bindingCache = {};
     };
@@ -66,6 +76,14 @@
         // Example result: with(sc1) { with(sc0) { return (expression) } }
         var rewrittenBindings = ko.expressionRewriting.preProcessBindings(bindingsString, options),
             functionBody = "with($context){with($data||{}){return{" + rewrittenBindings + "}}}";
+
+        if (typeof trustedTypes !== "undefined") {
+            // Trusted Types has a bug where it throws on new Function
+            // even if we pass TrustedScript. So use eval instead.
+            var f = "(function($context, $element) { " + functionBody + " })";
+            return eval(knockoutPolicy['createScript'](f));
+        }
+
         return new Function("$context", "$element", functionBody);
     }
 })();
