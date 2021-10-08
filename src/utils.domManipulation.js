@@ -55,7 +55,8 @@
                 documentContext.body.appendChild(div);
             }
 
-            if (typeof trustedTypes !== "undefined") {
+            if (typeof trustedTypes !== "undefined" && trustedTypes['isHTML'](html)) {
+                // Pass TrustedHTML as-is.
                 div.innerHTML = html;
             } else {
                 div.innerHTML = markup;
