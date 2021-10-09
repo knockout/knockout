@@ -50,4 +50,21 @@ describe('Binding: HTML', function() {
         expect(td.tagName).toEqual("TD");
         expect('innerText' in td ? td.innerText : td.textContent).toEqual("hello");
     });
+
+    it('Should assign the TrustedHTML directly to innerHTML', function () {
+        // Mock Trusted Types.
+        trustedTypes = {};
+        trustedTypes.isHTML = function(input) {
+            if (input.type == "TrustedHTML") {
+                return true;
+            }
+            return false;
+        };
+
+        var html = {"type": "TrustedHTML"};
+        var model = { htmlProp: html };
+        testNode.innerHTML = "<span data-bind='html:htmlProp'></span>";
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0].innerHTML).toEqual("[object Object]");
+    });
 });

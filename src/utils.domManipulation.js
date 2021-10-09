@@ -55,7 +55,12 @@
                 documentContext.body.appendChild(div);
             }
 
-            div.innerHTML = markup;
+            if (typeof trustedTypes !== "undefined" && trustedTypes['isHTML'](html)) {
+                // Pass TrustedHTML as-is.
+                div.innerHTML = html;
+            } else {
+                div.innerHTML = markup;
+            }
 
             if (mayRequireCreateElementHack) {
                 div.parentNode.removeChild(div);
@@ -112,7 +117,8 @@
         html = ko.utils.unwrapObservable(html);
 
         if ((html !== null) && (html !== undefined)) {
-            if (typeof html != 'string')
+            // If passed html is a TrustedHTML, do not stringify.
+            if (typeof html != 'string' && typeof trustedTypes !== "undefined" && !trustedTypes['isHTML'](html))
                 html = html.toString();
 
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
