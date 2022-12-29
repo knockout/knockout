@@ -213,7 +213,7 @@ describe('Rate-limited', function() {
             jasmine.Clock.tick(250);
             expect(notifySpy).toHaveBeenCalledWith('a');
 
-            // Second notification happends using later settings
+            // Second notification happens using later settings
             notifySpy.reset();
             jasmine.Clock.tick(250);
             expect(notifySpy).toHaveBeenCalledWith('b');

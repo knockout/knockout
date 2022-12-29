@@ -450,7 +450,7 @@ describe('Binding: Value', function() {
 
         it('Should automatically initialize the model property to match the first option value if no option value matches the current model property value', function() {
             // The rationale here is that we always want the model value to match the option that appears to be selected in the UI
-            //  * If there is *any* option value that equals the model value, we'd initalise the select box such that *that* option is the selected one
+            //  * If there is *any* option value that equals the model value, we'd initialise the select box such that *that* option is the selected one
             //  * If there is *no* option value that equals the model value (often because the model value is undefined), we should set the model
             //    value to match an arbitrary option value to avoid inconsistency between the visible UI and the model
             var observable = new ko.observable(); // Undefined by default

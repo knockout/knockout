@@ -138,7 +138,7 @@ ko.bindingHandlers['textInput'] = {
                 // IE 8 has a bug where it fails to fire 'propertychange' on the first update following a value change from
                 // JavaScript code. It also doesn't fire if you clear the entire value. To fix this, we bind to the following
                 // events too.
-                onEvent('keyup', updateModel);      // A single keystoke
+                onEvent('keyup', updateModel);      // A single keystroke
                 onEvent('keydown', updateModel);    // The first character when a key is held down
             }
             if (registerForSelectionChangeEvent) {
