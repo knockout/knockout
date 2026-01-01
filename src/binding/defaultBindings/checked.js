@@ -50,7 +50,10 @@ ko.bindingHandlers['checked'] = {
                     // When we're responding to the checkedValue changing, and the element is
                     // currently checked, replace the old elem value with the new elem value
                     // in the model array.
-                    if (isChecked) {
+                    if (isChecked
+                        // we want to suppress this behavior in DotVVM - it will applies only to non-DotVVM checkboxes
+                        && !allBindings['has']('checkedArrayContainsObservables')
+                    ) {
                         ko.utils.addOrRemoveItem(writableValue, elemValue, true, checkedArrayContainsObservables, checkedValueComparer);
                         ko.utils.addOrRemoveItem(writableValue, saveOldValue, false, checkedArrayContainsObservables, checkedValueComparer);
                     }
