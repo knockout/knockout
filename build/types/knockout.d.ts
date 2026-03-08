@@ -36,7 +36,10 @@ export interface SubscribableFunctions<T = any> extends ReadonlySubscribableFunc
     extend<S extends Subscribable<T>>(requestedExtenders: ObservableExtenderOptions<T>): S;
 }
 
-export interface Subscribable<T = any> extends SubscribableFunctions<T> { }
+export interface Subscribable<T = any> extends SubscribableFunctions<T> {
+    (): T;
+    (value: T): any;
+}
 
 export const subscribable: {
     new <T = any>(): Subscribable<T>;

@@ -50,7 +50,8 @@
         var nodesToDelete = [];
         var itemsToMoveFirstIndexes = [];
         var itemsForBeforeRemoveCallbacks = [];
-        var itemsForMoveCallbacks = [];
+        var itemsForBeforeMoveCallbacks = [];
+        var itemsForAfterMoveCallbacks = [];
         var itemsForAfterAddCallbacks = [];
         var mapData;
         var countWaitingForRemove = 0;
@@ -59,14 +60,16 @@
             mapData = { arrayEntry: value, indexObservable: ko.observable(currentArrayIndex++) };
             newMappingResult.push(mapData);
             if (!isFirstExecution) {
-                itemsForAfterAddCallbacks.push(mapData);
+                itemsForAfterAddCallbacks[currentArrayIndex - 1] = mapData;
             }
         }
 
         function itemMovedOrRetained(oldPosition) {
             mapData = lastMappingResult[oldPosition];
-            if (currentArrayIndex !== mapData.indexObservable.peek())
-                itemsForMoveCallbacks.push(mapData);
+            if (currentArrayIndex !== mapData.indexObservable.peek()) {
+                itemsForBeforeMoveCallbacks[mapData.indexObservable.peek()] = mapData;
+                itemsForAfterMoveCallbacks[currentArrayIndex] = mapData;
+            }
             // Since updating the index might change the nodes, do so before calling fixUpContinuousNodeArray
             mapData.indexObservable(currentArrayIndex++);
             ko.utils.fixUpContinuousNodeArray(mapData.mappedNodes, domNode);
@@ -76,9 +79,11 @@
         function callCallback(callback, items) {
             if (callback) {
                 for (var i = 0, n = items.length; i < n; i++) {
-                    ko.utils.arrayForEach(items[i].mappedNodes, function(node) {
-                        callback(node, i, items[i].arrayEntry);
-                    });
+                    if (items[i]) {
+                        ko.utils.arrayForEach(items[i].mappedNodes, function (node) {
+                            callback(node, i, items[i].arrayEntry);
+                        });
+                    }
                 }
             }
         }
@@ -121,7 +126,7 @@
                                     if (mapData.arrayEntry === deletedItemDummyValue) {
                                         mapData = null;
                                     } else {
-                                        itemsForBeforeRemoveCallbacks.push(mapData);
+                                        itemsForBeforeRemoveCallbacks[mapData.indexObservable.peek()] = mapData;
                                     }
                                 }
                                 if (mapData) {
@@ -159,7 +164,7 @@
         ko.utils.domData.set(domNode, lastMappingResultDomDataKey, newMappingResult);
 
         // Call beforeMove first before any changes have been made to the DOM
-        callCallback(options['beforeMove'], itemsForMoveCallbacks);
+        callCallback(options['beforeMove'], itemsForBeforeMoveCallbacks);
 
         // Next remove nodes for deleted items (or just clean if there's a beforeRemove callback)
         ko.utils.arrayForEach(nodesToDelete, options['beforeRemove'] ? ko.cleanNode : ko.removeNode);
@@ -180,7 +185,7 @@
                 mapData = newMappingResult[i];
                 for (lastNode = undefined; i; ) {
                     if ((mappedNodes = newMappingResult[--i].mappedNodes) && mappedNodes.length) {
-                        lastNode = mappedNodes[mappedNodes.length-1];
+                        lastNode = mappedNodes[mappedNodes.length - 1];
                         break;
                     }
                 }
@@ -225,11 +230,13 @@
         // as already "removed" so we won't call beforeRemove for it again, and it ensures that the item won't match up
         // with an actual item in the array and appear as "retained" or "moved".
         for (i = 0; i < itemsForBeforeRemoveCallbacks.length; ++i) {
-            itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
+            if (itemsForBeforeRemoveCallbacks[i]) {
+                itemsForBeforeRemoveCallbacks[i].arrayEntry = deletedItemDummyValue;
+            }
         }
 
         // Finally call afterMove and afterAdd callbacks
-        callCallback(options['afterMove'], itemsForMoveCallbacks);
+        callCallback(options['afterMove'], itemsForAfterMoveCallbacks);
         callCallback(options['afterAdd'], itemsForAfterAddCallbacks);
     }
 })();

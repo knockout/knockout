@@ -252,4 +252,32 @@ describe("Deferred bindings", function() {
         expect(testNode).toContainText("1");
     });
 
+    it("Should not duplicate foreach items when valueHasMutated is called before replacing array (issue #2594)", function() {
+        // Repro requires VM created *before* deferUpdates is enabled
+        ko.options.deferUpdates = false;
+        var vm = {
+            key: ko.observable(),
+            list: {}
+        };
+        ko.options.deferUpdates = true;
+
+        testNode.innerHTML = "<div data-bind='foreach: $root.list[$root.key()]'><span data-bind='text: $data'></span></div>";
+        ko.applyBindings(vm, testNode);
+
+        // Step 1: add array to list
+        vm.list["test"] = ko.observableArray(["apple", "orange"]);
+        jasmine.Clock.tick(1);
+
+        // Step 2: set key so foreach binds to the array
+        vm.key("test");
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('appleorange');
+
+        // Step 3: call valueHasMutated then replace array with different-length array
+        vm.key.valueHasMutated();
+        vm.list['test'](["cat", "dog", "mice", "bird"]);
+        jasmine.Clock.tick(1);
+        expect(testNode.childNodes[0]).toContainText('catdogmicebird');
+    });
+
 });

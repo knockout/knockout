@@ -152,7 +152,8 @@
         firstChild: function(node) {
             if (!isStartComment(node)) {
                 if (node.firstChild && isEndComment(node.firstChild)) {
-                    throw new Error("Found invalid end comment, as the first child of " + node);
+                    if (DEBUG) throw new Error("Found invalid end comment, as the first child of " + node);
+                    return node.firstChild.nextSibling;
                 }
                 return node.firstChild;
             } else if (!node.nextSibling || isEndComment(node.nextSibling)) {
@@ -169,7 +170,8 @@
 
             if (node.nextSibling && isEndComment(node.nextSibling)) {
                 if (isUnmatchedEndComment(node.nextSibling)) {
-                    throw Error("Found end comment without a matching opening comment, as child of " + node);
+                    if (DEBUG) throw Error("Found end comment without a matching opening comment, as child of " + node);
+                    return null;
                 } else {
                     return null;
                 }

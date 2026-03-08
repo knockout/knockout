@@ -214,7 +214,7 @@
             if (!bindingInfo.eventSubscribable) {
                 bindingInfo.eventSubscribable = new ko.subscribable;
             }
-            if (options && options['notifyImmediately'] && bindingInfo.notifiedEvents[event]) {
+            if (options && options['notifyImmediately'] && bindingInfo.notifiedEvents && bindingInfo.notifiedEvents[event]) {
                 ko.dependencyDetection.ignore(callback, context, [node]);
             }
             return bindingInfo.eventSubscribable.subscribe(callback, context, event);
@@ -450,9 +450,9 @@
                 };
 
             // Use of allBindings as a function is maintained for backwards compatibility, but its use is deprecated
-            function allBindings() {
+            var allBindings = function() {
                 return ko.utils.objectMap(bindingsUpdater ? bindingsUpdater() : bindings, evaluateValueAccessor);
-            }
+            };
             // The following is the 3.x allBindings API
             allBindings['get'] = function(key) {
                 return bindings[key] && evaluateValueAccessor(getValueAccessor(key));

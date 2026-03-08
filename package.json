@@ -10,7 +10,9 @@
   "scripts": {
     "grunt": "grunt",
     "prepublishOnly": "grunt",
-    "test": "node spec/runner.node.js"
+    "test": "npm run test:node && npm run test:browser",
+    "test:node": "node spec/runner.node.js --source",
+    "test:browser": "node spec/runner.puppeteer.js spec/runner.html"
   },
   "repository": {
     "type": "git",
@@ -38,8 +40,12 @@
   ],
   "devDependencies": {
     "closure-compiler": "~0.2.1",
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.0",
-    "typescript": "^3.9.9"
+    "grunt": "^1.6.1",
+    "grunt-cli": "^1.5.0",
+    "puppeteer": "^24.3.1",
+    "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "minimatch": "^3.1.4"
   }
 }
