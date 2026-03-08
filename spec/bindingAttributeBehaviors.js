@@ -694,6 +694,22 @@ describe('Binding attribute syntax', function() {
         expect(callbacks).toEqual(1);
     });
 
+    it('Should not throw when subscribing to childrenComplete with notifyImmediately before applyBindings (issue #2584)', function () {
+        var callbacks = 0;
+
+        testNode.innerHTML = "<div></div>";
+
+        // Subscribe before applyBindings has reached the node
+        ko.bindingEvent.subscribe(testNode, "childrenComplete", function () {
+            callbacks++;
+        }, null, { notifyImmediately: true });
+
+        expect(callbacks).toEqual(0);
+
+        ko.applyBindings({}, testNode);
+        expect(callbacks).toEqual(1);
+    });
+
     it('Should call a descendantsComplete callback function after descendant elements are bound', function () {
         var callbacks = 0,
             callback = function (node) {

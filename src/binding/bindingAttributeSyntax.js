@@ -214,7 +214,7 @@
             if (!bindingInfo.eventSubscribable) {
                 bindingInfo.eventSubscribable = new ko.subscribable;
             }
-            if (options && options['notifyImmediately'] && bindingInfo.notifiedEvents[event]) {
+            if (options && options['notifyImmediately'] && bindingInfo.notifiedEvents && bindingInfo.notifiedEvents[event]) {
                 ko.dependencyDetection.ignore(callback, context, [node]);
             }
             return bindingInfo.eventSubscribable.subscribe(callback, context, event);
