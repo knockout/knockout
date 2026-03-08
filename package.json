@@ -10,7 +10,9 @@
   "scripts": {
     "grunt": "grunt",
     "prepublishOnly": "grunt",
-    "test": "node spec/runner.node.js"
+    "test": "node spec/runner.node.js",
+    "test:browser": "node spec/runner.puppeteer.js",
+    "test:all": "node spec/runner.node.js && node spec/runner.puppeteer.js"
   },
   "repository": {
     "type": "git",
