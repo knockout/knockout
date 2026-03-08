@@ -359,32 +359,68 @@ describe('Binding attribute syntax', function() {
         expect(testNode).toContainText('Hello Bert, Goodbye');
     });
 
-    it('Should reject closing virtual bindings without matching open, when found as a sibling', function() {
+    it('Should reject closing virtual bindings without matching open, when found as a sibling (debug mode)', function() {
+        if (!window.DEBUG) return;
         testNode.innerHTML = "x<div></div><!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
-    it('Should reject closing virtual bindings without matching open, when found as a a first child', function() {
+    it('Should ignore closing virtual bindings without matching open in non-debug mode (issue #2582)', function() {
+        if (window.DEBUG) return;
+        testNode.innerHTML = "x<div></div><!-- /ko -->x";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).not.toThrow();
+    });
+
+    it('Should reject closing virtual bindings without matching open, when found as a a first child (debug mode)', function() {
+        if (!window.DEBUG) return;
         testNode.innerHTML = "<div>x<!-- /ko -->x</div>";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
-    it('Should reject closing virtual bindings, when found as first child at the top level', function() {
+    it('Should ignore closing virtual bindings without matching open as first child in non-debug mode (issue #2582)', function() {
+        if (window.DEBUG) return;
+        testNode.innerHTML = "<div>x<!-- /ko -->x</div>";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).not.toThrow();
+    });
+
+    it('Should reject closing virtual bindings, when found as first child at the top level (debug mode)', function() {
+        if (!window.DEBUG) return;
         testNode.innerHTML = "x<!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
     });
 
-    it('Should reject duplicated closing virtual bindings', function() {
+    it('Should ignore closing virtual bindings at top level in non-debug mode (issue #2582)', function() {
+        if (window.DEBUG) return;
+        testNode.innerHTML = "x<!-- /ko -->x";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).not.toThrow();
+    });
+
+    it('Should reject duplicated closing virtual bindings (debug mode)', function() {
+        if (!window.DEBUG) return;
         testNode.innerHTML = "x<!-- ko if: true --><div></div><!-- /ko --><!-- /ko -->x";
         expect(function() {
             ko.applyBindings(null, testNode);
         }).toThrow();
+    });
+
+    it('Should ignore duplicated closing virtual bindings in non-debug mode (issue #2582)', function() {
+        if (window.DEBUG) return;
+        testNode.innerHTML = "x<!-- ko if: true --><div></div><!-- /ko --><!-- /ko -->x";
+        expect(function() {
+            ko.applyBindings(null, testNode);
+        }).not.toThrow();
     });
 
     it('Should reject opening virtual bindings that are not closed', function() {
