@@ -582,7 +582,7 @@ function test_misc(this: any) {
         $(el).datepicker("destroy");
     });
 
-    this.observableFactory = function (readonly: boolean = false): ko.Subscribable<number> {
+    this.observableFactory = function (readonly: boolean = false): ko.ReadonlyObservable<number> {
         if (readonly) {
             return ko.computed(() => 3);
         } else {

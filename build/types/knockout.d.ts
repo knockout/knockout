@@ -24,6 +24,9 @@ export interface ReadonlySubscribableFunctions<T = any> extends Function {
     subscribe<TTarget = void>(callback: SubscriptionCallback<T, TTarget>, callbackTarget?: TTarget, event?: "change"): Subscription;
     subscribe<X = any, TTarget = void>(callback: SubscriptionCallback<X, TTarget>, callbackTarget: TTarget, event: string): Subscription;
 
+    extend(requestedExtenders: ObservableExtenderOptions<T>): this;
+    extend<S extends Subscribable<T>>(requestedExtenders: ObservableExtenderOptions<T>): S;
+
     getSubscriptionsCount(event?: string): number;
 }
 
@@ -31,9 +34,6 @@ export interface SubscribableFunctions<T = any> extends ReadonlySubscribableFunc
     init<S extends Subscribable<any>>(instance: S): void;
 
     notifySubscribers(valueToWrite?: T, event?: string): void;
-
-    extend(requestedExtenders: ObservableExtenderOptions<T>): this;
-    extend<S extends Subscribable<T>>(requestedExtenders: ObservableExtenderOptions<T>): S;
 }
 
 export interface Subscribable<T = any> extends SubscribableFunctions<T> {
@@ -65,21 +65,15 @@ export interface ObservableFunctions<T = any> extends ReadonlyObservableFunction
 }
 
 /**
- * The part of an observable contract that do not mutate the underlying value - while most observables are writable at runtime
- *  it can be useful to cast values to this type, just like it can be useful to cast writable arrays
- *  to the native TS ReadonlyArray type.
- *
- * Computeds can also be cast to this type.
- *
- * NOTE: does not support .extend:
- *    Although some extenders are safe (ones which create a new observable or computed)
- *    others are not (e.g. deferred, notify) and modify the underlying observable
- * */
+ * A read-only view of an observable. Useful for exposing observables or computeds
+ * without allowing consumers to modify the value.
+ */
 export interface ReadonlyObservable<T = any> extends ReadonlyObservableFunctions<T> {
     (): T;
 }
 
 export interface Observable<T = any> extends ObservableFunctions<T>, ReadonlyObservable<T> {
+    (): T;
     (value: T): any;
 }
 export function observable<T>(value: T): Observable<T>;
@@ -102,7 +96,7 @@ export function isWritableObservable<T = any>(instance: any): instance is Observ
 export type MaybeObservableArray<T = any> = T[] | ObservableArray<T>;
 
 /**
- * The part of an observable array contract that do not mutate the underlying value - see ReadableObservable type for rationale
+ * A read-only view of an observable array.
  */
 export interface ReadonlyObservableArrayFunctions<T = any> extends ReadonlyObservableFunctions<T[]> {
     //#region observableArray/generalFunctions
@@ -137,7 +131,7 @@ export interface ReadonlyObservableArrayFunctions<T = any> extends ReadonlyObser
     reversed(): T[];
 
     /**
-     * Returns a reversed copy of the array.
+     * Returns a sorted copy of the array.
      * Does not modify the underlying array.
      */
     sorted(compareFunction?: (left: T, right: T) => number): T[];
@@ -192,7 +186,7 @@ export interface ObservableArrayFunctions<T = any> extends ReadonlyObservableArr
      */
     remove(item: T): T[];
     /**
-     * Removes all values  and returns them as an array.
+     * Removes all values and returns them as an array.
      * @param removeFunction A function used to determine true if item should be removed and false otherwise
      */
     remove(removeFunction: (item: T) => boolean): T[];
@@ -257,7 +251,7 @@ export type ComputedReadFunction<T = any, TTarget = void> = Subscribable<T> | Ob
 export type ComputedWriteFunction<T = any, TTarget = void> = (this: TTarget, val: T) => void;
 export type MaybeComputed<T = any> = T | Computed<T> | WritableComputed<T>;
 
-export interface ComputedFunctions<T = any> extends Subscribable<T> {
+export interface ComputedFunctions<T = any> extends ReadonlySubscribableFunctions<T> {
     // It's possible for a to be undefined, since the equalityComparer is run on the initial
     // computation with undefined as the first argument. This is user-relevant for deferred computeds.
     equalityComparer(a: T | undefined, b: T): boolean;
@@ -267,7 +261,7 @@ export interface ComputedFunctions<T = any> extends Subscribable<T> {
     getDependenciesCount(): number;
     getDependencies(): Subscribable[];
 }
-export interface WritableComputedFunctions<T = any> extends ComputedFunctions<T> {
+export interface WritableComputedFunctions<T = any> extends ComputedFunctions<T>, SubscribableFunctions<T> {
 }
 
 /** A standard computed observable, which is read-only */
