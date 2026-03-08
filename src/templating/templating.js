@@ -213,12 +213,33 @@
         var shouldHideDestroyed = (options['includeDestroyed'] === false) || (ko.options['foreachHidesDestroyed'] && !options['includeDestroyed']);
 
         if (!shouldHideDestroyed && !options['beforeRemove'] && ko.isObservableArray(arrayOrObservableArray)) {
-            setDomNodeChildrenFromArrayMapping(arrayOrObservableArray.peek());
+            // Guard against reentrancy (e.g., a binding init that modifies the array) by queueing updates.
+            var queuedChangeLists = [], isProcessing = false;
+            function processArrayChange(changeList) {
+                queuedChangeLists.push(changeList);
+                if (isProcessing) {
+                    return;
+                }
+                isProcessing = true;
+                try {
+                    while (queuedChangeLists.length) {
+                        try {
+                            setDomNodeChildrenFromArrayMapping(arrayOrObservableArray.peek(), queuedChangeLists[0]);
+                        } finally {
+                            queuedChangeLists.shift();
+                        }
+                    }
+                } finally {
+                    isProcessing = false;
+                }
+            }
 
-            var subscription = arrayOrObservableArray.subscribe(function (changeList) {
-                setDomNodeChildrenFromArrayMapping(arrayOrObservableArray(), changeList);
-            }, null, "arrayChange");
+            // Subscribe before initial rendering so that the arrayChange subscription is registered
+            // on the observable before any descendant bindings subscribe (fixes #2305).
+            var subscription = arrayOrObservableArray.subscribe(processArrayChange, null, "arrayChange");
             subscription.disposeWhenNodeIsRemoved(targetNode);
+
+            processArrayChange();
 
             return subscription;
         } else {

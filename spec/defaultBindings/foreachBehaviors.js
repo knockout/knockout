@@ -738,6 +738,54 @@ describe('Binding: Foreach', function() {
         expect(testNode).toContainText("item");
     });
 
+    it('Should not cause errors when replacing the array with a shorter one and a computed depends on it (issue #2305)', function() {
+        var phrases = ko.observableArray(['hello', 'world', 'foo']);
+        var translatedPhrases = ko.pureComputed(function() {
+            return phrases().map(function(phrase) { return { text: phrase.toUpperCase() }; });
+        });
+
+        testNode.innerHTML = "<div data-bind='foreach: phrases'><span data-bind='text: $parent.translatedPhrases()[$index()].text'></span></div>";
+        ko.applyBindings({ phrases: phrases, translatedPhrases: translatedPhrases }, testNode);
+
+        expect(testNode.childNodes[0]).toContainText('HELLOWORLDFOO');
+
+        // Replace with a shorter array; should not throw
+        phrases(['hi']);
+        expect(testNode.childNodes[0]).toContainText('HI');
+    });
+
+    it('Should not re-enter when array is modified during rendering', function() {
+        ko.bindingHandlers.modifyArray = {
+            init: function(element, valueAccessor) {
+                var arr = valueAccessor();
+                if (arr.peek().length === 2) {
+                    arr.push('c');
+                }
+            }
+        };
+
+        // When the array starts with enough items to trigger the modification during initial render
+        var items = ko.observableArray(['a', 'b']);
+        testNode.innerHTML = "<div data-bind='foreach: items'><span data-bind='text: $data, modifyArray: $parent.items'></span></div>";
+        ko.applyBindings({ items: items }, testNode);
+
+        expect(testNode.childNodes[0]).toContainText('abc');
+
+        items.push('d');
+        expect(testNode.childNodes[0]).toContainText('abcd');
+
+        // When the modification is triggered by a later update
+        ko.cleanNode(testNode);
+        items = ko.observableArray(['a']);
+        testNode.innerHTML = "<div data-bind='foreach: items'><span data-bind='text: $data, modifyArray: $parent.items'></span></div>";
+        ko.applyBindings({ items: items }, testNode);
+
+        expect(testNode.childNodes[0]).toContainText('a');
+
+        items.push('b');
+        expect(testNode.childNodes[0]).toContainText('abc');
+    });
+
     if ("activeElement" in document) {
         it('Should maintain focus on focused element even when it\'s moved', function() {
             testNode.innerHTML = "<div data-bind='foreach: sortedItems'><input type='text' data-bind='value: name'></div>";
