@@ -10,8 +10,8 @@
 
 For more details, see
 
- * Documentation on [the project's website](https://knockoutjs.com/documentation/introduction.html)
- * Online examples at [https://knockoutjs.com/examples/](https://knockoutjs.com/examples/)
+* Documentation on [the project's website](https://knockoutjs.com/documentation/introduction.html)
+* Online examples at [http://knockoutjs.com/examples/](https://knockoutjs.com/examples/)
 
 ## Downloading Knockout
 
@@ -43,6 +43,7 @@ If you prefer to build the library yourself:
    ```sh
    npm run grunt
    ```
+
    Now you'll find the built files in `build/output/`.
 
    To run a single task, use `--`
@@ -53,7 +54,12 @@ If you prefer to build the library yourself:
 
 ## Running the tests
 
-If you have [phantomjs](https://phantomjs.org/download.html) installed, then the `grunt` script will automatically run the specification suite and report its results.
+The `grunt` script will automatically run the specification suite and report its results.
+
+Tests are run in two environments:
+
+* **Node.js** — non-DOM specs via `spec/runner.node.js`
+* **Headless Chrome** — full browser specs via [Puppeteer](https://pptr.dev/) (`spec/runner.puppeteer.js`)
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
