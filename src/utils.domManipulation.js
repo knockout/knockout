@@ -55,7 +55,7 @@
                 documentContext.body.appendChild(div);
             }
 
-            div.innerHTML = markup;
+            div.innerHTML = koTrustedTypesPolicy ? koTrustedTypesPolicy['createHTML'](markup) : markup;
 
             if (mayRequireCreateElementHack) {
                 div.parentNode.removeChild(div);
@@ -112,8 +112,13 @@
         html = ko.utils.unwrapObservable(html);
 
         if ((html !== null) && (html !== undefined)) {
-            if (typeof html != 'string')
+            if (typeof html != 'string') {
+                if (typeof trustedTypes !== 'undefined' && trustedTypes['isHTML'](html)) {
+                    node.innerHTML = html;
+                    return;
+                }
                 html = html.toString();
+            }
 
             // jQuery contains a lot of sophisticated code to parse arbitrary HTML fragments,
             // for example <tr> elements which are not normally allowed to exist on their own.

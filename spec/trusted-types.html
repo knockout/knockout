@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Knockout Trusted Types Test</title>
+</head>
+<body>
+    <div id="result"></div>
+    <script src="knockout.js"></script>
+    <script>
+    (function() {
+        var results = [];
+
+        function assert(name, fn) {
+            try {
+                fn();
+                results.push({ name: name, pass: true });
+            } catch (e) {
+                results.push({ name: name, pass: false, error: e.message });
+            }
+        }
+
+        function expect(actual) {
+            return {
+                toBe: function(expected) {
+                    if (actual !== expected) throw new Error('Expected ' + expected + ' but got ' + actual);
+                },
+                toContain: function(expected) {
+                    if (String(actual).indexOf(expected) === -1)
+                        throw new Error('Expected "' + actual + '" to contain "' + expected + '"');
+                }
+            };
+        }
+
+        // Test 1: Basic binding works under TT enforcement
+        assert('Basic text binding', function() {
+            var div = document.createElement('div');
+            div.setAttribute('data-bind', 'text: message');
+            document.body.appendChild(div);
+            ko.applyBindings({ message: 'hello trusted types' }, div);
+            expect(div.textContent).toBe('hello trusted types');
+            ko.cleanNode(div);
+            document.body.removeChild(div);
+        });
+
+        // Test 2: Template/foreach binding works (uses innerHTML internally)
+        assert('Template binding with foreach', function() {
+            var div = document.createElement('div');
+            div.setAttribute('data-bind', 'foreach: items');
+            var span = document.createElement('span');
+            span.setAttribute('data-bind', 'text: $data');
+            div.appendChild(span);
+            document.body.appendChild(div);
+            ko.applyBindings({ items: ['a', 'b', 'c'] }, div);
+            expect(div.textContent).toBe('abc');
+            ko.cleanNode(div);
+            document.body.removeChild(div);
+        });
+
+        // Test 3: html binding with plain string (uses createHTML internally)
+        assert('HTML binding with string', function() {
+            var div = document.createElement('div');
+            div.setAttribute('data-bind', 'html: content');
+            document.body.appendChild(div);
+            ko.applyBindings({ content: '<b>bold</b>' }, div);
+            expect(div.innerHTML.toLowerCase()).toContain('<b>bold</b>');
+            ko.cleanNode(div);
+            document.body.removeChild(div);
+        });
+
+        // Test 4: html binding with TrustedHTML (passthrough)
+        assert('HTML binding with TrustedHTML', function() {
+            var policy = trustedTypes.createPolicy('knockout-test', {
+                createHTML: function(s) { return s; }
+            });
+            var div = document.createElement('div');
+            div.setAttribute('data-bind', 'html: content');
+            document.body.appendChild(div);
+            var trustedHtml = policy.createHTML('<b>bold</b>');
+            ko.applyBindings({ content: trustedHtml }, div);
+            expect(div.innerHTML.toLowerCase()).toContain('<b>bold</b>');
+            ko.cleanNode(div);
+            document.body.removeChild(div);
+        });
+
+        // Test 5: Component binding works
+        assert('Component registration and binding', function() {
+            ko.components.register('tt-test-component', {
+                template: '<span>component content</span>'
+            });
+            var div = document.createElement('div');
+            div.setAttribute('data-bind', 'component: "tt-test-component"');
+            document.body.appendChild(div);
+            ko.applyBindings({}, div);
+            // Components render asynchronously; just verify no TT error was thrown
+            ko.cleanNode(div);
+            document.body.removeChild(div);
+            ko.components.unregister('tt-test-component');
+        });
+
+        // Output results
+        window.__ttResults = results;
+        var resultDiv = document.getElementById('result');
+        resultDiv.textContent = JSON.stringify(results);
+    })();
+    </script>
+</body>
+</html>

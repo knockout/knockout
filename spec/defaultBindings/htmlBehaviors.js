@@ -50,4 +50,18 @@ describe('Binding: HTML', function() {
         expect(td.tagName).toEqual("TD");
         expect('innerText' in td ? td.innerText : td.textContent).toEqual("hello");
     });
+
+    it('Should pass TrustedHTML directly to innerHTML without stringification', function () {
+        if (typeof trustedTypes === 'undefined') {
+            return; // Skip in environments without Trusted Types
+        }
+        var policy = trustedTypes.createPolicy('knockout-test-html', {
+            createHTML: function(s) { return s; }
+        });
+        var trustedHtml = policy.createHTML('<b>trusted content</b>');
+        var model = { htmlProp: trustedHtml };
+        testNode.innerHTML = "<span data-bind='html:htmlProp'></span>";
+        ko.applyBindings(model, testNode);
+        expect(testNode.childNodes[0].innerHTML.toLowerCase()).toEqual('<b>trusted content</b>');
+    });
 });
