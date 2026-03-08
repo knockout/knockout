@@ -181,14 +181,23 @@ var computedFn = {
         trackingObj._version = target.getVersion();
     },
     haveDependenciesChanged: function () {
-        var id, dependency, dependencyTracking = this[computedState].dependencyTracking;
-        for (id in dependencyTracking) {
-            if (Object.prototype.hasOwnProperty.call(dependencyTracking, id)) {
-                dependency = dependencyTracking[id];
-                if ((this._evalDelayed && dependency._target._notificationIsPending) || dependency._target.hasChanged(dependency._version)) {
-                    return true;
+        var state = this[computedState];
+        if (state.isBeingEvaluated) {
+            return false;
+        }
+        state.isBeingEvaluated = true;
+        try {
+            var id, dependency, dependencyTracking = state.dependencyTracking;
+            for (id in dependencyTracking) {
+                if (Object.prototype.hasOwnProperty.call(dependencyTracking, id)) {
+                    dependency = dependencyTracking[id];
+                    if ((this._evalDelayed && dependency._target._notificationIsPending) || dependency._target.hasChanged(dependency._version)) {
+                        return true;
+                    }
                 }
             }
+        } finally {
+            state.isBeingEvaluated = false;
         }
     },
     markDirty: function () {

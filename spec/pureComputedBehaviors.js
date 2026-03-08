@@ -399,6 +399,14 @@ describe('Pure Computed', function() {
         expect(computed2()).toEqual('foo');
     });
 
+    it('Should not cause infinite recursion when two circular pure computeds are read (issue #2154)', function() {
+        var a = ko.pureComputed(function() { return b(); });
+        var b = ko.pureComputed(function() { return a(); });
+
+        expect(a()).toBeUndefined();
+        expect(b()).toBeUndefined();
+    });
+
     describe('Should maintain order of subscriptions', function () {
         var data, dataPureComputed;
 
