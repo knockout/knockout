@@ -38,8 +38,9 @@
   ],
   "devDependencies": {
     "closure-compiler": "~0.2.1",
-    "grunt": "~0.4.1",
-    "grunt-cli": "~0.1.0",
+    "grunt": "^1.6.1",
+    "grunt-cli": "^1.5.0",
+    "phantomjs-prebuilt": "^2.1.16",
     "typescript": "^3.7.5"
   }
 }

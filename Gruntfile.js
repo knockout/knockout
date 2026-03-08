@@ -139,7 +139,8 @@ module.exports = function(grunt) {
 
     grunt.registerMultiTask('test', 'Run tests', function () {
         var done = this.async();
-        grunt.util.spawn({ cmd: this.target, args: [this.data] },
+        const spawnOptions = this.target === 'phantomjs' ? { cmd: "cmd", args: ["/c", "npx phantomjs " + this.data] } : { cmd: this.target, args: [this.data] };
+        grunt.util.spawn(spawnOptions,
             function (error, result, code) {
                 if (code === 127 /*not found*/) {
                     grunt.verbose.error(result.stderr);
@@ -159,7 +160,7 @@ module.exports = function(grunt) {
         var done = this.async(),
             target = this.target;
 
-        grunt.util.spawn({ cmd: "tsc", args: ["-p", this.data] },
+        grunt.util.spawn({ cmd: "cmd", args: ["/c", "npx tsc -p " + this.data] },
             function (error, result, code) {
                 grunt.log.writeln(result.stdout);
 

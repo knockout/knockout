@@ -10,8 +10,8 @@
 
 For more details, see
 
- * Documentation on [the project's website](http://knockoutjs.com/documentation/introduction.html)
- * Online examples at [http://knockoutjs.com/examples/](http://knockoutjs.com/examples/)
+* Documentation on [the project's website](http://knockoutjs.com/documentation/introduction.html)
+* Online examples at [http://knockoutjs.com/examples/](http://knockoutjs.com/examples/)
 
 ## Downloading Knockout
 
@@ -43,6 +43,7 @@ If you prefer to build the library yourself:
    ```sh
    npm run grunt
    ```
+
    Now you'll find the built files in `build/output/`.
 
    To run a single task, use `--`
@@ -53,7 +54,7 @@ If you prefer to build the library yourself:
 
 ## Running the tests
 
-If you have [phantomjs](http://phantomjs.org/download.html) installed, then the `grunt` script will automatically run the specification suite and report its results.
+The `grunt` script will automatically run the specification suite and report its results.
 
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
