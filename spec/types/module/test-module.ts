@@ -582,7 +582,7 @@ function test_misc(this: any) {
         $(el).datepicker("destroy");
     });
 
-    this.observableFactory = function (readonly: boolean = false): ko.Subscribable<number> {
+    this.observableFactory = function (readonly: boolean = false): ko.ReadonlyObservable<number> {
         if (readonly) {
             return ko.computed(() => 3);
         } else {
@@ -590,6 +590,19 @@ function test_misc(this: any) {
         }
     }
 
+}
+
+function test_subscribableRetainsType() {
+    // See https://github.com/knockout/knockout/issues/2555
+    // Subscribable<T> should preserve type T when called, not return any
+    let sub: ko.Subscribable<number> = ko.observable(5);
+    let value = sub();
+    // This will fail to compile if value is 'any' instead of 'number',
+    // because 'true extends false' is never true, making the type 'never',
+    // and 'never' is not assignable to 'true'.
+    type IsNotAny<T> = 0 extends (1 & T) ? false : true;
+    const check: IsNotAny<typeof value> = true;
+    sub(10);
 }
 
 function test_customObservable() {
@@ -862,7 +875,7 @@ class DummyTemplateEngine extends ko.templateEngine {
                         try {
                             var evalResult = eval(script);
                             return (evalResult === null) || (evalResult === undefined) ? "" : evalResult.toString();
-                        } catch (ex) {
+                        } catch (ex: any) {
                             throw new Error("Error evaluating script: [js: " + script + "]\n\nException: " + ex.toString());
                         }
                     }

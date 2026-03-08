@@ -50,7 +50,7 @@
 
     // By default, we run the tests against knockout-raw.js, but you can specify an alternative test
     // subject as a querystring parameter, e.g., runner.html?src=build/output/knockout-latest.js.
-    // This is used by our automated test runners (PhantomJS and Testling CI).
+    // This is used by our automated test runners (Puppeteer and Testling CI).
     var koFilename = getParam('src') || "build/knockout-raw.js";
     jasmine.addScriptReference("../" + koFilename);
 })();

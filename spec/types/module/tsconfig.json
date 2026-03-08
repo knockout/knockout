@@ -4,6 +4,7 @@
     "module": "umd", /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
     "noEmit": true, /* Do not emit outputs. */
     "strict": true, /* Enable all strict type-checking options. */
+    "skipLibCheck": true,
     "moduleResolution": "classic",
     "baseUrl": ".",
     "paths": {
