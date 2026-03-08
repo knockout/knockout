@@ -92,6 +92,27 @@ describe('registerEventHandler', function() {
         ko.utils.triggerEvent(element, 'click');
         expect(eventFired && !jQueryModified).toBe(true);
     });
+
+    it ('should remove event handler on node disposal (issue #2314)', function() {
+        this.restoreAfter(ko.options, 'useOnlyNativeEvents');
+        ko.options.useOnlyNativeEvents = true;
+
+        var element = document.createElement('button');
+        var callCount = 0;
+
+        testNode.appendChild(element);
+        ko.utils.registerEventHandler(element, 'click', function() {
+            callCount++;
+        });
+
+        element.click();
+        expect(callCount).toBe(1);
+
+        ko.cleanNode(element);
+
+        element.click();
+        expect(callCount).toBe(1);
+    });
 });
 
 describe('cloneNodes', function () {

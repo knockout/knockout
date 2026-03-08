@@ -401,9 +401,14 @@ ko.utils = (function () {
                     jQueryEventAttachName = (typeof jQueryInstance(element)['on'] == 'function') ? 'on' : 'bind';
                 }
                 jQueryInstance(element)[jQueryEventAttachName](eventType, wrappedHandler);
-            } else if (!mustUseAttachEvent && typeof element.addEventListener == "function")
+            } else if (!mustUseAttachEvent && typeof element.addEventListener == "function") {
                 element.addEventListener(eventType, wrappedHandler, false);
-            else if (typeof element.attachEvent != "undefined") {
+
+                // Ensure handler is removed on node disposal to avoid leaks (see bug #2314)
+                ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
+                    element.removeEventListener(eventType, wrappedHandler);
+                });
+            } else if (typeof element.attachEvent != "undefined") {
                 var attachEventHandler = function (event) { wrappedHandler.call(element, event); },
                     attachEventName = "on" + eventType;
                 element.attachEvent(attachEventName, attachEventHandler);
