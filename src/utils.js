@@ -1,3 +1,16 @@
+// Create a Trusted Types policy for Knockout's internal use (e.g., innerHTML, new Function)
+var koTrustedTypesPolicy;
+if (typeof trustedTypes !== 'undefined') {
+    try {
+        koTrustedTypesPolicy = trustedTypes['createPolicy']('knockout', {
+            'createHTML': function(s) { return s; },
+            'createScript': function(s) { return s; }
+        });
+    } catch (e) {
+        // Policy creation may fail if CSP restricts policy names or 'knockout' already exists
+    }
+}
+
 ko.utils = (function () {
     var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -41,12 +54,13 @@ ko.utils = (function () {
     });
     var eventsThatMustBeRegisteredUsingAttachEvent = { 'propertychange': true }; // Workaround for an IE9 issue - https://github.com/SteveSanderson/knockout/issues/406
 
-    var ieVersion = undefined;
-    if (typeof trustedTypes === "undefined") {
-        // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
-        // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
-        // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
-        // If there is a future need to detect specific versions of IE10+, we will amend this.
+    // Detect IE versions for bug workarounds (uses IE conditionals, not UA string, for robustness)
+    // Note that, since IE 10 does not support conditional comments, the following logic only detects IE < 10.
+    // Currently this is by design, since IE 10+ behaves correctly when treated as a standard browser.
+    // If there is a future need to detect specific versions of IE10+, we will amend this.
+    // Skip when Trusted Types is available (IE doesn't support Trusted Types)
+    var ieVersion;
+    if (!koTrustedTypesPolicy) {
         ieVersion = document && (function() {
             var version = 3, div = document.createElement('div'), iElems = div.getElementsByTagName('i');
 
@@ -58,7 +72,6 @@ ko.utils = (function () {
             return version > 4 ? version : undefined;
         }());
     }
-
     var isIe6 = ieVersion === 6,
         isIe7 = ieVersion === 7;
 

@@ -33,7 +33,9 @@ module.exports = function(grunt) {
         },
         test: {
             puppeteer: 'spec/runner.puppeteer.js',
-            node: 'spec/runner.node.js'
+            node: 'spec/runner.node.js',
+            trustedtypes: 'spec/runner.trusted-types.js',
+            trustedtypesdebug: 'spec/runner.trusted-types.js build/output/knockout-latest.debug.js'
         },
         testtypes: {
             global: "spec/types/global",
@@ -139,7 +141,8 @@ module.exports = function(grunt) {
 
     grunt.registerMultiTask('test', 'Run tests', function () {
         var done = this.async();
-        const spawnOptions = { cmd: "node", args: [this.data] };
+        var args = this.data.split(' ');
+        const spawnOptions = { cmd: "node", args: args };
         grunt.util.spawn(spawnOptions,
             function (error, result, code) {
                 if (code === 127 /*not found*/) {
