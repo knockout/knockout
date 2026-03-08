@@ -56,6 +56,11 @@ If you prefer to build the library yourself:
 
 The `grunt` script will automatically run the specification suite and report its results.
 
+Tests are run in two environments:
+
+* **Node.js** — non-DOM specs via `spec/runner.node.js`
+* **Headless Chrome** — full browser specs via [Puppeteer](https://pptr.dev/) (`spec/runner.puppeteer.js`)
+
 Or, if you want to run the specs in a browser (e.g., for debugging), simply open `spec/runner.html` in your browser.
 
 ## License

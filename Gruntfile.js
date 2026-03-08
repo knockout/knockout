@@ -32,7 +32,7 @@ module.exports = function(grunt) {
             min: './dist/knockout.js'
         },
         test: {
-            phantomjs: 'spec/runner.phantom.js',
+            puppeteer: 'spec/runner.puppeteer.js',
             node: 'spec/runner.node.js'
         },
         testtypes: {
@@ -139,7 +139,7 @@ module.exports = function(grunt) {
 
     grunt.registerMultiTask('test', 'Run tests', function () {
         var done = this.async();
-        const spawnOptions = this.target === 'phantomjs' ? { cmd: "cmd", args: ["/c", "npx phantomjs " + this.data] } : { cmd: this.target, args: [this.data] };
+        const spawnOptions = { cmd: "node", args: [this.data] };
         grunt.util.spawn(spawnOptions,
             function (error, result, code) {
                 if (code === 127 /*not found*/) {
