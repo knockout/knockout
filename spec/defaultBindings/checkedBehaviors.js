@@ -155,6 +155,26 @@ describe('Binding: Checked', function() {
         expect(testNode.childNodes[0].checked).toEqual(false);
     });
 
+    it('When a checkbox is bound to an observable array that is set to null or undefined, the checkbox should be unchecked without error (issue #2309)', function() {
+        var model = { myObservableArray: ko.observableArray(["My value"]) };
+        testNode.innerHTML = "<input type='checkbox' value='My value' data-bind='checked:myObservableArray' />";
+        ko.applyBindings(model, testNode);
+
+        expect(testNode.childNodes[0].checked).toEqual(true);
+
+        // Set the observable to null; checkbox should uncheck without throwing
+        model.myObservableArray(null);
+        expect(testNode.childNodes[0].checked).toEqual(false);
+
+        // Set the observable to undefined; checkbox should remain unchecked without throwing
+        model.myObservableArray(undefined);
+        expect(testNode.childNodes[0].checked).toEqual(false);
+
+        // Set the observable back to an array; checkbox should reflect the array contents
+        model.myObservableArray(["My value"]);
+        expect(testNode.childNodes[0].checked).toEqual(true);
+    });
+
     it('When a checkbox is bound to a computed array, the checkbox and the computed observable should update each other', function() {
         var observable = ko.observable([]),
             computed = ko.computed({
