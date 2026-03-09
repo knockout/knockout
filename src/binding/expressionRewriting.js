@@ -194,6 +194,7 @@ ko.exportSymbol('expressionRewriting', ko.expressionRewriting);
 ko.exportSymbol('expressionRewriting.bindingRewriteValidators', ko.expressionRewriting.bindingRewriteValidators);
 ko.exportSymbol('expressionRewriting.parseObjectLiteral', ko.expressionRewriting.parseObjectLiteral);
 ko.exportSymbol('expressionRewriting.preProcessBindings', ko.expressionRewriting.preProcessBindings);
+ko.exportSymbol('expressionRewriting.writeValueToProperty', ko.expressionRewriting.writeValueToProperty);
 
 // Making bindings explicitly declare themselves as "two way" isn't ideal in the long term (it would be better if
 // all bindings could use an official 'property writer' API without needing to declare that they might). However,
