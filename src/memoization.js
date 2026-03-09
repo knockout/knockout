@@ -8,11 +8,15 @@ ko.memoization = (function () {
     function generateRandomId() {
         return randomMax8HexChars() + randomMax8HexChars();
     }
+	var commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->";
+	function getNodeValue(node){
+		return commentNodesHaveTextProperty ? node.text: node.nodeValue;
+	}
     function findMemoNodes(rootNode, appendToArray) {
         if (!rootNode)
             return;
         if (rootNode.nodeType == 8) {
-            var memoId = ko.memoization.parseMemoText(rootNode.nodeValue);
+            var memoId = ko.memoization.parseMemoText(getNodeValue(rootNode));
             if (memoId != null)
                 appendToArray.push({ domNode: rootNode, memoId: memoId });
         } else if (rootNode.nodeType == 1) {
