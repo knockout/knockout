@@ -13,7 +13,7 @@ Get the latest stable production build of Knockout.js:
 </div>
 
 <div class="download-debug-panel">
-    Also available: <a href='knockout-3.5.1.debug.js'>debug build</a>.
+    Also available: <a href='knockout-3.5.2.debug.js'>debug build</a>.
     <strong>Note:</strong> This is only intended to help you understand how Knockout works. Don't use it for normal application
     development, because it exposes additional unsupported private APIs.
 </div>
@@ -32,9 +32,13 @@ Additionally, you can include the `--save` option to add knockout to your `bower
 
 Simply reference the JavaScript file using a `<script>` tag somewhere on your HTML pages. For example,
 
-    <script type='text/javascript' src='knockout-3.5.1.js'></script>
+    <script type='text/javascript' src='knockout-3.5.2.js'></script>
 
 Of course, update the `src` attribute to match the location where you put the downloaded file. Next, if you're new to Knockout, get started with [interactive tutorials](http://learn.knockoutjs.com), see some [live examples](../examples/), or dig into documentation about [observables](../documentation/observables.html).
+
+### Trusted Types
+
+Knockout 3.5.2 supports [Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) and creates a policy named `knockout` for its internal operations. If your application uses a Content Security Policy with `require-trusted-types-for 'script'`, Knockout will work with it automatically.
 
 ### Content Delivery Networks (CDNs)
 
@@ -50,6 +54,7 @@ To give your users the fastest download speeds, you might instead prefer to refe
 
 ### Archive of all versions
 
+* [v3.5.2](knockout-3.5.2.js) ([debug](knockout-3.5.2.debug.js)) --- March 8, 2026
 * [v3.5.1](knockout-3.5.1.js) ([debug](knockout-3.5.1.debug.js)) --- November 5, 2019
 * [v3.5.0](knockout-3.5.0.js) ([debug](knockout-3.5.0.debug.js)) --- February 21, 2019
 * [v3.5.0 Release Candidate 2](knockout-3.5.0rc2.js) ([debug](knockout-3.5.0rc2.debug.js)) --- September 8, 2018
