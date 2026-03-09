@@ -74,8 +74,11 @@
                 }
             },
             templateConfig = config['template'],
-            viewModelConfig = config['viewModel'];
-
+            viewModelConfig = config['viewModel'],
+            findContent = config['findContent'];
+        if(findContent) {
+            result['findContent'] = findContent;
+        }
         if (templateConfig) {
             possiblyGetConfigFromAmd(errorCallback, templateConfig, function(loadedConfig) {
                 ko.components._getFirstResultFromLoaders('loadTemplate', [componentName, loadedConfig], function(resolvedTemplate) {
