@@ -185,6 +185,9 @@ module.exports = function(grunt) {
         grunt.file.copy(buildConfig.min, distConfig.min);
 
         console.log('To publish, run:');
+        console.log('    npm install');
+        console.log('    git add -f package.json');
+        console.log('    git add -f package-lock.json');
         console.log('    git add -f ' + distConfig.debug);
         console.log('    git add -f ' + distConfig.min);
         console.log('    git checkout head');
