@@ -97,6 +97,23 @@ If you want to apply the CSS class `my-class`, you *can't* write this:
 
     <div data-bind="css: { 'my-class': someValue }">...</div>
 
+### Note: Simultaneously applied CSS class names may overwrite each other
+
+Note that when using an object as the css parameter, its properties are evaluated sequentially and completely. This means it is possible for one property to *add* a class, and another to *remove* it.
+Suppose you have the following with `isImportant: true`
+
+    <div data-bind="
+      css: {
+        'visible important': isImportant, 
+        'visible not-important': !isImportant 
+      }
+    " class="important"></div>
+
+Note that the element will not be tagged with the `visible` class. This is because the order of operations is
+
+1. `'visible important': isImportant` is evaluated to true. Knockout understands that you want the class to be tagged as `visible` and `important` and adds these.
+2. `'visible not-important': !isImportant` is evaluated to false. Knockout understands that you do **not** want the class to be tagged as `visible` or `not-important` and therefore removes both.
+
 ### Dependencies
 
 None, other than the core Knockout library.
