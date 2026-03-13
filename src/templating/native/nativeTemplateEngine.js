@@ -17,7 +17,10 @@ ko.nativeTemplateEngine.prototype['renderTemplateSource'] = function (templateSo
     }
 };
 
+ko.nativeTemplateEngine.prototype['contentType'] = "text/ko-template";
+
 ko.nativeTemplateEngine.instance = new ko.nativeTemplateEngine();
 ko.setTemplateEngine(ko.nativeTemplateEngine.instance);
+ko.setTemplateEngineContentType(ko.nativeTemplateEngine.instance.contentType, ko.nativeTemplateEngine.instance);
 
 ko.exportSymbol('nativeTemplateEngine', ko.nativeTemplateEngine);
