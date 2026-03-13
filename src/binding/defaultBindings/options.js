@@ -45,6 +45,19 @@ ko.bindingHandlers['options'] = {
                 return includeDestroyed || item === undefined || item === null || !ko.utils.unwrapObservable(item['_destroy']);
             });
 
+            if (allBindings.get('optionsSort')) {
+                filteredArray.sort(function (a, b) {
+                    var aText = optionText(a);
+                    var bText = optionText(b);
+                    var language = (navigator.language || navigator.userLanguage);
+                    return aText.toString().localeCompare(bText.toString(), language, { 'sensitivity': 'base' });
+
+                    function optionText(item) {
+                        return applyToObject(item, allBindings.get('optionsText'), item) || '';
+                    };
+                });
+            }
+
             // If caption is included, add it to the array
             if (allBindings['has']('optionsCaption')) {
                 captionValue = ko.utils.unwrapObservable(allBindings.get('optionsCaption'));
