@@ -32,6 +32,10 @@
 
             this.itemsOnCurrentPage = ko.computed(function () {
                 var startIndex = this.pageSize * this.currentPageIndex();
+                if (startIndex !== 0 && startIndex >= ko.unwrap(this.data).length) {
+                    this.currentPageIndex(Math.ceil(ko.unwrap(this.data).length / this.pageSize) - 1);
+                    startIndex = this.pageSize * this.currentPageIndex();
+                }
                 return ko.utils.unwrapObservable(this.data).slice(startIndex, startIndex + this.pageSize);
             }, this);
 
