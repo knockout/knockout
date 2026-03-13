@@ -1,6 +1,26 @@
 describe('Binding: Event', function() {
     beforeEach(jasmine.prepareTestNode);
 
+    it('Should throw an error if bound value is not a function', function () {
+        var koOnError = ko.onError;
+        var lastError;
+        ko.onError = function(e) {
+            lastError = e;
+        }
+
+        testNode.innerHTML = "<a href='#' data-bind='event: { click: a }'>hey</button>";
+        ko.applyBindings({ a: 1 }, testNode);
+
+        try {
+            ko.utils.triggerEvent(testNode.childNodes[0], "click");
+        } catch (ex) {
+            lastError = e;
+        } finally {
+            ko.onError = koOnError;
+            expect(lastError.message).toContain("The value for");
+        }
+    });
+
     it('Should invoke the supplied function when the event occurs, using model as \'this\' param and first arg, and event as second arg', function () {
         var model = {
             firstWasCalled: false,
@@ -62,6 +82,21 @@ describe('Binding: Event', function() {
         ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
         expect(model.innerWasCalled).toEqual(true);
         expect(model.outerWasCalled).toEqual(false);
+    });
+
+    it('Should be able to prevent bubbling of bubblable events using an explicit false return value from handler', function() {
+      var model = {
+        innerWasCalled: false, innerDoCall: function () {
+            this.innerWasCalled = true;
+            return false;
+        },
+        outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+      };
+      testNode.innerHTML = "<div data-bind='event:{click:outerDoCall}'><button data-bind='event:{click:innerDoCall}'>hey</button></div>";
+      ko.applyBindings(model, testNode);
+      ko.utils.triggerEvent(testNode.childNodes[0].childNodes[0], "click");
+      expect(model.innerWasCalled).toEqual(true);
+      expect(model.outerWasCalled).toEqual(false);
     });
 
     it('Should be able to supply handler params using "bind" helper', function() {
