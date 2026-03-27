@@ -21,7 +21,6 @@
                 },
                 originalChildNodes = ko.utils.makeArray(ko.virtualElements.childNodes(element));
 
-            ko.virtualElements.emptyNode(element);
             ko.utils.domNodeDisposal.addDisposeCallback(element, disposeAssociatedComponentViewModel);
 
             ko.computed(function () {
@@ -55,7 +54,7 @@
                     if (!componentDefinition) {
                         throw new Error('Unknown component \'' + componentName + '\'');
                     }
-                    cloneTemplateIntoElement(componentName, componentDefinition, element);
+                    ko.components.cloneTemplateIntoElement(componentName, componentDefinition, element);
 
                     var componentInfo = {
                         'element': element,
@@ -85,7 +84,7 @@
 
     ko.virtualElements.allowedBindings['component'] = true;
 
-    function cloneTemplateIntoElement(componentName, componentDefinition, element) {
+    ko.components.cloneTemplateIntoElement = function(componentName, componentDefinition, element) {
         var template = componentDefinition['template'];
         if (!template) {
             throw new Error('Component \'' + componentName + '\' has no template');
