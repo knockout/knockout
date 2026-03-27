@@ -443,3 +443,18 @@ describe('objectMap', function () {
         expect(expectedContext).toEqual(actualContext);
     });
 });
+
+describe('extend', function () {
+    it('Should extend normal and symbol properties', function() {
+        let a = ko.utils.createSymbolOrString('a');
+        let b = ko.utils.createSymbolOrString('b');
+        let c = ko.utils.createSymbolOrString('c');
+        var expected = {[a]: 1, [b]: 2, [c]: 3, d: 4, e: 5, f: 6};
+        var target = {[a]: 1, [c]: 1, d: 4, f: 3};
+        var source = {[b]: 2, [c]: 3, e: 5, f: 6};
+
+        var result = ko.utils.extend(target, source);
+
+        expect(result).toEqual(expected);
+    });
+});
