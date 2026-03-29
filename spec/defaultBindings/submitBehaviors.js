@@ -11,4 +11,17 @@ describe('Binding: Submit', function() {
         expect(model.wasCalled).toEqual(true);
         expect(firstParamStored).toEqual(formNode);
     });
+
+    it('Should be able to prevent bubbling of submit event using the submitBubble:false option', function() {
+        var model = {
+            innerWasCalled: false, innerDoCall: function () { this.innerWasCalled = true; },
+            outerWasCalled: false, outerDoCall: function () { this.outerWasCalled = true; }
+        };
+        testNode.innerHTML = "<div data-bind='event:{submit:outerDoCall}'><form data-bind='submit:innerDoCall,submitBubble:false' /></div>";
+        var formNode = testNode.childNodes[0].childNodes[0];
+        ko.applyBindings(model, testNode);
+        ko.utils.triggerEvent(formNode, "submit");
+        expect(model.innerWasCalled).toEqual(true);
+        expect(model.outerWasCalled).toEqual(false);
+    });
 });
