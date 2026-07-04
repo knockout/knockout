@@ -225,4 +225,13 @@ describe('Expression Rewriting', function() {
                 { key: 'd', value: "'empty comment'" }
             ]);
     });
+
+    it('Should not backtrack exponentially on an unterminated string with escape characters', function() {
+        // The string token used to be /"(?:\\.|[^"])*"/, where [^"] also matches the backslash
+        // that the escape branch consumes. A run of backslashes with no closing quote could be
+        // tiled in exponentially many ways, so parsing a short input took seconds.
+        var start = new Date();
+        ko.expressionRewriting.parseObjectLiteral('a: "' + new Array(60).join('\\'));
+        expect(new Date() - start).toBeLessThan(1000);
+    });
 });
