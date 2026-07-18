@@ -101,6 +101,16 @@ describe('Mapping helpers', function() {
         expect(result.exclude).toEqual(obj.exclude);
     });
 
+    it('ko.toJS should not let a "__proto__" property become the prototype of the result', function() {
+        var data = JSON.parse('{"name":"bob","__proto__":{"isAdmin":true}}');
+        expect(data.isAdmin).toEqual(undefined);
+
+        var result = ko.toJS(data);
+        expect(result.name).toEqual("bob");
+        expect(result.isAdmin).toEqual(undefined);
+        expect(Object.getPrototypeOf(result)).toEqual(Object.prototype);
+    });
+
     it('ko.toJSON should unwrap everything and then stringify', function() {
         var data = ko.observableArray(['a', 1, { someProp : ko.observable('Hey') }]);
         var result = ko.toJSON(data);

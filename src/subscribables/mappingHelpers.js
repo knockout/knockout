@@ -66,7 +66,10 @@
                 visitorCallback('toJSON');
         } else {
             for (var propertyName in rootObject) {
-                visitorCallback(propertyName);
+                // Assigning "__proto__" on the output object runs the Object.prototype setter, which replaces
+                // the output's prototype instead of adding a property to it, so skip it.
+                if (propertyName !== "__proto__")
+                    visitorCallback(propertyName);
             }
         }
     };
