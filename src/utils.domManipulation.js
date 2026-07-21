@@ -20,7 +20,7 @@
 
     function getWrap(tags) {
         var m = tags.match(/^(?:<!--.*?-->\s*?)*?<([a-z]+)[\s>]/);
-        return (m && lookup[m[1]]) || none;
+        return (m && Object.prototype.hasOwnProperty.call(lookup, m[1]) && lookup[m[1]]) || none;
     }
 
     function simpleHtmlParse(html, documentContext) {

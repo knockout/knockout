@@ -17,6 +17,7 @@ describe('Parse HTML fragment', function() {
         { html: '<tfoot-component>foo</tfoot-component>', parsed: ['<tfoot-component>foo</tfoot-component>'], jQueryRequiredVersion: "3.0" },
         { html: '<div></div>', parsed: ['<div></div>'] },
         { html: '<custom-component></custom-component>', parsed: ['<custom-component></custom-component>'] },
+        { html: '<constructor></constructor>', parsed: ['<constructor></constructor>'] },
         { html: '<tr></tr>', parsed: ['<tr></tr>'] },
         { html: '<!-- ko if:true --><tr></tr><!-- /ko -->', parsed: ['<!-- ko if:true -->','<tr></tr>','<!-- /ko -->'] },
         { html: '<!-- this is a table row --><tr></tr>', parsed: ['<!-- this is a table row -->','<tr></tr>'] },

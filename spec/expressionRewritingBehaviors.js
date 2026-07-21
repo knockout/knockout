@@ -65,6 +65,11 @@ describe('Expression Rewriting', function() {
         expect(result[1].value).toEqual("function(){var regex=/{/g;return/123/;}");
     });
 
+    it('Should treat a division after an inherited Object property name as a division', function() {
+        var result = ko.expressionRewriting.parseObjectLiteral("a: x.constructor/2, b: y/3");
+        expect(result).toEqual([{key: 'a', value: 'x.constructor/2'}, {key: 'b', value: 'y/3'}]);
+    });
+
     it('Should parse a value that begins with a colon', function() {
         var result = ko.expressionRewriting.parseObjectLiteral("a: :-)");
         expect(result.length).toEqual(1);

@@ -184,6 +184,12 @@ describe('Binding attribute syntax', function() {
         expect(testNode).toContainText("My prop value");
     });
 
+    it('Should bind descendants of an element whose tag name matches an inherited Object property', function() {
+        testNode.innerHTML = "<constructor><div data-bind='text: someProp'></div></constructor>";
+        ko.applyBindings({ someProp: 'My prop value' }, testNode);
+        expect(testNode).toContainText("My prop value");
+    });
+
     it('Bindings can signal that they control descendant bindings by returning a flag from their init function', function() {
         ko.bindingHandlers.test = {
             init: function() { return { controlsDescendantBindings : true } }

@@ -347,7 +347,7 @@
         if (shouldApplyBindings)
             bindingContextForDescendants = applyBindingsToNodeInternal(nodeVerified, null, bindingContext)['bindingContextForDescendants'];
 
-        if (bindingContextForDescendants && !bindingDoesNotRecurseIntoElementTypes[ko.utils.tagNameLower(nodeVerified)]) {
+        if (bindingContextForDescendants && !Object.prototype.hasOwnProperty.call(bindingDoesNotRecurseIntoElementTypes, ko.utils.tagNameLower(nodeVerified))) {
             applyBindingsToDescendantsInternal(bindingContextForDescendants, nodeVerified);
         }
     }
