@@ -81,7 +81,7 @@ ko.expressionRewriting = (function () {
                 } else if (c === 47 && i && tok.length > 1) {  // "/"
                     // Look at the end of the previous token to determine if the slash is actually division
                     var match = toks[i-1].match(divisionLookBehind);
-                    if (match && !keywordRegexLookBehind[match[0]]) {
+                    if (match && !Object.prototype.hasOwnProperty.call(keywordRegexLookBehind, match[0])) {
                         // The slash is actually a division punctuator; re-parse the remainder of the string (not including the slash)
                         str = str.substr(str.indexOf(tok) + 1);
                         toks = str.match(bindingToken);
