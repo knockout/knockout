@@ -39,7 +39,7 @@ Because the `hasFocus` binding works in both directions (setting the associated 
 {% capture live_example_view %}
 <p>
 	Name: 
-	<b data-bind="visible: !editing(), text: name, click: edit">&nbsp;</b>
+	<b data-bind="visible: !editing(), text: name() || '[ none ]', click: edit">&nbsp;</b>
 	<input data-bind="visible: editing, value: name, hasFocus: editing" />
 </p>
 <p><em>Click the name to edit it; click elsewhere to apply changes.</em></p>
