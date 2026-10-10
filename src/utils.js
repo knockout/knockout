@@ -25,7 +25,10 @@ ko.utils = (function () {
     function extend(target, source) {
         if (source) {
             for(var prop in source) {
-                if(hasOwnProperty.call(source, prop)) {
+                // Assigning "__proto__" on the target runs the Object.prototype setter, which replaces
+                // the target's prototype instead of adding a property to it, so skip it (same fix as
+                // ko.toJS's visitPropertiesOrArrayEntries).
+                if(hasOwnProperty.call(source, prop) && prop !== "__proto__") {
                     target[prop] = source[prop];
                 }
             }

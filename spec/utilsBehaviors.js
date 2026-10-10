@@ -443,3 +443,18 @@ describe('objectMap', function () {
         expect(expectedContext).toEqual(actualContext);
     });
 });
+
+describe('extend', function () {
+    it('Should not let a "__proto__" property become the prototype of the target', function() {
+        var expectedPrototype = Object.getPrototypeOf({});
+        var source = JSON.parse('{"name":"bob","__proto__":{"isAdmin":true}}');
+        expect(source.isAdmin).toEqual(undefined);
+
+        var target = {};
+        var result = ko.utils.extend(target, source);
+
+        expect(result.name).toEqual("bob");
+        expect(result.isAdmin).toEqual(undefined);
+        expect(Object.getPrototypeOf(result)).toEqual(expectedPrototype);
+    });
+});
