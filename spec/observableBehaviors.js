@@ -5,6 +5,45 @@ describe('Observable', function() {
         expect(ko.isSubscribable(instance)).toEqual(true);
     });
 
+    it('Should inherit methods added after creation when the __proto__ accessor is removed', function () {
+        // only test if Object.setPrototypeOf is supported
+        if (typeof Object.setPrototypeOf !== 'function') {
+            return;
+        }
+
+        var descriptor = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__');
+        var instance;
+        var notifiedValue;
+
+        if (!descriptor || !descriptor.configurable) {
+            return;
+        }
+
+        try {
+            delete Object.prototype.__proto__;
+
+            instance = ko.observable(3);
+
+            instance.subscribe(function (value) { notifiedValue = value; });
+            instance(456);
+
+            // adding methods to the prototype after the instance is created
+            // would not have effect if knockout falls back to copying instead of setting prototype
+            ko.observable.fn.testPrototypeMethod = function () {
+                return this() * 2;
+            };
+            expect(instance.testPrototypeMethod()).toEqual(456 * 2);
+        } finally {
+            delete ko.observable.fn.testPrototypeMethod;
+            Object.defineProperty(Object.prototype, '__proto__', descriptor);
+        }
+
+        expect(instance.testPrototypeMethod).toEqual(undefined);
+
+        expect(instance()).toEqual(456);
+        expect(notifiedValue).toEqual(456);
+    });
+
     it('Should advertise that instances are observable', function () {
         var instance = new ko.observable();
         expect(ko.isObservable(instance)).toEqual(true);
