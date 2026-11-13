@@ -34,7 +34,11 @@ ko.utils = (function () {
     }
 
     function setPrototypeOf(obj, proto) {
-        obj.__proto__ = proto;
+        if (typeof Object.setPrototypeOf == "function") {
+            Object.setPrototypeOf(obj, proto)
+        } else {
+            obj.__proto__ = proto;
+        }
         return obj;
     }
 
